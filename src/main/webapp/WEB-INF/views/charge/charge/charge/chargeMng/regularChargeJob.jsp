@@ -100,7 +100,7 @@ $(document).ready(function() {
 		],
 		viewrecords: true,
 		shrinkToFit:false,
-		height: 230,
+		height: 150,
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,

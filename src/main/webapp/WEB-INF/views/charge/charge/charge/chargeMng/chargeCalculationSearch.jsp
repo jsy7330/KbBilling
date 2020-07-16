@@ -58,7 +58,7 @@ $(document).ready(function() {
 		],
 		viewrecords: true,
 		shrinkToFit:false,
-		height: 500,
+		height: 300,
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
