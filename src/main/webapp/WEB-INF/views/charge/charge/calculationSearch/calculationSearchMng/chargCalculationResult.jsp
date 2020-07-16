@@ -11,7 +11,51 @@ $(document).ready(function() {
 	pageInit();
 
 	var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
-	if($(".datepicker").length > 0){
+	
+	//CHANHEE(달력처리 수정 .datepicker 주석 / .month-picker 추가)
+	//달력처리
+	if($(".month-picker").length > 0){
+		if(lng == 'ko'){
+			format = 'yy-mm';
+		}else if (lng == 'en'){
+			format = 'mm/yy';
+		}
+		$('.month-picker').datepicker( {
+			changeMonth: true,
+			changeYear: true,
+			showButtonPanel: true,
+			dateFormat: format,
+			onClose: function(dateText, inst) {
+				var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+				var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+				$(this).datepicker('setDate', new Date(year, month, 1));
+			},
+			beforeShow : function (dateText, inst) {
+		        	
+				var selectDate = $(this).val().split("-");
+				var year = Number(selectDate[0]);
+				var month = Number(selectDate[1]) - 1;
+				$(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
+				$(this).datepicker('setDate', new Date(year, month, 1));
+		            
+			}
+		}); 
+		 
+		// 년월 레이어 focus
+	    $(".month-picker").focus(function () {
+	        $(".ui-datepicker-calendar").hide();
+	        $("#ui-datepicker-div").position({
+	            my: "center top",
+	            at: "center bottom",
+	            of: $(this)
+	        });
+	    });
+		
+	}
+	
+	$('#searchStatDt').datepicker('setDate', new Date());
+	
+	/* if($(".datepicker").length > 0){
 		$( ".datepicker" ).datepicker({
 		      changeMonth: true,
 		      changeYear: true,
@@ -30,7 +74,7 @@ $(document).ready(function() {
 		    }).datepicker("setDate", "0"); 
 	}
 	$('.inp_date .btn_cal').click(function(e){e.preventDefault();$(this).prev().focus();});
-	$( ".datepicker1.disabled" ).datepicker( "option", "disabled", true );
+	$( ".datepicker1.disabled" ).datepicker( "option", "disabled", true ); */
 
 	//그리드 처리
 	$("#workGrpGrid").jqGrid({
@@ -52,7 +96,8 @@ $(document).ready(function() {
 		],
 		viewrecords: true,
 		shrinkToFit:false,
-		height: 120,
+		//CHANHEE(120->300)
+		height: 300,
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
@@ -62,7 +107,8 @@ $(document).ready(function() {
 			page : "page"          //현재 페이지
 		},
 		rowList:[5,10,20,30,50],	//선택시 노출되는 row 수
-        rowNum: 5,
+		//CHANHEE(5->20)
+        rowNum: 20,
         pager: "#workGrpGridPager",
         onCellSelect : function(rowid, index, contents, event){
         	setSelectedData(rowid);
@@ -303,11 +349,12 @@ function btnEnable(id){
 					</c:forEach>
 				</select>
 			</td>
-			<th>청구년월</th>
+			<th><spring:message code="LAB.M10.LAB00033" /></th> <!-- 청구년월 -->
 			<td>
 				<div class="date_box">
 					<div class="inp_date w130">
-						<input type="text" id="searchStatDt" name="searchStatDt"  class="datepicker" readonly="readonly" />
+						<!-- CHANHEE datepicker 에서 month-picker 로 class 수정 -->
+						<input type="text" id="searchStatDt" name="searchStatDt"  class="month-picker" readonly="readonly" />
 						<a href="#" class="btn_cal"></a>
 					</div>
 				</div>
