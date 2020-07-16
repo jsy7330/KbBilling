@@ -56,7 +56,8 @@ $(document).ready(function() {
 		],
 		viewrecords: true,
 		shrinkToFit:false,
-		height: 120,
+		//CHANHEE(120->300)
+		height: 300,
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
@@ -66,7 +67,8 @@ $(document).ready(function() {
 			page : "page"          //현재 페이지
 		},
 		rowList:[5,10,20,30,50],	//선택시 노출되는 row 수
-        rowNum: 5,
+		//CHANHEE(5->20)
+        rowNum: 20,
         pager: "#workGrpGridPager",
         onCellSelect : function(rowid, index, contents, event){
         	setSelectedData(rowid);
