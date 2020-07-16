@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.nonpayment.nonpayment.DunningExemptionMapper">
+
+<!-- 조치제외정보 조회 -->
+	<select id="dunningExemptionList" resultType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT A.SO_ID AS SO_ID
+				 , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM
+				 , A.CTRT_ID
+				 , B.SVC_TEL_NO
+				 , A.CUST_ID
+				 , C.CUST_NM
+				 , A.PYM_CUST_ID
+				 , A.PYM_ACNT_ID
+				 , A.UPYM_MNG_TP AS UPYM_MNG_TP
+				 , (SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                         , TSYCO_CODE_MAST_NAME MNAME
+                         , TSYCO_CODE_DETAIL DETAIL
+                         , TSYCO_CODE_DETAIL_NAME NAME
+                     WHERE MAST.COMMON_GRP = DETAIL.COMMON_GRP
+                       AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+                       AND MNAME.LNG_TYP     = #{dunningInfo.lngTyp}
+                       AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+                       AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+                       AND NAME.LNG_TYP      = #{dunningInfo.lngTyp}
+                       AND MAST.COMMON_GRP   = 'BL00109'
+                       AND DETAIL.USE_YN     = 'Y'
+                       AND MAST.USE_YN       = 'Y'
+                       AND DETAIL.COMMON_CD = A.UPYM_MNG_TP) AS UPYM_MNG_TP_NM
+				 , A.EXCP_STRT_YYMMDD AS EXCP_STRT_YYMMDD
+				 , A.EXCP_END_YYMMDD AS EXCP_END_YYMMDD
+				 , A.UPYM_EXCP_RSN_CD AS UPYM_EXCP_RSN_CD
+				 ,(SELECT NAME.CODE_NM
+                     FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP = DETAIL.COMMON_GRP
+                      AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+                      AND MNAME.LNG_TYP     = #{dunningInfo.lngTyp}
+                      AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+                      AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+                      AND NAME.LNG_TYP      = #{dunningInfo.lngTyp}
+                      AND MAST.COMMON_GRP   = 'BL00113'
+                      AND DETAIL.USE_YN     = 'Y'
+                      AND MAST.USE_YN       = 'Y'
+                      AND DETAIL.COMMON_CD = A.UPYM_EXCP_RSN_CD) AS UPYM_EXCP_RSN_NM
+				 , A.EXCP_CT AS EXCP_CT
+				 , A.REG_ID
+				 , A.REG_DATE
+				 , A.CHG_ID
+				 , A.CHG_DATE
+              FROM TBLUP_UPYM_EXCP A
+				 , IFNBRM_CTRT_INFO B
+				 , IFNBRM_CUST_INFO C
+             WHERE 1 = 1
+               AND A.CTRT_ID = B.CTRT_ID
+               AND B.CUST_ID = C.CUST_ID
+               AND B.PYM_ACNT_ID = C.PYM_ACNT_ID
+               AND B.INACT_DTTM = '99991231235959'
+			<if test="dunningInfo.searchSoId != null and dunningInfo.searchSoId != ''">
+				AND A.SO_ID = #{dunningInfo.searchSoId}
+			</if>
+			<if test="dunningInfo.searchCustId != null and dunningInfo.searchCustId != ''">
+				AND A.CUST_ID = #{dunningInfo.searchCustId}
+			</if>
+			
+			<if test="dunningInfo.searchExcpStrtYymmddFrom != null and dunningInfo.searchExcpStrtYymmddFrom != ''">
+				AND A.EXCP_STRT_YYMMDD BETWEEN #{dunningInfo.searchExcpStrtYymmddFrom} AND #{dunningInfo.searchExcpStrtYymmddTo}
+			</if>
+			<if test="dunningInfo.searchExcpEndYymmddFrom != null and dunningInfo.searchExcpEndYymmddFrom != ''">
+				AND A.EXCP_END_YYMMDD BETWEEN #{dunningInfo.searchExcpEndYymmddFrom} AND #{dunningInfo.searchExcpEndYymmddTo}
+			</if>
+			<if test="dunningInfo.searchUpymMngTp != null and dunningInfo.searchUpymMngTp != ''">
+				AND A.UPYM_MNG_TP = #{dunningInfo.searchUpymMngTp}
+			</if>
+			<if test="dunningInfo.searchUpymExcpRsnCd != null and dunningInfo.searchUpymExcpRsnCd != ''">
+				AND A.UPYM_EXCP_RSN_CD = #{dunningInfo.searchUpymExcpRsnCd}
+			</if>
+             ORDER BY A.REG_DATE DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<!-- 조치제외정보 카운트 -->
+	<select id="dunningExemptionCount" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO" resultType="int">
+			SELECT COUNT(0)
+              FROM TBLUP_UPYM_EXCP
+             WHERE 1 = 1
+			<if test="dunningInfo.searchSoId != null and dunningInfo.searchSoId != ''">
+				AND SO_ID = #{dunningInfo.searchSoId}
+			</if>
+			<if test="dunningInfo.searchCustId != null and dunningInfo.searchCustId != ''">
+				AND CUST_ID = #{dunningInfo.searchCustId}
+			</if>
+			<if test="dunningInfo.searchExcpStrtYymmddFrom != null and dunningInfo.searchExcpStrtYymmddFrom != ''">
+				AND EXCP_STRT_YYMMDD BETWEEN #{dunningInfo.searchExcpStrtYymmddFrom} AND #{dunningInfo.searchExcpStrtYymmddTo}
+			</if>
+			<if test="dunningInfo.searchExcpEndYymmddFrom != null and dunningInfo.searchExcpEndYymmddFrom != ''">
+				AND EXCP_END_YYMMDD BETWEEN #{dunningInfo.searchExcpEndYymmddFrom} AND #{dunningInfo.searchExcpEndYymmddTo}
+			</if>
+			<if test="dunningInfo.searchUpymMngTp != null and dunningInfo.searchUpymMngTp != ''">
+				AND UPYM_MNG_TP = #{dunningInfo.searchUpymMngTp}
+			</if>
+			<if test="dunningInfo.searchUpymExcpRsnCd != null and dunningInfo.searchUpymExcpRsnCd != ''">
+				AND UPYM_EXCP_RSN_CD = #{dunningInfo.searchUpymExcpRsnCd}
+			</if>
+	</select>
+	
+	<!-- 조치제외  상세 정보 조회 -->
+	<select id="getDunningExemption" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO"  resultType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO">
+		SELECT A.SO_ID AS SO_ID
+			 , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM
+			 , A.CTRT_ID
+			 , B.SVC_TEL_NO
+			 , A.CUST_ID
+			 , C.CUST_NM
+			 , A.PYM_CUST_ID
+			 , A.PYM_ACNT_ID
+			 , A.UPYM_MNG_TP AS UPYM_MNG_TP
+			 , (SELECT NAME.CODE_NM
+			                  FROM TSYCO_CODE_MAST MAST
+			                     , TSYCO_CODE_MAST_NAME MNAME
+			                     , TSYCO_CODE_DETAIL DETAIL
+			                     , TSYCO_CODE_DETAIL_NAME NAME
+			                 WHERE MAST.COMMON_GRP = DETAIL.COMMON_GRP
+			                   AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+			                   AND MNAME.LNG_TYP     = #{dunningInfo.lngTyp}
+			                   AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+			                   AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+			                   AND NAME.LNG_TYP      = #{dunningInfo.lngTyp}
+			                   AND MAST.COMMON_GRP   = 'BL00109'
+			                   AND DETAIL.USE_YN     = 'Y'
+			                   AND MAST.USE_YN       = 'Y'
+			                   AND DETAIL.COMMON_CD = A.UPYM_MNG_TP) AS UPYM_MNG_TP_NM
+			 , A.EXCP_STRT_YYMMDD AS EXCP_STRT_YYMMDD
+			 , A.EXCP_END_YYMMDD AS EXCP_END_YYMMDD
+			 , A.UPYM_EXCP_RSN_CD AS UPYM_EXCP_RSN_CD
+			 ,(SELECT NAME.CODE_NM
+			                 FROM TSYCO_CODE_MAST MAST
+			                    , TSYCO_CODE_MAST_NAME MNAME
+			                    , TSYCO_CODE_DETAIL DETAIL
+			                    , TSYCO_CODE_DETAIL_NAME NAME
+			                WHERE MAST.COMMON_GRP = DETAIL.COMMON_GRP
+			                  AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+			                  AND MNAME.LNG_TYP     = #{dunningInfo.lngTyp}
+			                  AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+			                  AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+			                  AND NAME.LNG_TYP      = #{dunningInfo.lngTyp}
+			                  AND MAST.COMMON_GRP   = 'BL00113'
+			                  AND DETAIL.USE_YN     = 'Y'
+			                  AND MAST.USE_YN       = 'Y'
+			                  AND DETAIL.COMMON_CD = A.UPYM_EXCP_RSN_CD) AS UPYM_EXCP_RSN_NM
+			 , A.EXCP_CT AS EXCP_CT
+			 , A.REG_ID
+			 , A.REG_DATE
+			 , A.CHG_ID
+			 , A.CHG_DATE
+		  FROM TBLUP_UPYM_EXCP A
+			 , IFNBRM_CTRT_INFO B
+			 , IFNBRM_CUST_INFO C
+		 WHERE 1 = 1
+		   AND A.CTRT_ID = B.CTRT_ID
+           AND B.CUST_ID = C.CUST_ID
+           AND B.PYM_ACNT_ID = C.PYM_ACNT_ID
+           AND B.INACT_DTTM = '99991231235959'
+		   AND A.SO_ID = #{dunningInfo.soId,jdbcType=VARCHAR}
+		   AND A.CTRT_ID = #{dunningInfo.ctrtId,jdbcType=VARCHAR}
+		   AND A.UPYM_MNG_TP = #{dunningInfo.upymMngTp,jdbcType=VARCHAR}
+		   AND A.EXCP_STRT_YYMMDD = #{dunningInfo.excpStrtYymmdd,jdbcType=VARCHAR}
+		   AND A.EXCP_END_YYMMDD = #{dunningInfo.excpEndYymmdd,jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 조치제외정보 INSERT -->
+	<insert id="insertDunningExemption" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO">
+		INSERT INTO TBLUP_UPYM_EXCP
+		(
+			CTRT_ID
+		  , UPYM_MNG_TP        /*미납대응유형(BL00109)*/
+          , EXCP_STRT_YYMMDD
+          , EXCP_END_YYMMDD
+          , SO_ID
+          , CUST_ID
+          , PYM_CUST_ID
+          , PYM_ACNT_ID
+          , UPYM_EXCP_RSN_CD   /*미납조치제외사유코드(BL00113)*/
+          , EXCP_CT
+          , REG_ID
+          , REG_DATE
+          , CHG_ID
+          , CHG_DATE
+        ) VALUES (
+            #{dunningInfo.ctrtId,jdbcType=VARCHAR}
+          , #{dunningInfo.upymMngTp,jdbcType=VARCHAR}
+          , #{dunningInfo.excpStrtYymmdd,jdbcType=VARCHAR}
+          , #{dunningInfo.excpEndYymmdd,jdbcType=VARCHAR}
+          , #{dunningInfo.soId,jdbcType=VARCHAR}
+          , #{dunningInfo.custId,jdbcType=VARCHAR}
+          , #{dunningInfo.pymCustId,jdbcType=VARCHAR}
+          , #{dunningInfo.pymAcntId,jdbcType=VARCHAR}
+          , #{dunningInfo.upymExcpRsnCd,jdbcType=VARCHAR}
+          , #{dunningInfo.excpCt,jdbcType=VARCHAR}
+          , #{dunningInfo.regId,jdbcType=VARCHAR}
+          , #{dunningInfo.sysToDate,jdbcType=VARCHAR}
+          , #{dunningInfo.chgId,jdbcType=VARCHAR}
+          , #{dunningInfo.sysToDate,jdbcType=VARCHAR}
+        )
+	</insert>
+	
+	<!-- 조치제외정보 UPDATE -->
+	<update id="updateDunningExemption" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO">
+		UPDATE TBLUP_UPYM_EXCP SET
+			EXCP_CT = #{dunningInfo.excpCt,jdbcType=VARCHAR}
+          , CHG_ID = #{dunningInfo.chgId,jdbcType=VARCHAR}
+          , CHG_DATE = #{dunningInfo.sysToDate,jdbcType=VARCHAR}
+		 WHERE 1 = 1
+		   AND SO_ID = #{dunningInfo.soId,jdbcType=VARCHAR}
+		   AND CTRT_ID = #{dunningInfo.custId,jdbcType=VARCHAR}
+		   AND UPYM_MNG_TP = #{dunningInfo.upymMngTp,jdbcType=VARCHAR}
+		   AND EXCP_STRT_YYMMDD = #{dunningInfo.excpStrtYymmdd,jdbcType=VARCHAR}
+		   AND EXCP_END_YYMMDD = #{dunningInfo.excpEndYymmdd,jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 조치내역조회 UPDATE -->
+	<update id="updateDunningExemptionList" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO">
+		UPDATE TBLUP_UPYM_EXCP SET
+			EXCP_STRT_YYMMDD = #{dunningInfo.excpStrtYymmddNew,jdbcType=VARCHAR}
+		  , EXCP_END_YYMMDD = #{dunningInfo.excpEndYymmddNew,jdbcType=VARCHAR}
+          , CHG_ID = #{dunningInfo.chgId,jdbcType=VARCHAR}
+          , CHG_DATE = #{dunningInfo.sysToDate,jdbcType=VARCHAR}
+		 WHERE 1 = 1
+		   AND SO_ID = #{dunningInfo.soId,jdbcType=VARCHAR}
+		   AND CTRT_ID = #{dunningInfo.custId,jdbcType=VARCHAR}
+		   AND UPYM_MNG_TP = #{dunningInfo.upymMngTp,jdbcType=VARCHAR}
+		   AND EXCP_STRT_YYMMDD = #{dunningInfo.excpStrtYymmdd,jdbcType=VARCHAR}
+		   AND EXCP_END_YYMMDD = #{dunningInfo.excpEndYymmdd,jdbcType=VARCHAR}
+	</update>
+	
+	<!-- 조치내역조회 DELETE -->
+	<delete id="deleteDunningExemptionList" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningExemptionVO">
+		DELETE TBLUP_UPYM_EXCP
+		 WHERE 1 = 1
+		   AND SO_ID = #{dunningInfo.soId,jdbcType=VARCHAR}
+		   AND CTRT_ID = #{dunningInfo.custId,jdbcType=VARCHAR}
+		   AND UPYM_MNG_TP = #{dunningInfo.upymMngTp,jdbcType=VARCHAR}
+		   AND EXCP_STRT_YYMMDD = #{dunningInfo.excpStrtYymmdd,jdbcType=VARCHAR}
+		   AND EXCP_END_YYMMDD = #{dunningInfo.excpEndYymmdd,jdbcType=VARCHAR}
+	</delete>
+	
+</mapper>

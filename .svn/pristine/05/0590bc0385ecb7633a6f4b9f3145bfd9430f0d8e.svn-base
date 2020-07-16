@@ -1,0 +1,147 @@
+package com.ntels.ccbs.charge.controller.payment.payment;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.ntels.ccbs.charge.domain.payment.payment.ReceiptCancelVO;
+import com.ntels.ccbs.charge.service.payment.payment.ReceiptCancelService;
+import com.ntels.ccbs.system.service.common.service.CommonDataService;
+
+
+@Controller
+@RequestMapping(value = "/charge/payment/payment/receiptCancel")
+public class ReceiptCancelController {
+	
+	private static String URL = "charge/payment/payment/receiptCancel";
+	
+	/** the logger. */
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Autowired
+	private CommonDataService commonDataService;
+	
+	@Autowired
+	private ReceiptCancelService receiptCancelService;
+	
+	/**
+	 * 
+	 * <PRE>
+	 * 1. MethodName: receiptCancelList
+	 * 2. ClassName : ReceiptCancelController
+	 * 3. Comment   : 수납취소
+	 * 4. 작성자    : kih
+	 * 5. 작성일    : 2016. 7. 12. 오후 8:51:42
+	 * </PRE>
+	 *   @return String
+	 *   @param model
+	 *   @param ReceiptCancelVO
+	 *   @param request
+	 *   @return
+	 *   @throws Exception
+	 */
+	
+	@RequestMapping(value = "receiptCancelList", method = RequestMethod.POST)
+	public String receiptCancelList(Model model, ReceiptCancelVO receiptCancelVO, HttpServletRequest request) throws Exception {
+		
+		String lngTyp = (String)request.getSession().getAttribute("sessionLanguage");
+		
+		model.addAttribute("dateTp", commonDataService.getCommonCodeList("BL00122", lngTyp));	 //일자구분
+		model.addAttribute("paymentTp", commonDataService.getCommonCodeList("BL00067", lngTyp)); //입금구분
+		model.addAttribute("receiptTp", commonDataService.getCommonCodeList("BL00079", lngTyp)); //수납유형
+		
+		return URL + "/receiptCancelList";
+	}
+	
+	/**
+	 * 
+	 * <PRE>
+	 * 1. MethodName: recDtlListAction
+	 * 2. ClassName : ReceiptCancelController
+	 * 3. Comment   : 수납 내역 조회
+	 * 4. 작성자    : kih
+	 * 5. 작성일    : 2016. 7. 12. 오후 8:51:42
+	 * </PRE>
+	 *   @return void
+	 *   @param ReceiptCancelVO
+	 *   @param model
+	 *   @param request
+	 *   @throws Exception
+	 */
+	@RequestMapping(value = "recCnclListAction", method = RequestMethod.POST)
+	public void recStatisticsListAction(
+			ReceiptCancelVO receiptCancel
+	      , Model model
+	      , HttpServletRequest request
+		  ) throws Exception {
+		
+		int page = Integer.parseInt(request.getParameter("page"));
+        int perPageRow = Integer.parseInt(request.getParameter("rows"));
+
+		String lngTyp = request.getSession().getAttribute("sessionLanguage").toString();
+		receiptCancel.setLngTyp(lngTyp);
+		
+		int count = 0;
+		count = receiptCancelService.rcptListCnt(receiptCancel);
+		
+		List<ReceiptCancelVO> pymList = new ArrayList<ReceiptCancelVO>();
+		if (count > 0){
+			pymList = receiptCancelService.rcptList(receiptCancel, page, perPageRow);
+		}
+		
+		model.addAttribute("rows", pymList);	// 목록리스트
+		model.addAttribute("total", Math.ceil((double)count / (double)perPageRow)); // 페이지 사이즈
+		model.addAttribute("records", pymList.size()); //현화면의 리스트갯수		
+		model.addAttribute("page", page); 			//현재 페이지
+		model.addAttribute("perpage", perPageRow);
+	}
+	
+	@RequestMapping(value = "receiptCancelResultList", method = RequestMethod.POST)
+	public String receiptCancelResultList(Model model, ReceiptCancelVO receiptCancelVO, HttpServletRequest request) throws Exception {
+
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		model.addAttribute("dateTp", commonDataService.getCommonCodeList("BL00096", lng));	 //일자구분
+
+		
+		return URL + "/receiptCancelResultList";
+	}
+	
+	@RequestMapping(value = "receiptCancelResultListAction", method = RequestMethod.POST)
+	public void receiptCancelResultListAction(
+			ReceiptCancelVO receiptCancel
+	      , Model model
+	      , HttpServletRequest request
+		  ) throws Exception {
+		
+		int page = Integer.parseInt(request.getParameter("page"));
+        int perPageRow = Integer.parseInt(request.getParameter("rows"));
+
+		String lngTyp = request.getSession().getAttribute("sessionLanguage").toString();
+		receiptCancel.setLngTyp(lngTyp);
+		
+		int count = 0;
+		count = receiptCancelService.receiptCancelResultListCount(receiptCancel);
+		
+		List<ReceiptCancelVO> pymList = new ArrayList<ReceiptCancelVO>();
+		if (count > 0){
+			pymList = receiptCancelService.receiptCancelResultList(receiptCancel, page, perPageRow);
+		}
+		
+		model.addAttribute("rows", pymList);	// 목록리스트
+		model.addAttribute("total", Math.ceil((double)count / (double)perPageRow)); // 페이지 사이즈
+		model.addAttribute("records", pymList.size()); //현화면의 리스트갯수		
+		model.addAttribute("page", page); 			//현재 페이지
+		model.addAttribute("perpage", perPageRow);
+	}
+	
+	
+}

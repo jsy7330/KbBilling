@@ -1,0 +1,13 @@
+package com.ntels.ccbs.charge.service.payment.payment;
+
+import java.util.List;
+
+import com.ntels.ccbs.charge.domain.payment.advanceReceived.AdvanceReceivedVO;
+
+public interface AdvanceReceivedService {
+
+	public int getDepositMoneyCount(AdvanceReceivedVO advanceReceivedVO);
+	
+	public List<AdvanceReceivedVO> getDepositMoneyList(AdvanceReceivedVO advanceReceivedVO, int page, int perPage);
+	
+}

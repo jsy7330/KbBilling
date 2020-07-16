@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.appIf.mapper.common.AppLogMapper">
+	<!-- 연동로그기록 -->
+	<insert id="insertAppLog" parameterType="IfLogVO">
+	
+	    INSERT INTO TSYIF_REQUEST_LOG
+        (
+        	 SEQ
+            ,REMOTE_ADDR
+			,SERVER_NAME
+			,SERVER_PORT
+			,SESSION_ID
+			,REQ_PATH
+			,REQ_METHOD
+			,REQ_DATE
+			,RES_DATE
+			,SV_CODE
+			,OP_CODE
+			,CH_CODE
+			,USER_ID
+			,MSGCODE
+			,MESSAGE
+			,REQ_MSG
+			,RES_MSG
+        )
+        VALUES
+        (
+        	#{ifLog.seq}
+			,#{ifLog.remoteAddr}
+			,#{ifLog.serverName}
+			,#{ifLog.serverPort}
+			,#{ifLog.sessionId}
+			,#{ifLog.reqPath}
+			,#{ifLog.reqMethod}
+			,#{ifLog.reqDate} 
+			,#{ifLog.resDate}
+			,#{ifLog.svCode}
+			,#{ifLog.opCode}
+			,#{ifLog.chCode}
+			,#{ifLog.userId}
+			,#{ifLog.msgcode}
+			,#{ifLog.message}
+			,#{ifLog.reqMsg}
+			,#{ifLog.resMsg}
+        )    
+	</insert>
+	
+</mapper>

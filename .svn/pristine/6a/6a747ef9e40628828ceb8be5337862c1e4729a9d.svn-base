@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.distributor.distributorMgt.OrganizationRelHistMapper">
+
+
+	<select id="getOrganizationDetail" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationRelHistVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationRelHistVO">
+		
+		SELECT	B.SO_ID									/*사업ID*/
+				, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID=B.SO_ID)AS SO_NM	/*사업명*/
+				, B.ORG_ID								/*조직ID*/
+				, B.ORG_NM								/*조직명*/
+				, A.BUSI_TP_CD							/*사업자구분코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+							, TSYCO_CODE_DETAIL DETAIL
+							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationRelHistVO.lngTyp} 
+							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+							AND NAME.LNG_TYP      = #{organizationRelHistVO.lngTyp}
+							AND MAST.COMMON_GRP   ='DN00040'
+							AND DETAIL.COMMON_CD = A.BUSI_TP_CD
+   				) AS BUSI_TP_NM							/* 사업자구분코드명*/
+				, A.BOR_NO								/*사업자등록번호*/
+				, A.CORP_REG_NO							/*법인등록번호*/
+				, A.BUSI_TP								/*업종*/
+				, A.BUSI_CNDT							/*업태*/
+				, B.PRIV_TP_CD							/*자사구분코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+							, TSYCO_CODE_DETAIL DETAIL
+							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationRelHistVO.lngTyp} 
+							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+							AND NAME.LNG_TYP      = #{organizationRelHistVO.lngTyp}
+							AND MAST.COMMON_GRP   ='DN00044'
+							AND DETAIL.COMMON_CD = B.PRIV_TP_CD
+   				) AS PRIV_TP_NM							/* 자사구분코드명*/
+				, A.REP_NM								/*대표자명*/
+				, A.REP_RNO								/*대표자주민번호*/
+				, A.EML									/*이메일*/
+				, A.HMPG								/*홈페이지*/
+				, A.TEL_NO								/*전화번호*/
+				, A.FAX_NO								/*팩스번호*/
+				, B.APPY_STRT_DT						/*적용시작일*/
+				, B.APPY_END_DT							/*적용종료일*/
+				, B.TP_CD								/*유형코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationRelHistVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationRelHistVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00038'
+							AND DETAIL.COMMON_CD = B.TP_CD
+	       		) AS TP_NM            					/* 유형코드명*/
+				, B.TP_DTL_CD							/*유형상세코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationRelHistVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationRelHistVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00039'
+							AND DETAIL.COMMON_CD = B.TP_DTL_CD
+	       		) AS TP_DTL_NM    						/* 유형상세코드명*/
+				, B.INQ_PERM_CD							/*조회권한코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationRelHistVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationRelHistVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00051'
+							AND DETAIL.COMMON_CD = B.INQ_PERM_CD
+	       		) AS INQ_PERM_NM    					/* 조회권한코드명*/
+				, B.ORG_LV_CD							/*조직레벨코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationRelHistVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationRelHistVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00052'
+							AND DETAIL.COMMON_CD = B.ORG_LV_CD
+	       		) AS ORG_LV_NM    						/* 조직레벨코드명*/
+				, B.AR_CL_CD							/*지역분류코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationRelHistVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationRelHistVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00100'
+							AND DETAIL.COMMON_CD = B.AR_CL_CD
+	       		) AS AR_CL_NM    						/* 지역분류코드명	*/
+				, B.AR_TP_CD							/*지역구분코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationRelHistVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationRelHistVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00101'
+							AND DETAIL.COMMON_CD = B.AR_TP_CD
+	       		) AS AR_TP_NM    /* 지역구분코드명*/
+	       		, ( 
+	       			SELECT REL_TP_CD 
+	       			FROM TDNDI_ORG_REL_HIST 
+	       			WHERE ORG_ID = B.ORG_ID 
+	       				AND ORG_REL_ORD = (
+	       									SELECT MAX(ORG_REL_ORD) AS ORD 
+	       									FROM TDNDI_ORG_REL_HIST 
+	       									WHERE ORG_ID = B.ORG_ID
+	       								) 
+	       		) AS REL_TP_CD  /* 관계유형코드*/
+		FROM	TDNDI_ORG_INFO B											/*조직정보*/
+				LEFT OUTER JOIN TDNDI_DIST_INFO A ON B.ORG_ID = A.ORG_ID	/*유통정보*/
+		WHERE	1=1
+				AND B.ORG_ID = #{organizationRelHistVO.orgId}/*조직ID*/
+                 
+                 
+	</select>
+	
+	
+	<!-- update  TDNDI_ORG_REL_HIST 적용종료일 업데이트 -->
+	<update id="updateTdndiOrgRelHist" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		UPDATE	TDNDI_ORG_REL_HIST				/* 조직관계이력*/
+			SET	APPY_END_DT		= #{organizationVO.appyEndDt}		/* 적용종료일(입력된 적용시작일-1일)*/
+			<if test="organizationVO.partOrgId != null and organizationVO.partOrgId != ''">
+				, PART_ORG_ID   = #{organizationVO.partOrgId}         /* 상대조직ID*/
+			</if>	
+				, CHG_DATE		= #{organizationVO.chgDate}		/* 수정일*/
+				, CHGR_ID		= #{organizationVO.chgrId}		/* 수정자ID*/
+		WHERE	ORG_ID			= #{organizationVO.orgId}			/* 조직ID*/
+			AND ORG_REL_ORD		= ( SELECT A.ORD FROM (SELECT MAX(ORG_REL_ORD) AS ORD 
+									FROM TDNDI_ORG_REL_HIST 
+									WHERE ORG_ID = #{organizationVO.orgId} ) A)		/* 조직관계순번*/
+	</update>
+	
+	
+	<select id="getOrganizationDetail2" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		SELECT
+				A.SO_ID                	/* 사업ID*/
+		       	, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+		       	, A.ORG_ID               /* 조직ID*/
+	       		, A.ORG_NM               /* 조직명*/
+	       		, A.TP_CD                /* 유형코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00038'
+							AND DETAIL.COMMON_CD = A.TP_CD
+	       		) AS TP_NM            /* 유형코드명*/
+	       		, A.TP_DTL_CD         /* 유형상세코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00039'
+							AND DETAIL.COMMON_CD = A.TP_DTL_CD
+	       		) AS TP_DTL_NM    	/* 유형상세코드명*/
+	       		, A.ORG_LV_CD            /* 조직레벨코드*/
+		       	, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00052'
+							AND DETAIL.COMMON_CD = A.ORG_LV_CD
+	       		) AS ORG_LV_NM    		/* 조직레벨코드명*/
+		       	, A.APPY_STRT_DT         /* 적용시작일*/
+		       	, A.APPY_END_DT          /* 적용종료일*/
+		       	, ( 
+	       			SELECT REL_TP_CD 
+	       			FROM TDNDI_ORG_REL_HIST 
+	       			WHERE ORG_ID = A.ORG_ID 
+	       				AND ORG_REL_ORD = (
+	       									SELECT MAX(ORG_REL_ORD) AS ORD 
+	       									FROM TDNDI_ORG_REL_HIST 
+	       									WHERE ORG_ID = A.ORG_ID
+	       								) 
+	       		) AS REL_TP_CD  /* 관계유형코드*/
+		FROM TSYCO_ORG_INFO A
+		WHERE	1=1
+			AND A.ORG_ID =  ( SELECT UPP_ORG_ID FROM TSYCO_ORG_INFO WHERE ORG_ID =  #{organizationVO.orgId} )
+	</select>
+	
+	<!-- update  TDNDI_ORG_REL_HIST 수정 업데이트 -->
+	<update id="updateTdndiOrgRelHist2" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		UPDATE	TDNDI_ORG_REL_HIST				/* 조직관계이력*/
+			SET	APPY_END_DT		= #{organizationVO.appyEndDt}		/* 적용종료일*/
+				, APPY_STRT_DT	= #{organizationVO.appyStrtDt}		/* 적용시작일*/
+				, PART_ORG_ID 	= #{organizationVO.partOrgId}		/* 상대조직ID*/
+				, CHG_DATE		= #{organizationVO.chgDate}		/* 수정일*/
+				, CHGR_ID		= #{organizationVO.chgrId}		/* 수정자ID*/
+		WHERE	ORG_ID			= #{organizationVO.orgId}			/* 조직ID*/
+			AND ORG_REL_ORD		= ( SELECT ORD FROM (SELECT MAX(ORG_REL_ORD) AS ORD 
+									FROM TDNDI_ORG_REL_HIST 
+									WHERE ORG_ID = #{organizationVO.orgId}) A)		/* 조직관계순번*/
+	</update>
+	
+
+</mapper>

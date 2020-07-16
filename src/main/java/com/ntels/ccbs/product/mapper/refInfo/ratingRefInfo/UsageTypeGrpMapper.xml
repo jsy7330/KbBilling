@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Ruleper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.UsageTypeGrpMapper">
+ 
+	<select id="getUsageTypeList" resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeGrp"
+		 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeGrp">
+		 <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        
+			SELECT USG_TYP
+				  ,USG_TYP_NM
+				  ,EFF_DT
+			  FROM TOP_USG_TYP
+			 WHERE 1=1
+		  MINUS
+		    SELECT B.USG_TYP
+		          ,B.USG_TYP_NM
+		          ,B.EFF_DT
+		      FROM TOP_USG_TYP_GRP A
+		          ,TOP_USG_TYP B
+		     WHERE 1=1
+		       AND A.USG_TYP = B.USG_TYP
+		       AND USG_TYP_GRP_CD = #{usageTypeGrp.usgTypGrpCd}
+        
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+    
+    <select id="getUsageTypeGrpList" resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeGrp"
+		 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeGrp">
+		 <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        
+			SELECT B.USG_TYP
+			      ,B.USG_TYP_NM
+			      ,B.EFF_DT
+			      ,A.USG_TYP_GRP_CD
+			      ,A.CHRG_CD
+		      FROM TOP_USG_TYP_GRP A
+		          ,TOP_USG_TYP B
+		     WHERE 1=1
+		       AND A.USG_TYP = B.USG_TYP
+		       AND A.USG_TYP_GRP_CD = #{usageTypeGrp.usgTypGrpCd}
+        
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+    
+    <select id="getUsageTypeGrpListCount" resultType="int"
+		 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeGrp">
+      
+			SELECT COUNT(*)
+			  FROM (
+			  		SELECT *
+			  		  FROM TOP_USG_TYP_GRP
+			  		 WHERE 1=1
+			  		   AND USG_TYP = #{usageTypeGrp.insertUsgTyp}
+			  		   AND CHRG_CD = #{usageTypeGrp.insertChrgCd}
+			  		   AND USG_TYP_GRP_CD = #{usageTypeGrp.insertUsgTypGrpCd}
+			  		   AND EFF_DT = #{usageTypeGrp.insertEffDt}
+			  )
+       
+    </select>
+ 
+ 	<insert id="addUsageTypeGrp"
+ 		parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeGrp">
+ 		
+ 		 INSERT INTO TOP_USG_TYP_GRP (
+ 		        USG_TYP
+ 		      , CHRG_CD
+ 		      , USG_TYP_GRP_CD
+ 		      , EFF_DT
+ 		      , EXP_DT
+ 		      , LMT_INCLUDE
+ 		      , LAST_MOD_BY
+ 		      , LAST_MOD_DT
+ 		    ) VALUES (
+ 		        #{usageTypeGrp.insertUsgTyp}
+ 		      , #{usageTypeGrp.insertChrgCd}
+ 		      , #{usageTypeGrp.insertUsgTypGrpCd}
+ 		      , #{usageTypeGrp.insertEffDt}
+ 		      , #{usageTypeGrp.insertExpDt}
+ 		      , #{usageTypeGrp.insertLmtInclude}
+ 		      , #{usageTypeGrp.userId}
+ 		      , #{usageTypeGrp.sysToDate}
+ 		    )
+ 		
+ 	</insert>
+ 	
+	<delete id="delUsageTypeGrp"
+		parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeGrp">
+ 		
+ 		 DELETE
+ 		   FROM TOP_USG_TYP_GRP
+ 		  WHERE 1=1
+  		    AND USG_TYP = #{usageTypeGrp.delUsgTyp}
+  		    AND CHRG_CD = #{usageTypeGrp.delChrgCd}
+  		    AND USG_TYP_GRP_CD = #{usageTypeGrp.delUsgTypGrpCd}
+  		    AND EFF_DT = #{usageTypeGrp.delEffDt}
+ 		  
+ 		  		
+ 	</delete>
+
+</mapper>

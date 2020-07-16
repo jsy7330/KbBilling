@@ -1,0 +1,492 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
+<script type="text/javascript">
+$(document).ready(function() {
+	$("select").selectmenu()
+	.selectmenu( "option", "width", "100%" );
+	
+	$("#addAllowanceRateFctrCd, #addAllowanceQtyFctrCd, #addAllowanceCrncyFctrCd, #addAllowanceAlwnceCd").selectmenu("disable");	
+	
+	$("#addAllowanceRateRefFl").selectmenu({ //차후
+		change: function( event, ui ) {	
+			if($(this).val() == '0') {
+				$("#addAllowanceRateVal").val("1");
+				$("#addAllowanceRateVal").removeClass('not-active'); 
+				$("#addAllowanceRateVal").removeAttr('disabled', true);	
+				$("#addAllowanceRateFctrCd").selectmenu("disable");
+			} else if ($(this).val() == '1') {
+				$("#addAllowanceRateVal").val("");
+				$("#addAllowanceRateVal").addClass('not-active'); 
+				$("#addAllowanceRateVal").attr('disabled', true);	
+				$("#addAllowanceRateFctrCd").selectmenu("enable");
+			}	
+		}
+	});
+			
+	$("#addAllowanceQtyRefFl").selectmenu({ //차후
+		change: function( event, ui ) {	
+			if($(this).val() == '0') {
+				$("#addAllowanceQty").val("1");
+				$("#addAllowanceQty").removeClass('not-active'); 
+				$("#addAllowanceQty").removeAttr('disabled', true);	
+				$("#addAllowanceQtyFctrCd").selectmenu("disable");
+			} else if ($(this).val() == '1') {
+				$("#addAllowanceQty").val("");
+				$("#addAllowanceQty").addClass('not-active'); 
+				$("#addAllowanceQty").attr('disabled', true);	
+				$("#addAllowanceQtyFctrCd").selectmenu("enable");
+			}	
+		}
+	});	
+	
+	$("#addAllowanceCrncyRefFl").selectmenu({ //차후
+		change: function( event, ui ) {	
+			if($(this).val() == '0') {
+				$("#addAllowanceCrncyCd").selectmenu("enable");
+				$("#addAllowanceCrncyFctrCd").selectmenu("disable");
+			} else if ($(this).val() == '1') {
+				$("#addAllowanceCrncyCd").selectmenu("disable");
+				$("#addAllowanceCrncyFctrCd").selectmenu("enable");
+			}	
+		}
+	});		
+	
+ 	$("#addAllowanceBtnInsert").click(function() {
+		insertData();            
+	});	
+	
+	$(document).on("keyup", "input:text[numberOnly]", function() {$(this).val( $(this).val().replace(/[^0-9]/gi,"") );}); 
+	
+});	
+
+function insertData(){
+	
+	var param = checkValidation();
+			
+		$.ajax({
+			url : 'addRate.json',
+			type : 'POST',
+			async: false,
+			data : param,
+			success : function(data) {
+				
+				if(data.result != "0" && data.result != "-1"){
+					alert('<spring:message code="MSG.M09.MSG00005" />');	//저장되었습니다.
+					$("#allowanceListGrid").trigger("reloadGrid");
+					//$("#tree").dynatree("getTree").reload();					
+					$("#addAllowanceBtnClose").trigger('click');
+				} else if (data.result == "-1") {
+					alert('<spring:message code="MSG.M09.MSG00051" />');
+					
+				}
+			},
+		    error: function(request,status,error){
+		    	alert("code:"+request.status+"\n"+"message:"+request.responseText+"\n"+"error:"+error);
+		    },
+			complete : function() {
+			}
+		});
+}
+
+
+function checkValidation(){
+	var param = new Object();
+
+	param.fctrVal1= $("#fctrVal1").val();
+	param.fctrVal2= $("#fctrVal2").val();
+	param.fctrVal3= $("#fctrVal3").val();
+	param.fctrVal4= $("#fctrVal4").val();
+	param.fctrVal5= $("#fctrVal5").val();
+	param.fctrVal6= $("#fctrVal6").val();	
+	param.fctrVal7= $("#fctrVal7").val();
+	param.fctrVal8= $("#fctrVal8").val();
+	param.fctrVal9= $("#fctrVal9").val();
+
+	param.rateItmCd = $("#addAllowanceRateItmCd").val();
+	param.rateRefFl = $("#addAllowanceRateRefFl").val();
+
+	if($("#addAllowanceRateVal").val() == "" || $("#addAllowanceRateVal").val() == null){
+		param.rateVal = "0";
+	}else{
+		param.rateVal = $("#addAllowanceRateVal").val();
+	}
+
+	//param.rateVal = $("#addAllowanceRateVal").val();
+
+
+	if ($("#addAllowanceRateFctrCd").val() != "[]") {
+		param.rateFctrCd = $("#addAllowanceRateFctrCd").val();
+	}
+
+	param.qtyRefFl = $("#addAllowanceQtyRefFl").val(); 
+	
+	if($("#addAllowanceQty").val() == "" || $("#addAllowanceQty").val() == null){
+		param.qty = "0";
+	}else{
+		param.qty = $("#addAllowanceQty").val();
+	}
+	
+	//param.qty = $("#addAllowanceQty").val();
+
+
+
+	if ($("#addAllowanceQtyFctrCd").val() != "[]") {
+		param.qtyFctrCd = $("#addAllowanceQtyFctrCd").val();
+	}	
+	
+	param.crncyRefFl = $("#addAllowanceCrncyRefFl").val();
+	param.crncyCd = $("#addAllowanceCrncyCd").val();
+	if ($("#addAllowanceCrncyFctrCd").val() != "[]") {
+		param.crncyFctrCd = $("#addAllowanceCrncyFctrCd").val();
+	}			
+	
+		
+	return param;
+	
+}
+
+</script>
+	
+<!-- title -->
+<div class="layer_top">
+	<div class="title"><spring:message code="LAB.M01.LAB00131"/></div>
+	<a href="#" class="close">Close</a>
+</div>
+<!--// title -->
+<!-- center -->
+<div class="layer_box">
+	<div class="ly_btn_box">
+		<div class="fl">
+			<h4 class="ly_title"><spring:message code="LAB.M01.LAB00131"/><!-- 과금요율등록 --></h4>
+		</div>
+	</div>
+
+	<table class="writeview">
+
+		<colgroup>
+			<col style="width:15%;">
+			<col style="width:20%;">
+			<col style="width:10%;">
+			<col style="width:20%;">
+			<col style="width:15%;">
+			<col style="width:20%;">
+			
+		</colgroup>
+		<thead>
+		 	<tr>
+				<th>
+					<c:if test="${!empty fctrList1}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${1 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>	
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList1}">
+							<c:if test="${1 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVal1" name="fctrVal1">
+								<c:forEach items="${fctrList1}" var="fctrList1" varStatus="status">
+								<option value="${fctrList1.commonCd}">${fctrList1.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>
+				<c:if test="${empty fctrList1}">*</c:if>						
+				</td>   
+
+				<th>
+					<c:if test="${!empty fctrList2}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${2 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList2}">
+							<c:if test="${2 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVal2" name="fctrVal2">
+								<c:forEach items="${fctrList2}" var="fctrList2" varStatus="status">
+								<option value="${fctrList2.commonCd}">${fctrList2.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>			
+				<c:if test="${empty fctrList2}">*</c:if>						
+				</td>   	
+				
+				<th>
+					<c:if test="${!empty fctrList3}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${3 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>	
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList3}">
+							<c:if test="${3 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVal3" name="fctrVal3">
+								<c:forEach items="${fctrList3}" var="fctrList3" varStatus="status">
+								<option value="${fctrList3.commonCd}">${fctrList3.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>	
+				<c:if test="${empty fctrList3}">*</c:if>				
+				</td>   				
+			</tr>
+
+		 	<tr>
+				<th>
+					<c:if test="${!empty fctrList4}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${4 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>	
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList4}">
+							<c:if test="${4 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVal4" name="fctrVal4">
+								<c:forEach items="${fctrList4}" var="fctrList4" varStatus="status">
+								<option value="${fctrList4.commonCd}">${fctrList4.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>	
+					<c:if test="${empty fctrList4}">*</c:if>						
+				</td>   
+				<th>
+					<c:if test="${!empty fctrList5}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${5 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList5}">
+							<c:if test="${5 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVal5" name="fctrVal5">
+								<c:forEach items="${fctrList5}" var="fctrList5" varStatus="status">
+								<option value="${fctrList5.commonCd}">${fctrList5.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>		
+				<c:if test="${empty fctrList5}">*</c:if>						
+				</td>   	
+				
+				<th>
+					<c:if test="${!empty fctrList6}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${6 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>	
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList6}">
+							<c:if test="${6 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVal6" name="fctrVal6">
+								<c:forEach items="${fctrList6}" var="fctrList6" varStatus="status">
+								<option value="${fctrList6.commonCd}">${fctrList6.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>			
+				<c:if test="${empty fctrList6}">*</c:if>						
+				</td>   				
+			</tr>
+
+
+		 	<tr>
+				<th>
+					<c:if test="${!empty fctrList7}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${7 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>	
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList7}">
+							<c:if test="${7 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVal7" name="fctrVal7">
+								<c:forEach items="${fctrList7}" var="fctrList7" varStatus="status">
+								<option value="${fctrList7.commonCd}">${fctrList7.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>		
+				<c:if test="${empty fctrList7}">*</c:if>						
+				</td>   
+				<th>
+					<c:if test="${!empty fctrList8}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${8 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList8}">
+							<c:if test="${8 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVa8" name="fctrVal8">
+								<c:forEach items="${fctrList8}" var="fctrList8" varStatus="status">
+								<option value="${fctrList8.commonCd}">${fctrList8.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>	
+				<c:if test="${empty fctrList8}">*</c:if>						
+				</td>   	
+				
+				<th>
+					<c:if test="${!empty fctrList9}">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<c:if test="${9 eq fctr.fctrNo}"> ${fctr.fctrNm}</c:if>
+						</c:forEach>
+					</c:if>	
+				</th>
+	            <td>
+					<c:forEach items="${fctr}" var="fctr" varStatus="status">
+						<c:if test="${!empty fctrList9}">
+							<c:if test="${9 eq fctr.fctrNo}">
+								<select class="w100p" id="fctrVal9" name="fctrVal9">
+								<c:forEach items="${fctrList9}" var="fctrList9" varStatus="status">
+								<option value="${fctrList9.commonCd}">${fctrList9.commonCdNm}</option>
+								</c:forEach>
+							</select>     
+							</c:if>	
+						</c:if>	
+					</c:forEach>		
+				<c:if test="${empty fctrList9}">*</c:if>						
+				</td>   				
+			</tr>
+
+
+
+
+		 	<tr>
+				<th>
+					<spring:message code="LAB.M03.LAB00011"/><!-- 단가참조여부 -->
+				</th>
+	            <td>
+					<select class="w100p" id="addAllowanceRateRefFl" name="addAllowanceRateRefFl">
+						<c:forEach items="${rateRefFl}" var="rateRefFl" varStatus="status">
+							<option value="${rateRefFl.commonCd}">${rateRefFl.commonCdNm}</option>
+						</c:forEach>
+					</select>                                            
+				</td>
+				<th>
+					<spring:message code="LAB.M03.LAB00006"/><!-- 단가 -->
+				</th>
+				<td>
+	       			<input type="text" id="addAllowanceRateVal" name="addAllowanceRateVal" value="1" class="w100p" numberOnly>                                            
+	     		</td>
+				<th>
+					<spring:message code="LAB.M03.LAB00012"/><!-- 단가참조요소 -->
+				</th>
+	            <td>
+					<select class="w100p" id="addAllowanceRateFctrCd" name="addAllowanceRateFctrCd">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<option value="${fctr.fctrCd}">${fctr.fctrNm}</option>
+						</c:forEach>
+					</select>                                            
+				</td>	     		                                          							 	
+		 	</tr>
+		 	<tr>
+				<th>
+					<spring:message code="LAB.M07.LAB00248"/><!-- 수량참조여부 -->
+				</th>
+	            <td>
+					<select class="w100p" id="addAllowanceQtyRefFl" name="addAllowanceQtyRefFl">
+						<c:forEach items="${qtyRefFl}" var="qtyRefFl" varStatus="status">
+							<option value="${qtyRefFl.commonCd}">${qtyRefFl.commonCdNm}</option>
+						</c:forEach>
+					</select>                                            
+				</td>
+				<th>
+					<spring:message code="LAB.M07.LAB00247"/><!-- 수량 -->
+				</th>
+				<td>
+	       			<input type="text" id="addAllowanceQty" name="addAllowanceQty" value="1" class="w100p" numberOnly>                                            
+	     		</td>
+				<th>
+					<spring:message code="LAB.M07.LAB00249"/><!-- 수량참조요소 -->
+				</th>
+	            <td>
+					<select class="w100p" id="addAllowanceQtyFctrCd" name="addAllowanceQtyFctrCd">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<option value="${fctr.fctrCd}">${fctr.fctrNm}</option>
+						</c:forEach>
+					</select>                                            
+				</td>	     		                                          							 	
+		 	</tr>
+		 	<tr>
+				<th>
+					<spring:message code="LAB.M12.LAB00003"/><!-- 통화참조여부 -->
+				</th>
+	            <td>
+					<select class="w100p" id="addAllowanceCrncyRefFl" name="addAllowanceCrncyRefFl">
+						<c:forEach items="${crncyRefFl}" var="crncyRefFl" varStatus="status">
+							<option value="${crncyRefFl.commonCd}">${crncyRefFl.commonCdNm}</option>
+						</c:forEach>
+					</select>                                            
+				</td>
+				<th>
+					<spring:message code="LAB.M12.LAB00005"/><!-- 통화코드 -->
+				</th>
+				<td>
+					<select class="w100p" id="addAllowanceCrncyCd" name="addAllowanceCrncyCd">
+						<c:forEach items="${crncyCd}" var="crncyCd" varStatus="status">
+							<option value="${crncyCd.commonCd}">${crncyCd.commonCdNm}</option>
+						</c:forEach>
+					</select>                                            
+	     		</td>
+				<th>
+					<spring:message code="LAB.M12.LAB00004"/><!-- 통화참조요소 -->
+				</th>
+	            <td>
+					<select class="w100p" id="addAllowanceCrncyFctrCd" name="addAllowanceCrncyFctrCd">
+						<c:forEach items="${fctr}" var="fctr" varStatus="status">
+							<option value="${fctr.fctrCd}">${fctr.fctrNm}</option>
+						</c:forEach>
+					</select>                                            
+				</td>	     		                                          							 	
+		 	</tr>
+		 	<tr>
+				<th>
+					<spring:message code="LAB.M01.LAB00085"/><!-- 공제코드 -->
+				</th>
+	            <td colspan="3">
+					<select class="w100p" id="addAllowanceAlwnceCd" name="addAllowanceAlwnceCd">
+					</select>                                            
+				</td>	     		                                          							 	
+		 	</tr>		 			 			 					 		
+		</thead>
+	</table>
+</div>
+<!--// center -->
+<div class="btn_box">
+	<a class="blue-btn" href="#" id="addAllowanceBtnInsert"><span class="confirm_icon"><spring:message code="LAB.M09.LAB00048" /></span></a>
+	<a class="grey-btn close" href="#" id="addAllowanceBtnClose"><span class="cancel_icon"><spring:message code="LAB.M03.LAB00027" /></span></a>
+</div>
+
+<input id="addAllowanceRateItmCd" type='text' value="${productDevMgt.rateItmCd}"  hidden />

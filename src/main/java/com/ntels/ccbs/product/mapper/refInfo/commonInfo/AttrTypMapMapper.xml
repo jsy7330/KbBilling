@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.refInfo.commonInfo.AttrTypMapMapper">
+	<select id="list" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.AttrTypMap" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.AttrTypMap">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT A.ATTR_TYP,
+			       (
+					SELECT NAME.CODE_NM
+					FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+						, TSYCO_CODE_DETAIL DETAIL
+						, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{attrTypMap.lngTyp}
+						AND DETAIL.COMMON_GRP=NAME.COMMON_GRP
+						AND DETAIL.COMMON_CD=NAME.COMMON_CD
+						AND NAME.LNG_TYP=#{attrTypMap.lngTyp}
+						AND MAST.COMMON_GRP='PP00017'
+						AND DETAIL.COMMON_CD=A.ATTR_TYP
+						AND DETAIL.USE_YN='Y'
+						AND MAST.USE_YN='Y'			        
+			        ) ATTR_TYP_NM,
+			       A.ATTR_CD,
+			       B.ATTR_NM,
+			       A.INACT_DT,
+			       A.ACT_DT,
+			       A.CHG_DATE
+			FROM   TPMBI_ATTR_TYP_MAP A,
+			       TPMBI_ATTR B
+			WHERE  B.ATTR_CD     = A.ATTR_CD
+			AND    B.MSTR_FL     = '1'      
+			<if test="attrTypMap.searchAttrCd != null and attrTypMap.searchAttrCd != ''">
+			AND A.ATTR_CD =  '${attrTypMap.searchAttrCd}'
+			</if>
+			<if test="attrTypMap.searchAttrTyp != null and attrTypMap.searchAttrTyp != ''">
+			AND A.ATTR_TYP =  '${attrTypMap.searchAttrTyp}'
+			</if>
+			AND    A.MSTR_FL     = '1'
+			AND    A.INACT_DT >= #{attrTypMap.currentDay}   
+			ORDER BY A.ATTR_TYP, B.ATTR_NM ASC
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<select id="count" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.AttrTypMap"  resultType="int">
+		SELECT COUNT(0) AS TOTAL 
+			FROM   TPMBI_ATTR_TYP_MAP A,
+			       TPMBI_ATTR B
+			WHERE  B.ATTR_CD     = A.ATTR_CD
+			AND    B.MSTR_FL     = '1'      
+			<if test="attrTypMap.attrCd != null and attrTypMap.attrCd != ''">
+			AND A.ATTR_CD =  '${attrTypMap.attr_cd}'
+			</if>
+			<if test="attrTypMap.attrTyp != null and attrTypMap.attrTyp != ''">
+			AND A.ATTR_TYP =  '${attrTypMap.attr_typ}'
+			</if>
+			AND    A.MSTR_FL     = '1'
+			AND    A.INACT_DT >= #{attrTypMap.currentDay}
+			ORDER BY A.ATTR_TYP, B.ATTR_NM ASC
+	</select>
+	<select id="attrListAction" resultType="hashmap">			
+		SELECT  TA.ATTR_CD ,
+		        TA.ATTR_NM ,
+		        TA.ACT_DT ,
+		        TA.INACT_DT
+		FROM    TPMBI_ATTR TA
+		WHERE   TA.MSTR_FL = '1'
+		AND     TA.INACT_DT >=  #{attrTypMap.currentDay}
+     </select>
+	<select id="list2" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.AttrTypMap" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.AttrTypMap">	
+		SELECT  TA.ATTR_CD ,
+		        TA.ATTR_NM ,
+		        TA.INACT_DT ,
+		        TA.ACT_DT
+		FROM    TPMBI_ATTR TA
+		WHERE   TA.MSTR_FL = '1'
+		AND     TA.INACT_DT >=  #{attrTypMap.currentDay}
+		       AND ATTR_CD NOT IN ( SELECT TATM.ATTR_CD
+		                          FROM   TPMBI_ATTR_TYP_MAP TATM
+		                          WHERE TATM.MSTR_FL     = '1'
+		                          <if test="attrTypMap.searchAttrTyp != null and attrTypMap.searchAttrTyp != ''">
+		                          AND 	 TATM.ATTR_TYP    = '${attrTypMap.searchAttrTyp}'
+								  </if>
+		                          AND    TATM.INACT_DT >=  #{attrTypMap.currentDay} 
+		)
+     </select>  
+     <select id="count2" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.AttrTypMap"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM TPMBI_ATTR TA
+		WHERE TA.MSTR_FL = '1'
+		AND TA.INACT_DT >=  #{attrTypMap.currentDay}
+		AND ATTR_CD NOT IN ( 
+			SELECT 
+				TATM.ATTR_CD
+		    FROM   TPMBI_ATTR_TYP_MAP TATM
+		    WHERE  TATM.MSTR_FL = '1'
+           		<if test="attrTypMap.searchAttrTyp != null and attrTypMap.searchAttrTyp != ''">
+				AND TATM.ATTR_TYP    = '${attrTypMap.attrTyp}'
+				</if>
+                 AND TATM.INACT_DT >=  #{attrTypMap.currentDay} 
+        )
+	</select>
+	<select id="attrCnt" resultType="int">
+			SELECT  COUNT(ATTR_CD)
+			FROM    TPMBI_ATTR_TYP_MAP
+			WHERE   ATTR_TYP    = #{attrTyp}
+			AND     ATTR_CD     = #{attrCd}
+			AND     MSTR_FL     = '1'
+			AND    INACT_DT >= #{currentDay}
+     </select>
+    <select id="attrDate" resultType="hashmap">	     
+          SELECT ATTR_CD,
+               MAX(INACT_DT) INACT_DT,
+               MIN(ACT_DT)  ACT_DT
+        FROM TPMBI_ATTR
+        WHERE ATTR_CD = #{attrCd}
+        	AND MSTR_FL = '1'
+        GROUP BY ATTR_CD   
+    </select>      
+    
+  	<insert id="insert" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute">   
+	    	INSERT INTO TPMBI_ATTR_TYP_MAP
+	    	( ATTR_TYP,
+	    	  ATTR_CD,
+			  ACT_DT,
+			  INACT_DT,
+			  MSTR_FL,
+	          REGR_ID,
+	          CHGR_ID,
+	          REG_DATE,
+	          CHG_DATE
+	         ) VALUES (
+	    	  #{attrTyp},
+	    	  #{attrCd},
+	    	  #{actDt},
+			  #{inactDt},
+			  '1',
+			  #{userId},
+			  #{userId},
+		      <choose>                          
+  				<when test="'${dbms.kind}' == 'ORACLE'">                       
+                 SYSDATE,
+                 SYSDATE         
+				</when>                          
+				<when test="'${dbms.kind}' == 'MYSQL'">                         
+                 NOW(),
+                 NOW()         
+                </when>
+       		</choose>
+	         )
+   </insert> 	
+   
+	<select id="getAttrTypMap" parameterType="String" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.AttrTypMap">
+		SELECT A.ATTR_TYP,
+			   		(
+					SELECT NAME.CODE_NM
+					FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+						, TSYCO_CODE_DETAIL DETAIL
+						, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP=MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP=#{lngTyp}
+						AND DETAIL.COMMON_GRP=NAME.COMMON_GRP
+						AND DETAIL.COMMON_CD=NAME.COMMON_CD
+						AND NAME.LNG_TYP=#{lngTyp}
+						AND MAST.COMMON_GRP='PP00017'
+						AND DETAIL.COMMON_CD=A.ATTR_TYP
+						AND DETAIL.USE_YN='Y'
+						AND MAST.USE_YN='Y'			        
+			        ) ATTR_TYP_NM,  			        
+			       A.ATTR_CD,
+			       B.ATTR_NM,
+			       A.INACT_DT,
+			       A.ACT_DT,
+			       A.CHG_DATE
+			FROM   TPMBI_ATTR_TYP_MAP A,
+			       TPMBI_ATTR B
+			WHERE  B.ATTR_CD     = A.ATTR_CD
+			AND    B.MSTR_FL     = '1'      
+			AND A.ATTR_CD =  #{attrCd}
+			AND A.ATTR_TYP = #{attrTyp}	
+			AND    A.MSTR_FL     = '1'
+			AND    A.INACT_DT >= #{currentDay}
+	</select>  
+	<update id="update" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.AttrTypMap">
+		UPDATE TPMBI_ATTR_TYP_MAP
+			SET  
+			INACT_DT = #{inactDt}
+			,MSTR_FL = '0'
+			,CHGR_ID   	= #{userId}
+			,CHG_DATE 	= #{sysToDate}
+		WHERE  ATTR_CD      = #{attrCd}
+		AND    ATTR_TYP    	= #{attrTyp}
+		AND    MSTR_FL 		= '1'
+	</update>
+</mapper>

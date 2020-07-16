@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.service.SequenceMapper">
+
+    <select id="getSequence" resultType="int" parameterType="String">
+        SELECT /* 현재 Sequence 조회 jh.yun 2016.02.25 */ 
+            CURR_NO
+        FROM TSYCO_SEQUENCE
+        WHERE MOD_ID = #{modCd, jdbcType=VARCHAR}
+    </select>
+    
+    <update id="updateNextSequence" parameterType="String">
+        UPDATE /* 현재 Sequnce Update jh.yun 2016.02.25 */ 
+            TSYCO_SEQUENCE
+        SET CURR_NO = CURR_NO + 1
+        WHERE MOD_ID = #{modCd, jdbcType=VARCHAR}
+    </update>
+    
+    
+    <select id="getNowDate" resultType="java.util.HashMap" parameterType="String">
+        SELECT /* Sequence의 현재 일자 조회 jh.yun 2016.02.25 */
+            CURR_YYYY
+           ,CURR_MM 
+           ,CURR_DD
+        FROM TSYCO_SEQUENCE
+        WHERE MOD_ID = #{modCd, jdbcType=VARCHAR}
+    </select>
+    
+    
+    <update id="updateCycleSequence" parameterType="java.util.Map">
+        UPDATE /* 다음 Cycle로 수정 Update jh.yun 2016.02.25 */ 
+            TSYCO_SEQUENCE
+        SET CURR_NO   = #{CURR_NO}
+           ,CURR_YYYY = #{CURR_YYYY}
+           ,CURR_MM   = #{CURR_MM}
+           ,CURR_DD   = #{CURR_DD}
+        WHERE MOD_ID = #{MOD_CD}
+    </update>
+    
+    
+    <update id="updateNextSubSequence" parameterType="String">
+        UPDATE /* 현재 Sub Sequnce Update jh.yun 2016.05.11 */ 
+            TSYCO_SUB_SEQUENCE
+        SET CURR_NO = CURR_NO + 1
+        WHERE TARGET_TBL_NM = #{targetTblNm, jdbcType=VARCHAR}
+        AND   TARGET_COL_NM = #{targetColNm, jdbcType=VARCHAR}
+        AND   KEY_CODE      = #{keyCode, jdbcType=VARCHAR}
+    </update>
+    
+    
+    <select id="getSubSequence" resultType="int" parameterType="String">
+        SELECT /* 현재 Sub Sequence 조회 jh.yun 2016.05.11 */ 
+            CURR_NO
+        FROM TSYCO_SUB_SEQUENCE
+        WHERE TARGET_TBL_NM = #{targetTblNm, jdbcType=VARCHAR}
+        AND   TARGET_COL_NM = #{targetColNm, jdbcType=VARCHAR}
+        AND   KEY_CODE      = #{keyCode, jdbcType=VARCHAR}
+    </select>
+    
+    
+    <update id="insertSubSequence" parameterType="String">
+        INSERT INTO /* 새로운 Sub Sequence 추가 jh.yun 2016.05.11 */ 
+            TSYCO_SUB_SEQUENCE
+        (
+            TARGET_TBL_NM
+           ,TARGET_COL_NM
+           ,KEY_CODE
+           ,CURR_NO
+        ) VALUES
+        (
+            #{targetTblNm, jdbcType=VARCHAR}
+           ,#{targetColNm, jdbcType=VARCHAR}
+           ,#{keyCode, jdbcType=VARCHAR}
+           ,1
+        )
+    </update>
+    
+    <update id="updateNextSequenceMulti">
+        UPDATE  
+            TSYCO_SEQUENCE
+        SET CURR_NO = CURR_NO + #{size}
+        WHERE MOD_ID = #{modCd, jdbcType=VARCHAR}
+    </update>
+    
+</mapper>

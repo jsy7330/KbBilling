@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.orderDeliveryMgt.OrderPlacementMapper">
+
+	<!-- 발주 리스트 조회 -->
+	<select id="orderPlacementList" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.SO_ID					/*사업ID*/
+					, A.PO_NO				/*발주번호*/
+					, A.PO_ORG_ID			/*발주조직ID*/
+					, (SELECT ORG_NM FROM TDNDI_ORG_INFO WHERE ORG_ID = A.PO_ORG_ID) AS PO_ORG_NM 	/*발주조직명*/
+					, A.LGST_CENT_ID		/*물류센터ID*/
+					, D.ORG_NM AS LGST_CENT_NM 	/*물류센터명*/
+					, A.ACTNC_INCHRG		/*인수담당자*/
+					, A.ACTNC_INCHRG_TEL	/*인수담당자 연락처*/
+					, A.MNCO_ID				/*제조사ID*/
+					, B.MNCO_NM				/*제조사명*/
+					, A.PO_PRGR_STAT_CD		/*발주진행상태코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderPlacementVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderPlacementVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00070'
+								AND DETAIL.COMMON_CD = A.PO_PRGR_STAT_CD
+		       		) AS PO_PRGR_STAT_NM	/*발주진행상태명*/
+					, A.ITEM_ID				/*제품ID*/
+					, C.ITEM_NM				/*제품명*/
+					, A.ITEM_TP_CD			/*제품유형코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderPlacementVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderPlacementVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM			/* 제품유형코드명*/
+					, A.COLOR_CD			/*색상코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderPlacementVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderPlacementVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00078'
+								AND DETAIL.COMMON_CD = A.COLOR_CD
+		       		) AS COLOR_NM			/*색상명*/
+		       		, A.DLGD_AGREE_DT		/*납품합의일자*/
+		       		, A.PO_QTY				/*발주수량*/
+		       		, A.PO_UT_PRC			/*발주단가*/
+		       		, A.PO_AMT				/*발주금액*/
+		       		, (SELECT SUM(ACTNC_QTY) FROM TDNDT_ACTNC WHERE PO_NO = A.PO_NO) AS PO_ACTNC_QTY		/*기납품수량*/
+		       		, A.DLV_ZIP_CD			/*배송지우편번호*/
+					, A.DLV_BSS_ADDR		/*배송지기본주소*/
+					, A.DLV_DTL_ADDR		/*배송지상세주소*/
+					, A.ADD_TX				/*부가가치세*/
+					, (SELECT SUM(ACTNC_ADD_TX) FROM TDNDT_ACTNC WHERE PO_NO = A.PO_NO) AS PO_ACTNC_ADD_TX	/*기부가세*/
+             		, A.TOT_PRCHS_AMT		/*발주총금액*/
+					, A.PO_REG_DT			/*발주일자*/
+					, A.PO_CONF_DT			/*발주확정일자*/
+					, A.NOTE				/*비고*/
+					, B.PO_INCHRG_NM		/*발주담당자명*/
+					, B.PO_INCHRG_EML		/*발주담당자이메일*/
+					, A.CHGR_ID				/*수정자*/
+					, A.CHG_DATE			/*수정일시*/
+			FROM	TDNDT_PO A				/*발주*/
+					LEFT OUTER JOIN TDNDT_MNCO B ON A.MNCO_ID = B.MNCO_ID 	/*제조사정보*/
+					LEFT OUTER JOIN TDNDT_ITEM C ON A.ITEM_ID = C.ITEM_ID	/*제품정보*/
+					LEFT OUTER JOIN TDNDI_ORG_INFO D ON A.LGST_CENT_ID = D.ORG_ID	/*조직정보*/
+					LEFT OUTER JOIN TDNDT_PO_IDL_DTL E ON A.PO_NO = E.PO_NO	
+			WHERE	1 = 1
+				<!-- 상태코드 30 만 -->
+				<if test="orderPlacementVO.idlStatCd != null and orderPlacementVO.idlStatCd != ''">
+					AND E.IDL_STAT_CD = #{orderPlacementVO.idlStatCd}
+				</if>
+				<if test="orderPlacementVO.lgstCentId != null and orderPlacementVO.lgstCentId != ''">
+					AND A.LGST_CENT_ID = #{orderPlacementVO.lgstCentId}
+				</if>
+				<if test="orderPlacementVO.soId != null and orderPlacementVO.soId != ''">
+					AND A.SO_ID =  #{orderPlacementVO.soId}
+				</if>
+				<if test="orderPlacementVO.mncoId != null and orderPlacementVO.mncoId != ''">
+					AND A.MNCO_ID =  #{orderPlacementVO.mncoId}
+				</if>	
+				<if test="orderPlacementVO.itemTpCd != null and orderPlacementVO.itemTpCd != ''">
+					AND A.ITEM_TP_CD =  #{orderPlacementVO.itemTpCd}
+				</if>	
+				<if test="orderPlacementVO.poPrgrStatCd != null and orderPlacementVO.poPrgrStatCd != ''">
+					AND A.PO_PRGR_STAT_CD =  #{orderPlacementVO.poPrgrStatCd}
+				</if>	
+				<if test="orderPlacementVO.searchStatDt != null and orderPlacementVO.searchStatDt != ''">
+					AND A.PO_REG_DT <![CDATA[ >= ]]> #{orderPlacementVO.searchStatDt}
+				</if>
+				<if test="orderPlacementVO.searchEndDt != null and orderPlacementVO.searchEndDt != ''">
+					AND A.PO_REG_DT <![CDATA[ <= ]]> #{orderPlacementVO.searchEndDt}
+				</if>	
+			ORDER BY A.PO_NO DESC		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	
+	<!-- 발주 리스트 카운트 -->
+	<select id="orderPlacementCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_PO A				/*발주*/
+				LEFT OUTER JOIN TDNDT_MNCO B ON A.MNCO_ID = B.MNCO_ID 	/*제조사정보*/
+				LEFT OUTER JOIN TDNDT_ITEM C ON A.ITEM_ID = C.ITEM_ID	/*제품정보*/
+				LEFT OUTER JOIN TDNDI_ORG_INFO D ON A.LGST_CENT_ID = D.ORG_ID	/*조직정보*/
+				LEFT OUTER JOIN TDNDT_PO_IDL_DTL E ON A.PO_NO = E.PO_NO	
+		WHERE	1 = 1
+			<!-- 상태코드 30 만 -->
+			<if test="orderPlacementVO.idlStatCd != null and orderPlacementVO.idlStatCd != ''">
+				AND E.IDL_STAT_CD = #{orderPlacementVO.idlStatCd}
+			</if>
+			<if test="orderPlacementVO.lgstCentId != null and orderPlacementVO.lgstCentId != ''">
+				AND A.LGST_CENT_ID = #{orderPlacementVO.lgstCentId}
+			</if>
+			<if test="orderPlacementVO.soId != null and orderPlacementVO.soId != ''">
+				AND A.SO_ID =  #{orderPlacementVO.soId}
+			</if>
+			<if test="orderPlacementVO.mncoId != null and orderPlacementVO.mncoId != ''">
+				AND A.MNCO_ID =  #{orderPlacementVO.mncoId}
+			</if>	
+			<if test="orderPlacementVO.itemTpCd != null and orderPlacementVO.itemTpCd != ''">
+				AND A.ITEM_TP_CD =  #{orderPlacementVO.itemTpCd}
+			</if>	
+			<if test="orderPlacementVO.poPrgrStatCd != null and orderPlacementVO.poPrgrStatCd != ''">
+				AND A.PO_PRGR_STAT_CD =  #{orderPlacementVO.poPrgrStatCd}
+			</if>	
+			<if test="orderPlacementVO.searchStatDt != null and orderPlacementVO.searchStatDt != ''">
+				AND A.PO_REG_DT <![CDATA[ >= ]]> #{orderPlacementVO.searchStatDt}
+			</if>
+			<if test="orderPlacementVO.searchEndDt != null and orderPlacementVO.searchEndDt != ''">
+				AND A.PO_REG_DT <![CDATA[ <= ]]> #{orderPlacementVO.searchEndDt}
+			</if>
+	</select>
+	
+	
+	<!-- 발주 등록 -->
+	<insert id="insertOrderPlacement" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+	
+		INSERT INTO TDNDT_PO
+			( SO_ID				/*사업ID*/
+			, PO_NO				/*발주번호*/
+			, PO_ORG_ID			/*발주조직ID*/
+			, LGST_CENT_ID		/*물류센터ID*/
+			, MNCO_ID			/*제조사ID*/
+			, PO_PRGR_STAT_CD	/*발주진행상태코드*/
+			, ITEM_ID			/*제품ID*/
+			, ITEM_TP_CD		/*제품유형코드*/
+			, COLOR_CD			/*색상코드*/
+			, DLGD_AGREE_DT		/*납품합의일자*/
+			, PO_QTY			/*발주수량*/
+			, PO_UT_PRC			/*발주단가*/
+			, PO_AMT			/*발주금액*/
+			, DLV_ZIP_CD		/*배송지우편번호*/
+			, DLV_BSS_ADDR		/*배송지기본주소*/
+			, DLV_DTL_ADDR		/*배송지상세주소*/
+			, ADD_TX			/*부가가치세*/
+			, TOT_PRCHS_AMT		/*발주총금액*/
+			, PO_REG_DT			/*발주일자*/
+			, PO_CONF_DT		/*발주확정일자*/
+			, ACTNC_INCHRG		/*인수담당자*/
+			, ACTNC_INCHRG_TEL	/*인수담당자전화번호*/
+			, NOTE				/*비고*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{orderPlacementVO.soId}				/*사업ID*/
+			, #{orderPlacementVO.poNo}				/*발주번호*/
+			, #{orderPlacementVO.poOrgId}			/*발주조직ID*/
+			, #{orderPlacementVO.lgstCentId}		/*물류센터ID*/
+			, #{orderPlacementVO.mncoId}			/*제조사ID*/
+			, #{orderPlacementVO.poPrgrStatCd}		/*발주진행상태코드*/
+			, #{orderPlacementVO.itemId}			/*제품ID*/
+			, #{orderPlacementVO.itemTpCd}			/*제품유형코드*/
+			, #{orderPlacementVO.colorCd}			/*색상코드*/
+			, #{orderPlacementVO.dlgdAgreeDt}		/*납품합의일자*/
+			, #{orderPlacementVO.poQty}				/*발주수량*/
+			, #{orderPlacementVO.poUtPrc}			/*발주단가*/
+			, #{orderPlacementVO.poAmt}				/*발주금액*/
+			, #{orderPlacementVO.dlvZipCd}			/*배송지우편번호*/
+			, #{orderPlacementVO.dlvBssAddr}		/*배송지기본주소*/
+			, #{orderPlacementVO.dlvDtlAddr}		/*배송지상세주소*/
+			, #{orderPlacementVO.addTx}				/*부가가치세*/
+			, #{orderPlacementVO.totPrchsAmt}		/*발주총금액*/
+			, #{orderPlacementVO.poRegDt}			/*발주일자*/
+			, #{orderPlacementVO.poConfDt}			/*발주확정일자*/
+			, #{orderPlacementVO.actncInchrg}		/*인수담당자*/
+			, #{orderPlacementVO.actncInchrgTel}	/*인수담당자전화번호*/
+			, #{orderPlacementVO.note}				/*비고*/
+			, #{orderPlacementVO.regrId}			/*등록자*/
+			, #{orderPlacementVO.regDate}			/*등록일시*/
+			, #{orderPlacementVO.chgrId}			/*수정자*/
+			, #{orderPlacementVO.chgDate}			/*수정일시*/
+			)			
+	</insert>
+	
+	
+	<!-- 발주 진행상태 등록 -->
+	<insert id="insertPoStatProcHist" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+	
+		INSERT INTO TDNDT_PO_STAT_PROC_HIST
+			( SO_ID				/*사업ID*/
+			, PO_NO				/*발주번호*/
+			, PO_PRGR_STAT_CD	/*발주진행상태코드*/
+			, STAT_PROC_ID		/*상태처리자ID*/
+			, STAT_PROC_DTTM	/*상태처리일시*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{orderPlacementVO.soId}				/*사업ID*/
+			, #{orderPlacementVO.poNo}				/*발주번호*/
+			, #{orderPlacementVO.poPrgrStatCd}		/*발주진행상태코드*/
+			, #{orderPlacementVO.statProcId}		/*상태처리자ID*/
+			, #{orderPlacementVO.statProcDttm}		/*상태처리일시*/
+			, #{orderPlacementVO.regrId}			/*등록자*/
+			, #{orderPlacementVO.regDate}			/*등록일시*/
+			, #{orderPlacementVO.chgrId}			/*수정자*/
+			, #{orderPlacementVO.chgDate}			/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 발주 수정 -->
+	<update id="updateOrderPlacement" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+		UPDATE TDNDT_PO
+			SET	SO_ID 				= #{orderPlacementVO.soId}			/*사업ID*/
+				, PO_ORG_ID 		= #{orderPlacementVO.poOrgId}		/*발주조직ID*/
+				, LGST_CENT_ID 		= #{orderPlacementVO.lgstCentId}	/*물류센터ID*/
+				, MNCO_ID 			= #{orderPlacementVO.mncoId}		/*제조사ID*/
+				, ITEM_ID 			= #{orderPlacementVO.itemId}		/*제품ID*/
+				, ITEM_TP_CD 		= #{orderPlacementVO.itemTpCd}		/*제품유형코드*/
+				, COLOR_CD 			= #{orderPlacementVO.colorCd}		/*색상코드*/
+				, DLGD_AGREE_DT 	= #{orderPlacementVO.dlgdAgreeDt}	/*납품합의일자*/
+				, PO_QTY 			= #{orderPlacementVO.poQty}			/*발주수량*/
+				, PO_UT_PRC 		= #{orderPlacementVO.poUtPrc}		/*발주단가*/
+				, PO_AMT 			= #{orderPlacementVO.poAmt}			/*발주금액*/
+				, DLV_ZIP_CD 		= #{orderPlacementVO.dlvZipCd}		/*배송지우편번호*/
+				, DLV_BSS_ADDR 		= #{orderPlacementVO.dlvBssAddr}	/*배송지기본주소*/
+				, DLV_DTL_ADDR 		= #{orderPlacementVO.dlvDtlAddr}	/*배송지상세주소*/
+				, ADD_TX 			= #{orderPlacementVO.addTx}			/*부가가치세*/
+				, TOT_PRCHS_AMT 	= #{orderPlacementVO.totPrchsAmt}	/*발주총금액*/
+				, ACTNC_INCHRG 		= #{orderPlacementVO.actncInchrg}	/*인수담당자*/
+				, ACTNC_INCHRG_TEL 	= #{orderPlacementVO.actncInchrgTel}	/*인수담당자전화번호*/
+				, NOTE 				= #{orderPlacementVO.note}			/*비고*/
+				, CHGR_ID 			= #{orderPlacementVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{orderPlacementVO.chgDate}		/*수정일시*/
+		WHERE	PO_NO				= #{orderPlacementVO.poNo}			/*발주번호*/
+	</update>
+	
+	
+	<!-- 발주 진행상태 수정 -->
+	<update id="updatePoPrgrStatCd" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+		UPDATE TDNDT_PO
+			SET	PO_PRGR_STAT_CD		= #{orderPlacementVO.poPrgrStatCd}	/*발주진행상태코드*/
+				, PO_CONF_DT		= #{orderPlacementVO.poConfDt}		/*발주확정일자*/
+				, CHGR_ID 			= #{orderPlacementVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{orderPlacementVO.chgDate}		/*수정일시*/
+		WHERE	PO_NO				= #{orderPlacementVO.poNo}			/*발주번호*/
+	</update>
+	
+	<!-- 발주 진행상태 등록 -->
+	<insert id="insertPoIdlDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+	
+		INSERT INTO TDNDT_PO_IDL_DTL
+			( SO_ID				/*사업ID*/
+			, PO_NO				/*발주번호*/
+			, IDL_STAT_CD		/*대기상태코드*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{orderPlacementVO.soId}				/*사업ID*/
+			, #{orderPlacementVO.poNo}				/*발주번호*/
+			, #{orderPlacementVO.idlStatCd}			/*대기상태코드*/
+			, #{orderPlacementVO.regrId}			/*등록자*/
+			, #{orderPlacementVO.regDate}			/*등록일시*/
+			, #{orderPlacementVO.chgrId}			/*수정자*/
+			, #{orderPlacementVO.chgDate}			/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 발주 진행상태 삭제 -->
+	<delete id="deletePoIdlDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+		DELETE
+		FROM	TDNDT_PO_IDL_DTL
+		WHERE	PO_NO				= #{orderPlacementVO.poNo}		/*발주번호*/
+    </delete>
+    
+    <!-- 납품확인 정보 등록 -->
+	<insert id="insertActnc" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+	
+		INSERT INTO TDNDT_ACTNC
+			( SO_ID					/*사업ID*/
+			, ACTNC_NO				/*납품번호*/
+			, PO_NO					/*발주번호*/
+			, ORD_NO				/*주문번호*/
+			, ITEM_ID				/*제품ID*/
+			, ITEM_TP_CD			/*제품유형코드*/
+			, CLOR_CD				/*색상코드*/
+			, ACTNC_DT				/*납품일자*/
+			, ACTNC_PRGR_STAT_CD	/*납품진행상태코드*/
+			, ACTNC_QTY				/*납품수량*/
+			, ACTNC_UT_PRC			/*납품단가*/
+			, ACTNC_AMT				/*납품금액*/
+			, ACTNC_ADD_TX			/*납품부가세*/
+			, ACTNC_TOT_AMT			/*납품총금액*/
+			, STAT_PROC_ID			/*상태처리자ID*/
+			, STAT_PROC_DTTM		/*상태처리일시*/
+			, ACTNC_ORG_ID			/*납품조직ID*/
+			, ACTNC_INCHRG_ID		/*납품담당자ID*/
+			, ACTNC_INCHRG_TEL_NO	/*납품담당자연락처*/
+			, INOUT_RESN_CD			/*입출고사유코드*/
+			, INOUT_CL_CD			/*입출고구분코드*/
+			, NOTE					/*비고*/
+			, REGR_ID				/*등록자*/
+			, REG_DATE				/*등록일시*/
+			, CHGR_ID				/*수정자*/
+			, CHG_DATE				/*수정일시*/
+			)
+        VALUES
+			( #{orderPlacementVO.soId}				/*사업ID*/
+			, #{orderPlacementVO.actncNo}			/*납품번호*/
+			, #{orderPlacementVO.poNo}				/*발주번호*/
+			, #{orderPlacementVO.ordNo}				/*주문번호*/
+			, #{orderPlacementVO.itemId}			/*제품ID*/
+			, #{orderPlacementVO.itemTpCd}			/*제품유형코드*/
+			, #{orderPlacementVO.clorCd}			/*색상코드*/
+			, #{orderPlacementVO.actncDt}			/*납품일자*/
+			, #{orderPlacementVO.actncPrgrStatCd}	/*납품진행상태코드*/
+			, #{orderPlacementVO.actncQty}			/*납품수량*/
+			, #{orderPlacementVO.actncUtPrc}		/*납품단가*/
+			, #{orderPlacementVO.actncAmt}			/*납품금액*/
+			, #{orderPlacementVO.actncAddTx}		/*납품부가세*/
+			, #{orderPlacementVO.actncTotAmt}		/*납품총금액*/
+			, #{orderPlacementVO.statProcId}		/*상태처리자ID*/
+			, #{orderPlacementVO.statProcDttm}		/*상태처리일시*/
+			, #{orderPlacementVO.actncOrgId}		/*납품조직ID*/
+			, #{orderPlacementVO.actncInchrgId}		/*납품담당자ID*/
+			, #{orderPlacementVO.actncInchrgTelNo}	/*납품담당자연락처*/
+			, #{orderPlacementVO.inoutResnCd}		/*입출고사유코드*/
+			, #{orderPlacementVO.inoutClCd}			/*입출고구분코드*/
+			, #{orderPlacementVO.note}				/*비고*/
+			, #{orderPlacementVO.regrId}			/*등록자*/
+			, #{orderPlacementVO.regDate}			/*등록일시*/
+			, #{orderPlacementVO.chgrId}			/*수정자*/
+			, #{orderPlacementVO.chgDate}			/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 납품내역 리스트 -->
+	<select id="actncList" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.SO_ID					/*사업ID*/
+					, A.ACTNC_NO			/*납품번호*/
+					, A.PO_NO				/*발주번호*/
+					, A.ITEM_ID				/*제품ID*/
+					, C.ITEM_NM				/*제품명*/
+					, A.ITEM_TP_CD			/*제품유형코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderPlacementVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderPlacementVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM			/* 제품유형코드명*/
+		       		, A.CLOR_CD			/*색상코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderPlacementVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderPlacementVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00078'
+								AND DETAIL.COMMON_CD = A.CLOR_CD
+		       		) AS COLOR_NM			/*색상명*/
+		       		, A.ACTNC_PRGR_STAT_CD	/*발주진행상태코드*/
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderPlacementVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderPlacementVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00070'
+								AND DETAIL.COMMON_CD = A.ACTNC_PRGR_STAT_CD
+		       		) AS ACTNC_PRGR_STAT_NM			/*발주진행상태명*/
+					, A.ACTNC_DT				/*납품일자*/
+					, A.ACTNC_QTY				/*납품수량*/
+					, A.ACTNC_UT_PRC			/*납품단가*/
+					, A.ACTNC_AMT				/*납품금액*/
+					, A.ACTNC_ADD_TX			/*납품부가가치세*/
+					, A.ACTNC_TOT_AMT			/*납품총금액*/
+					, B.LOAN_LMT_AMT
+					, B.LOAN_USG_AMT
+					, C.LOAN_USG_AMT	AS ITEM_USG_AMT
+					, C.MNCO_ID
+					, A.STAT_PROC_ID			/*상태처리자*/
+					, A.STAT_PROC_DTTM			/*상태처리일시*/
+					, A.ACTNC_ORG_ID			/*납품조직*/
+					, A.ACTNC_INCHRG_ID			/*납품담당자*/
+					, A.ACTNC_INCHRG_TEL_NO		/*납품담당자연락처*/
+					, A.INOUT_RESN_CD			/*입출고사유코드*/
+					, A.INOUT_CL_CD				/*입출고구분코드*/
+					, A.NOTE					/*비고*/
+					, A.CHGR_ID					/*수정자*/
+					, A.CHG_DATE				/*수정일시*/
+			FROM	TDNDT_ACTNC A				/*발주*/
+					LEFT OUTER JOIN TDNDT_ITEM C ON A.ITEM_ID = C.ITEM_ID 	/*제품정보*/
+					LEFT OUTER JOIN TDNDT_MNCO_LOAN_INFO B ON C.MNCO_ID = B.MNCO_ID 	/*제조사여신정보*/
+			WHERE	1 = 1
+					AND A.PO_NO 		= #{orderPlacementVO.poNo}
+					
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 납품내역 카운트 -->
+	<select id="actncCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_ACTNC A				/*발주*/
+				LEFT OUTER JOIN TDNDT_ITEM C ON A.ITEM_ID = C.ITEM_ID 	/*제품정보*/
+				LEFT OUTER JOIN TDNDT_MNCO_LOAN_INFO B ON C.MNCO_ID = B.MNCO_ID 	/*제조사여신정보*/
+		WHERE	1 = 1
+				AND A.PO_NO 		= #{orderPlacementVO.poNo}
+	</select>
+	
+	
+	<!-- 납품진행상태  수정 -->
+	<update id="updateActncPrgrStatCd" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+		UPDATE TDNDT_ACTNC
+			SET	ACTNC_PRGR_STAT_CD	= #{orderPlacementVO.actncPrgrStatCd}	/*납품진행상태코드*/
+				, STAT_PROC_ID		= #{orderPlacementVO.chgrId}			/*상태처리자*/
+				, STAT_PROC_DTTM	= #{orderPlacementVO.statProcDttm}		/*상태처리자	*/		
+				, CHGR_ID 			= #{orderPlacementVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{orderPlacementVO.chgDate}		/*수정일시*/
+		WHERE	ACTNC_NO			= #{orderPlacementVO.actncNo}		/*발주번호*/
+	</update>
+	
+	<!-- 제품의 여신사용금액 수정 -->
+	<update id="updateLoanUsgAmt" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+		UPDATE TDNDT_ITEM
+			SET	LOAN_USG_AMT		= #{orderPlacementVO.itemUsgAmt}	/*여신사용금액*/
+				, CHGR_ID 			= #{orderPlacementVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{orderPlacementVO.chgDate}		/*수정일시*/
+		WHERE	ITEM_ID				= #{orderPlacementVO.itemId}		/*제품ID*/
+	</update>
+	
+	<!-- 납품 처리 대기상태 등록 -->
+	<insert id="insertActncIdlDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.OrderPlacementVO">
+	
+		INSERT INTO TDNDT_ACTNC_IDL_DTL
+			( SO_ID				/*사업ID*/
+			, ACTNC_NO			/*납품번호*/
+			, IDL_STAT_CD		/*대기상태코드*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{orderPlacementVO.soId}				/*사업ID*/
+			, #{orderPlacementVO.actncNo}			/*납품번호*/
+			, #{orderPlacementVO.idlStatCd}			/*대기상태코드*/
+			, #{orderPlacementVO.regrId}			/*등록자*/
+			, #{orderPlacementVO.regDate}			/*등록일시*/
+			, #{orderPlacementVO.chgrId}			/*수정자*/
+			, #{orderPlacementVO.chgDate}			/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 부가세 조회 -->
+	<select id="getTaxRate" parameterType="String" resultType="String">
+		SELECT
+				TAX_RATE
+		FROM 	TSYCO_TAX_MAST
+		WHERE	SYSTEM_ID = 'DN'
+	</select>
+</mapper>

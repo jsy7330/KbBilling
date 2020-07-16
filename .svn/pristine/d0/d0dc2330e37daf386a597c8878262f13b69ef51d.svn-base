@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.sample.sample.TreeSampleMapper">
+
+	<select id="getStepList" parameterType="TreeSampleVO" resultType="TreeSampleVO">
+		SELECT 
+			ROOT_YN 
+		FROM UI_TREE_MAST 
+		WHERE SVC_CD = #{svcCd, jdbcType=VARCHAR}
+			AND USE_YN = 'Y'
+		AND SO_ID = #{soId, jdbcType=VARCHAR}	
+		ORDER BY ROOT_YN ASC
+	</select>
+	
+	<select id="getAuthList" parameterType="TreeSampleVO" resultType="TreeSampleVO">
+		SELECT 
+		  AA.MENU_NO
+		  , AA.CODE
+		  , AA.MENU_NAME
+		  , AA.UP_MENU_NO
+		  , AA.UP_MENU_NAME
+		  , AA.STEP_NO
+		  , AA.DISPLAY_ORDER
+		  , AA.FOLDER
+		  , AA.PROD_LIST
+		FROM(
+		  SELECT 
+		    A.MENU_NO, A.CODE, A.MENU_NAME, A.UP_MENU_NO, A.UP_MENU_NAME, A.STEP_NO, A.DISPLAY_ORDER, A.FOLDER, A.PROD_LIST
+		  FROM(
+		    SELECT 
+		      MA.GRP_CODE AS MENU_NO,
+		      '' AS CODE,
+		      MA.TITLE AS MENU_NAME,
+		      'PRODUCT' AS UP_MENU_NO,
+		      MA.TITLE AS UP_MENU_NAME,
+		      MA.ROOT_YN AS STEP_NO,
+		      @RN:=@RN+1 AS DISPLAY_ORDER,
+		      (SELECT MAX(ROOT_YN) FROM UI_TREE_MAST WHERE SVC_CD = 'S01')  AS CNT,
+            	CASE WHEN MA.GRP_CODE IS null THEN 'N'
+            	ELSE 'Y' END AS FOLDER,
+            	null as PROD_LIST
+		    FROM UI_TREE_MAST MA, (SELECT @RN:=0) AS R
+		    WHERE MA.SVC_CD = 'S01' AND MA.USE_YN ='Y' AND MA.ROOT_YN= '1' AND MA.SO_ID = #{soId, jdbcType=VARCHAR}
+		    ORDER BY DISPLAY_ORDER, MENU_NO) A
+		  UNION ALL 
+		<foreach collection="stepList" item="item" index="index"  separator="UNION ALL">
+		    SELECT 
+		      C.MENU_NO, C.CODE, C.MENU_NAME, C.UP_MENU_NO, C.UP_MENU_NAME, C.STEP_NO, C.DISPLAY_ORDER, C.FOLDER, C.PROD_LIST
+		    FROM(
+		      SELECT 
+		        CASE WHEN B.DN_GRP_CODE IS null THEN CONCAT('*',CONCAT( B.GRP_CODE,B.CODE_NM))
+            	ELSE B.DN_GRP_CODE END AS MENU_NO,    
+		        B.CODE AS CODE,
+		        B.CODE_NM AS MENU_NAME,  
+		        B.GRP_CODE AS UP_MENU_NO, 
+		        (SELECT TITLE FROM UI_TREE_MAST WHERE SVC_CD = 'S01' AND  GRP_CODE = B.GRP_CODE) AS UP_MENU_NAME,
+		        A.ROOT_YN +1 AS STEP_NO ,  
+		        @RN:=@RN+1 AS DISPLAY_ORDER,
+            	CASE WHEN B.DN_GRP_CODE IS null THEN 'N'
+            	ELSE 'Y' END AS FOLDER,
+            	B.PROD_LIST
+		      FROM UI_TREE_MAST A, UI_TREE_DETAIL B,(SELECT @RN:=0) AS R
+		      WHERE A.ROOT_YN = #{item.rootYn}
+		        AND A.GRP_CODE = B.GRP_CODE
+		        AND A.SVC_CD = B.SVC_CD
+		        AND A.SO_ID = #{soId, jdbcType=VARCHAR}
+		      -- AND A.SVC_CD = 'S01' -- 받을 값
+		      -- AND B.GRP_CODE = 'GRP01' -- 상위 GRP
+		    ) C
+		</foreach>   
+		) AA
+	</select>
+
+	<select id="getComboList" parameterType="TreeSampleVO" resultType="TreeSampleVO">
+			SELECT TITLE, GRP_CODE, ROOT_YN+1 AS ROOT_YN FROM UI_TREE_MAST WHERE SVC_CD = #{svcCd, jdbcType=VARCHAR} AND USE_YN = 'Y'
+	</select>	
+	<select id="getPordListAction" parameterType="TreeSampleVO" resultType="TreeSampleVO">
+		SELECT 
+			DISTINCT A.PROD_CD, A.PROD_NM , A.PROD_GRP, A.SO_ID 
+		FROM TPMPD_PROD A, TPMPD_PROD_ATTR B
+		WHERE  
+		A.PROD_CD = #{prodCd, jdbcType=VARCHAR}
+	</select>
+	<select id="getInputProdList" parameterType="TreeSampleVO" resultType="TreeSampleVO">
+		SELECT 
+		  PROD_CD, SEQ,TITLE,COL_TP , COL_SIZE, COMMON_GRP, TABLE_ID, COLUMN_ID,QRY  
+		FROM UI_PROD_CONF 
+		WHERE PROD_CD = #{prodCd, jdbcType=VARCHAR}
+		AND ACT_DT &lt;  #{StartDt, jdbcType=VARCHAR}
+    	AND INACT_DT &gt;  #{StartDt, jdbcType=VARCHAR}
+		AND USE_YN = 'Y'
+		ORDER BY SEQ ASC
+	</select>	
+	<select id="getInputProdCnt" resultType="int" parameterType="TreeSampleVO">
+		SELECT COUNT(*) AS CNT
+		FROM UI_PROD_CONF 
+		WHERE PROD_CD = #{prodCd, jdbcType=VARCHAR}
+		AND ACT_DT &lt;  #{StartDt, jdbcType=VARCHAR}
+    	AND INACT_DT &gt;  #{StartDt, jdbcType=VARCHAR}		
+		AND USE_YN = 'Y'
+		ORDER BY SEQ ASC		
+	</select>	
+	
+	<select id="getInputProdList1" parameterType="TreeSampleVO" resultType="TreeSampleVO">
+		SELECT 
+		  PROD_CD, SEQ,TITLE,COL_TP , COL_SIZE, COMMON_GRP, TABLE_ID, COLUMN_ID,QRY  
+		FROM UI_PROD_CONF 
+		WHERE PROD_CD = #{prodCd, jdbcType=VARCHAR}
+		AND ACT_DT &lt;  #{StartDt, jdbcType=VARCHAR}
+    	AND INACT_DT &gt;  #{StartDt, jdbcType=VARCHAR}
+    	AND column_id not in ('OS_TYP','RT_ID')
+		AND USE_YN = 'Y'
+		ORDER BY SEQ ASC
+	</select>	
+	<select id="getInputProdCnt1" resultType="int" parameterType="TreeSampleVO">
+		SELECT COUNT(*) AS CNT
+		FROM UI_PROD_CONF 
+		WHERE PROD_CD = #{prodCd, jdbcType=VARCHAR}
+		AND ACT_DT &lt;  #{StartDt, jdbcType=VARCHAR}
+    	AND INACT_DT &gt;  #{StartDt, jdbcType=VARCHAR}	
+    	AND column_id not in ('OS_TYP','RT_ID')	
+		AND USE_YN = 'Y'
+		ORDER BY SEQ ASC		
+	</select>	
+	<select id="processEstimateList" statementType="CALLABLE" parameterType="TreeSampleVO">
+		CALL PROC_EST_MAIN(#{soId, jdbcType=VARCHAR},#{orderId, jdbcType=VARCHAR},#{retV, mode=OUT, jdbcType=VARCHAR} )
+	</select>	
+	<select id="processEstimateList1" statementType="CALLABLE" parameterType="TreeSampleVO">
+		CALL PROC_EST_MAIN(#{soId, jdbcType=VARCHAR},#{orderId, jdbcType=VARCHAR},#{retV, mode=OUT, jdbcType=VARCHAR} )
+	</select>		
+</mapper>

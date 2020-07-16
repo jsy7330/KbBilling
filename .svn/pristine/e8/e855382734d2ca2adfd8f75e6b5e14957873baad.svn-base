@@ -1,0 +1,422 @@
+package com.ntels.ccbs.system.domain.sample.sample;
+
+import java.util.List;
+import java.util.Map;
+
+import com.ntels.ccbs.system.domain.configuration.codeMng.CommonCodeVO;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+
+
+@XStreamAlias("treeSample")
+public class TreeSampleVO {
+	/**
+	 * 메뉴번호
+	 */
+	private String menuNo;
+	/**
+	 * 메뉴명
+	 */
+	private String menuName;
+	/**
+	 * 상위메뉴번호
+	 */
+	private String upMenuNo;
+	/**
+	 * URL
+	 */
+	private String viewPath;
+	/**
+	 * 출력순서
+	 */
+	private String displayOrder;
+	/**
+	 * 설명
+	 */
+	private String description;
+	/**
+	 * 사용여부
+	 */
+	private String useYn;
+	/**
+	 * 상위메뉴명
+	 */
+	private String upMenuName;
+	/**
+	 * 레벨
+	 */
+	private String stepNo;
+	/**
+	 * 최상위(ROOT)확인 여부
+	 */
+	private String topMenu;
+	/**
+	 * 다국어명 리스트
+	 */
+	private List<Map<String,Object>> menuLngList;
+	/**
+	 * 다국어별 메뉴명
+	 */
+	private String menuNm;
+	/**
+	 * 다국어명
+	 */
+	private String lngNm;
+	/**
+	 * 지역코드
+	 */
+	private String cntryCd;
+	/**
+	 * 다국어코드
+	 */
+	private String lngCd; 
+	
+	/**
+	 * 서비스코드
+	 */
+	private String svcCd; 	
+
+	private int cnt;
+	
+
+	private String code;
+	
+	private String rootYn;
+
+	private String folder;
+
+	private String title;
+	private String grpCode;
+	private String prodList;
+
+	private String prodCd;
+	private String prodNm;
+
+	private String seq;
+	private String colTp;
+	private String colSize;
+	private String commonGrp;
+	private String tableId;
+	private String columnId; 
+	private String soId; 
+	private String prodGrp; 
+	
+	/**
+	 * 권한을 가진 SO 리스트
+	 */
+	private List<Map<String,Object>> stepList;
+	
+	/**
+	 * grid에서 보여질 menu_name
+	 */
+	private String cdMenuName;
+	
+	private List<CommonCodeVO> commonCodeList;
+
+	public String getMenuNo() {
+		return menuNo;
+	}
+
+	public void setMenuNo(String menuNo) {
+		this.menuNo = menuNo;
+	}
+
+	public String getMenuName() {
+		return menuName;
+	}
+
+	public void setMenuName(String menuName) {
+		this.menuName = menuName;
+	}
+
+	public String getUpMenuNo() {
+		return upMenuNo;
+	}
+
+	public void setUpMenuNo(String upMenuNo) {
+		this.upMenuNo = upMenuNo;
+	}
+
+	public String getViewPath() {
+		return viewPath;
+	}
+
+	public void setViewPath(String viewPath) {
+		this.viewPath = viewPath;
+	}
+
+	public String getDisplayOrder() {
+		return displayOrder;
+	}
+
+	public void setDisplayOrder(String displayOrder) {
+		this.displayOrder = displayOrder;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	public String getUseYn() {
+		return useYn;
+	}
+
+	public void setUseYn(String useYn) {
+		this.useYn = useYn;
+	}
+
+	public String getUpMenuName() {
+		return upMenuName;
+	}
+
+	public void setUpMenuName(String upMenuName) {
+		this.upMenuName = upMenuName;
+	}
+
+	public String getStepNo() {
+		return stepNo;
+	}
+
+	public void setStepNo(String stepNo) {
+		this.stepNo = stepNo;
+	}
+
+	public String getTopMenu() {
+		return topMenu;
+	}
+
+	public void setTopMenu(String topMenu) {
+		this.topMenu = topMenu;
+	}
+
+	public List<Map<String, Object>> getMenuLngList() {
+		return menuLngList;
+	}
+
+	public void setMenuLngList(List<Map<String, Object>> menuLngList) {
+		this.menuLngList = menuLngList;
+	}
+
+	public String getMenuNm() {
+		return menuNm;
+	}
+
+	public void setMenuNm(String menuNm) {
+		this.menuNm = menuNm;
+	}
+
+	public String getLngNm() {
+		return lngNm;
+	}
+
+	public void setLngNm(String lngNm) {
+		this.lngNm = lngNm;
+	}
+
+	public String getCntryCd() {
+		return cntryCd;
+	}
+
+	public void setCntryCd(String cntryCd) {
+		this.cntryCd = cntryCd;
+	}
+
+	public String getLngCd() {
+		return lngCd;
+	}
+
+	public void setLngCd(String lngCd) {
+		this.lngCd = lngCd;
+	}
+
+	public String getSvcCd() {
+		return svcCd;
+	}
+
+	public void setSvcCd(String svcCd) {
+		this.svcCd = svcCd;
+	}
+
+	public int getCnt() {
+		return cnt;
+	}
+
+	public void setCnt(int cnt) {
+		this.cnt = cnt;
+	}
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
+
+	public String getRootYn() {
+		return rootYn;
+	}
+
+	public void setRootYn(String rootYn) {
+		this.rootYn = rootYn;
+	}
+
+	public String getFolder() {
+		return folder;
+	}
+
+	public void setFolder(String folder) {
+		this.folder = folder;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public String getGrpCode() {
+		return grpCode;
+	}
+
+	public void setGrpCode(String grpCode) {
+		this.grpCode = grpCode;
+	}
+
+	public String getProdList() {
+		return prodList;
+	}
+
+	public void setProdList(String prodList) {
+		this.prodList = prodList;
+	}
+
+	public String getProdCd() {
+		return prodCd;
+	}
+
+	public void setProdCd(String prodCd) {
+		this.prodCd = prodCd;
+	}
+
+	public String getProdNm() {
+		return prodNm;
+	}
+
+	public void setProdNm(String prodNm) {
+		this.prodNm = prodNm;
+	}
+
+	public String getSeq() {
+		return seq;
+	}
+
+	public void setSeq(String seq) {
+		this.seq = seq;
+	}
+
+	public String getColTp() {
+		return colTp;
+	}
+
+	public void setColTp(String colTp) {
+		this.colTp = colTp;
+	}
+
+	public String getColSize() {
+		return colSize;
+	}
+
+	public void setColSize(String colSize) {
+		this.colSize = colSize;
+	}
+
+	public String getCommonGrp() {
+		return commonGrp;
+	}
+
+	public void setCommonGrp(String commonGrp) {
+		this.commonGrp = commonGrp;
+	}
+
+	public String getTableId() {
+		return tableId;
+	}
+
+	public void setTableId(String tableId) {
+		this.tableId = tableId;
+	}
+
+	public String getColumnId() {
+		return columnId;
+	}
+
+	public void setColumnId(String columnId) {
+		this.columnId = columnId;
+	}
+
+	public List<Map<String, Object>> getStepList() {
+		return stepList;
+	}
+
+	public void setStepList(List<Map<String, Object>> stepList) {
+		this.stepList = stepList;
+	}
+
+	public String getCdMenuName() {
+		return cdMenuName;
+	}
+
+	public void setCdMenuName(String cdMenuName) {
+		this.cdMenuName = cdMenuName;
+	}
+
+	public List<CommonCodeVO> getCommonCodeList() {
+		return commonCodeList;
+	}
+
+	public void setCommonCodeList(List<CommonCodeVO> commonCodeList) {
+		this.commonCodeList = commonCodeList;
+	}
+	public String getSoId() {
+		return soId;
+	}
+
+	public void setSoId(String soId) {
+		this.soId = soId;
+	}
+
+	public String getProdGrp() {
+		return prodGrp;
+	}
+
+	public void setProdGrp(String prodGrp) {
+		this.prodGrp = prodGrp;
+	}
+	@Override
+	public String toString() {
+		return "TreeSampleVO [menuNo=" + menuNo + ", menuName=" + menuName
+				+ ", upMenuNo=" + upMenuNo + ", viewPath=" + viewPath
+				+ ", displayOrder=" + displayOrder + ", description="
+				+ description + ", useYn=" + useYn + ", upMenuName="
+				+ upMenuName + ", stepNo=" + stepNo + ", topMenu=" + topMenu
+				+ ", menuLngList=" + menuLngList + ", menuNm=" + menuNm
+				+ ", lngNm=" + lngNm + ", cntryCd=" + cntryCd + ", lngCd="
+				+ lngCd + ", svcCd=" + svcCd + ", cnt=" + cnt + ", code="
+				+ code + ", rootYn=" + rootYn + ", folder=" + folder
+				+ ", title=" + title + ", grpCode=" + grpCode + ", prodList="
+				+ prodList + ", prodCd=" + prodCd + ", prodNm=" + prodNm
+				+ ", seq=" + seq + ", colTp=" + colTp + ", colSize=" + colSize
+				+ ", commonGrp=" + commonGrp + ", tableId=" + tableId
+				+ ", columnId=" + columnId + ", stepList=" + stepList
+				+ ", cdMenuName=" + cdMenuName + ", commonCodeList="
+				+ commonCodeList + "]";
+	}
+	
+
+}

@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.statistics.statisticsMgt.StatisticsMgtMapper">
+     <select id="getStatisticeList" resultType="StatisticsMgtVO">
+		SELECT A.*
+		 FROM (
+		     SELECT  
+		             A.STMT_CD
+		            ,A.SO_ID
+		            ,A.STMT_TP
+		            ,A.INACT_DT
+		            ,A.ACT_DT
+		            ,A.STMT_NM
+		            ,A.STMT
+		            ,A.VAR_DEFN
+		            ,A.TMOUT
+		            ,A.VLD_YN
+		            ,A.RMRK_DESC
+		            ,A.REGR_ID
+		            ,(SELECT USER_NAME FROM TSYCO_USER B WHERE B.USER_ID = REGR_ID) AS  REGR_NM
+			        <choose>
+			            <when test="'${dbms.kind}' == 'MYSQL'">        
+			            , DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE    
+			            </when>
+			            <otherwise>
+			            ,TO_CHAR(A.REG_DATE,'YYYY-MM-DD HH24:MI:SS') AS REG_DATE          
+			            </otherwise>
+			        </choose>			           
+		            ,A.CHGR_ID
+		            ,(SELECT USER_NAME FROM TSYCO_USER C WHERE C.USER_ID = A.CHGR_ID) AS   CHGR_NM
+		     FROM TSYCO_DEFN_STMT A
+	         WHERE 1=1	         
+			<if test="stmtTp != null and stmtTp != ''">
+	     	 	AND A.STMT_TP  = #{stmtTp}
+			</if>		         
+			<if test="soId != null and soId  != ''">
+	     	 	AND A.SO_ID  = #{soId}
+			</if>
+		    ) A
+    </select>
+     <select id="getStatisticeDtl" resultType="StatisticsMgtVO">
+		SELECT A.*
+		 FROM (
+		     SELECT  
+		             A.STMT_CD
+		            ,A.SO_ID
+		            ,A.STMT_TP
+			        <choose>
+			            <when test="'${dbms.kind}' == 'MYSQL'">        
+		            ,(CONCAT(CONCAT(CONCAT(CONCAT(SUBSTR(A.INACT_DT,1,4),'-'),SUBSTR(A.INACT_DT,5,2)),'-'),SUBSTR(A.INACT_DT,7,2)) ) AS INACT_DT
+		            ,(CONCAT(CONCAT(CONCAT(CONCAT(SUBSTR(A.ACT_DT,1,4),'-'),SUBSTR(A.ACT_DT,5,2)),'-'),SUBSTR(A.ACT_DT,7,2)) ) AS ACT_DT   
+			            </when>
+			            <otherwise>
+		            ,(CONCAT(CONCAT(CONCAT(CONCAT(SUBSTR(A.INACT_DT,0,4),'-'),SUBSTR(A.INACT_DT,5,2)),'-'),SUBSTR(A.INACT_DT,7,2)) ) AS INACT_DT
+		            ,(CONCAT(CONCAT(CONCAT(CONCAT(SUBSTR(A.ACT_DT,0,4),'-'),SUBSTR(A.ACT_DT,5,2)),'-'),SUBSTR(A.ACT_DT,7,2)) ) AS ACT_DT       
+			            </otherwise>
+			        </choose>	   
+		            ,A.STMT_NM
+		            ,A.STMT
+		            ,A.VAR_DEFN
+		            ,A.TMOUT
+		            ,A.VLD_YN
+		            ,A.RMRK_DESC
+		            ,A.REGR_ID
+		            ,(SELECT USER_NAME FROM TSYCO_USER B WHERE B.USER_ID = REGR_ID) AS  REGR_NM
+			        <choose>
+			            <when test="'${dbms.kind}' == 'MYSQL'">        
+			            , DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE    
+			            </when>
+			            <otherwise>
+			            ,TO_CHAR(A.REG_DATE,'YYYY-MM-DD HH24:MI:SS') REG_DATE         
+			            </otherwise>
+			        </choose>
+		            ,A.CHGR_ID
+		            ,(SELECT USER_NAME FROM TSYCO_USER C WHERE C.USER_ID = A.CHGR_ID) AS   CHGR_NM
+			        <choose>
+			            <when test="'${dbms.kind}' == 'MYSQL'">        
+			            , DATE_FORMAT(A.CHG_DATE, '%Y-%m-%d') AS CHG_DATE    
+			            </when>
+			            <otherwise>
+			            ,TO_CHAR(A.CHG_DATE,'YYYY-MM-DD HH24:MI:SS') CHG_DATE       
+			            </otherwise>
+			        </choose>	
+		     FROM TSYCO_DEFN_STMT A
+		     WHERE 1=1
+			<if test="stmtCd != null and stmtCd != ''">
+	     		AND A.STMT_CD = #{stmtCd}
+			</if>		     
+		    ) A
+    </select>    
+     <select id="getInitCodeList" resultType="StatisticsMgtVO">
+		SELECT 
+	       DETAIL.COMMON_CD
+	       ,COALESCE((SELECT CODE_NM 
+	         FROM TSYCO_CODE_DETAIL_NAME NAME
+	         WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+	         AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+	         AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+		FROM TSYCO_CODE_MAST MAST
+		, TSYCO_CODE_DETAIL DETAIL
+		WHERE   MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			AND MAST.COMMON_GRP   ='CM00055'
+		    AND DETAIL.USE_YN     ='Y'
+		    AND MAST.USE_YN       ='Y'
+		ORDER BY DETAIL.SORT_NO
+    </select>  
+     <select id="getUseableList" resultType="StatisticsMgtVO">
+		SELECT 
+	        DETAIL.COMMON_CD
+	       ,COALESCE((SELECT CODE_NM 
+	         FROM TSYCO_CODE_DETAIL_NAME NAME
+	         WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+	         AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+	         AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+		FROM TSYCO_CODE_MAST MAST
+		, TSYCO_CODE_DETAIL DETAIL
+		WHERE   MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			AND MAST.COMMON_GRP   ='CM00055'
+		    AND DETAIL.USE_YN     ='Y'
+		    AND MAST.USE_YN       ='Y'
+		    AND DETAIL.COMMON_CD NOT IN (${varDefn})
+		ORDER BY DETAIL.SORT_NO
+    </select>   
+     <select id="getSelectedList" resultType="StatisticsMgtVO">
+		SELECT 
+	        DETAIL.COMMON_CD
+	       ,COALESCE((SELECT CODE_NM 
+	         FROM TSYCO_CODE_DETAIL_NAME NAME
+	         WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+	         AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+	         AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+		FROM TSYCO_CODE_MAST MAST
+		, TSYCO_CODE_DETAIL DETAIL
+		WHERE   MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			AND MAST.COMMON_GRP   ='CM00055'
+		    AND DETAIL.USE_YN     ='Y'
+		    AND MAST.USE_YN       ='Y'
+		    AND DETAIL.COMMON_CD IN (${varDefn})
+		ORDER BY DETAIL.SORT_NO
+    </select>       
+    <update id="updateStatistics" parameterType="com.ntels.ccbs.customer.domain.statistics.statisticsMgt.StatisticsMgtVO">
+	     UPDATE TSYCO_DEFN_STMT SET
+	        SO_ID = #{statisticsMgtVO.soId}
+	      ,STMT_TP = #{statisticsMgtVO.stmtTp}
+	      ,INACT_DT = #{statisticsMgtVO.inactDt}
+	      ,ACT_DT = #{statisticsMgtVO.actDt}
+	      ,STMT_NM = #{statisticsMgtVO.stmtNm}
+	      ,STMT = #{statisticsMgtVO.stmt}
+	      ,VAR_DEFN = #{statisticsMgtVO.varDefn}
+	      ,TMOUT = #{statisticsMgtVO.tmout}
+	      ,VLD_YN = #{statisticsMgtVO.vldYn}
+	      ,RMRK_DESC = #{statisticsMgtVO.rmrkDesc}
+	      ,CHGR_ID  = #{statisticsMgtVO.chgrId}   
+	        <choose>
+	            <when test="'${dbms.kind}' == 'MYSQL'">        
+	            ,CHG_DATE = NOW() 
+	            </when>
+	            <otherwise>
+	            ,CHG_DATE = SYSDATE     
+	            </otherwise>
+	        </choose>
+	     WHERE STMT_CD = #{statisticsMgtVO.stmtCd}
+    </update>   
+    
+    <insert id="insertStatistics" parameterType="com.ntels.ccbs.customer.domain.statistics.statisticsMgt.StatisticsMgtVO">    
+		INSERT INTO TSYCO_DEFN_STMT (SO_ID,
+                         STMT_TP,
+                         STMT_CD,
+                         INACT_DT,
+                         ACT_DT,
+                         STMT_NM,
+                         STMT,
+                         VAR_DEFN,
+                         TMOUT,
+                         VLD_YN,
+                         RMRK_DESC,
+                         REGR_ID,
+                         REG_DATE,
+                         CHGR_ID,
+                         CHG_DATE)VALUES(
+                  		#{statisticsMgtVO.soId},
+                        #{statisticsMgtVO.stmtTp},
+                        #{statisticsMgtVO.stmtCd},
+   						#{statisticsMgtVO.inactDt},
+   						#{statisticsMgtVO.actDt},
+                        #{statisticsMgtVO.stmtNm},
+                        #{statisticsMgtVO.stmt},
+                        #{statisticsMgtVO.varDefn},
+                        #{statisticsMgtVO.tmout},
+                        #{statisticsMgtVO.vldYn},
+                        #{statisticsMgtVO.rmrkDesc},
+                        #{statisticsMgtVO.chgrId} ,
+				        <choose>
+				            <when test="'${dbms.kind}' == 'MYSQL'">        
+				            NOW(), 
+				            </when>
+				            <otherwise>
+				            SYSDATE,     
+				            </otherwise>
+				        </choose>
+			                        #{statisticsMgtVO.chgrId} ,
+				        <choose>
+				            <when test="'${dbms.kind}' == 'MYSQL'">        
+				            NOW() 
+				            </when>
+				            <otherwise>
+				            SYSDATE  
+				            </otherwise>
+				        </choose>
+                         )    
+    </insert>
+    
+	<select id="getStatisticeSoList" resultType="StatisticsMgtVO">
+		SELECT A.*
+		 FROM (
+		     SELECT  
+		             A.STMT_CD
+		            ,A.SO_ID
+		            ,A.STMT_TP
+		            ,A.INACT_DT
+		            ,A.ACT_DT
+		            ,A.STMT_NM
+		            ,A.STMT
+		            ,A.VAR_DEFN
+		            ,A.TMOUT
+		            ,A.VLD_YN
+		            ,A.RMRK_DESC
+		            ,A.REGR_ID
+		            ,(SELECT USER_NAME FROM TSYCO_USER B WHERE B.USER_ID = REGR_ID) AS  REGR_NM
+			        <choose>
+			            <when test="'${dbms.kind}' == 'MYSQL'">        
+			            , DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE    
+			            </when>
+			            <otherwise>
+			            ,TO_CHAR(A.REG_DATE,'YYYY-MM-DD HH24:MI:SS') REG_DATE         
+			            </otherwise>
+			        </choose>		            
+		            ,A.CHGR_ID
+		            ,(SELECT USER_NAME FROM TSYCO_USER C WHERE C.USER_ID = A.CHGR_ID) AS   CHGR_NM
+		     FROM TSYCO_DEFN_STMT A
+		     WHERE 1=1
+			<if test="searchSoId != null and searchSoId != ''">
+	     		AND A.SO_ID = #{searchSoId}
+			</if>			     
+		    ) A
+    </select>
+    
+     <select id="getStatistice" resultType="StatisticsMgtVO">
+		SELECT A.*
+		 FROM (
+		     SELECT  
+		             A.STMT_CD
+		            ,A.SO_ID
+		            ,A.STMT_TP
+		            ,A.INACT_DT
+		            ,A.ACT_DT
+		            ,A.STMT_NM
+		            ,A.STMT
+		            ,A.VAR_DEFN
+		            ,A.TMOUT
+		            ,A.VLD_YN
+		            ,A.RMRK_DESC
+		            ,A.REGR_ID
+		            ,(SELECT USER_NAME FROM TSYCO_USER B WHERE B.USER_ID = REGR_ID) AS  REGR_NM
+			        <choose>
+			            <when test="'${dbms.kind}' == 'MYSQL'">        
+			            , DATE_FORMAT(A.REG_DATE, '%Y-%m-%d') AS REG_DATE    
+			            </when>
+			            <otherwise>
+			            ,TO_CHAR(A.REG_DATE,'YYYY-MM-DD HH24:MI:SS') REG_DATE         
+			            </otherwise>
+			        </choose>
+		            ,A.CHGR_ID
+		            ,(SELECT USER_NAME FROM TSYCO_USER C WHERE C.USER_ID = A.CHGR_ID) AS   CHGR_NM
+		     FROM TSYCO_DEFN_STMT A
+	         WHERE 1=1	         
+			<if test="statisticsMgtVO.stmtTp != null and statisticsMgtVO.stmtTp != ''">
+	     	 	AND A.STMT_TP  = #{statisticsMgtVO.stmtTp}
+			</if>		         
+			<if test="statisticsMgtVO.soId != null and statisticsMgtVO.soId  != ''">
+	     	 	AND A.SO_ID  = #{statisticsMgtVO.soId}
+			</if>
+		    ) A
+    </select>   
+    
+    <delete id="deleteStatistics" parameterType="com.ntels.ccbs.customer.domain.statistics.statisticsMgt.StatisticsMgtVO">
+	     DELETE FROM TSYCO_DEFN_STMT WHERE STMT_CD = #{statisticsMgtVO.stmtCd}
+    </delete>        
+</mapper>
+    

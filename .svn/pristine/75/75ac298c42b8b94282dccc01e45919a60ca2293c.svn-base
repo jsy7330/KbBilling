@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.distributor.distributorMgt.PointContactMapper">
+
+	<!-- 접점 리스트 조회 -->
+	<select id="pointContactList" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.PointContactVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.PointContactVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT	A.SO_ID						--사업자ID
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   -- 사업명
+					, C.PART_ORG_ID				--상위조직ID
+					, (SELECT	ORG_NM 
+                  		FROM	TDNDI_ORG_INFO 
+                  		WHERE	ORG_ID = C.PART_ORG_ID) AS PART_ORG_NM		--상위조직명
+                  	, A.ORG_ID					--조직ID:접점ID
+					, B.ORG_NM					--조직명:접점명
+					, A.BUSI_TP_CD				--사업자구분코드
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{pointContactVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{pointContactVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00040'
+								AND DETAIL.COMMON_CD = A.BUSI_TP_CD
+		       		) AS BUSI_TP_NM			--사업자구분코드명
+		       		, A.BOR_NO				--사업자등록번호
+					, A.CORP_REG_NO			--법인등록번호
+					, A.BUSI_TP				--업종
+					, A.BUSI_CNDT			--업태
+					, A.REP_NM				--대표자명
+					, A.REP_RNO				--대표자주민번호
+					, A.HMPG				--홈페이지
+					, A.TEL_NO				--전화번호
+					, A.FAX_NO				--팩스번호
+					, A.EML					--이메일
+					, A.ZIP_CD				--우편번호
+					, A.ADDR1				--주소1
+					, A.ADDR2				--주소2
+					, B.APPY_STRT_DT		--적용시작일
+					, B.APPY_END_DT			--적용종료일
+					, A.ONLN_TP_CD			--온라인구분코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{pointContactVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{pointContactVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00043'
+								AND DETAIL.COMMON_CD = A.ONLN_TP_CD
+		       		) AS ONLN_TP_NM			--온라인구분코드명
+					, B.ORG_STAT_CD			--조직상태코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{pointContactVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{pointContactVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00041'
+								AND DETAIL.COMMON_CD = B.ORG_STAT_CD
+		       		) AS ORG_STAT_NM		--조직상태코드명
+					, A.TERM_RESN			--해지사유
+			FROM	TDNDI_DIST_INFO A		--유통정보
+					, TDNDI_ORG_INFO B		--조직정보
+					, TDNDI_ORG_REL_HIST C	--조직관계이력
+        	WHERE	A.ORG_ID		= B.ORG_ID
+				AND A.ORG_ID		= C.ORG_ID
+				AND C.APPY_END_DT	= '99991231'
+				AND C.REL_TP_CD		= '101'
+				AND B.TP_CD			= '6000'
+				<if test="pointContactVO.orgIdList != null and pointContactVO.orgIdList.size() != 0">
+					AND A.ORG_ID IN
+					<foreach collection="pointContactVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+        		</if>
+		 ORDER BY APPY_STRT_DT DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	
+	<!-- 접점 리스트 카운트 -->
+	<select id="pointContactCount" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.PointContactVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDI_DIST_INFO A		--유통정보
+				, TDNDI_ORG_INFO B		--조직정보
+				, TDNDI_ORG_REL_HIST C	--조직관계이력
+       	WHERE	A.ORG_ID		= B.ORG_ID
+			AND A.ORG_ID		= C.ORG_ID
+			AND C.APPY_END_DT	= '99991231'
+			AND C.REL_TP_CD		= '101'
+			AND B.TP_CD			= '6000'
+			<if test="pointContactVO.orgIdList != null and pointContactVO.orgIdList.size() != 0">
+				AND A.ORG_ID IN
+				<foreach collection="pointContactVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+		            #{item}
+		        </foreach>
+       		</if>
+	</select>
+	
+	<!-- update  TDNDI_DIST_INFO  -->
+	<update id="updateDistInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.PointContactVO">
+		UPDATE   TDNDI_DIST_INFO
+        SET      BUSI_TP_CD			= #{pointContactVO.busiTpCd}			--사업자구분코드
+        		, ONLN_TP_CD		= #{pointContactVO.onlnTpCd}			--온라인구분코드
+				, BOR_NO			= #{pointContactVO.borNo}				--사업자등록번호
+				, CORP_REG_NO		= #{pointContactVO.corpRegNo}			--법인등록번호
+				, BUSI_TP			= #{pointContactVO.busiTp}				--업종
+				, BUSI_CNDT			= #{pointContactVO.busiCndt}			--업태
+				, REP_NM			= #{pointContactVO.repNm}				--대표자명
+				, REP_RNO			= #{pointContactVO.repRno}				--대표자주민번호
+				, EML				= #{pointContactVO.eml}					--이메일
+				, HMPG				= #{pointContactVO.hmpg}				--홈페이지
+				, TEL_NO			= #{pointContactVO.telNo}				--전화번호
+				, FAX_NO			= #{pointContactVO.faxNo}				--팩스번호
+				, ZIP_CD			= #{pointContactVO.zipCd}				--우편번호
+				, ADDR1				= #{pointContactVO.addr1}				--주소1
+				, ADDR2				= #{pointContactVO.addr2}				--주소2
+				, TERM_RESN			= #{pointContactVO.termResn}			--해지사유
+				, CHGR_ID			= #{pointContactVO.chgrId}				--수정자
+				, CHG_DATE			= #{pointContactVO.chgDate}				--수정일시
+        WHERE    ORG_ID         = #{pointContactVO.orgId}             -- 조직ID
+        	AND SO_ID			= #{pointContactVO.soId}	          -- 사업ID
+	</update>
+	
+	<!-- update  TDNDI_ORG_INFO  업데이트-->
+	<update id="updateOrgInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.PointContactVO">
+		UPDATE	TDNDI_ORG_INFO
+			SET	ORG_NM          = #{pointContactVO.orgNm}		--조직명
+				, ORG_STAT_CD	= #{pointContactVO.orgStatCd}	--조직상태코드
+				, APPY_STRT_DT	= #{pointContactVO.appyStrtDt}	--개설일
+				, APPY_END_DT	= #{pointContactVO.appyEndDt}	--폐점일
+				, CHG_DATE		= #{pointContactVO.chgDate}		--수정일시
+				, CHGR_ID		= #{pointContactVO.chgrId}		--수정자		
+		WHERE	ORG_ID			= #{pointContactVO.orgId}		--조직ID
+			AND SO_ID			= #{pointContactVO.soId}	          -- 사업ID
+	</update>
+	
+	<!-- update  TDNDI_ORG_REL_HIST 조직업무권한 -->
+	<update id="updateOrgRelHist" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.PointContactVO">
+		UPDATE   TDNDI_ORG_REL_HIST
+        SET      APPY_STRT_DT   = #{pointContactVO.appyStrtDt}        -- 적용시작일
+               , APPY_END_DT    = #{pointContactVO.appyEndDt}         -- 적용종료일
+               , CHG_DATE		= #{pointContactVO.chgDate}           -- 수정일
+			   , CHGR_ID		= #{pointContactVO.chgrId}            -- 수정자ID      
+        WHERE    ORG_ID         = #{pointContactVO.orgId}             -- 조직ID
+        AND      ORG_REL_ORD    = ( SELECT MAX(ORG_REL_ORD) AS ORG_REL_ORD FROM TDNDI_ORG_REL_HIST WHERE ORG_ID = #{pointContactVO.orgId} )         -- 조직관계순번
+        	AND SO_ID			= #{pointContactVO.soId}	          -- 사업ID
+	</update>
+</mapper>	

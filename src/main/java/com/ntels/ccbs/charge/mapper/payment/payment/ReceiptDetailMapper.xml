@@ -1,0 +1,442 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.payment.payment.ReceiptDetailMapper">
+
+<!-- 수납 조회 -->
+	<!-- 수납 통계조회 -->
+	<select id="receiptStatisticsList" parameterType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptDetailVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptDetailVO">
+		SELECT   DIV_DPST                                          AS DIV_DPST /* 구분 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_01    ELSE RCPT_AMT_01 END   AS RCPT_01  /* 지로 */
+                 ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_02    ELSE RCPT_AMT_02 END   AS RCPT_02  /* 자동이체 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_04    ELSE RCPT_AMT_04 END   AS RCPT_04  /* 가상계좌 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_05    ELSE RCPT_AMT_05 END   AS RCPT_05  /* 신용카드 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_08    ELSE RCPT_AMT_08 END   AS RCPT_08  /* A장표 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_09    ELSE RCPT_AMT_09 END   AS RCPT_09  /* 무통장입금 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_11    ELSE RCPT_AMT_11 END   AS RCPT_11  /* 현금 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_16    ELSE RCPT_AMT_16 END   AS RCPT_16  /* 선수금대체 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_17    ELSE RCPT_AMT_17 END   AS RCPT_17  /* 미확인대체 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_30    ELSE RCPT_AMT_30 END   AS RCPT_30  /* 번호이동입금 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_31    ELSE RCPT_AMT_31 END   AS RCPT_31  /* 납부주장입금 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN DPST_CNT_40    ELSE RCPT_AMT_40 END   AS RCPT_40  /* 원포인트입금 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN TOT_CNT    ELSE TOT_AMT END   AS TOT   /* 합계 */
+                ,CASE WHEN DIV_DPST = (SELECT NAME.CODE_NM
+                                         FROM TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                          AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                          AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                                          AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                          AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                          AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                                          AND MAST.COMMON_GRP   ='BL00100'
+                                          AND DETAIL.COMMON_CD  ='1'
+                                          AND DETAIL.USE_YN     ='Y'
+                                          AND MAST.USE_YN       ='Y') THEN CNCL_CNT    ELSE CNCL_AMT END   AS CNCL     /* 수납취소 */
+        FROM     ( SELECT   SUM( CASE WHEN A.DPST_CL = '01' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_01 /* 지로 */
+                           ,SUM( CASE WHEN A.DPST_CL = '02' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_02 /* 자동이체 */
+                           ,SUM( CASE WHEN A.DPST_CL = '04' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_04 /* 가상계좌 */
+                           ,SUM( CASE WHEN A.DPST_CL = '05' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_05 /* 신용카드 */
+                           ,SUM( CASE WHEN A.DPST_CL = '08' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_08 /* A장표 */
+                           ,SUM( CASE WHEN A.DPST_CL = '09' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_09 /* 무통장입금 */
+                           ,SUM( CASE WHEN A.DPST_CL = '11' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_11 /* 현금 */
+                           ,SUM( CASE WHEN A.DPST_CL = '16' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_16 /* 선수금대체 */
+                           ,SUM( CASE WHEN A.DPST_CL = '17' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_17 /* 미확인대체 */
+                           ,SUM( CASE WHEN A.DPST_CL = '30' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_30 /* 번호이동입금 */
+                           ,SUM( CASE WHEN A.DPST_CL = '31' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_31 /* 납부주장입금 */
+                           ,SUM( CASE WHEN A.DPST_CL = '40' THEN RCPT_AMT ELSE 0 END ) AS RCPT_AMT_40 /* 원포인트입금 */
+                           ,SUM( RCPT_AMT )                                            AS TOT_AMT     /* 금액합계 */
+                           ,SUM( CASE WHEN   CNCL_YN = 'Y'  THEN RCPT_AMT  ELSE 0 END )     AS CNCL_AMT    /* 취소금액 */
+                           ,SUM( CASE WHEN A.DPST_CL = '01' THEN 1    ELSE 0 END )     AS DPST_CNT_01 /* 지로 */
+                           ,SUM( CASE WHEN A.DPST_CL = '02' THEN 1    ELSE 0 END )     AS DPST_CNT_02 /* 자동이체 */
+                           ,SUM( CASE WHEN A.DPST_CL = '04' THEN 1    ELSE 0 END )     AS DPST_CNT_04 /* 가상계좌 */
+                           ,SUM( CASE WHEN A.DPST_CL = '05' THEN 1    ELSE 0 END )     AS DPST_CNT_05 /* 신용카드 */
+                           ,SUM( CASE WHEN A.DPST_CL = '08' THEN 1    ELSE 0 END )     AS DPST_CNT_08 /* A장표 */
+                           ,SUM( CASE WHEN A.DPST_CL = '09' THEN 1    ELSE 0 END )     AS DPST_CNT_09 /* 무통장입금 */
+                           ,SUM( CASE WHEN A.DPST_CL = '11' THEN 1    ELSE 0 END )     AS DPST_CNT_11 /* 현금 */
+                           ,SUM( CASE WHEN A.DPST_CL = '16' THEN 1    ELSE 0 END )     AS DPST_CNT_16 /* 선수금대체 */
+                           ,SUM( CASE WHEN A.DPST_CL = '17' THEN 1    ELSE 0 END )     AS DPST_CNT_17 /* 미확인대체 */
+                           ,SUM( CASE WHEN A.DPST_CL = '30' THEN 1    ELSE 0 END )     AS DPST_CNT_30 /* 번호이동입금 */
+                           ,SUM( CASE WHEN A.DPST_CL = '31' THEN 1    ELSE 0 END )     AS DPST_CNT_31 /* 납부주장입금 */
+                           ,SUM( CASE WHEN A.DPST_CL = '40' THEN 1    ELSE 0 END )     AS DPST_CNT_40 /* 원포인트입금 */
+                           ,COUNT( * )                                                 AS TOT_CNT     /* 건수합계 */
+                           ,SUM( CASE WHEN   CNCL_YN = 'Y'  THEN 1    ELSE 0 END )     AS CNCL_CNT    /* 취소건수 */
+                   FROM   TBLPY_RCPT A
+                   WHERE  1 = 1
+                   AND    A.DPST_CL <![CDATA[<>]]> '22'    /* (-)매출수납처리는 제외 */
+                   <if test="receiptDetail.pymDtTp == '01'">    /* 수납일자  */
+                        AND    A.PAY_PROC_DT BETWEEN #{receiptDetail.strtDt} /* PAY_PROC_DT_FROM */ AND #{receiptDetail.endDt} /* PAY_PROC_DT_TO */ /* 수납처리일자 */
+                   </if> 
+                   <if test="receiptDetail.pymDtTp == '02'">    /* 입금일자  */
+                        AND    A.DPST_DT BETWEEN #{receiptDetail.strtDt} /* DPST_DT_FROM */ AND #{receiptDetail.endDt} /* DPST_DT_TO */ /* 입금일자 */ 
+                   </if>  
+                   <if test="receiptDetail.pymDtTp == '03'">    /* 이체일자 */
+                        AND    A.TRANS_DT BETWEEN #{receiptDetail.strtDt} /* TRANS_DT_FROM */ AND #{receiptDetail.endDt} /* TRANS_DT_TO */ /* 이체일자 */
+                   </if>
+                   <if test="receiptDetail.usrId != null and receiptDetail.usrId != ''">
+                        AND    A.REGR_ID          = #{receiptDetail.usrId}    /* 등록자ID */
+                   </if>
+                   <if test="receiptDetail.pymAcntId != null and receiptDetail.pymAcntId != ''">
+                        AND    A.PYM_ACNT_ID      = #{receiptDetail.pymAcntId} /* PYM_ACNT_ID */
+                   </if>
+                   AND    A.SO_ID            = #{receiptDetail.soId}
+                 ) AA
+               , ( SELECT NAME.CODE_NM AS DIV_DPST
+                     FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                      AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                      AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                      AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                      AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                      AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                      AND MAST.COMMON_GRP   ='BL00100'
+                      AND DETAIL.USE_YN     ='Y'
+                      AND MAST.USE_YN       ='Y'
+                 ) BB
+    </select>
+    
+    <!-- 수납 조회 -->
+    <select id="recList" parameterType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptDetailVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptDetailVO">
+        SELECT  <if test="receiptDetail.pymDtTp == '01'">    /* 수납일자  */
+                /*+ ORDERED USE_NL(A B C BL00067 BL00079) INDEX(A IX_TBLPY_RCPT_04)*/
+                </if>
+                <if test="receiptDetail.pymDtTp == '02'">    /* 입금일자  */
+                /*+ ORDERED USE_NL(A B C BL00067 BL00079) INDEX(A IX_TBLPY_RCPT_01)*/
+                </if>
+                <if test="receiptDetail.pymDtTp == '03'">    /* 이체일자 */
+                /*+ ORDERED USE_NL(A B C BL00067 BL00079) INDEX(A IX_TBLPY_RCPT_11)*/
+                </if>
+                 A.PYM_ACNT_ID           AS PYM_ACNT_ID         /* 납부계정ID */
+               , B.ACNT_NM               AS ACNT_NM             /* 납부자계정명 */
+               , A.DPST_DT               AS DPST_DT             /* 입금일자 */
+               , A.TRANS_DT              AS TRANS_DT            /* 이체일자 */
+               , A.PAY_PROC_DT           AS PAY_PROC_DT         /* 수납처리일자 */
+               , A.BILL_YYMM             AS BILL_YYMM           /* 청구년월 */
+               , A.PAY_OBJ_AMT           AS PAY_OBJ_AMT         /* 처리금액 */
+               , A.PAY_APLY_AMT          AS BILL_AMT            /* 청구금액 */
+               , A.PRE_RCPT_AMT          AS PRE_RCPT_AMT        /* 이전수납금액 */
+               , A.RCPT_AMT              AS RCPT_AMT            /* 수납금액 */
+               , A.PREPAY_APLY_AMT       AS PREPAY_APLY_AMT     /* 처리잔액, 선수금적용액 */
+               , A.CNCL_YN               AS CNCL_YN             /* 수납취소 */
+               , (SELECT NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                       , TSYCO_CODE_MAST_NAME MNAME
+                       , TSYCO_CODE_DETAIL DETAIL
+                       , TSYCO_CODE_DETAIL_NAME NAME
+                   WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                     AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                     AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                     AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                     AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                     AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                     AND MAST.COMMON_GRP   ='BL00067'
+                     AND DETAIL.COMMON_CD  ='1'
+                     AND DETAIL.USE_YN     ='Y'
+                     AND MAST.USE_YN       ='Y')
+                                         AS DPST_CL_NM          /* 입금구분명(BLPY001) */
+               , (SELECT NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                       , TSYCO_CODE_MAST_NAME MNAME
+                       , TSYCO_CODE_DETAIL DETAIL
+                       , TSYCO_CODE_DETAIL_NAME NAME
+                   WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                     AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                     AND MNAME.LNG_TYP     =#{receiptDetail.lngTyp}
+                     AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                     AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                     AND NAME.LNG_TYP      =#{receiptDetail.lngTyp}
+                     AND MAST.COMMON_GRP   ='BL00079'
+                     AND DETAIL.COMMON_CD  ='1'
+                     AND DETAIL.USE_YN     ='Y'
+                     AND MAST.USE_YN       ='Y')
+                                         AS PAY_TP_NM           /* 수납구분명(BLPY013) */
+               , A.REGR_ID               AS REGR_ID             /* 등록자ID */
+               , C.USER_NAME             AS USR_NM              /* 등록자명 */
+               , A.REG_DATE              AS REG_DATE            /* 등록일(Formatting) */
+               , B.CUST_ID               AS CUST_ID             /* 납부고객ID */
+               , B.CUST_NM               AS CUST_NM             /* 납부고객명 */
+               , A.BILL_DT               AS BILL_DT             /* 청구일자 */
+               , A.PYM_SEQ_NO            AS PYM_SEQ_NO          /* 수납일련번호 */
+               , A.DPST_SEQ_NO           AS DPST_SEQ_NO         /* 입금일련번호 */
+               , A.PREPAY_TRANS_SEQ_NO   As PREPAY_TRANS_SEQ_NO /* 선수대체일련번호 */
+               , A.AMBG_TRANS_SEQ_NO     As AMBG_TRANS_SEQ_NO   /* 불명금대체일련번호 */
+               , A.DPST_CL               AS DPST_CL             /* 입금구분 */
+               , A.PAY_TP                AS PAY_TP              /* 수납구분 */
+               , A.SO_ID                 AS SO_ID               /* 사업 */
+               , A.BILL_SEQ_NO           AS BILL_SEQ_NO         /* 청구번호 */
+               , ( CASE A.DPST_CL WHEN '05' THEN
+                                               ( SELECT /*+ ORDERED USE_NL(DPST RSLT) */
+                                                        RSLT.ALLOT_PRD
+                                                   FROM TBLPY_DPST                  DPST
+                                                       ,TBLPY_CDTCD_WTDRAW_REQ_RSLT RSLT
+                                                  WHERE 1=1
+                                                  AND DPST.DPST_SEQ_NO    = A.DPST_SEQ_NO
+                                                  AND DPST.DPST_TP_SEQ_NO = RSLT.CARD_WTDRAW_SEQ_NO
+                                                  AND RSLT.WTDRAW_PROC_STAT  = 'Y'
+                                                  AND ROWNUM =1
+                                                 )
+                                            ELSE ''
+                    END ) AS ALLOT_PRD                          /* 할부기간 */
+        FROM     TBLPY_RCPT          A
+               , (SELECT Z.PYM_ACNT_ID, Z.CUST_ID, Z.CUST_NM
+                   FROM IFNBRM_CUST_INFO Z,
+                        (SELECT PYM_ACNT_ID, MAX(CUST_ID) 
+                           FROM IFNBRM_CUST_INFO
+                         GROUP BY PYM_ACNT_ID) ZZ
+                   WHERE Z.PYM_ACNT_ID = ZZ.PYM_ACNT_ID) B
+               , TSYCO_USER          C
+        WHERE  A.PYM_ACNT_ID      = B.PYM_ACNT_ID
+        AND    A.REGR_ID          = C.USER_ID
+        AND    A.DPST_CL <![CDATA[ <> ]]> '22'                                          /* (-)매출수납처리는 제외 */
+        <if test="receiptDetail.cnclYn != null and receiptDetail.cnclYn != ''">
+        AND    A.CNCL_YN     = #{receiptDetail.cnclYn}                                  /* 수납취소여부 */
+        </if>
+        <if test="receiptDetail.usrId != null and receiptDetail.usrId != ''">
+        AND    A.REGR_ID     = #{receiptDetail.usrId}                                   /* 등록자ID */
+        </if>
+        <if test="receiptDetail.pymAcntId != null and receiptDetail.pymAcntId != ''">
+        AND    A.PYM_ACNT_ID = #{receiptDetail.pymAcntId}                               /* 납부계정ID */
+        </if>
+        <if test="receiptDetail.pymDtTp == '01'">
+        AND    A.PAY_PROC_DT BETWEEN #{receiptDetail.strtDt} AND #{receiptDetail.endDt} /* 수납처리일 */
+        </if>
+        <if test="receiptDetail.pymDtTp == '02'">
+        AND    A.DPST_DT BETWEEN #{receiptDetail.strtDt} AND #{receiptDetail.endDt}     /* 입금일자 */
+        </if>
+        <if test="receiptDetail.pymDtTp == '03'">
+        AND    A.TRANS_DT BETWEEN #{receiptDetail.strtDt} AND #{receiptDetail.endDt}    /* 이체일자 */
+        </if>
+        <if test="receiptDetail.dpstCl != null and receiptDetail.dpstCl != ''">
+        AND    A.DPST_CL     = #{receiptDetail.dpstCl}                                  /* 입금구분 */
+        </if>
+        AND    A.SO_ID       = #{receiptDetail.soId}                                    /* SO_ID */
+    </select>
+    
+    <!-- 수납 상세 조회 -->
+    <select id="recDtlList" parameterType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptDetailVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptDetailVO">
+        SELECT   C.CUST_NM               AS CUST_NM         /* 고객명 */
+               , F.SVC_TEL_NO            AS SVC_TEL_NO      /* 회선번호 */
+               , AA.BILL_YYMM            AS BILL_YYMM       /* 청구년월 */
+               , A.USE_YYMM              AS USE_YYMM        /* 사용년월 */
+               , D.PROD_NM               AS PROD_NM         /* 상품명 */
+               , D.SVC_NM                AS SVC_NM          /* 서비스명 */
+               , B.RATE_ITM_NM           AS CHRG_ITM_NM     /* 요금항목명 */
+               , AA.BILL_AMT             AS BILL_AMT        /* 청구금액 */
+               , A.PRE_RCPT_AMT          AS PRE_RCPT_AMT    /* 이전수납금액 */
+               , A.RCPT_AMT              AS RCPT_AMT        /* 수납금액 */
+               , A.CUST_ID               AS CUST_ID         /* 고객ID */
+               , A.CTRT_ID               AS CTRT_ID         /* 계약ID */
+               , A.PYM_SEQ_NO            AS PYM_SEQ_NO      /* 수납일련번호 */
+               , A.PROD_CMPS_ID          AS PROD_CMPS_ID    /* 상품구성ID */
+               , A.SVC_CMPS_ID           AS SVC_CMPS_ID     /* 서비스구성ID */
+               , A.CHRG_ITM_CD           AS CHRG_ITM_CD     /* 요금항목코드 */
+               , A.BILL_SEQ_NO           AS BILL_SEQ_NO     /* 청구일련번호 */
+        FROM     TBLPY_RCPT_DTL       A
+               , TBLIV_BILL           AA
+               , IFNBRM_RATE_ITM_INFO  B
+               , IFNBRM_CUST_INFO C
+               , IFNBRM_PROD_INFO D
+               , IFNBRM_CTRT_INFO F
+        WHERE  A.BILL_SEQ_NO  = AA.BILL_SEQ_NO
+        AND    A.USE_YYMM     = AA.USE_YYMM
+        AND    A.PROD_CMPS_ID = AA.PROD_CMPS_ID
+        AND    A.SVC_CMPS_ID  = AA.SVC_CMPS_ID
+        AND    A.CHRG_ITM_CD  = AA.CHRG_ITM_CD
+        AND    A.CHRG_ITM_CD  = B.SVC_RATE_ITM_TYP_CD
+        AND    AA.PROD_CD     = D.PROD_CD
+        AND    A.CUST_ID      = C.CUST_ID
+        AND    A.PYM_ACNT_ID  = C.PYM_ACNT_ID
+        AND    A.CTRT_ID      = F.CTRT_ID
+        AND    F.INACT_DTTM   = '99991231235959'
+        AND    A.PYM_SEQ_NO   = #{receiptDetail.pymSeqNo}    /* PYM_SEQ_NO */
+    </select>
+	
+</mapper>

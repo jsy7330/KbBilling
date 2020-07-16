@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.service.CommonDataMapper">
+	<!-- 공통코드 조회 -->
+	<select id="getCommonCode" resultType="CommonCodeVO">
+        SELECT 
+                 MAST.COMMON_GRP
+                ,DETAIL.COMMON_CD
+                ,COALESCE((SELECT CODE_NM 
+                  FROM TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+                  AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+                  AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+                ,DETAIL.REF_CODE
+                ,DETAIL.REF_CODE2
+                ,DETAIL.REF_CODE3
+                ,DETAIL.REF_CODE4
+                ,DETAIL.DEFAULT_YN
+                ,DETAIL.RMRK
+                ,DETAIL.SORT_NO
+                ,DETAIL.USE_YN
+        FROM TSYCO_CODE_MAST MAST
+            , TSYCO_CODE_DETAIL DETAIL
+        WHERE   MAST.COMMON_GRP     =DETAIL.COMMON_GRP
+            AND MAST.COMMON_GRP   =#{grpCd}
+            AND DETAIL.COMMON_CD  =#{code}
+            AND DETAIL.USE_YN     ='Y'
+            AND MAST.USE_YN       ='Y'
+	</select>
+    
+    <!-- 공통코드 리스트 조회 -->
+    <select id="getCommonCodeList" resultType="CommonCodeVO">
+        SELECT 
+                 MAST.COMMON_GRP
+                ,DETAIL.COMMON_CD
+                ,COALESCE((SELECT CODE_NM 
+                  FROM TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+                  AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+                  AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+                ,DETAIL.REF_CODE
+                ,DETAIL.REF_CODE2
+                ,DETAIL.REF_CODE3
+                ,DETAIL.REF_CODE4
+                ,DETAIL.DEFAULT_YN
+                ,DETAIL.RMRK
+                ,DETAIL.SORT_NO
+                ,DETAIL.USE_YN
+        FROM TSYCO_CODE_MAST MAST
+            , TSYCO_CODE_DETAIL DETAIL
+        WHERE   MAST.COMMON_GRP=DETAIL.COMMON_GRP
+            AND MAST.COMMON_GRP   =#{grpCd}
+            AND DETAIL.USE_YN     ='Y'
+            AND MAST.USE_YN       ='Y'
+        ORDER BY DETAIL.SORT_NO
+    </select>
+    
+    
+        
+    <!-- 공통코드 리스트 조회 Ref1 -->
+    <select id="getCommonCodeListByRef1" resultType="CommonCodeVO">
+        SELECT 
+                 MAST.COMMON_GRP
+                ,DETAIL.COMMON_CD
+                ,COALESCE((SELECT CODE_NM 
+                  FROM TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+                  AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+                  AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+                ,DETAIL.REF_CODE
+                ,DETAIL.REF_CODE2
+                ,DETAIL.REF_CODE3
+                ,DETAIL.REF_CODE4
+                ,DETAIL.DEFAULT_YN
+                ,DETAIL.RMRK
+                ,DETAIL.SORT_NO
+                ,DETAIL.USE_YN
+        FROM TSYCO_CODE_MAST MAST
+            , TSYCO_CODE_DETAIL DETAIL
+        WHERE   MAST.COMMON_GRP   =DETAIL.COMMON_GRP
+            AND MAST.COMMON_GRP   =#{grpCd}
+            AND DETAIL.REF_CODE   =#{ref1}
+            AND DETAIL.USE_YN     ='Y'
+            AND MAST.USE_YN       ='Y'
+        ORDER BY DETAIL.SORT_NO
+    </select>
+    
+    
+    <!-- 공통코드 리스트 조회 Ref2 -->
+    <select id="getCommonCodeListByRef2" resultType="CommonCodeVO">
+        SELECT 
+                 MAST.COMMON_GRP
+                ,DETAIL.COMMON_CD
+                ,COALESCE((SELECT CODE_NM 
+                  FROM TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+                  AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+                  AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+                ,DETAIL.REF_CODE
+                ,DETAIL.REF_CODE2
+                ,DETAIL.REF_CODE3
+                ,DETAIL.REF_CODE4
+                ,DETAIL.DEFAULT_YN
+                ,DETAIL.RMRK
+                ,DETAIL.SORT_NO
+                ,DETAIL.USE_YN
+        FROM TSYCO_CODE_MAST MAST
+            , TSYCO_CODE_DETAIL DETAIL
+        WHERE MAST.COMMON_GRP     =DETAIL.COMMON_GRP
+            AND MAST.COMMON_GRP   =#{grpCd}
+            AND DETAIL.REF_CODE2  =#{ref2}
+            AND DETAIL.USE_YN     ='Y'
+            AND MAST.USE_YN       ='Y'
+        ORDER BY DETAIL.SORT_NO
+    </select>
+    
+    <!-- 공통코드 리스트 조회 Ref3 -->
+    <select id="getCommonCodeListByRef3" resultType="CommonCodeVO">
+        SELECT 
+                 MAST.COMMON_GRP
+                ,DETAIL.COMMON_CD
+                ,COALESCE((SELECT CODE_NM 
+                  FROM TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+                  AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+                  AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+                ,DETAIL.REF_CODE
+                ,DETAIL.REF_CODE2
+                ,DETAIL.REF_CODE3
+                ,DETAIL.REF_CODE4
+                ,DETAIL.DEFAULT_YN
+                ,DETAIL.RMRK
+                ,DETAIL.SORT_NO
+                ,DETAIL.USE_YN
+        FROM TSYCO_CODE_MAST MAST
+            , TSYCO_CODE_DETAIL DETAIL
+        WHERE   MAST.COMMON_GRP   =DETAIL.COMMON_GRP
+            AND MAST.COMMON_GRP   =#{grpCd}
+            AND DETAIL.REF_CODE3  =#{ref3}
+            AND DETAIL.USE_YN     ='Y'
+            AND MAST.USE_YN       ='Y'
+        ORDER BY DETAIL.SORT_NO
+    </select>
+    
+   <!-- 공통코드 리스트 조회 Ref4 -->
+    <select id="getCommonCodeListByRef4" resultType="CommonCodeVO">
+        SELECT 
+                 MAST.COMMON_GRP
+                ,DETAIL.COMMON_CD
+                ,COALESCE((SELECT CODE_NM 
+                  FROM TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+                  AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+                  AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+                ,DETAIL.REF_CODE
+                ,DETAIL.REF_CODE2
+                ,DETAIL.REF_CODE3
+                ,DETAIL.REF_CODE4
+                ,DETAIL.DEFAULT_YN
+                ,DETAIL.RMRK
+                ,DETAIL.SORT_NO
+                ,DETAIL.USE_YN
+        FROM TSYCO_CODE_MAST MAST
+            , TSYCO_CODE_DETAIL DETAIL
+        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+            AND NAME.LNG_TYP      =#{lng}
+            AND MAST.COMMON_GRP   =#{grpCd}
+            AND DETAIL.REF_CODE4  =#{ref4}
+            AND DETAIL.USE_YN     ='Y'
+            AND MAST.USE_YN       ='Y'
+        ORDER BY DETAIL.SORT_NO
+    </select>
+    
+   <!-- 공통코드 리스트 조회 Ref4 -->
+    <select id="getCommonCodeListProd" resultType="CommonCodeVO">
+	 	 SELECT PROD_CD, COMMON_GRP, COMMON_CD, COMMON_CD_NM  FROM V_PROD_CONF_GRP
+		 WHERE PROD_CD = #{prodCd}
+		 AND COMMON_GRP = #{grpCd}   
+    </select>    
+</mapper>

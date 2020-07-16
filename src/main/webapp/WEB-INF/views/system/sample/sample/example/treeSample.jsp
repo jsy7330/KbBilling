@@ -1,0 +1,330 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+<%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles"%>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
+<style type="text/css">
+/* Layer */
+.Layer_wrap2 {  overflow-y:auto;
+	  position:absolute;  
+	  left: 45%;
+	  top: 45%;
+	-ms-transform: translate(-45%, -45%);
+	-webkit-transform: translate(-45%, -45%);
+	-moz-transform: translate(-45%, -45%);
+    transform: translate(-45%, -45%);
+	  z-index:9999;
+	 margin:0; 
+	 padding:0; 
+	 border:2px solid #69822b;
+	 background:#fff;
+	 
+	 }  
+	 
+ ul.dynatree-container {
+	border: none;
+}; 
+  	 
+</style>
+
+<link href="/styles/nccbs/styles.css" rel="stylesheet" type="text/css" />
+<link href="/styles/nccbs/printPage.css" rel="stylesheet" type="text/css" />
+<link href="/styles/nccbs/print.css" rel="stylesheet" type="text/css" media="print">
+
+<script type="text/javascript">
+
+$(function(){
+
+	//속성유형 셀렉트 박스 선택시 검색 처리
+	$('#pordCdList').selectmenu({
+	    change: function() {
+    
+			var param = new Object();
+			param.prodCd = $("#pordCdList").val();
+
+			var url = '/system/sample/sample/example/getInputProdList.json';
+
+			$.ajax({
+				url:url,
+				type:'POST',
+				async: false,
+				data : param,
+				dataType: 'json',
+				success : function(data) {
+					alert($("#pordCdList").val());
+					getinputList(data); // 화면에 Input 값 노출
+					getinputList2(data,$("#pordCdList").val());  //팝업 창에 Input 값 노출
+				},
+				beforeSend: function(data){
+				},
+				error : function(err){
+					ajaxErrorCallback(err);     		
+				}
+			});		
+		}
+	});
+
+	$("#pordCdList").selectmenu();
+
+	$(".search").css("margin-top", "3px");
+	
+	$(".home_wrap").css("min-width", "1340px");
+	
+	$("ul.tabs li").each(function(i){
+		if (i != 0) {
+			$(this).hide();
+		}
+	});
+	
+	//닫기 버튼을 눌렀을 때
+	$('.Layer_wrap2 ').on('click','.close',function (e) {
+	    //링크 기본동작은 작동하지 않도록 한다.
+	    e.preventDefault();  
+	    $('#mask, .Layer_wrap2').hide();  
+	});
+
+	//검은 막을 눌렀을 때
+	$('#mask').click(function () {  
+	    $(this).hide();   
+	    $('.Layer_wrap2').hide();  
+	}); 		
+	
+	$(".ser_left").css("min-height","628px");
+	$(".ser_left").css("height","591px");
+	$(".ser_left").css("padding", "0px");
+	$(".ser_left").css("width", "300px");	
+	
+	var tree = $("#tree");
+
+	
+	$(tree).dynatree({
+ 		initAjax: {
+			url: "/system/sample/sample/example/getMenuListAction.json"
+ 		},
+		clickFolderMode: 1,
+		minExpandLevel: 2,	
+		onActivate: function(node) {
+			getProdDvlpStatus(node.data.prodList);
+		},
+		onPostInit: function (isReloading, isError) {
+		}
+		
+	});	
+
+	
+});
+
+
+
+function seachFolderNodeWithName(tree) {
+	var activatedNode = tree.dynatree("getActiveNode");
+	
+    var nodeKey = undefined;
+	if ($("#productDevMgtProductListSelectCurrentLvl").val() <= 5) {
+		nodeKey	= $("#productDevMgtProductListSelectNode").val();
+	} else {
+		nodeKey = $("#productDevMgtProductListSelectNodeParent").val();
+	}
+
+    tree.dynatree("getRoot").visit(function (node) {        
+        
+    });
+    if(nodeKey != undefined){
+    	tree.dynatree("getTree").activateKey(nodeKey);
+    	return true;
+    }else{
+    	return false;
+    }
+}
+
+
+function chkDvlpStatus() {
+	if (publicDvlpStatus != "1") {
+		alert('<spring:message code="MSG.M07.MSG00111" />');
+		return false;
+	} else {
+		return true;
+	}
+}
+
+ function onVisible(divid) {
+	  var strObj = eval(divid);
+	  strObj.style.visibility = "visible";
+ }
+ function disVisible(divid){
+	  var strObj = eval(divid);
+	  strObj.style.visibility = "hidden";
+ }
+
+ function getinputList(data){
+	var inputList = data.prodList;
+		if(inputList == null){
+			alert("Data가 없습니다.");
+			return;
+		}
+		var contents = '<colgroup><col style="width: 30%;"><col style="width: 70%;"></colgroup><thead >';
+
+		$('#addInput').empty();
+		colspan=0;
+
+	for(i =0; i < inputList.length; i++){
+		
+		if(inputList[i].colTp =="C"){
+
+			var commonCodeList = inputList[i].commonCodeList
+
+			contents += '<tr>';
+			contents +=  '<th class=w' +inputList[i].colSize+' >'+inputList[i].title+'</th>';
+			contents +=  '<td >';
+			contents +=  '<select class=w' +inputList[i].colSize+' name='+inputList[i].columnId+' >';
+			contents +=  '<option value=""><spring:message code="LAB.M15.LAB00002"/></option>';
+			for(j = 0; j < commonCodeList.length; j++ ){
+							contents +=  '<option value=' + commonCodeList[j].commonCd + ' >' +  commonCodeList[j].commonCdNm  +'</option>';
+			}
+			contents +=  '</select></td>';
+			contents += '</tr>';
+		}else if(inputList[i].colTp =="T"){
+			contents += '<tr>';
+			contents +=  '<th class=w' +inputList[i].colSize+'>'+inputList[i].title+'</th>';
+			contents +=  '<td><input type=text name='+ inputList[i].columnId +' class=w'+inputList[i].colSize+' /></td>';
+			contents += '</tr>';
+			
+		}
+	}
+		contents +=  '</thead>';
+	onVisible('addInput');
+	$('#addInput').append(contents); // 추가기능
+ }
+
+ function getinputList2(data,prodCd){
+	var inputList = data.prodList;
+		if(inputList == null){
+			alert("Data가 없습니다.");
+			return;
+		}
+	
+		var param = new Object();
+		param.prodCd = prodCd;
+		var url="inputInsertPopUp.ajax";
+		$("#popup_dialog").css("width", 1000);
+		openModalPopup(url, param);
+
+
+ }
+
+
+function getProdDvlpStatus(prodList){
+ 	if (prodList != null){
+
+		var param = new Object();
+		param.prodList = encodeURIComponent(prodList);
+
+		var url = '/system/sample/sample/example/getPordListAction.json';
+
+		$.ajax({
+			url:url,
+			type:'POST',
+			async: false,
+			data : param,
+			dataType: 'json',
+
+		success : function(data) {
+				var options = [];				
+				$('#pordCdList').find('option').remove(); 
+				options.push('<option value="">' + "선택" + '</option>');
+				$.each(data.prodList, function(i, item) {
+					if (data.prodList[i].prodCd == null) {
+						options.push('<option value="">' + data.prodList[i].prodNm + '</option>');
+					} else {
+						options.push('<option value="' + data.prodList[i].prodCd + '">' + data.prodList[i].prodNm + '</option>');
+					}					
+				});
+				$('#pordCdList')
+				.append(options.join(""))
+				.selectmenu();			   
+				$('#pordCdList').val("").selectmenu('refresh');	
+				onVisible('prodCombo');
+				disVisible('addInput');
+			},
+			beforeSend: function(data){
+			},
+			error : function(err){
+				ajaxErrorCallback(err);     		
+			}
+		});
+
+	}else{
+
+			var options = [];
+			$('#pordCdList').find('option').remove(); 
+			options.push('<option value="">' + "해당 상품이 없습니다." + '</option>');
+			$('#pordCdList')
+	        .append(options.join(""))
+	        .selectmenu();
+			$('#pordCdList').val("").selectmenu('refresh');	
+				disVisible('prodCombo');
+				disVisible('addInput');
+			
+	}
+}
+
+
+function selectNode(){
+			var ProdTree = $("#tree").dynatree("getTree");
+		    var nodeKey = "";
+			if ($("#productDevMgtProductListSelectCurrentLvl").val() <= 3) {
+				nodeKey	= $("#productDevMgtProductListSelectNode").val();
+			} else {
+				nodeKey = $("#productDevMgtProductListSelectNodeParent").val();
+			}
+			
+			ProdTree.visit(function(node){
+		         if(node.data.key === userSoId){
+		             node.activate();
+		             //node 실행​
+		             node.select();
+		         } 
+			 });
+}
+
+
+
+
+</script>
+	<h3>${menuName}</h3>
+	<!-- Navigator -->
+		<div class="nav">                                        
+		   <a href="#" class="home"></a>
+			<c:forEach items="${naviMenuList}" var="mu" varStatus="status">
+			<span>&gt;</span>${mu.menuName}
+		</c:forEach>
+		</div>                               
+   <!--// Navigator -->
+	<div id="tree" style="overflow: auto;" class="ser_left">
+	</div>
+
+	<div class="ser_right" id = "prodCombo" style = "visibility:hidden">
+		<table class="writeview">
+				<colgroup>
+					<col style="width: 10%;">
+					<col style="width: 90%;">
+				</colgroup>
+			<thead>
+			<tr>
+				<th>
+					상품선택
+				</th>	
+				<td>
+					<select id="pordCdList" name="pordCdList" class="w200">
+					</select>
+				</td>
+			</tr>
+			</thead>
+		</table>
+  	<table class="writeview" id="addInput" style = "visibility:hidden">
+
+	</table>
+<div id="popup_dialog" class="Layer_wrap" style="display: none;width:400px;" >
+</div>

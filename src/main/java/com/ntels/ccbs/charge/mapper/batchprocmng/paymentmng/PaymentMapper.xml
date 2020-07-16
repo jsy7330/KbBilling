@@ -1,0 +1,852 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.paymentmng.PaymentMapper">
+
+	<select id="getEachDeposit" parameterType="String" resultType="EachDepositVO">
+    SELECT  /* PaymentMapper.xml.getEachDeposit, 양연희, 2017.11.15 */
+           A.EACH_DPST_SEQ
+         <!-- , A.DPST_PROC_CNTER_CD -->
+         <!-- , A.DPST_PROC_CNTER_BNKBNO -->
+         , A.SO_ID
+         , A.PYM_ACNT_ID
+         , A.BILL_SEQ_NO
+         , A.CTRT_ID
+         , A.DPST_CL
+         , A.DPST_DT
+         , A.TRANS_DT
+         , A.DPST_AMT
+         , A.FEE_AMT
+         , A.RCPT_EMP_ID
+    FROM   TBLPY_EACH_DPST A
+    WHERE  A.EACH_DPST_SEQ = #{seachDpstSeq}
+	</select>
+	
+		
+	<insert id="insertDepositOracle" parameterType="DepositVO">
+		INSERT INTO /* PaymentMapper.xml.insertDeposit, 양연희, 2017.12.05 */
+					TBLPY_DPST
+		(
+			DPST_SEQ_NO
+			,DPST_PROC_CNTER_CD
+			,DPST_PROC_CNTER_BNKBNO
+			,SO_ID
+			,PYM_ACNT_ID
+			,BILL_SEQ_NO
+			,CTRT_ID
+			,DPST_DT
+			,TRNS_DT
+			,DPST_PROC_DT
+			,CUST_ID
+			,DPST_CL
+			,DPST_TP
+			,DPST_TP_SEQ_NO
+			,PAY_CORP_TP
+			,PAY_CORP_CD
+			,ACNT_CARD_NO
+			,DPST_AMT
+			,DPST_BNK_ACNT_CD
+			,FEE_AMT
+			,PAY_PROC_YN
+			,PAY_PROC_DT
+			,CNCL_YN
+			,PAY_CNCL_YN
+			,PREPAY_TGT_YN
+			,PREPAY_OCC_SEQ_NO
+			,AMBG_TGT_YN
+			,AMBG_OCC_SEQ_NO
+			,ASSR_TGT_YN
+			,ASSR_OCC_SEQ_NO
+			,RCPT_EMP_ID
+			,DPST_OPETR_ID
+			,DPSTSTDR_ERP_SND_YN
+			,TRNSSTDR_ERD_SND_YN
+			,INPT_MENU_ID
+			,REGR_ID
+			,REG_DATE
+		)
+		VALUES
+		(
+		     #{depositVO.dpstSeqNo}
+		     ,#{depositVO.dpstProcCnterCd}
+		     ,#{depositVO.dpstProcCnterBnkbno}
+		     ,#{depositVO.soId}
+		     ,#{depositVO.pymAcntId}
+		     ,#{depositVO.billSeqNo}
+		     ,#{depositVO.ctrtId}
+		     ,#{depositVO.dpstDt}
+		     ,#{depositVO.trnsDt}
+		     ,#{depositVO.dpstProcDt}
+		     ,#{depositVO.custId}
+		     ,#{depositVO.dpstCl}
+		     ,#{depositVO.dpstTp}
+		     ,#{depositVO.dpstTpSeqNo}
+		     ,#{depositVO.payCorpTp}
+		     ,#{depositVO.payCorpCd}
+		     ,XX1.ENC_VARCHAR2_INS(#{depositVO.acntCardNo}, 10, 'SSN', 'TBLPY_DPST', 'ACNT_CARD_NO')
+		     ,#{depositVO.dpstAmt}
+		     ,#{depositVO.dpstBnkAcntCd}
+		     ,#{depositVO.feeAmt}
+		     ,#{depositVO.payProcYn}
+		     ,#{depositVO.payProcDt}
+		     ,#{depositVO.cnclYn}
+		     ,#{depositVO.payCnclYn}
+		     ,#{depositVO.prepayTgtYn}
+		     ,#{depositVO.prepayOccSeqNo}
+		     ,#{depositVO.ambgTgtYn}
+		     ,#{depositVO.ambgOccSeqNo}
+		     ,#{depositVO.assrTgtYn}
+		     ,#{depositVO.assrOccSeqNo}
+		     ,#{depositVO.rcptEmpId}
+		     ,#{depositVO.dpstOpetrId}
+		     ,#{depositVO.dpststdrErpSndYn}
+		     ,#{depositVO.trnsstdrErpSndYn}
+		     ,#{depositVO.inptMenuId}
+		     ,#{depositVO.regrId}
+		     ,#{depositVO.regDate}
+		)
+	</insert>
+	
+	<insert id="insertDeposit" parameterType="DepositVO"> 
+    INSERT INTO TBLPY_DPST
+    (
+        SO_ID
+      , DPST_SEQ_NO
+      , PYM_ACNT_ID
+      , BILL_SEQ_NO
+      , CUST_ID
+      , CTRT_ID
+      , DPST_CL
+      , DPST_TP
+      , DPST_TP_SEQ_NO
+      , DPST_DT
+      , TRANS_DT
+      , DPST_PROC_DT
+      , DPST_AMT
+      , DPST_BNK_ACNT_CD
+      , FEE_AMT
+      , PAY_CORP_TP
+      , PAY_CORP_CD
+      , ACNT_CARD_NO
+      , PAY_PROC_YN
+      , PAY_PROC_DT
+      , CNCL_YN
+      , PAY_CNCL_YN
+      , AMBG_TGT_YN
+      , AMBG_OCC_SEQ_NO
+      , PREPAY_TGT_YN
+      , PREPAY_OCC_SEQ_NO
+      , ASSR_TGT_YN
+      , ASSR_OCC_SEQ_NO
+      , ERP_SND_YN
+      , GRP_ID
+      , WON_DPST_AMT
+      , CRNCY_CD
+      , EXRATE
+      , EXRATE_APLY_DT
+      , INPT_MENU_ID
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    VALUES
+    (
+        #{depositVO.soId,jdbcType=VARCHAR}
+      , #{depositVO.dpstSeqNo,jdbcType=VARCHAR}
+      , #{depositVO.pymAcntId,jdbcType=VARCHAR}
+      , #{depositVO.billSeqNo,jdbcType=VARCHAR}
+      , #{depositVO.custId,jdbcType=VARCHAR}
+      , #{depositVO.ctrtId,jdbcType=VARCHAR}
+      , #{depositVO.dpstCl,jdbcType=VARCHAR}
+      , #{depositVO.dpstTp,jdbcType=VARCHAR}
+      , #{depositVO.dpstTpSeqNo,jdbcType=VARCHAR}
+      , #{depositVO.dpstDt,jdbcType=VARCHAR}
+      , #{depositVO.transDt,jdbcType=VARCHAR}
+      , #{depositVO.dpstProcDt,jdbcType=VARCHAR}
+      , #{depositVO.dpstAmt,jdbcType=DOUBLE}
+      , #{depositVO.dpstBnkAcntCd,jdbcType=VARCHAR}
+      , #{depositVO.feeAmt,jdbcType=DOUBLE}
+      , #{depositVO.payCorpTp,jdbcType=VARCHAR}
+      , #{depositVO.payCorpCd,jdbcType=VARCHAR}
+      , #{depositVO.acntCardNo,jdbcType=VARCHAR}
+      , #{depositVO.payProcYn,jdbcType=VARCHAR}
+      , #{depositVO.payProcDt,jdbcType=VARCHAR}
+      , #{depositVO.cnclYn,jdbcType=VARCHAR}
+      , #{depositVO.payCnclYn,jdbcType=VARCHAR}
+      , #{depositVO.ambgTgtYn,jdbcType=VARCHAR}
+      , #{depositVO.ambgOccSeqNo,jdbcType=VARCHAR}
+      , #{depositVO.prepayTgtYn,jdbcType=VARCHAR}
+      , #{depositVO.prepayOccSeqNo,jdbcType=VARCHAR}
+      , #{depositVO.assrTgtYn,jdbcType=VARCHAR}
+      , #{depositVO.assrOccSeqNo,jdbcType=VARCHAR}
+      , #{depositVO.erpSndYn,jdbcType=VARCHAR}
+      , #{depositVO.grpId,jdbcType=VARCHAR}
+      , #{depositVO.wonDpstAmt,jdbcType=DOUBLE}
+      , #{depositVO.crncyCd,jdbcType=VARCHAR}
+      , #{depositVO.exrate,jdbcType=DOUBLE}
+      , #{depositVO.exrateAplyDt,jdbcType=VARCHAR}
+      , #{depositVO.inptMenuId,jdbcType=VARCHAR}
+      , #{depositVO.regrId,jdbcType=VARCHAR}
+      , #{depositVO.regDate,jdbcType=DATE}
+      , #{depositVO.regrId,jdbcType=VARCHAR}
+      , #{depositVO.regDate,jdbcType=DATE}
+    )
+	</insert>
+	
+	<select id="getPymAcntCnt" parameterType="String" resultType="int">
+    SELECT /* PaymentMapper.xml.getPymAcntCnt, 양연희, 2017.12.04 */
+          COUNT(*)
+    FROM  TCMCU_PYM_ACNT_INFO
+    WHERE PYM_ACNT_ID = #{pymAcntId}
+	</select>
+	
+	<select id="getDeposit" parameterType="String" resultType="DepositVO">
+    SELECT /* PaymentMapper.xml.getDeposit, 양연희, 2017.12.04 */
+           A.DPST_SEQ_NO
+         <!-- , A.DPST_PROC_CNTER_CD -->
+         <!-- , A.DPST_PROC_CNTER_BNKBNO -->
+         , A.SO_ID
+         , A.PYM_ACNT_ID
+         , A.BILL_SEQ_NO
+         , A.CTRT_ID
+         , A.DPST_DT
+         , A.TRANS_DT                    /* 수정 컬럼 */
+         , A.DPST_PROC_DT
+         , A.CUST_ID
+         , A.DPST_CL
+         , A.DPST_TP
+         , A.DPST_TP_SEQ_NO
+         , A.PAY_CORP_TP
+         , A.PAY_CORP_CD
+         , A.ACNT_CARD_NO                /* 수정 컬럼 */
+         , A.DPST_AMT
+         , A.DPST_BNK_ACNT_CD
+         , A.FEE_AMT
+         , A.PAY_PROC_YN
+         , A.PAY_PROC_DT
+         , A.CNCL_YN
+         , A.PAY_CNCL_YN
+         , A.PREPAY_TGT_YN
+         , A.PREPAY_OCC_SEQ_NO
+         , A.AMBG_TGT_YN
+         , A.AMBG_OCC_SEQ_NO
+         , A.ASSR_TGT_YN
+         , A.ASSR_OCC_SEQ_NO
+         <!-- ,(SELECT COUNT(*) FROM TBLUP_BDDBT_TGT_INFO WHERE PYM_ACNT_ID = A.PYM_ACNT_ID AND BDDBT_REG_DT <![CDATA[<=]]> A.DPST_DT AND USE_YN = 'Y') AS BDDBT_TGT_CNT -->
+    FROM   TBLPY_DPST A
+    WHERE  A.DPST_SEQ_NO = #{sdpstSeqNo}
+	</select>
+	
+	<insert id="insertAmbgOcc" parameterType="AmbgOccVO">
+		INSERT INTO /* PaymentMapper.xml.insertAmbgOcc, 양연희, 2017.12.04 */
+					TBLPY_AMBG_OCC
+		(
+			AMBG_OCC_SEQ_NO
+			,SO_ID
+			,AMBG_OCC_DTTM
+			,AMBG_OCC_TP
+			,AMBG_OCC_RESN
+			,DPST_TP_SEQ_NO
+			,DPST_DT
+			,DPST_PROC_DT
+			,DPST_CL
+			,DPST_BNK_ACNT_CD
+			,PAY_CORP_CD
+			,ACNT_CARD_NO
+			,AMBG_PROC_STAT
+			,AMBG_OCC_AMT
+			,AMBG_TRANS_AMT
+			,AMBG_BAL
+			,TRANS_CMPL_YN
+			,CNCL_YN
+			,CNCL_DTTM
+			,PYM_ACNT_ID
+			,TRANS_DT
+			,MNG_CNTER_ORG_ID
+			,MNG_BR_ORG_ID
+			,ERP_SND_YN
+			,INPT_MENU_ID
+			,REGR_ID
+			,REG_DATE
+		)
+		VALUES
+		(
+		     #{ambgOccVO.ambgOccSeqNo}
+		     ,#{ambgOccVO.soId}
+		     ,#{ambgOccVO.ambgOccDttm}
+		     ,#{ambgOccVO.ambgOccTp}
+		     ,#{ambgOccVO.ambgOccResn}
+		     ,#{ambgOccVO.dpstTpSeqNo}
+		     ,#{ambgOccVO.dpstDt}
+		     ,#{ambgOccVO.dpstProcDt}
+		     ,#{ambgOccVO.dpstCl}
+		     ,#{ambgOccVO.dpstBnkAcntCd}
+		     ,#{ambgOccVO.payCorpCd}
+		     ,XX1.ENC_VARCHAR2_INS(#{ambgOccVO.acntCardNo}, 10, 'SSN', 'TBLPY_AMBG_OCC', 'ACNT_CARD_NO')
+		     ,#{ambgOccVO.ambgProcStat}
+		     ,#{ambgOccVO.ambgOccAmt}
+		     ,#{ambgOccVO.ambgTransAmt}
+		     ,#{ambgOccVO.ambgBal}
+		     ,#{ambgOccVO.transCmplYn}
+		     ,#{ambgOccVO.cnclYn}
+		     ,#{ambgOccVO.cnclDttm}
+		     ,#{ambgOccVO.pymAcntId}
+		     ,#{ambgOccVO.transDt}
+		     ,#{ambgOccVO.mngCnterOrgId}
+		     ,#{ambgOccVO.mngBrOrgId}
+		     ,#{ambgOccVO.erpSndYn}
+		     ,#{ambgOccVO.inptMenuId}
+		     ,#{ambgOccVO.regrId}
+		     ,#{ambgOccVO.regDate}
+		)
+	</insert>
+
+	
+	<select id="getBillDataList_oracle" parameterType="String" resultType="BillListVO">
+    SELECT /* PaymentMapper.xml.getBillDataList, 양연희, 2017.12.04 오라클 용*/
+           SO_ID
+         , BILL_SEQ_NO
+         , USE_YYMM
+         , SVC_CMPS_ID
+         , PROD_CMPS_ID
+         , CHRG_ITM_CD
+         -- , UPP_PROD_CMPS_ID
+         , BILL_YYMM
+         , BILL_CYCL
+         , CTRT_ID
+         , CUST_ID
+         , PYM_ACNT_ID
+         , BILL_AMT
+         -- , MNG_CNTER_ORG_ID
+         -- , MNG_BR_ORG_ID
+         -- , MNGR_ID
+         -- , ROW_NUMBER() OVER (PARTITION BY BILL_SEQ_NO ORDER BY APLY_ORDER1, APLY_ORDER2, BILL_SEQ_NO, APLY_ORDER3, APLY_ORDER4, APLY_ORDER5, CTRT_ID, USE_YYMM) AS RCPT_VAL
+         , APLY_ORDER1
+         , APLY_ORDER2
+         , APLY_ORDER3
+         , APLY_ORDER4
+         , APLY_ORDER5
+    FROM ( SELECT A.SO_ID
+                , A.BILL_SEQ_NO
+                , A.USE_YYMM
+                , A.SVC_CMPS_ID
+                , A.PROD_CMPS_ID
+                , A.CHRG_ITM_CD
+                -- , A.UPP_PROD_CMPS_ID                  /* 수정컬럼 */
+                , A.BILL_YYMM
+                , A.BILL_CYCL
+                , A.CTRT_ID
+                , A.CUST_ID
+                , A.PYM_ACNT_ID
+                , A.BILL_AMT - A.RCPT_AMT AS BILL_AMT
+                -- , A.MNG_CNTER_ORG_ID                 /* 수정컬럼 */
+                -- , A.MNG_BR_ORG_ID                    /* 수정컬럼 */
+                -- , A.MNGR_ID                          /* 수정컬럼 */
+                , CASE WHEN A.USE_YYMM > A.BILL_YYMM THEN CONCAT(CAST('10' AS UNSIGNED ), A.USE_YYMM)/* TO_NUMBER('99' || A.USE_YYMM) */     /* 수정컬럼 */
+                       ELSE 1 
+                  END  AS APLY_ORDER1 
+                ,(SELECT COUNT(*)
+                  FROM   TBLIV_BILL X
+                      ,  VIFNBRM_SVC_RATE_ITM_INFO Y
+                  WHERE  X.PYM_ACNT_ID = A.PYM_ACNT_ID
+                  AND    X.BILL_SEQ_NO = A.BILL_SEQ_NO
+                  AND    X.BILL_AMT - X.RCPT_AMT > 0
+                  AND    Y.SVC_RATE_ITM_TYP_CD = X.CHRG_ITM_CD
+                  AND    Y.RATE_ITM_TYP_CD NOT IN ('CT101','CT117','CT103')) AS APLY_ORDER2  /* 김영숙님 요청 - 용역료, 부가세 제외하고 나머지는 후순위 수납 반영 */
+                -- , DECODE(SIGN(A.BILL_AMT - A.RCPT_AMT), -1, 1, 2) AS APLY_ORDER3        -- 마이너스 금액 먼저 입금반영 
+                -- , DECODE(A.CHRG_ITM_CD, 'SR013', 1, 2) AS APLY_ORDER4                   -- 부가세 먼저 입금반영     
+                -- , DECODE(B.RATE_ITM_TYP_CD, 'CT101', 1, 'CT117', 1, 'CT103', 1, 99) AS APLY_ORDER5
+                , CASE WHEN SIGN(A.BILL_AMT - A.RCPT_AMT) <![CDATA[ < ]]> 0 THEN 1 
+                       ELSE 2
+                  END  AS APLY_ORDER3 
+                , CASE WHEN A.CHRG_ITM_CD = 'SR008' THEN 1 
+                       ELSE 2
+                  END  AS APLY_ORDER4 
+                , CASE WHEN B.RATE_ITM_TYP_CD = 'CT101' THEN 1
+                       WHEN B.RATE_ITM_TYP_CD = 'CT103' THEN 1
+                       WHEN B.RATE_ITM_TYP_CD = 'CT117' THEN 1
+                       ELSE 99 
+                  END  AS APLY_ORDER5
+          FROM   TBLIV_BILL A
+              ,  VIFNBRM_SVC_RATE_ITM_INFO B
+          WHERE  A.PYM_ACNT_ID = #{spymAcntId}
+          <if test="sbillSeqNo != null">
+          AND    A.BILL_SEQ_NO = #{sbillSeqNo}
+          </if>
+          <if test="sctrtId != null">
+          AND    A.CTRT_ID = #{sctrtId}
+          </if>
+          <!-- AND    A.BILL_AMT - A.RCPT_AMT != 0 -->
+          AND    A.USE_YYMM != '999912'
+          AND    B.SO_ID = A.SO_ID
+          AND    B.SVC_RATE_ITM_TYP_CD = A.CHRG_ITM_CD
+          AND    B.RATE_ITM_TYP_CD != 'CT111'                    /* 보증금은 수납대상에서 제외 */
+      ) Z
+    ORDER BY APLY_ORDER1, APLY_ORDER2, BILL_SEQ_NO, APLY_ORDER3, APLY_ORDER4, APLY_ORDER5, CTRT_ID, USE_YYMM -- ,RCPT_VAL
+	</select>
+	
+	
+		
+	<select id="getBillDataList" parameterType="String" resultType="BillListVO">
+    SELECT /* PaymentMapper.xml.getBillDataList, 양연희, 2017.12.04 MySql 용*/
+           SO_ID
+         , BILL_SEQ_NO
+         , USE_YYMM
+         , SVC_CMPS_ID
+         , PROD_CMPS_ID
+         , CHRG_ITM_CD
+         -- , UPP_PROD_CMPS_ID
+         , BILL_YYMM
+         , BILL_CYCL
+         , CTRT_ID
+         , CUST_ID
+         , PYM_ACNT_ID
+         , BILL_AMT
+         -- , MNG_CNTER_ORG_ID
+         -- , MNG_BR_ORG_ID
+         -- , MNGR_ID
+         -- , ROW_NUMBER() OVER (PARTITION BY BILL_SEQ_NO ORDER BY APLY_ORDER1, APLY_ORDER2, BILL_SEQ_NO, APLY_ORDER3, APLY_ORDER4, APLY_ORDER5, CTRT_ID, USE_YYMM) AS RCPT_VAL
+         ,(@vBILL_SEQ_NO:=BILL_SEQ_NO) vBILL_SEQ_NO
+         , CASE @vBILL_SEQ_NO WHEN BILL_SEQ_NO THEN @rownum:=@rownum+1 ELSE @rownum+1 END  AS RCPT_VAL
+         , APLY_ORDER1
+         , APLY_ORDER2
+         , APLY_ORDER3
+         , APLY_ORDER4
+         , APLY_ORDER5
+    FROM ( SELECT A.SO_ID
+                , A.BILL_SEQ_NO
+                , A.USE_YYMM
+                , A.SVC_CMPS_ID
+                , A.PROD_CMPS_ID
+                , A.CHRG_ITM_CD
+                -- , A.UPP_PROD_CMPS_ID                  /* 수정컬럼 */
+                , A.BILL_YYMM
+                , A.BILL_CYCL
+                , A.CTRT_ID
+                , A.CUST_ID
+                , A.PYM_ACNT_ID
+                , A.BILL_AMT - A.RCPT_AMT AS BILL_AMT
+                -- , A.MNG_CNTER_ORG_ID                 /* 수정컬럼 */
+                -- , A.MNG_BR_ORG_ID                    /* 수정컬럼 */
+                -- , A.MNGR_ID                          /* 수정컬럼 */
+                , CASE WHEN A.USE_YYMM > A.BILL_YYMM THEN CONCAT(CAST('10' AS UNSIGNED ), A.USE_YYMM)/* TO_NUMBER('99' || A.USE_YYMM) */     /* 수정컬럼 */
+                       ELSE 1 
+                  END  AS APLY_ORDER1 
+                ,(SELECT COUNT(*)
+                  FROM   TBLIV_BILL X
+                      ,  VIFNBRM_SVC_RATE_ITM_INFO Y
+                  WHERE  X.PYM_ACNT_ID = A.PYM_ACNT_ID
+                  AND    X.BILL_SEQ_NO = A.BILL_SEQ_NO
+                  AND    X.BILL_AMT - X.RCPT_AMT > 0
+                  AND    Y.SVC_RATE_ITM_TYP_CD = X.CHRG_ITM_CD
+                  AND    Y.RATE_ITM_TYP_CD NOT IN ('CT101','CT117','CT103')) AS APLY_ORDER2  /* 김영숙님 요청 - 용역료, 부가세 제외하고 나머지는 후순위 수납 반영 */
+                -- , DECODE(SIGN(A.BILL_AMT - A.RCPT_AMT), -1, 1, 2) AS APLY_ORDER3        -- 마이너스 금액 먼저 입금반영 
+                -- , DECODE(A.CHRG_ITM_CD, 'SR013', 1, 2) AS APLY_ORDER4                   -- 부가세 먼저 입금반영     
+                -- , DECODE(B.RATE_ITM_TYP_CD, 'CT101', 1, 'CT117', 1, 'CT103', 1, 99) AS APLY_ORDER5
+                , CASE WHEN SIGN(A.BILL_AMT - A.RCPT_AMT) <![CDATA[ < ]]> 0 THEN 1 
+                       ELSE 2
+                  END  AS APLY_ORDER3 
+                , CASE WHEN A.CHRG_ITM_CD = 'SR008' THEN 1 
+                       ELSE 2
+                  END  AS APLY_ORDER4 
+                , CASE WHEN B.RATE_ITM_TYP_CD = 'CT101' THEN 1
+                       WHEN B.RATE_ITM_TYP_CD = 'CT103' THEN 1
+                       WHEN B.RATE_ITM_TYP_CD = 'CT117' THEN 1
+                       ELSE 99 
+                  END  AS APLY_ORDER5
+          FROM   TBLIV_BILL A
+              ,  VIFNBRM_SVC_RATE_ITM_INFO B
+              , (SELECT @vBILL_SEQ_NO:='', @rownum:=0 FROM DUAL) C
+          WHERE  A.PYM_ACNT_ID = #{spymAcntId}
+          <if test="sbillSeqNo != null">
+          AND    A.BILL_SEQ_NO = #{sbillSeqNo}
+          </if>
+          <if test="sctrtId != null">
+          AND    A.CTRT_ID = #{sctrtId}
+          </if>
+          AND    A.BILL_AMT - A.RCPT_AMT != 0
+          AND    A.USE_YYMM != '999912'
+          AND    B.SO_ID = A.SO_ID
+          AND    B.SVC_RATE_ITM_TYP_CD = A.CHRG_ITM_CD
+          AND    B.RATE_ITM_TYP_CD != 'CT111'                    /* 보증금은 수납대상에서 제외 */
+          ORDER BY APLY_ORDER1, APLY_ORDER2, BILL_SEQ_NO, APLY_ORDER3, APLY_ORDER4, APLY_ORDER5, CTRT_ID, USE_YYMM -- ,RCPT_VAL 
+      ) Z
+    ORDER BY APLY_ORDER1, APLY_ORDER2, BILL_SEQ_NO, APLY_ORDER3, APLY_ORDER4, APLY_ORDER5, CTRT_ID, USE_YYMM ,RCPT_VAL
+	</select>
+	
+	<insert id="insertAssrOcc" parameterType="AssrOccVO">
+		INSERT INTO /* PaymentMapper.xml.insertAssrOcc, 양연희, 2017.12.04 */
+					TBLPY_ASSR_OCC
+		(
+			ASSR_OCC_SEQ_NO
+			,PYM_SEQ_NO
+			,PYM_ACNT_ID
+			,PROD_CMPS_ID
+			,SVC_CMPS_ID
+			,CHRG_ITM_CD
+			,SO_ID			
+			,CUST_ID
+			,CTRT_ID
+			,ASSR_OCC_DTTM
+			,DPST_TP_SEQ_NO
+			,DPST_DT
+			,DPST_CL
+			,ASSR_PROC_STAT
+			,ASSR_OCC_AMT
+			,ASSR_TRANS_AMT
+			,ASSR_BAL
+			,TRANS_CMPL_YN
+			,CNCL_YN
+			,CNCL_DTTM
+			,TRANS_DT
+			,MNG_CNTER_ORG_ID
+			,MNG_BR_ORG_ID
+			,ERP_SND_YN
+			,INPT_MENU_ID
+			,REGR_ID
+			,REG_DATE
+		)
+		VALUES
+		(
+		     #{assrOccVO.assrOccSeqNo}
+		     ,#{assrOccVO.pymSeqNo}
+		     ,#{assrOccVO.pymAcntId}
+		     ,#{assrOccVO.prodCmpsId}
+		     ,#{assrOccVO.svcCmpsId}
+		     ,#{assrOccVO.chrgItmCd}
+		     ,#{assrOccVO.soId}		     
+		     ,#{assrOccVO.custId}
+		     ,#{assrOccVO.ctrtId}
+		     ,#{assrOccVO.assrOccDttm}
+		     ,#{assrOccVO.dpstTpSeqNo}
+		     ,#{assrOccVO.dpstDt}
+		     ,#{assrOccVO.dpstCl}
+		     ,#{assrOccVO.assrProcStat}
+		     ,#{assrOccVO.assrOccAmt}
+		     ,#{assrOccVO.assrTransAmt}
+		     ,#{assrOccVO.assrBal}
+		     ,#{assrOccVO.transCmplYn}
+		     ,#{assrOccVO.cnclYn}
+		     ,#{assrOccVO.cnclDttm}
+		     ,#{assrOccVO.transDt}
+		     ,#{assrOccVO.mngCnterOrgId}
+		     ,#{assrOccVO.mngBrOrgId}
+		     ,#{assrOccVO.erpSndYn}
+		     ,#{assrOccVO.inptMenuId}
+		     ,#{assrOccVO.regrId}
+		     ,#{assrOccVO.regDate}
+		)
+	</insert>
+	
+	<insert id="insertReceiptDtl" parameterType="ReceiptDtlVO">
+    INSERT INTO /* PaymentMapper.xml.insertReceiptDtl, 양연희, 2017.12.04 */
+          TBLPY_RCPT_DTL
+    (
+        SO_ID
+      , PYM_SEQ_NO
+      , BILL_SEQ_NO      
+      , USE_YYMM 
+      , PROD_CMPS_ID
+      , SVC_CMPS_ID
+      , CHRG_ITM_CD
+      , CUST_ID
+      , CTRT_ID
+      , BILL_AMT
+      , RCPT_AMT
+      , PRE_SO_ID
+      , PRE_RCPT_AMT       /* 수정 컬럼 PRE_PYM_AMT */
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    VALUES
+    (
+        #{receiptDtlVO.soId}
+      , #{receiptDtlVO.pymSeqNo}
+      , #{receiptDtlVO.billSeqNo}
+      , #{receiptDtlVO.useYymm}
+      , #{receiptDtlVO.prodCmpsId}
+      , #{receiptDtlVO.svcCmpsId}
+      , #{receiptDtlVO.chrgItmCd}
+      , #{receiptDtlVO.custId}
+      , #{receiptDtlVO.ctrtId}
+      , #{receiptDtlVO.billAmt}
+      , #{receiptDtlVO.rcptAmt}
+      , #{receiptDtlVO.preSoId}
+      , #{receiptDtlVO.preRcptAmt}
+      , #{receiptDtlVO.regrId}
+      , #{receiptDtlVO.regDate}
+      , #{receiptDtlVO.regrId}
+      , #{receiptDtlVO.regDate}
+    )
+	</insert>
+	
+	<update id="updateBillData" parameterType="BillListVO">
+    UPDATE /* PaymentMapper.xml.updateBillData, 양연희, 2017.12.04 */
+           TBLIV_BILL
+    SET    FULL_PAY_YN    = CASE WHEN ( COALESCE(BILL_AMT, 0) - COALESCE(RCPT_AMT, 0) - #{billListVO.rcptAmt} ) = 0 THEN 'Y'
+                                 ELSE 'N'
+                            END 
+         , RCPT_AMT       = COALESCE(RCPT_AMT, 0) + #{billListVO.rcptAmt}
+         , LAST_RCPT_DT   = #{billListVO.lastRcptDt}
+         , CHGR_ID        = #{billListVO.chgrId}
+         , CHG_DATE       = #{billListVO.chgDate}
+    WHERE  BILL_SEQ_NO    = #{billListVO.billSeqNo}
+    AND    USE_YYMM       = #{billListVO.useYymm}
+    AND    SVC_CMPS_ID    = #{billListVO.svcCmpsId}
+    AND    PROD_CMPS_ID   = #{billListVO.prodCmpsId}
+    AND    CHRG_ITM_CD    = #{billListVO.chrgItmCd}
+	</update>
+
+	<insert id="insertReceiptOracle" parameterType="ReceiptVO">
+		MERGE INTO	/* PaymentMapper.xml.insertReceipt, 양연희, 2017.12.04 */
+					TBLPY_RCPT A
+    	USING DUAL 
+    	ON (A.PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+    	WHEN MATCHED THEN
+    	UPDATE
+    	SET		PAY_OBJ_AMT = (SELECT SUM(BILL_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+    			,PAY_APLY_AMT = (SELECT SUM(RCPT_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+    			,PREPAY_APLY_AMT = (SELECT SUM(PRE_PYM_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+    			,RCPT_AMT = (SELECT SUM(RCPT_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+    	WHEN NOT MATCHED THEN
+    	INSERT
+		(
+			PYM_SEQ_NO
+			,DPST_SEQ_NO
+			,BILL_SEQ_NO
+			,BILL_YYMM
+			,BILL_CYCL
+ 			,BILL_DT
+ 			,SO_ID
+			,PYM_ACNT_ID
+			,PAY_PROC_DT
+			,DPST_DT
+			,TRNS_DT
+			,DPST_PROC_DT
+			,DPST_CL
+			,PAY_TP
+			,PAY_OBJ_AMT
+			,PAY_APLY_AMT
+			,PREPAY_APLY_AMT
+			,RCPT_AMT
+			,PREPAY_OCC_SEQ_NO
+			,PREPD_CTRT_ID
+			,CNCL_YN
+			,RCPT_OPETR_ID
+			,BDDBT_RCPT_YN
+			,ERP_SND_YN
+			,INPT_MENU_ID
+			,REGR_ID
+			,REG_DATE
+			,CHGR_ID
+			,CHG_DATE
+		)
+		VALUES
+		(		#{receiptVO.pymSeqNo}
+		     	,#{receiptVO.dpstSeqNo}
+		     	,#{receiptVO.billSeqNo}
+		     	,#{receiptVO.billYymm}
+		     	,#{receiptVO.billCycl}
+		     	,#{receiptVO.billDt}
+		     	,'00'
+		     	,#{receiptVO.pymAcntId}
+		     	,#{receiptVO.payProcDt}
+		     	,(SELECT DPST_DT FROM TBLPY_DPST WHERE DPST_SEQ_NO = #{receiptVO.dpstSeqNo})
+		     	,(SELECT TRNS_DT FROM TBLPY_DPST WHERE DPST_SEQ_NO = #{receiptVO.dpstSeqNo})
+		     	,(SELECT DPST_PROC_DT FROM TBLPY_DPST WHERE DPST_SEQ_NO = #{receiptVO.dpstSeqNo})
+		     	,(SELECT DPST_CL FROM TBLPY_DPST WHERE DPST_SEQ_NO = #{receiptVO.dpstSeqNo})
+		     	,#{receiptVO.payTp}
+		     	,(SELECT SUM(BILL_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+             	,(SELECT SUM(RCPT_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+             	,(SELECT SUM(PRE_PYM_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+             	,(SELECT SUM(RCPT_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+		     	,#{receiptVO.prepayOccSeqNo}
+		     	,#{receiptVO.prepdCtrtId}
+		     	,#{receiptVO.cnclYn}
+		     	,#{receiptVO.rcptOpetrId}
+		     	,#{receiptVO.bddbtRcptYn}
+		     	,#{receiptVO.erpSndYn}
+		     	,#{receiptVO.inptMenuId}
+		     	,#{receiptVO.regrId}
+		     	,#{receiptVO.regDate}
+		     	,#{receiptVO.regrId}
+		     	,#{receiptVO.regDate}
+		)
+	</insert>
+	
+	<insert id="insertReceipt" parameterType="ReceiptVO">
+    INSERT INTO TBLPY_RCPT
+    (
+        SO_ID
+      , PYM_SEQ_NO      
+      , DPST_SEQ_NO
+      , DPST_CL      
+      , PYM_ACNT_ID
+      , BILL_SEQ_NO
+      , BILL_YYMM
+      , BILL_CYCL
+      , BILL_DT      
+      , DPST_DT
+      , TRANS_DT
+      , DPST_PROC_DT
+      , PAY_PROC_DT      
+      , PAY_TP
+      , PAY_OBJ_AMT
+      , PAY_APLY_AMT
+      , PREPAY_APLY_AMT
+      , RCPT_AMT      
+      , PREPD_CTRT_ID
+      , PREPAY_OCC_SEQ_NO 
+      , CNCL_YN      
+      , RCPT_OPETR_ID
+      , BDDBT_RCPT_YN 
+      , ERP_SND_YN 
+      , INPT_MENU_ID 
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    VALUES
+    (
+        #{receiptVO.soId}   
+      , #{receiptVO.pymSeqNo}
+      , #{receiptVO.dpstSeqNo}
+      ,(SELECT DPST_CL           FROM TBLPY_DPST     WHERE DPST_SEQ_NO = #{receiptVO.dpstSeqNo})      
+      , #{receiptVO.pymAcntId}
+      , #{receiptVO.billSeqNo}
+      , #{receiptVO.billYymm}
+      , #{receiptVO.billCycl}
+      , #{receiptVO.billDt}      
+      ,(SELECT DPST_DT           FROM TBLPY_DPST     WHERE DPST_SEQ_NO = #{receiptVO.dpstSeqNo})
+      ,(SELECT TRANS_DT          FROM TBLPY_DPST     WHERE DPST_SEQ_NO = #{receiptVO.dpstSeqNo})
+      ,(SELECT DPST_PROC_DT      FROM TBLPY_DPST     WHERE DPST_SEQ_NO = #{receiptVO.dpstSeqNo})
+      , #{receiptVO.payProcDt}      
+      , #{receiptVO.payTp}
+      ,(SELECT SUM(BILL_AMT)     FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO  = #{receiptVO.pymSeqNo})
+      ,(SELECT SUM(RCPT_AMT)     FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO  = #{receiptVO.pymSeqNo})
+      ,(SELECT SUM(PRE_RCPT_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO  = #{receiptVO.pymSeqNo})
+      ,(SELECT SUM(RCPT_AMT)     FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO  = #{receiptVO.pymSeqNo})      
+      , #{receiptVO.prepdCtrtId}
+      , #{receiptVO.prepayOccSeqNo} 
+      , #{receiptVO.cnclYn}
+      , #{receiptVO.rcptOpetrId} 
+      , #{receiptVO.bddbtRcptYn} 
+      , #{receiptVO.erpSndYn} 
+      , #{receiptVO.inptMenuId} 
+      , #{receiptVO.regrId}
+      , #{receiptVO.regDate}
+      , #{receiptVO.regrId}
+      , #{receiptVO.regDate}
+    )
+    ON DUPLICATE KEY
+    UPDATE PAY_OBJ_AMT     = (SELECT SUM(BILL_AMT)     FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+         , PAY_APLY_AMT    = (SELECT SUM(RCPT_AMT)     FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+         , PREPAY_APLY_AMT = (SELECT SUM(PRE_RCPT_AMT) FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+         , RCPT_AMT        = (SELECT SUM(RCPT_AMT)     FROM TBLPY_RCPT_DTL WHERE PYM_SEQ_NO = #{receiptVO.pymSeqNo})
+	</insert>
+	
+	<insert id="insertPrepayOcc" parameterType="PrepayOccVO">
+    INSERT INTO /* PaymentMapper.xml.insertPrepayOcc, 양연희, 2017.12.04 */
+          TBLPY_PREPAY_OCC
+    (
+        SO_ID
+      , PREPAY_OCC_SEQ_NO
+      , PYM_ACNT_ID
+      , PREPAY_OCC_TP
+      , PREPAY_OCC_RESN
+      , PREPAY_OCC_DTTM
+      , PREPAY_OCC_TGT_SEQ_NO
+      , PREPAY_PROC_STAT
+      , DPST_DT
+      , DPST_PROC_DT
+      , PREPAY_OCC_AMT
+      , PREPAY_TRANS_AMT
+      , PREPAY_BAL
+      , TRANS_CMPL_YN
+      , TRANS_DT
+      , CNCL_YN
+      , CNCL_DTTM
+      , CNCL_RESN
+	  <!-- , MNG_CNTER_ORG_ID -->
+	  <!-- , MNG_BR_ORG_ID -->
+      , ERP_SND_YN
+      , INPT_MENU_ID
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    VALUES
+    (
+        #{prepayOccVO.soId}
+      , #{prepayOccVO.prepayOccSeqNo}
+      , #{prepayOccVO.pymAcntId}
+      , #{prepayOccVO.prepayOccTp}
+      , #{prepayOccVO.prepayOccResn}
+      , #{prepayOccVO.prepayOccDttm}
+      , #{prepayOccVO.prepayOccTgtSeqNo}
+      , #{prepayOccVO.prepayProcStat}
+      , #{prepayOccVO.dpstDt}
+      , #{prepayOccVO.dpstProcDt}
+      , #{prepayOccVO.prepayOccAmt}
+      , #{prepayOccVO.prepayTransAmt}
+      , #{prepayOccVO.prepayBal}
+      , #{prepayOccVO.transCmplYn}
+      , #{prepayOccVO.transDt}
+      , #{prepayOccVO.cnclYn}
+      , #{prepayOccVO.cnclDttm}
+      , #{prepayOccVO.cnclResn}
+      <!-- , #{prepayOccVO.mngCnterOrgId} -->
+      <!-- , #{prepayOccVO.mngBrOrgId} -->
+      , #{prepayOccVO.erpSndYn}
+      , #{prepayOccVO.inptMenuId}
+      , #{prepayOccVO.regrId}
+      , #{prepayOccVO.regDate}
+      , #{prepayOccVO.regrId}
+      , #{prepayOccVO.regDate}
+    )
+	</insert>
+	
+	<update id="updateReceipt" parameterType="ReceiptVO">
+		UPDATE	/* PaymentMapper.xml.updateReceipt, 양연희, 2017.12.04 */
+				TBLPY_RCPT
+		SET		PREPAY_OCC_SEQ_NO	= #{receiptVO.prepayOccSeqNo}
+				,CHGR_ID			= #{receiptVO.regrId}
+				,CHG_DATE			= #{receiptVO.regDate}
+		WHERE	PYM_SEQ_NO			= #{receiptVO.pymSeqNo}
+	</update>
+	<update id="updateDeposit" parameterType="DepositVO">
+	
+    UPDATE /* PaymentMapper.xml.updateDeposit, 양연희, 2017.12.04 */
+           TBLPY_DPST
+    SET    PAY_PROC_YN       = #{depositVO.payProcYn}
+         , PAY_PROC_DT       = #{depositVO.payProcDt}
+         , PREPAY_TGT_YN     = #{depositVO.prepayTgtYn}
+         , PREPAY_OCC_SEQ_NO = #{depositVO.prepayOccSeqNo} 
+         , AMBG_TGT_YN       = #{depositVO.ambgTgtYn}
+         , AMBG_OCC_SEQ_NO   = #{depositVO.ambgOccSeqNo} 
+         , ASSR_TGT_YN       = #{depositVO.assrTgtYn} 
+         , ASSR_OCC_SEQ_NO   = #{depositVO.assrOccSeqNo} 
+         , INPT_MENU_ID      = #{depositVO.inptMenuId}          
+         , CHGR_ID           = #{depositVO.regrId}
+         , CHG_DATE          = #{depositVO.regDate}
+    WHERE  DPST_SEQ_NO       = #{depositVO.dpstSeqNo}
+	</update>
+
+	<update id="updateEachDeposit" parameterType="EachDepositVO">
+    UPDATE /* PaymentMapper.xml.updateEachDeposit, 양연희, 2017.11.15 */
+           TBLPY_EACH_DPST
+    SET    DPST_SEQ_NO   = #{eachDepositVO.dpstSeqNo}
+         , INPT_MENU_ID  = #{eachDepositVO.inptMenuId} 
+         , DPST_PROC_DT  = #{eachDepositVO.dpstProcDt}
+         , CHGR_ID       = #{eachDepositVO.regrId}
+         , CHG_DATE      = #{eachDepositVO.regDate}
+    WHERE  EACH_DPST_SEQ = #{eachDepositVO.eachDpstSeq}
+	</update>
+	
+</mapper>

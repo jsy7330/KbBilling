@@ -1,0 +1,19 @@
+package com.ntels.ccbs.charge.service.billing.billing;
+
+import java.util.List;
+
+import com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO;
+
+public interface BillingStatisticsService {
+	public List<BillingStatisticsVO> billDtlList(BillingStatisticsVO billingStatistics);
+
+	public List<BillingStatisticsVO> ctrtDtlList(BillingStatisticsVO billingStatistics);
+
+	public List<BillingStatisticsVO> chrgItmDtlList(BillingStatisticsVO billingStatistics);
+
+	public int getBillInvoiceCount(BillingStatisticsVO billingStatisticsVO);
+
+	public List<BillingStatisticsVO> getBillInvoiceList(BillingStatisticsVO billingStatisticsVO, int page, int perPage);
+
+	public List<BillingStatisticsVO> getBillDtlList(BillingStatisticsVO billingStatisticsVO);
+}

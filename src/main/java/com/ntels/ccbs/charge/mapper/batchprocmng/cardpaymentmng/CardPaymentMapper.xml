@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.cardpaymentmng.CardPaymentMapper">
+
+	<select id="getCardWtdrawSingleDeposit" parameterType="String" resultType="CardWtdrawReqRsltVO">
+		SELECT  /* CardPaymentMapper.xml.getCardWtdrawSingleDeposit, 양연희, 2017.12.18 */
+				A.WTDRAW_REQ_NO
+        		,A.PYM_ACNT_ID
+        		,A.BILL_SEQ_NO
+        		,NVL(C.REF_CD4, '0000') AS DPST_PROC_CNTER_CD
+        		,NVL(C.REF_CD2, '1005-101-324978') AS DPST_PROC_CNTER_BNKBNO
+        		,A.UTR_ID
+        		,A.REQ_DATE
+        		,XX1.DEC_VARCHAR2_SEL(A.ENCPT_CARD_NO, 10, 'SSN', 'TBLPY_CARD_WTDRAW_REQ_RSLT', 'ENCPT_CARD_NO') AS ENCPT_CARD_NO 
+        		,A.PAY_AMT
+        		,A.CARD_CONF_DATE
+        		,A.CARD_CORP_CD
+        		,#{trnsDt} AS TRNS_DT
+        		,A.FEE_AMT
+        		,B.CUST_ID
+		FROM    TBLPY_CARD_WTDRAW_REQ_RSLT A
+				,TCMCU_PYM_ACNT_INFO B
+				,TSYCD_COMM_CD_DTL C
+		WHERE   A.WTDRAW_REQ_NO = #{wtdrawReqNo}
+		AND     A.WTDRAW_REQ_PROC_STAT = 'R'
+		AND     A.NICE_INTRLCK_RSLT_CD = '3001'
+		AND		A.PAY_PATH != 'B'
+		AND		B.PYM_ACNT_ID(+) = A.PYM_ACNT_ID
+		AND		C.COMM_CD_GRP(+) = 'BL00001'
+		AND     C.COMM_CD(+) = '02'
+	</select>
+	
+	<update id="updateCardWtdrawRcptRslt" parameterType="CardWtdrawReqRsltVO">
+		UPDATE	/* CardPaymentMapper.xml.updateCardWtdrawRcptRslt, 양연희, 2017.12.14 */
+				TBLPY_CARD_WTDRAW_REQ_RSLT
+		SET		WTDRAW_REQ_PROC_STAT	= #{cardWtdrawReqRsltVO.wtdrawReqProcStat}
+				,TRNS_DT				= #{cardWtdrawReqRsltVO.trnsDt}
+				,DPST_PROC_DT			= #{cardWtdrawReqRsltVO.dpstProcDt}
+				,CHGR_ID				= #{cardWtdrawReqRsltVO.regrId}
+				,CHG_DATE				= #{cardWtdrawReqRsltVO.regDate}
+		WHERE	WTDRAW_REQ_NO			= #{cardWtdrawReqRsltVO.wtdrawReqNo}
+	</update>
+	
+	<select id="getCardSingleDepositCncl" parameterType="String" resultType="CardWtdrawReqRsltVO">
+		SELECT  /* CardPaymentMapper.xml.getCardSingleDepositCncl, 양연희, 2017.12.18 */
+				A.WTDRAW_REQ_NO
+        		,C.DPST_SEQ_NO
+		FROM    TBLPY_CARD_WTDRAW_REQ_RSLT A
+        		,TBLPY_CARD_WTDRAW_REQ_RSLT B
+        		,TBLPY_DPST C
+		WHERE   A.WTDRAW_REQ_NO = #{wtdrawReqNo}
+		AND     A.WTDRAW_REQ_PROC_STAT = 'R'
+		AND     A.NICE_INTRLCK_RSLT_CD = '2001'
+		AND     B.NICE_TID = A.NICE_TID
+		AND     B.WTDRAW_REQ_PROC_STAT = 'P'
+		AND     B.NICE_INTRLCK_RSLT_CD = '3001'
+		AND     C.DPST_CL = '04'
+		AND     C.DPST_TP_SEQ_NO = B.WTDRAW_REQ_NO
+		AND		C.PAY_CNCL_YN = 'N'
+	</select>
+	
+	<select id="getCardSingleRcptList" parameterType="String" resultType="CardWtdrawReqRsltVO">
+		SELECT  /* CardPaymentMapper.xml.getCardSingleRcptList, 양연희, 2017.12.18 */
+				PYM_SEQ_NO
+		FROM    TBLPY_RCPT
+		WHERE   DPST_SEQ_NO = #{dpstSeqNo}
+	</select>
+	
+</mapper>

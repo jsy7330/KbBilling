@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.autotransmng.NBlpy102Mapper">
+
+	<select id="getEdiApplFileList" parameterType="NBlpy00CommVO" resultType="NBlpy00EdiApplReqVO">
+		SELECT  /* NBlpy102Mapper.getEdiApplFileList, 양연희, 2017.12.06 */
+				'GW82'||
+        		'11'||
+        		LPAD(0, 8, '0')||
+        		'90'||
+        		LPAD(B.GIRO_NO, 7, '0')||
+        		LPAD(A.TOT_CNT, 8, '0')||
+                RPAD(C.CORP_NM, 34, ' ')||
+        		LPAD(#{nBlpy00CommVO.procDt}, 8, '0')||
+        		RPAD(' ', 87, ' ') AS EDI_FILE_CON_STR
+        		,'0000000000' AS EDI_APPL_DATA_SEQ_NO
+                ,'0000000000' AS EDI_APPL_SEQ_NO
+        		,'F' AS APPL_PROC_STAT
+        		,B.GIRO_NO AS EDI_GIRO_NO
+        		,'00000000' AS E03_SEQ_NO
+        		,'' AS PAYER_NO
+        		,'' AS BNK_CD
+        		,'' AS ACNT_NO
+        		,'' AS E05_APPL_CL_CD
+				,'' AS E10_ACNT_OPEN_BNK_CD
+				,'' AS CUST_SSN_NO
+				,'' AS E14_APFRM_RCPTPNT_CD
+				,'' AS E16_FRST_APLY_DT
+        		,#{nBlpy00CommVO.inptMenuId} AS INPT_MENU_ID
+				,#{nBlpy00CommVO.workId} AS REGR_ID
+				,'H' AS DATA_RECORD_YN
+		FROM    (SELECT COUNT(*) AS TOT_CNT
+				FROM	TBLPY_EDI_APPL_REQ_RSLT
+				WHERE	REQ_BAT_PROC_NO = #{nBlpy00CommVO.batProcNo}
+				AND		APPL_PROC_STAT = 'C') A
+				,(SELECT SUBSTRB(SET_VAL, 1, 7) AS GIRO_NO
+				FROM    TBLIV_BILL_STP
+				WHERE   SO_ID = '00'
+				AND     SET_ITM_ID = '00001'
+				AND		EFT_END_YYMM = '999912') B
+				,(SELECT SUBSTRB(SET_VAL, 1, 34) AS CORP_NM
+				FROM    TBLIV_BILL_STP
+				WHERE   SO_ID = '00'
+				AND     SET_ITM_ID = '00002'
+				AND		EFT_END_YYMM = '999912') C
+		UNION ALL
+		SELECT	EDI_FILE_CON_STR
+				,EDI_APPL_DATA_SEQ_NO
+				,EDI_APPL_SEQ_NO
+				,APPL_PROC_STAT
+				,EDI_GIRO_NO
+				,E03_SEQ_NO
+				,PAYER_NO
+				,BNK_CD
+				,ACNT_NO
+				,E05_APPL_CL_CD
+				,E10_ACNT_OPEN_BNK_CD
+				,CUST_SSN_NO
+				,E14_APFRM_RCPTPNT_CD
+				,E16_FRST_APLY_DT
+				,#{nBlpy00CommVO.inptMenuId} AS INPT_MENU_ID
+				,#{nBlpy00CommVO.workId} AS REGR_ID
+				,'Y' AS DATA_RECORD_YN
+		FROM	(
+				SELECT	'GW82'||
+		        		'22'||
+						LPAD(E03_SEQ_NO, 8, '0')||
+						LPAD(E04_APPL_DT, 8, '0')||
+						LPAD(E05_APPL_CL_CD, 2, '0')||
+						RPAD(NVL(E06_BFR_PAYER_NO, ' '), 20, ' ')||
+						RPAD(NVL(E07_ATR_PAYER_NO, ' '), 20, ' ')||
+						'00'||
+						'00'||
+						LPAD(NVL(E10_ACNT_OPEN_BNK_CD, '0'), 7, '0')||
+						RPAD(NVL(XX1.DEC_VARCHAR2_SEL(E11_ENCPT_ACNT_NO, 10, 'SSN', 'TBLPY_EDI_APPL_REQ_RSLT', 'E11_ENCPT_ACNT_NO'), ' '), 15, ' ')||
+--						RPAD(NVL(XX1.DEC_VARCHAR2_SEL(E12_ENCPT_CUST_SSN_NO, 10, 'SSN', 'TBLPY_EDI_APPL_REQ_RSLT', 'E12_ENCPT_CUST_SSN_NO'), ' '), 13, ' ')||
+						RPAD(NVL(DECODE(LENGTH(XX1.DEC_VARCHAR2_SEL(E12_ENCPT_CUST_SSN_NO, 10, 'SSN', 'TBLPY_EDI_APPL_REQ_RSLT', 'E12_ENCPT_CUST_SSN_NO'))
+											, 10
+											, XX1.DEC_VARCHAR2_SEL(E12_ENCPT_CUST_SSN_NO, 10, 'SSN', 'TBLPY_EDI_APPL_REQ_RSLT', 'E12_ENCPT_CUST_SSN_NO')
+											, SUBSTR(XX1.DEC_VARCHAR2_SEL(E12_ENCPT_CUST_SSN_NO, 10, 'SSN', 'TBLPY_EDI_APPL_REQ_RSLT', 'E12_ENCPT_CUST_SSN_NO'), 1, 6)||'0000000')
+											, ' '), 13, ' ')||
+						RPAD(NVL(E13_PAYER_TEL_NO, ' '), 11, ' ')||
+						LPAD(NVL(E14_APFRM_RCPTPNT_CD, '0'), 7, '0')||
+						LPAD(NVL(E15_APPL_RSLT_CD, '0'), 2, '0')||
+						LPAD(NVL(E16_FRST_APLY_DT, '0'), 8, '0')||
+						NVL(E17_RCPT_DSK_CL, ' ')||
+						LPAD(NVL(E18_PAYORGNL_RCPT_NO, '0'), 9, '0')||
+						RPAD(NVL(E19_ACNT_CUST_NM, ' '), 16, ' ')||
+						NVL(E20_AGRE_DATA_CL, ' ')||
+						RPAD(' ', 2, ' ') AS EDI_FILE_CON_STR
+						,EDI_APPL_DATA_SEQ_NO
+		                ,EDI_APPL_SEQ_NO
+		        		,DECODE(E05_APPL_CL_CD, '02', 'F', '06', 'F', '08', 'F', '09', 'F', 'W') AS APPL_PROC_STAT
+		        		,'' AS EDI_GIRO_NO
+		        		,E03_SEQ_NO
+		        		,NVL(E07_ATR_PAYER_NO, ' ') AS PAYER_NO
+		        		,NVL(SUBSTR(E10_ACNT_OPEN_BNK_CD, 1, 3), ' ') AS BNK_CD
+		        		,SUBSTR(NVL(XX1.DEC_VARCHAR2_SEL(E11_ENCPT_ACNT_NO, 10, 'SSN', 'TBLPY_EDI_APPL_REQ_RSLT', 'E11_ENCPT_ACNT_NO'), ' '), 1, 15) AS ACNT_NO
+		        		,E05_APPL_CL_CD
+						,E10_ACNT_OPEN_BNK_CD
+						,NVL(XX1.DEC_VARCHAR2_SEL(E12_ENCPT_CUST_SSN_NO, 10, 'SSN', 'TBLPY_EDI_APPL_REQ_RSLT', 'E12_ENCPT_CUST_SSN_NO'), ' ') AS CUST_SSN_NO
+						,E14_APFRM_RCPTPNT_CD
+						,E16_FRST_APLY_DT
+						,'Y' AS DATA_RECORD_YN
+				FROM    TBLPY_EDI_APPL_REQ_RSLT
+				WHERE	REQ_BAT_PROC_NO = #{nBlpy00CommVO.batProcNo}
+				AND		APPL_PROC_STAT = 'C'
+				ORDER BY TO_NUMBER(E03_SEQ_NO)
+				)
+		UNION ALL
+		SELECT	'GW82'||
+        		'33'||
+				LPAD(9, 8, '9')||
+				'90'||
+				LPAD(B.GIRO_NO, 7, '0')||
+				LPAD(A.TOT_CNT, 8, '0')||
+				LPAD(0, 8, '0')||
+				LPAD(0, 8, '0')||
+				LPAD(0, 8, '0')||
+				LPAD(0, 8, '0')||
+				LPAD(0, 8, '0')||
+				LPAD(NVL(NEW_CNT, 0), 8, '0')||
+				LPAD(NVL(TERM_CNT, 0), 8, '0')||
+				LPAD(NVL(VTERM_CNT, 0), 8, '0')||
+				LPAD(NVL(CHG_CNT, 0), 8, '0')||
+				RPAD(' ', 57, ' ') AS EDI_FILE_CON_STR
+        		,'0000000000' AS EDI_APPL_DATA_SEQ_NO
+                ,'0000000000' AS EDI_APPL_SEQ_NO
+        		,'F' AS APPL_PROC_STAT
+        		,B.GIRO_NO AS EDI_GIRO_NO
+        		,'00000000' AS E03_SEQ_NO
+        		,'' AS PAYER_NO
+        		,'' AS BNK_CD
+        		,'' AS ACNT_NO
+        		,'' AS E05_APPL_CL_CD
+				,'' AS E10_ACNT_OPEN_BNK_CD
+				,'' AS CUST_SSN_NO
+				,'' AS E14_APFRM_RCPTPNT_CD
+				,'' AS E16_FRST_APLY_DT
+        		,#{nBlpy00CommVO.inptMenuId} AS INPT_MENU_ID
+				,#{nBlpy00CommVO.workId} AS REGR_ID
+				,'T' AS DATA_RECORD_YN
+		FROM	 (SELECT COUNT(*) AS TOT_CNT
+				FROM	TBLPY_EDI_APPL_REQ_RSLT
+				WHERE	REQ_BAT_PROC_NO = #{nBlpy00CommVO.batProcNo}
+				AND		APPL_PROC_STAT = 'C') A
+				,(SELECT SUBSTRB(SET_VAL, 1, 7) AS GIRO_NO
+				FROM    TBLIV_BILL_STP
+				WHERE   SO_ID = '00'
+				AND     SET_ITM_ID = '00001'
+				AND		EFT_END_YYMM = '999912') B
+				,(SELECT SUM(DECODE(E05_APPL_CL_CD, '02', 1, 0)) AS NEW_CNT
+						,SUM(DECODE(E05_APPL_CL_CD, '08', 1, 0)) AS TERM_CNT
+						,SUM(DECODE(E05_APPL_CL_CD, '09', 1, 0)) AS VTERM_CNT
+						,SUM(DECODE(E05_APPL_CL_CD, '06', 1, 0)) AS CHG_CNT
+				FROM	TBLPY_EDI_APPL_REQ_RSLT
+				WHERE	REQ_BAT_PROC_NO = #{nBlpy00CommVO.batProcNo}
+				AND		APPL_PROC_STAT = 'C') C
+	</select>
+	
+	<select id="getEdiApplAgreData" resultType="NBlpy00EdiAgreDataVO">
+		SELECT	/* NBlpy102Mapper.getEdiApplAgreData, 양연희, 2018.01.08 */
+				A.EDI_APPL_SEQ_NO
+				,A.AGRE_DATA_YN
+				,A.AGRE_DATA_CL
+				,A.AGRE_DATA_FILE_PATH
+				,A.AGRE_DATA_FILE_NM
+				,A.AGRE_DATA_FILE_CT
+				,B.AGRE_FILE_UUID
+		FROM	TBLPY_EDI_APPL A,
+				TCMCU_EDI_APPL_INFO B
+		WHERE	A.EDI_APPL_SEQ_NO = #{ediApplSeqNo}
+		AND		A.EDI_APPL_SEQ_NO = B.EDI_APPL_SEQ_NO
+	</select>
+	
+	<update id="updateEdiApplReqProcStat" parameterType="NBlpy00EdiApplReqVO">
+		UPDATE	/* NBlpy102Mapper.updateEdiApplReqProcStat, 양연희, 2017.12.06 */
+				TBLPY_EDI_APPL_REQ_RSLT
+		SET		APPL_PROC_STAT			= #{nBlpy00EdiApplReqVO.applProcStat}
+				,CHGR_ID				= #{nBlpy00EdiApplReqVO.regrId}
+				,CHG_DATE				= #{nBlpy00EdiApplReqVO.regDate}
+		WHERE	EDI_APPL_DATA_SEQ_NO	= #{nBlpy00EdiApplReqVO.ediApplDataSeqNo}
+	</update>
+
+	<update id="updateEdiApplProcStat" parameterType="NBlpy00EdiApplVO">
+		UPDATE	/* NBlpy102Mapper.updateEdiApplProcStat, 양연희, 2017.12.04 */
+				TBLPY_EDI_APPL
+		SET		APPL_PROC_STAT	= #{nBlpy00EdiApplVO.applProcStat}
+				,CHGR_ID		= #{nBlpy00EdiApplVO.regrId}
+				,CHG_DATE		= #{nBlpy00EdiApplVO.regDate}
+		WHERE	EDI_APPL_SEQ_NO	= #{nBlpy00EdiApplVO.ediApplSeqNo}
+	</update>
+
+	<update id="updateRcptFileBatProcRslt" parameterType="NBlpyRcptFileBatVO">
+		UPDATE	/* NBlpy102Mapper.updateRcptFileBatProcRslt, 양연희, 2018.02.06 */
+				TBLPY_RCPT_FILE_BAT_PROC_RSLT
+		SET		PROC_STAT			= #{nBlpyRcptFileBatVO.procStat}
+				,CHGR_ID			= #{nBlpyRcptFileBatVO.regrId}
+				,CHG_DATE			= #{nBlpyRcptFileBatVO.regDate}
+				<if test="nBlpyRcptFileBatVO.fileNm != null and nBlpyRcptFileBatVO.fileNm != '' ">
+				,FILE_NM			= #{nBlpyRcptFileBatVO.fileNm}
+				</if>
+				<if test="nBlpyRcptFileBatVO.scsCnt != null">
+				,SCS_CNT			= #{nBlpyRcptFileBatVO.scsCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.scsAmt != null">
+				,SCS_AMT			= #{nBlpyRcptFileBatVO.scsAmt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.errCnt != null">
+				,ERR_CNT			= #{nBlpyRcptFileBatVO.errCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.errAmt != null">
+				,ERR_AMT			= #{nBlpyRcptFileBatVO.errAmt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.partWtdrawCnt != null">
+				,PART_WTDRAW_CNT	= #{nBlpyRcptFileBatVO.partWtdrawCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.partWtdrawAmt != null">
+				,PART_WTDRAW_AMT	= #{nBlpyRcptFileBatVO.partWtdrawAmt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.feeAmt != null">
+				,FEE_AMT			= #{nBlpyRcptFileBatVO.feeAmt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.newCnt != null">
+				,NEW_CNT			= #{nBlpyRcptFileBatVO.newCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.termCnt != null">
+				,TERM_CNT			= #{nBlpyRcptFileBatVO.termCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.anyTermCnt != null">
+				,ANY_TERM_CNT		= #{nBlpyRcptFileBatVO.anyTermCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.payerChgCnt != null">
+				,PAYER_CHG_CNT		= #{nBlpyRcptFileBatVO.payerChgCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.fnltNewCnt != null">
+				,FNLT_NEW_CNT		= #{nBlpyRcptFileBatVO.fnltNewCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.fnltTermCnt != null">
+				,FNLT_TERM_CNT		= #{nBlpyRcptFileBatVO.fnltTermCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.fnltAnyTermCnt != null">
+				,FNLT_ANY_TERM_CNT	= #{nBlpyRcptFileBatVO.fnltAnyTermCnt}
+				</if>
+				<if test="nBlpyRcptFileBatVO.fileCrtSeqNo != null and nBlpyRcptFileBatVO.fileCrtSeqNo != '' ">
+				,FILE_CRT_SEQ_NO	= #{nBlpyRcptFileBatVO.fileCrtSeqNo}
+				</if>
+		WHERE	BAT_PROC_NO			= #{nBlpyRcptFileBatVO.batProcNo}
+	</update>
+
+	<insert id="insertBillFileCrt" parameterType="NBlivBillFileCrtVO">
+		INSERT INTO /* NBlpy102Mapper.insertBillFileCrt, 양연희, 2017.11.30 */
+					TBLIV_BILL_FILE_CRT
+		(
+			SO_ID
+			,FILE_CRT_SEQ_NO
+			,BILL_YYMM
+			,BILL_CYCL
+			,BILL_DT
+			,CRT_FILE_TP
+			,BILL_CL
+			,FILE_CRT_DT
+			,FILE_PATH
+			,FILE_NM
+			,FILE_SIZE
+			,DPST_REQ_DT
+			,PROC_CNT
+			,LAST_DOWNLOAD_DT
+			,LAST_DOWNLOAD_EMP_ID
+			,ERR_DESC
+			,INPT_MENU_ID
+			,REGR_ID
+			,REG_DATE
+			,CHGR_ID
+			,CHG_DATE
+		)
+		VALUES
+		(
+			#{nBlivBillFileCrtVO.soId}
+		    ,#{nBlivBillFileCrtVO.fileCrtSeqNo}
+		    ,#{nBlivBillFileCrtVO.billYymm}
+		    ,#{nBlivBillFileCrtVO.billCycl}
+		    ,#{nBlivBillFileCrtVO.billDt}
+		    ,#{nBlivBillFileCrtVO.crtFileTp}
+		    ,#{nBlivBillFileCrtVO.billCl}
+		    ,#{nBlivBillFileCrtVO.fileCrtDt}
+		    ,#{nBlivBillFileCrtVO.filePath}
+		    ,#{nBlivBillFileCrtVO.fileNm}
+		    ,#{nBlivBillFileCrtVO.fileSize}
+		    ,#{nBlivBillFileCrtVO.dpstReqDt}
+		    ,#{nBlivBillFileCrtVO.procCnt}
+		    ,#{nBlivBillFileCrtVO.lastDownloadDt}
+		    ,#{nBlivBillFileCrtVO.lastDownloadEmpId}
+		    ,#{nBlivBillFileCrtVO.errDesc}
+		    ,#{nBlivBillFileCrtVO.inptMenuId}
+		    ,#{nBlivBillFileCrtVO.regrId}
+		    ,#{nBlivBillFileCrtVO.regDate}
+		    ,#{nBlivBillFileCrtVO.regrId}
+		    ,#{nBlivBillFileCrtVO.regDate}
+		)
+	</insert>
+
+</mapper>

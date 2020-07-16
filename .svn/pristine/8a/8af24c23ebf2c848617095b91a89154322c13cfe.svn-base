@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.refInfo.commonInfo.FactorMapper">
+
+<select id="totalFactorListCount" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+		SELECT COUNT(*)
+		FROM TPMBI_FCTR A
+		WHERE A.MSTR_FL = '1'
+		AND A.INACT_DT >= #{factor.currentDay}
+		<if test="factor.fctrNm != null">
+	       AND  FCTR_NM	LIKE CONCAT(CONCAT('%', #{factor.fctrNm}), '%')
+	    </if>			
+</select>
+
+<select id="totalFactorList" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT '0' CHK,
+					A.FCTR_CD,
+  					A.ACT_DT,
+  					A.INACT_DT,
+    				A.FCTR_NM,
+   					A.REGR_ID,
+   					REG_DATE,
+   					A.CHGR_ID,
+   					CHG_DATE,
+		           (
+	                   SELECT C.CODE_NM AS COMMON_CD_NM
+	                   FROM   TSYCO_CODE_DETAIL B
+		               LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+		                 ON #{factor.lngTyp}  = C.LNG_TYP
+		                 AND B.COMMON_GRP = C.COMMON_GRP
+		                 AND B.COMMON_CD = C.COMMON_CD
+	                   WHERE  B.COMMON_GRP  = 'PP00012'
+	                   AND    B.COMMON_CD   = FCTR_REF_TYP
+               		) AS FCTR_REF_TYP,   
+  					TABLE_ID,
+   					COLMN_ID,
+		           (
+	                   SELECT C.CODE_NM AS COMMON_CD_NM
+	                   FROM   TSYCO_CODE_DETAIL B
+		               LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+		                 ON #{factor.lngTyp}  = C.LNG_TYP
+		                 AND B.COMMON_GRP = C.COMMON_GRP
+		                 AND B.COMMON_CD = C.COMMON_CD
+	                   WHERE  B.COMMON_GRP  = 'PP00024'
+	                   AND    B.COMMON_CD   = DATA_TYP
+               		) AS DATA_TYP,   					
+   					REF_CD,
+   					REF_FUNC,   			
+   					 (	CASE WHEN CHG_NULL_FL = '0' THEN 'N'
+   					 		 WHEN CHG_NULL_FL = '1' THEN 'Y'
+   					 		 ELSE 'N'
+   					 	END 
+   					 ) AS CHG_NULL_FL,		 
+  					 CHG_NULL_VAL
+		FROM TPMBI_FCTR A
+		WHERE A.MSTR_FL = '1'
+		AND A.INACT_DT >= #{factor.currentDay}
+		<if test="factor.fctrNm != null">
+	       AND  FCTR_NM	LIKE CONCAT(CONCAT('%', #{factor.fctrNm}), '%')
+	    </if>			
+		ORDER BY A.FCTR_CD DESC
+<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>			
+</select>
+
+<select id="fctrNameCheck" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+		SELECT COUNT(*)
+		FROM TPMBI_FCTR A
+		WHERE A.MSTR_FL = '1'
+  		AND A.INACT_DT >= #{factor.currentDay}
+  		AND TRIM(FCTR_NM) = TRIM(#{factor.fctrNm})
+</select>
+
+
+<select id="getRefColmnIdComboList" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+  		SELECT '[]'   AS COLUMN_NAME ,
+  		       'SEL' AS COLUMN_DESC,
+  		       NULL   AS COMMENTS
+  		FROM DUAL
+  		UNION ALL
+	   SELECT A.COLUMN_NAME ,
+	   		  A.COLUMN_DESC,
+	   		  A.COMMENTS
+	   FROM
+	         (
+        	<choose> 	         
+				<when test="'${dbms.kind}' == 'ORACLE'">                       
+					SELECT COLUMN_NAME,
+					       COMMENTS AS COLUMN_DESC,
+					       COMMENTS
+					FROM   ALL_COL_COMMENTS
+					WHERE  TABLE_NAME = #{factor.tableName}
+					ORDER BY COLUMN_NAME ASC	
+				</when>                          
+				<when test="'${dbms.kind}' == 'MYSQL'">                         
+					SELECT COLUMN_NAME AS COLUMN_NAME,
+						COLUMN_COMMENT AS COLUMN_DESC,
+						COLUMN_COMMENT AS COMMENTS
+					FROM   INFORMATION_SCHEMA.COLUMNS 
+					WHERE  TABLE_SCHEMA = 'BSS'
+	        		AND TABLE_NAME = #{factor.tableName}
+					ORDER BY COLUMN_NAME ASC
+                </when>	
+             </choose> 
+			 ) A
+</select>
+
+<select id="getTotalFactorDupCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+		SELECT (CASE WHEN COUNT(FCTR_CD) IS NULL
+					THEN 0
+					ELSE COUNT(FCTR_CD) 
+					END ) AS DATA_CNT
+		FROM  TPMBI_FCTR
+		WHERE FCTR_NM     = #{factor.fctrNm}
+		AND   MSTR_FL     = '1'
+		AND   INACT_DT  > #{factor.currentDay}
+		<if test="factor.fctrCd != null">
+	       AND FCTR_CD       != #{factor.fctrCd}
+	    </if>			
+</select>
+
+<insert id="addTotalFactor" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+      	INSERT INTO TPMBI_FCTR
+        (
+            FCTR_CD,
+  		    INACT_DT,
+   		    ACT_DT,
+    		FCTR_NM,
+    		MSTR_FL,
+    		REGR_ID,
+  			REG_DATE,
+  			CHGR_ID,
+  			CHG_DATE,
+  			FCTR_REF_TYP,
+  			TABLE_ID,
+  			COLMN_ID,
+  			DATA_TYP,
+  			REF_CD,
+  			REF_FUNC,
+  			CHG_NULL_FL,
+  			CHG_NULL_VAL
+        )
+        VALUES          
+        (               
+          #{factor.fctrCd, jdbcType=VARCHAR },
+          #{factor.inactDt, jdbcType=VARCHAR },
+          #{factor.actDt, jdbcType=VARCHAR },      
+          #{factor.fctrNm, jdbcType=VARCHAR },      
+          '1',             
+          #{factor.regrId, jdbcType=VARCHAR },  
+          #{factor.sysDate},  
+          #{factor.chgrId, jdbcType=VARCHAR },    
+          #{factor.sysDate}, 
+          #{factor.fctrRefTyp, jdbcType=VARCHAR },
+          #{factor.tableId, jdbcType=VARCHAR },      
+          #{factor.colmnId, jdbcType=VARCHAR },      
+          #{factor.dataTyp, jdbcType=VARCHAR },      
+          #{factor.refCd, jdbcType=VARCHAR },
+          #{factor.refFunc, jdbcType=VARCHAR },
+          #{factor.chgNullFl, jdbcType=VARCHAR },
+          #{factor.chgNullVal, jdbcType=VARCHAR }
+        )
+</insert>
+
+<select id="getCommonGrpPopupList" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+        SELECT B.COMMON_GRP,
+               B.COMMON_GRP_NM as COMMON_GRP_NM 
+        FROM   TSYCO_CODE_MAST      B
+        LEFT OUTER JOIN TSYCO_CODE_MAST_NAME C
+        ON #{factor.lngTyp} = C.LNG_TYP
+        AND B.COMMON_GRP = C.COMMON_GRP
+        WHERE  C.COMMON_GRP_NM 	LIKE CONCAT(CONCAT('%', #{factor.commonGrpNm}), '%')
+</select>
+
+<select id="getTotalFactor" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+		SELECT
+					 A.FCTR_CD,
+  					 A.INACT_DT,
+  					 A.ACT_DT,
+    				 A.FCTR_NM,
+   					 A.REGR_ID,
+   					 A.REG_DATE,
+   					 A.CHGR_ID,
+   					 A.CHG_DATE,
+  					 A.FCTR_REF_TYP,
+  					 A.TABLE_ID,
+   					 A.COLMN_ID,
+  					 A.DATA_TYP,
+   					 A.REF_CD,   					 
+   					 (
+						SELECT B.COMMON_GRP_NM
+						FROM TSYCO_CODE_MAST C, TSYCO_CODE_MAST_NAME B                                     
+						WHERE B.LNG_TYP =  #{factor.lngTyp}
+						AND B.COMMON_GRP = A.REF_CD  
+						AND C.COMMON_GRP = B.COMMON_GRP
+						AND C.USE_YN = 'Y'
+		        	 ) AS REF_CD_NM,	
+   					 A.REF_FUNC,
+   					 A.CHG_NULL_FL,
+   					 A.CHG_NULL_VAL,
+   					 A.ACT_DT AS BASE_ACT_DT
+ 			   FROM TPMBI_FCTR A
+		WHERE  A.FCTR_CD       =  #{factor.fctrCd}
+		AND    A.INACT_DT      =  #{factor.inactDt}
+		AND    A.ACT_DT        =  #{factor.actDt}
+</select>
+
+<select id="getTotalFactorDupExpCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+		SELECT (CASE WHEN COUNT(FCTR_CD) IS NULL
+					THEN 0
+					ELSE COUNT(FCTR_CD) 
+					END ) AS DATA_CNT 
+		FROM  TPMBI_FCTR
+		WHERE FCTR_NM  	    = 	#{factor.fctrNm}
+		AND   MSTR_FL       = 	'1'
+		AND   INACT_DT    >   #{factor.currentDay}
+		AND   FCTR_CD      != 	#{factor.fctrCd}
+</select>
+
+<update id="allmodTotalFactor" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+	UPDATE TPMPD_SVC_RATE_ITM_TYP_FCTR SET	
+	FCTR_REF_TYP = #{factor.fctrRefTyp, jdbcType=VARCHAR },
+	TABLE_ID = #{factor.tableId, jdbcType=VARCHAR },     
+	COLMN_ID = #{factor.colmnId, jdbcType=VARCHAR },     
+	DATA_TYP = #{factor.dataTyp, jdbcType=VARCHAR }, 
+	REF_CD = #{factor.refCd, jdbcType=VARCHAR },
+	REF_FUNC = #{factor.refFunc, jdbcType=VARCHAR },
+	CHG_NULL_FL = #{factor.chgNullFl, jdbcType=VARCHAR },
+    CHG_NULL_VAL = #{factor.chgNullVal, jdbcType=VARCHAR }
+	WHERE FCTR_CD = #{factor.fctrCd}
+	AND 	MSTR_FL = '1'
+</update>
+
+<update id="allmodTotalFactor1" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+	UPDATE TP_PROD_SUBSCRIP_FCTR SET
+	FCTR_REF_TYP = #{factor.fctrRefTyp, jdbcType=VARCHAR },
+	TABLE_ID = #{factor.tableId, jdbcType=VARCHAR },     
+	COLMN_ID = #{factor.colmnId, jdbcType=VARCHAR },     
+	DATA_TYP = #{factor.dataTyp, jdbcType=VARCHAR }, 
+	REF_CD = #{factor.refCd, jdbcType=VARCHAR },
+	REF_FUNC = #{factor.refFunc, jdbcType=VARCHAR },
+	CHG_NULL_FL = #{factor.chgNullFl, jdbcType=VARCHAR },
+    CHG_NULL_VAL = #{factor.chgNullVal, jdbcType=VARCHAR }
+	WHERE FCTR_CD = #{factor.fctrCd}
+	AND 	MSTR_FL = '1'
+</update>
+
+<update id="allmodTotalFactor2" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+	UPDATE TPMPD_RATE_ITM_FCTR SET
+	FCTR_REF_TYP = #{factor.fctrRefTyp, jdbcType=VARCHAR },
+	TABLE_ID = #{factor.tableId, jdbcType=VARCHAR },     
+	COLMN_ID = #{factor.colmnId, jdbcType=VARCHAR },     
+	DATA_TYP = #{factor.dataTyp, jdbcType=VARCHAR }, 
+	REF_CD = #{factor.refCd, jdbcType=VARCHAR },
+	REF_FUNC = #{factor.refFunc, jdbcType=VARCHAR },
+	CHG_NULL_FL = #{factor.chgNullFl, jdbcType=VARCHAR },
+    CHG_NULL_VAL = #{factor.chgNullVal, jdbcType=VARCHAR }
+	WHERE FCTR_CD = #{factor.fctrCd}
+	AND 	MSTR_FL = '1'
+</update>
+
+<update id="allmodTotalFactor3" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+	UPDATE TPMPD_D_RATE_ITM_FCTR SET
+	FCTR_REF_TYP = #{factor.fctrRefTyp, jdbcType=VARCHAR },
+	TABLE_ID = #{factor.tableId, jdbcType=VARCHAR },     
+	COLMN_ID = #{factor.colmnId, jdbcType=VARCHAR },     
+	DATA_TYP = #{factor.dataTyp, jdbcType=VARCHAR }, 
+	REF_CD = #{factor.refCd, jdbcType=VARCHAR },
+	REF_FUNC = #{factor.refFunc, jdbcType=VARCHAR },
+	CHG_NULL_FL = #{factor.chgNullFl, jdbcType=VARCHAR },
+    CHG_NULL_VAL = #{factor.chgNullVal, jdbcType=VARCHAR }
+	WHERE FCTR_CD = #{factor.fctrCd}
+	AND 	MSTR_FL = '1'
+</update>
+
+<update id="modTotalFactor" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+		UPDATE  TPMBI_FCTR
+	 	SET
+	 	   	    INACT_DT     = #{factor.inactDt, jdbcType=VARCHAR },
+   	 	        CHGR_ID      = #{factor.chgrId, jdbcType=VARCHAR },    
+	 	        CHG_DATE     = #{factor.sysDate}, 
+	 	       FCTR_REF_TYP  = #{factor.fctrRefTyp, jdbcType=VARCHAR },
+		       TABLE_ID      = #{factor.tableId, jdbcType=VARCHAR },   
+		       COLMN_ID      = #{factor.colmnId, jdbcType=VARCHAR },      
+		       DATA_TYP      = #{factor.dataTyp, jdbcType=VARCHAR },
+		       REF_CD        = #{factor.refCd, jdbcType=VARCHAR },
+		       REF_FUNC      = #{factor.refFunc, jdbcType=VARCHAR },
+		       CHG_NULL_FL   = #{factor.chgNullFl, jdbcType=VARCHAR },
+		       CHG_NULL_VAL  = #{factor.chgNullVal, jdbcType=VARCHAR }
+   	    WHERE   FCTR_CD      =   #{factor.fctrCd, jdbcType=VARCHAR }
+	     AND     ACT_DT      =   #{factor.actDt, jdbcType=VARCHAR }
+</update>
+<update id="modTotalFactorInactDt" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+	    UPDATE TPMBI_FCTR
+	    SET    INACT_DT          =  #{factor.inactDt, jdbcType=VARCHAR },
+		       MSTR_FL           =  #{factor.mstrFl, jdbcType=VARCHAR },
+               CHGR_ID           =  #{factor.chgrId, jdbcType=VARCHAR },    
+               CHG_DATE          =  #{factor.sysDate}
+        WHERE  FCTR_CD         	 =  #{factor.fctrCd, jdbcType=VARCHAR }
+		AND    ACT_DT            =  #{factor.baseActDt, jdbcType=VARCHAR }
+</update>
+
+<update id="modTotalFactorInactDtation" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor">
+		UPDATE TPMBI_FCTR
+   		SET    INACT_DT          =  #{factor.inactDt, jdbcType=VARCHAR },
+        	   CHGR_ID           =  #{factor.chgrId, jdbcType=VARCHAR },    
+               CHG_DATE          =  #{factor.sysDate}, 
+		       MSTR_FL           =  #{factor.mstrFl, jdbcType=VARCHAR }               
+		WHERE  FCTR_CD         	 =  #{factor.fctrCd, jdbcType=VARCHAR }
+	    AND    ACT_DT            =  #{factor.baseActDt, jdbcType=VARCHAR }
+</update>
+
+</mapper>

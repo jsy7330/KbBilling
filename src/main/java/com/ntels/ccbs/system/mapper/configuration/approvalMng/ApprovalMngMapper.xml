@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.configuration.approvalMng.ApprovalMngMapper">
+	
+	<select id="getApprovalMngCnt" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM(
+			SELECT 
+				 A.APRV_ID
+				,A.APRV_NM
+				,A.REGR_ID
+				,A.REG_DATE
+				,A.USE_YN 
+				,A.REGR_NM
+			 FROM
+			(SELECT 
+				A.APRV_ID
+				,A.APRV_NM
+				,A.REGR_ID
+				,A.REG_DATE
+				<!-- 
+       			<choose>                          
+  					<when test="'${dbms.kind}' == 'ORACLE'">                       
+                	,TO_CHAR(A.REG_DATE,'YYYY-MM-DD')AS REG_DATE
+					</when>                          
+					<when test="'${dbms.kind}' == 'MYSQL'">                         
+                    , date_format(A.REG_DATE, '%Y%m%d') AS REG_DATE
+                   </when>
+       			</choose>
+       			   -->
+				,A.USE_YN 
+				,(SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = A.REGR_ID) AS REGR_NM
+			FROM TSYCO_APRVMNG_MAST A
+			WHERE 1=1                                         
+			<if test="approvalMng.searchAprvId != null and approvalMng.searchAprvId != ''">
+			AND A.APRV_ID LIKE '%${approvalMng.searchAprvId}%'
+			</if>
+			<if test="approvalMng.searchAprvNm != null and approvalMng.searchAprvNm != ''">
+			AND A.APRV_NM LIKE '%${approvalMng.searchAprvNm}%'
+			</if>	
+			) A GROUP BY APRV_ID, APRV_NM, REGR_ID, REG_DATE, USE_YN, REGR_NM		
+		) B	
+	</select>
+	
+	<select id="getApprovalMngList" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng" resultType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 
+				 A.APRV_ID
+				,A.APRV_NM
+				,A.REGR_ID
+				,A.REG_DATE
+				,A.USE_YN 
+				,A.REGR_NM
+			 FROM
+			(SELECT 
+				A.APRV_ID
+				,A.APRV_NM
+				,A.REGR_ID
+				,A.REG_DATE
+				<!-- 
+       			<choose>                          
+  					<when test="'${dbms.kind}' == 'ORACLE'">                       
+                	,TO_CHAR(A.REG_DATE,'YYYY-MM-DD')AS REG_DATE
+					</when>                          
+					<when test="'${dbms.kind}' == 'MYSQL'">                         
+                    , date_format(A.REG_DATE, '%Y%m%d') AS REG_DATE
+                   </when>
+       			</choose> 
+       			  -->
+				,A.USE_YN 
+				,(SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = A.REGR_ID) AS REGR_NM
+			FROM TSYCO_APRVMNG_MAST A
+			WHERE 1=1                                         
+			<if test="approvalMng.searchAprvId != null and approvalMng.searchAprvId != ''">
+			AND A.APRV_ID LIKE '%${approvalMng.searchAprvId}%'
+			</if>
+			<if test="approvalMng.searchAprvNm != null and approvalMng.searchAprvNm != ''">
+			AND A.APRV_NM LIKE '%${approvalMng.searchAprvNm}%'
+			</if>	
+			)A GROUP BY APRV_ID, APRV_NM, REGR_ID, REG_DATE, USE_YN, REGR_NM		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>	
+	<select id="getAddApprovalCnt" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM VIFNSYS_USER_INFO   
+		WHERE 1=1                      
+     	<if test="approvalMng.searchPopOrgId != null and approvalMng.searchPopOrgId != ''">
+		AND ORG_ID LIKE '%${approvalMng.searchPopOrgId}%'
+		</if>
+		<if test="approvalMng.searchPopOrgNm != null and approvalMng.searchPopOrgNm != ''">
+		AND ORG_NM LIKE '%${approvalMng.searchPopOrgNm}%'
+		</if>
+		<if test="approvalMng.searchPopUserId != null and approvalMng.searchPopUserId != ''">
+		AND USER_ID LIKE '%${approvalMng.searchPopUserId}%'
+		</if>
+		<if test="approvalMng.searchPopUserName != null and approvalMng.searchPopUserName!= ''">
+		AND USER_NAME LIKE '%${approvalMng.searchPopUserName}%'
+		</if>		
+	</select>
+	<select id="getAddApprovalList" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng" resultType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 
+				ORG_ID
+				,ORG_NM
+				,USER_ID
+				,USER_NAME
+				,EMP_NO
+			FROM VIFNSYS_USER_INFO     
+			WHERE 1=1                                      
+     	<if test="approvalMng.searchPopOrgId != null and approvalMng.searchPopOrgId != ''">
+		AND ORG_ID LIKE '%${approvalMng.searchPopOrgId}%'
+		</if>
+		<if test="approvalMng.searchPopOrgNm != null and approvalMng.searchPopOrgNm != ''">
+		AND ORG_NM LIKE '%${approvalMng.searchPopOrgNm}%'
+		</if>
+		<if test="approvalMng.searchPopUserId != null and approvalMng.searchPopUserId != ''">
+		AND USER_ID LIKE '%${approvalMng.searchPopUserId}%'
+		</if>
+		<if test="approvalMng.searchPopUserName != null and approvalMng.searchPopUserName!= ''">
+		AND USER_NAME LIKE '%${approvalMng.searchPopUserName}%'
+		</if>		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	<select id="getApprovalCnt" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM TSYCO_APRVMNG_MAST      
+		WHERE APRV_ID = '${approvalMng.aprvId}'
+		
+	</select>
+	
+	<select id="getApprovalList" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng" resultType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 
+				A.APRV_ID
+				,A.APRV_NM
+				,A.APRV_STEP
+				,A.ORG_ID
+        		,(SELECT ORG.ORG_NM FROM TSYCO_ORG_INFO ORG WHERE ORG_ID= A.ORG_ID) AS ORG_NM
+				,A.USER_ID
+        		,(SELECT USER1.USER_NAME FROM TSYCO_USER USER1 WHERE USER_ID = A.USER_ID) AS USER_NAME
+				,A.REGR_ID
+				,A.REG_DATE 
+				,(SELECT USER2.USER_NAME FROM TSYCO_USER USER2 WHERE USER_ID = A.REGR_ID) AS REGR_NM
+			FROM TSYCO_APRVMNG_MAST  A
+			WHERE A.APRV_ID = '${approvalMng.aprvId}'
+			ORDER BY A.APRV_STEP 
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	
+	<!-- delete TSYCO_APRVMNG_MAST -->
+	<delete id="deleteAprvmngMast" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">
+		DELETE    
+		FROM	TSYCO_APRVMNG_MAST
+		WHERE	APRV_ID		= #{approvalMng.aprvId}			/* 결재업무ID */
+	</delete>
+	
+	<!-- insert TSYCO_APRVMNG_MAST -->
+	<insert id="insertAprvmngMast" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">
+		INSERT INTO TSYCO_APRVMNG_MAST
+            ( APRV_ID				/* 결재업무ID */
+			, APRV_NM				/* 결재업무명 */
+			, APRV_STEP				/* 결재단계 */
+			, ORG_ID				/* 결재자 조직코드 */
+			, USER_ID				/* 결재자 ID */
+			, USE_YN				/* 사용여부 */
+			, REGR_ID				/* 등록자 */
+			, REG_DATE				/* 등록일시 */
+			 )
+        VALUES
+			(#{approvalMng.aprvId}			/* 결재업무ID */
+			, #{approvalMng.aprvNm}			/* 결재업무명 */
+			, #{approvalMng.aprvStep}		/* 결재단계 */
+			, #{approvalMng.orgId}			/* 결재자 조직코드 */
+			, #{approvalMng.userId}			/* 결재자 ID */
+			, #{approvalMng.useYn}			/* 사용여부 */
+			, #{approvalMng.regrId}			/* 등록자 */
+			, #{approvalMng.regDate}		/* 등록일시 */
+			)
+	</insert>
+	
+	<!-- 결제상신 대상 카운트 조회 -->
+	<select id="getAprvMastCount" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM TSYCO_APRV_MAST      
+		WHERE APRV_ID = #{approvalMng.aprvId}
+		
+	</select>
+	
+	<!-- insert TSYCO_APRV_MAST 결재상신 저장-->
+	<insert id="insertAprvMast" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">
+		INSERT INTO TSYCO_APRV_MAST
+            ( APRV_MAST_ID			/* 결재ID */
+            , APRV_ID				/* 결재업무ID */
+            , APRV_STAT				/* 결재상태   - 승인요청:01, 승인:02,반려:03, 결재취소:04 */
+            , APRV_STEP				/* 결재단계 */
+            , ORG_ID				/* 결재자 조직코드 */
+			, USER_ID				/* 결재자 ID */
+            , REGR_ID				/* 등록자 */
+			, REG_DATE				/* 등록일시 */
+			 )
+        VALUES
+			(#{approvalMng.aprvMastId}		/* 결재ID */
+			, #{approvalMng.aprvId}			/* 결재업무ID */
+			, #{approvalMng.aprvStat}		/* 결재상태   - 승인요청:01, 승인:02,반려:03, 결재취소:04 */
+			, #{approvalMng.aprvStep}		/* 결재단계 */
+			, #{approvalMng.orgId}			/* 결재자 조직코드 */
+			, #{approvalMng.userId}			/* 결재자 ID */
+			, #{approvalMng.regrId}			/* 등록자 */
+			, #{approvalMng.regDate}		/* 등록일시 */
+			)
+	</insert>
+
+	<!-- insert TSYCO_APRV_HIST 결재 히스토리 저장-->
+	<insert id="insertAprvHist" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">
+		INSERT INTO TSYCO_APRV_HIST
+            ( APRV_MAST_ID			/* 결재ID */
+            , APRV_ID				/* 결재업무ID */
+            , APRV_STAT				/* 결재상태   - 승인요청:01, 승인:02,반려:03, 결재취소:04 */
+            , APRV_STEP				/* 결재단계 */
+            , REGR_ID				/* 등록자 */
+			, REG_DATE				/* 등록일시 */
+			 )
+        VALUES
+			(#{approvalMng.aprvMastId}		/* 결재ID */
+			, #{approvalMng.aprvId}			/* 결재업무ID */
+			, #{approvalMng.aprvStat}		/* 결재상태   - 승인요청:01, 승인:02,반려:03, 결재취소 :04 */
+			, #{approvalMng.aprvStep}		/* 결재단계 */
+			, #{approvalMng.regrId}			/* 등록자 */
+			, #{approvalMng.regDate}		/* 등록일시 */
+			)
+	</insert>	
+
+	<!-- 결재승인 리스트 -->
+	<select id="getApprovalOkList" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng" resultType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 
+				A.APRV_ID
+				, A.APRV_NM
+				, B.APRV_MAST_ID
+				, B.APRV_STAT
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{approvalMng.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{approvalMng.lngTyp}
+   							AND MAST.COMMON_GRP   ='SY00009'
+							AND DETAIL.COMMON_CD = B.APRV_STAT
+	       		) AS APRV_STAT_NM
+				, B.APRV_STEP
+				, B.ORG_ID
+				, (SELECT ORG.ORG_NM FROM TSYCO_ORG_INFO ORG WHERE ORG_ID= B.ORG_ID) AS ORG_NM
+				, B.USER_ID
+				, (SELECT USER1.USER_NAME FROM TSYCO_USER USER1 WHERE USER_ID = B.USER_ID) AS USER_NAME
+				, B.REGR_ID
+				, B.REG_DATE
+			FROM (SELECT 
+						APRV_ID
+						, APRV_NM 
+            			, USE_YN
+					FROM TSYCO_APRVMNG_MAST  
+					WHERE APRV_ID = #{approvalMng.aprvId}
+					GROUP BY APRV_ID, APRV_NM, REGR_ID, REG_DATE, USE_YN
+				) A
+				, TSYCO_APRV_MAST B
+			WHERE A.APRV_ID = B.APRV_ID
+			
+			<if test="approvalMng.searchAprvStep != null and approvalMng.searchAprvStep != ''">
+	        AND   B.APRV_STEP			= #{approvalMng.searchAprvStep}
+	        </if>
+	        
+			
+			ORDER BY B.APRV_STEP 
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<!-- 결재상태 업데이트 -->
+	<update id="updateAprvMast" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">
+        UPDATE TSYCO_APRV_MAST
+            SET
+                APRV_STAT 		= #{approvalMng.aprvStat}
+        WHERE 	APRV_ID			= #{approvalMng.aprvId}
+        <if test="approvalMng.aprvMastId != null and approvalMng.aprvMastId != ''">
+        AND   APRV_MAST_ID		= #{approvalMng.aprvMastId}
+        </if>
+        <if test="approvalMng.aprvStep != null and approvalMng.aprvStep != ''">
+        AND   APRV_STEP			= #{approvalMng.aprvStep}
+        </if>
+        
+    </update>
+    
+    <!-- 결재 히스토리 리스트 -->
+	<select id="getApprovalHistList" parameterType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng" resultType="com.ntels.ccbs.system.domain.configuration.approvalMng.ApprovalMng">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 
+				A.APRV_ID
+				, A.APRV_NM
+				, B.APRV_MAST_ID
+				, C.APRV_STAT
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{approvalMng.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{approvalMng.lngTyp}
+   							AND MAST.COMMON_GRP   ='SY00009'
+							AND DETAIL.COMMON_CD = C.APRV_STAT
+	       		) AS APRV_STAT_NM
+				, C.APRV_STEP
+				, B.ORG_ID
+				, (SELECT ORG.ORG_NM FROM TSYCO_ORG_INFO ORG WHERE ORG_ID= B.ORG_ID) AS ORG_NM
+				, B.USER_ID
+				, (SELECT USER1.USER_NAME FROM TSYCO_USER USER1 WHERE USER_ID = B.USER_ID) AS USER_NAME
+				, B.REGR_ID
+				, C.REG_DATE
+			FROM (SELECT 
+						APRV_ID
+						, APRV_NM 
+            			, USE_YN
+					FROM TSYCO_APRVMNG_MAST  
+					WHERE APRV_ID = #{approvalMng.aprvId}
+					GROUP BY APRV_ID, APRV_NM, REGR_ID, REG_DATE, USE_YN
+				) A
+				INNER JOIN TSYCO_APRV_MAST B ON A.APRV_ID = B.APRV_ID
+				LEFT OUTER JOIN TSYCO_APRV_HIST C ON B.APRV_MAST_ID = C.APRV_MAST_ID AND B.APRV_ID = C.APRV_ID
+				
+				
+			WHERE 1 = 1
+			
+			ORDER BY C.REG_DATE DESC , C.APRV_STEP DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+</mapper>

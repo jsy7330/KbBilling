@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.contract.contract.InvoiceDetailMapper">
+
+	<select id="getBillList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+	     SELECT
+               BILL.BILL_YYMM
+             , BILL.BILL_DT
+             , SUM(BILL.ADJ_PRV_BILL_AMT)                      AS ADJ_PRV_BILL_AMT
+             , SUM(BILL.ADJ_AMT)                               AS ADJ_AMT
+             , SUM(BILL.BILL_AMT)                              AS BILL_AMT
+             , SUM(BILL.RCPT_AMT)                              AS RCPT_AMT
+             , BILL.PAY_DUE_DT
+             , BILL.BILL_SEQ_NO
+             , BILL.PYM_ACNT_ID
+         FROM TBLIV_BILL BILL 
+         WHERE BILL.SO_ID         = #{soId}
+           AND BILL.PYM_ACNT_ID IN
+            <foreach collection="pymList" item="item" index="index" open="(" separator="," close=")">
+                #{item.pym_acnt_id}
+            </foreach>
+         GROUP BY BILL.SO_ID
+                , BILL.BILL_YYMM
+                , BILL.PYM_ACNT_ID
+                , BILL.BILL_DT
+                , BILL.PAY_DUE_DT
+                , BILL.BILL_SEQ_NO
+                , BILL.BILL_CYCL
+         ORDER BY BILL.SO_ID, BILL.BILL_YYMM DESC, BILL.BILL_DT
+	</select>
+	
+	<select id="getPymList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+		SELECT
+               CTRT.PYM_ACNT_ID
+	     FROM TCMCT_CTRT_INFO CTRT 
+         WHERE CTRT.SO_ID         = #{soId}
+         AND   CTRT.CUST_ID       = #{custId}
+         AND   CTRT.CTRT_ID       = #{ctrtId}
+         GROUP BY CTRT.PYM_ACNT_ID
+	</select>
+	
+	<select id="getBillCtrtList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+		SELECT
+		     BILL.SO_ID
+		  	,BILL.BILL_SEQ_NO
+		  	,BILL.BILL_YYMM
+		  	,BILL.BILL_DT
+			,BILL.PYM_ACNT_ID
+			,BILL.CUST_ID
+		    ,BILL.CTRT_ID
+		    ,(SELECT CUST.CUST_NM
+		      FROM TCMCU_CUST_INFO CUST
+		      WHERE CUST.SO_ID = BILL.SO_ID
+		      AND   CUST.CUST_ID = BILL.CUST_ID) AS CUST_NM
+		    ,(SELECT PROD.PROD_NM
+		      FROM TCMCT_CTRT_INFO CTRT
+		          ,IFNCRM_PROD_INFO PROD
+		      WHERE CTRT.SO_ID = BILL.SO_ID
+		      AND   CTRT.CTRT_ID = BILL.CTRT_ID
+		      AND   CTRT.INACT_DTTM &gt;= CONCAT(#{billDt}, '000000')
+		      AND   CTRT.ACT_DTTM &lt;= CONCAT(#{billDt}, '000000')
+		      AND   CTRT.PROD_CD = PROD.PROD_CD
+		      AND   CTRT.SO_ID = PROD.SO_ID) AS PROD_NM
+		    ,SUM(BILL.ADJ_PRV_BILL_AMT)                      AS ADJ_PRV_BILL_AMT
+		    ,SUM(BILL.ADJ_AMT)                               AS ADJ_AMT
+		    ,SUM(BILL.BILL_AMT)                              AS BILL_AMT
+		    ,SUM(BILL.RCPT_AMT)                              AS RCPT_AMT
+		FROM
+			TBLIV_BILL BILL
+		WHERE BILL.BILL_SEQ_NO = #{billSeqNo}
+		AND   BILL.PYM_ACNT_ID = #{pymAcntId}
+		AND   BILL.BILL_YYMM = #{billYymm}
+		AND   BILL.BILL_DT = #{billDt}
+		GROUP BY BILL.SO_ID
+		      	,BILL.CUST_ID
+			    ,BILL.CTRT_ID
+			    ,BILL.BILL_YYMM
+			    ,BILL.BILL_DT
+			    ,BILL.BILL_SEQ_NO
+                ,BILL.PYM_ACNT_ID
+		ORDER BY BILL.SO_ID, BILL.CUST_ID, BILL.CTRT_ID
+	</select>
+	
+	<select id="getBillCtrtDtlList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+			 SELECT BILL.SO_ID
+			       ,BILL.PYM_ACNT_ID
+			       ,BILL.BILL_YYMM
+			       ,BILL.USE_YYMM
+			       ,BILL.SVC_CD
+			       ,BILL.CHRG_ITM_CD
+			       ,ITM.SVC_RATE_ITM_TYP_NM AS CHRG_ITM_NM
+			       ,BILL.BILL_SEQ_NO
+			       ,BILL.PAY_DUE_DT
+			       ,BILL.ADJ_PRV_BILL_AMT
+			       ,BILL.ADJ_AMT
+			       ,BILL.BILL_AMT
+			       ,BILL.RCPT_AMT
+			FROM  (SELECT
+			             A.SO_ID
+			           , A.PYM_ACNT_ID
+			           , A.BILL_YYMM
+			           , A.USE_YYMM
+			           , A.SVC_CD
+			           , A.CHRG_ITM_CD
+			           , A.BILL_SEQ_NO
+			           , A.PAY_DUE_DT
+			           , SUM(A.ADJ_PRV_BILL_AMT)        AS ADJ_PRV_BILL_AMT
+			           , SUM(A.ADJ_AMT)                 AS ADJ_AMT
+			           , SUM(A.BILL_AMT)                AS BILL_AMT
+			           , SUM(A.RCPT_AMT)                AS RCPT_AMT
+			        FROM TBLIV_BILL A
+			       WHERE A.BILL_SEQ_NO       = #{billSeqNo}
+			         AND A.BILL_YYMM         = #{billYymm}
+			         AND A.BILL_DT           = #{billDt}
+			         AND A.PYM_ACNT_ID       = #{pymAcntId}
+			         AND A.CTRT_ID           = #{ctrtId}
+			         AND A.SO_ID             = #{soId}
+			       GROUP BY A.SO_ID
+			              , A.PYM_ACNT_ID
+			              , A.BILL_YYMM
+			              , A.USE_YYMM
+			              , A.SVC_CD
+			              , A.PAY_DUE_DT
+			              , A.CHRG_ITM_CD
+			              , A.BILL_SEQ_NO) BILL
+			      ,IFNBRM_SVC_RATE_ITM_INFO ITM
+			 WHERE BILL.SO_ID = ITM.SO_ID
+			   AND BILL.CHRG_ITM_CD = ITM.SVC_RATE_ITM_TYP_CD
+			 ORDER BY TO_NUMBER(ITM.DISP_PRI_NO)
+	</select>
+</mapper>

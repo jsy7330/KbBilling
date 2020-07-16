@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.contract.contract.OrderPrecheckMapper">
+
+    <delete id="deletePrecheckData">
+        DELETE FROM 
+            TCMCT_PRECHECK_RESULT
+        WHERE SO_ID = #{soId}
+        AND   CUST_ID = #{custId}
+        AND   RCPT_ID = #{rcptId}
+    </delete>
+    
+    <select id="getOrderPrecheckMastInfo" resultType="PrecheckMastVO">
+        SELECT
+            MAST.CHECK_CD
+           ,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng}
+                    AND MAST.COMMON_GRP   ='CM00031'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = MAST.CHECK_CD) AS CHECK_CD_NM
+           ,MAST.SO_ID
+           ,MAST.BASIC_SVC_CD
+           ,MAST.CUST_TP
+           ,MAST.CHECK_VAL
+           ,MAST.EVAL_CD
+           ,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng}
+                    AND MAST.COMMON_GRP   ='CM00032'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = MAST.EVAL_CD) AS EVAL_CD_NM
+           ,MAST.FORCE_APPROVE_USR
+           ,MAST.USE_YN
+           ,MAST.REGR_ID
+           ,MAST.REG_DATE
+           ,MAST.CHGR_ID
+           ,MAST.CHG_DATE
+        FROM
+            TCMCO_PRECHECK_MAST MAST
+        WHERE CHECK_CD = #{checkCd}
+        AND   SO_ID    = #{soId}
+        AND   BASIC_SVC_CD = #{basicSvcCd}
+        AND   CUST_TP      = #{custTp}
+    </select>
+    
+    <insert id="savePrecheckResult" parameterType="PrecheckInfoVO">
+        INSERT INTO TCMCT_PRECHECK_RESULT
+         (
+             SO_ID
+            ,CUST_ID
+            ,RCPT_ID
+            ,ORDER_CD
+            ,BASIC_SVC_CD
+            ,CUST_TP
+            ,ATTR_CD
+            ,CHECK_CD
+            ,CHECK_VALUE
+            ,EVAL
+            ,RESULT_VALUE
+            ,RESULT_CD
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+         ) VALUES
+         (
+             #{precheckInfo.soId,jdbcType=VARCHAR}
+            ,#{precheckInfo.custId,jdbcType=VARCHAR} 
+            ,#{precheckInfo.rcptId,jdbcType=VARCHAR} 
+            ,#{precheckInfo.orderCd,jdbcType=VARCHAR} 
+            ,#{precheckInfo.basicSvcCd,jdbcType=VARCHAR} 
+            ,#{precheckInfo.custTp,jdbcType=VARCHAR} 
+            ,#{precheckInfo.attrCd,jdbcType=VARCHAR} 
+            ,#{precheckInfo.checkCd,jdbcType=VARCHAR} 
+            ,#{precheckInfo.checkValue,jdbcType=VARCHAR} 
+            ,#{precheckInfo.evalCd,jdbcType=VARCHAR} 
+            ,#{precheckInfo.resultValue,jdbcType=VARCHAR} 
+            ,#{precheckInfo.resultCd,jdbcType=VARCHAR} 
+            ,#{precheckInfo.regrId,jdbcType=VARCHAR}
+            ,#{precheckInfo.regDate}
+            ,#{precheckInfo.chgrId,jdbcType=VARCHAR}
+            ,#{precheckInfo.chgDate}
+         )
+     </insert>
+     
+     <select id="getPymAcntIdList"  resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT
+            CTRT.SO_ID
+           ,CTRT.PYM_ACNT_ID
+        FROM TCMCT_CTRT_INFO CTRT
+        WHERE CTRT.SO_ID = #{soId}
+        AND   CTRT.CUST_ID = #{custId}
+        GROUP BY CTRT.SO_ID, CTRT.PYM_ACNT_ID
+    </select>
+    
+    
+     <select id="getCtrtCnt"  resultType="Integer">
+         SELECT COALESCE(SUM(CNT),0)
+         FROM (
+            SELECT
+                1 AS CNT
+            FROM TCMCT_CTRT_INFO CTRT
+            WHERE CTRT.SO_ID = #{soId}
+            AND   CTRT.CUST_ID = #{custId}
+            AND   CTRT.INACT_DTTM = '99991231235959'
+            AND   CTRT.CTRT_STAT NOT IN ('50','90')
+            UNION ALL
+            SELECT
+                1 AS CNT
+            FROM TCMCT_OCTRT_INFO OCTRT
+            WHERE OCTRT.SO_ID = #{soId}
+            AND   OCTRT.CUST_ID = #{custId}
+            AND   OCTRT.ORDER_TP = '101'
+            AND   OCTRT.ORDER_STAT NOT IN ('03','04')
+            )
+    </select>
+    
+    <update id="savePrecheckAsApprove">
+        UPDATE TCMCT_PRECHECK_RESULT
+        SET
+             RESULT_CD    = #{resultCd}
+            ,CHG_DATE     = #{nowDate}
+            ,CHGR_ID      = #{usrId}
+        WHERE
+                SO_ID        = #{soId}
+            AND CUST_ID      = #{custId}
+            AND RCPT_ID      = #{rcptId}
+            AND ORDER_CD     = #{orderCd}
+            AND BASIC_SVC_CD = #{basicSvcCd}
+            AND CUST_TP      = #{custTp}
+            AND ATTR_CD      = #{attrCd}
+            AND CHECK_CD     = #{checkCd}
+    </update>
+    
+    <select id="getPrecheckResultList" resultType="PrecheckInfoVO">
+        SELECT PRECHECK.SO_ID
+              ,PRECHECK.CUST_ID
+              ,PRECHECK.RCPT_ID
+              ,PRECHECK.ORDER_CD
+              ,PRECHECK.BASIC_SVC_CD
+              ,PRECHECK.CUST_TP_NM
+              ,PRECHECK.ATTR_CD
+              ,PRECHECK.CHECK_CD
+              ,PRECHECK.CHECK_VALUE
+              ,PRECHECK.EVAL_CD_NM
+              ,PRECHECK.RESULT_VALUE
+              ,PRECHECK.RESULT_CD
+              ,PRECHECK.RESULT_CD_NM
+              ,CONCAT(CONCAT(CONCAT('[', PRECHECK.CUST_TP_NM),']'),PRECHECK.CHECK_CD_NM) AS PRECHECK_NM
+        FROM (
+            SELECT
+            	  A.SO_ID
+            	 ,A.CUST_ID
+            	 ,A.RCPT_ID
+            	 ,A.ORDER_CD
+            	 ,A.BASIC_SVC_CD
+            	 ,A.CUST_TP
+                 ,(SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+                            , TSYCO_CODE_DETAIL DETAIL
+                            , TSYCO_CODE_DETAIL_NAME NAME
+                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{lng} 
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lng}
+                            AND MAST.COMMON_GRP   ='CM00009'
+                            AND DETAIL.USE_YN     ='Y'
+                            AND MAST.USE_YN       ='Y'
+                            AND DETAIL.COMMON_CD = A.CUST_TP) AS CUST_TP_NM
+            	 ,A.ATTR_CD
+            	 ,A.CHECK_CD
+                 ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00031'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = A.CHECK_CD) AS CHECK_CD_NM
+            	 ,A.CHECK_VALUE
+                 ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00032'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = A.EVAL) AS EVAL_CD_NM
+            	 ,A.RESULT_VALUE
+            	 ,A.RESULT_CD
+            	 ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00033'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = A.RESULT_CD) AS RESULT_CD_NM
+            	 ,'' AS PRECHECK_NM
+            FROM TCMCT_PRECHECK_RESULT A
+                 ,TCMCO_ORDER_ATTR B
+            WHERE   
+                    A.ORDER_CD     = B.ORDER_CD
+                AND A.ATTR_CD      = B.ORDER_ATTR_CD
+                AND A.SO_ID        = #{soId}
+                AND A.CUST_ID      = #{custId}
+                AND A.RCPT_ID      = #{rcptId}
+                AND A.ORDER_CD     = #{orderCd}
+                AND A.BASIC_SVC_CD = #{basicSvcCd}
+                AND A.CUST_TP      = #{custTp}
+            ORDER BY B.SORT_NO) PRECHECK
+    </select>
+    
+</mapper>
+    

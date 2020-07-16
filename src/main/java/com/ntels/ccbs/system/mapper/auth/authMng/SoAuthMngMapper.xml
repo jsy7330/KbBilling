@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.auth.authMng.SoAuthMngMapper">
+	<select id="soAuthList" parameterType="com.ntels.ccbs.system.domain.auth.authMng.SoAuthMngVO" 
+						resultType="com.ntels.ccbs.system.domain.auth.authMng.SoAuthMngVO">
+		SELECT 
+			A.SO_ID
+			,(SELECT B.SO_NM FROM TSYCO_SO_MAST B WHERE A.SO_ID=B.SO_ID)as soNm
+		FROM TSYCO_SO_AUTH_INFO A 
+		WHERE A.USER_ID=#{soAuth.userId, jdbcType=VARCHAR}	
+		ORDER BY A.SO_ID ASC
+	</select>
+	<select id="soAuthCount" parameterType="com.ntels.ccbs.system.domain.auth.authMng.SoAuthMngVO" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM TSYCO_SO_AUTH_INFO A 
+		WHERE A.USER_ID=#{soAuth.userId, jdbcType=VARCHAR}			
+	</select>
+	
+	<insert id="insert" parameterType="com.ntels.ccbs.system.domain.auth.authMng.SoAuthMngVO">
+		INSERT INTO
+			TSYCO_SO_AUTH_INFO(
+				SO_ID
+				,USER_ID
+				,REGR_ID
+				,REG_DATE
+				,CHGR_ID
+				,CHG_DATE
+			)VALUES(
+				#{soAuth.soId, jdbcType=VARCHAR}
+				,#{soAuth.userId, jdbcType=VARCHAR}
+				,#{soAuth.regrId, jdbcType=VARCHAR}
+				,#{soAuth.sysToDate, jdbcType=VARCHAR}
+				,#{soAuth.regrId, jdbcType=VARCHAR}
+				,#{soAuth.sysToDate, jdbcType=VARCHAR}
+			)
+	</insert>
+	
+	<delete id="deleteAll" parameterType="com.ntels.ccbs.system.domain.auth.authMng.SoAuthMngVO">
+		DELETE FROM TSYCO_SO_AUTH_INFO WHERE USER_ID=#{soAuth.userId, jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="delete" parameterType="com.ntels.ccbs.system.domain.auth.authMng.SoAuthMngVO">
+		DELETE FROM TSYCO_SO_AUTH_INFO WHERE USER_ID=#{soAuth.userId, jdbcType=VARCHAR} 
+		AND SO_ID=#{soAuth.soId, jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="baseSoId" parameterType="com.ntels.ccbs.system.domain.auth.authMng.SoAuthMngVO" resultType="string">
+		SELECT
+              B.SO_ID
+        FROM
+             TSYCO_USER A
+            ,TSYCO_ORG_INFO B
+        WHERE
+            A.USER_ID = #{soAuth.userId, jdbcType=VARCHAR}
+        AND A.ORG_ID = B.ORG_ID
+        AND B.APPY_STRT_DT &lt;= #{today}
+        AND B.APPY_END_DT &gt;= #{today}  
+	</select>
+</mapper>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-4.0.xsd
+        http://www.springframework.org/schema/integration/http http://www.springframework.org/schema/integration/http/spring-integration-http-4.0.xsd
+        http://www.springframework.org/schema/integration/xml http://www.springframework.org/schema/integration/xml/spring-integration-xml-4.0.xsd
+        http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-3.0.xsd"
+    xmlns:int="http://www.springframework.org/schema/integration"
+    xmlns:oxm="http://www.springframework.org/schema/oxm"
+    xmlns:int-xml="http://www.springframework.org/schema/integration/xml"
+    xmlns:int-http="http://www.springframework.org/schema/integration/http">
+
+    <int:annotation-config/>
+    
+    <!-- Inbound/Outbound Channels -->
+    <int:channel id="httpRequestChannel">
+            <int:interceptors> 
+                <int:wire-tap channel="httpInboundRequestLogger" />
+            </int:interceptors>
+    </int:channel>
+    <int:channel id="httpReplyChannel">
+            <int:interceptors>
+                <int:wire-tap channel="httpInboundResponseLogger" />
+            </int:interceptors>
+    </int:channel> 
+    <int:channel id="httpErrorChannel">
+            <int:interceptors>
+                <int:wire-tap channel="httpInboundErrorLogger" />
+            </int:interceptors>
+    </int:channel>
+
+
+    <!-- Inbound/Outbound Gateway -->
+    <int-http:inbound-gateway id="httpInboundGateway"
+        supported-methods="POST"
+        request-channel="httpRequestChannel"
+        reply-channel="httpReplyChannel"
+        view-name="/httpRest"
+        path="/httpRest"
+        header-mapper="headerMapper"
+        request-payload-type="com.ntels.ifg.httpRest.domain.RequestVO"
+        error-channel="httpErrorChannel"
+        reply-timeout="30000">
+        
+        <int-http:request-mapping consumes="application/xml" produces="application/xml"/>
+    </int-http:inbound-gateway>
+    
+    <int:service-activator id="httpRestInboundActivator"
+                    input-channel="httpRequestChannel"
+                    output-channel="httpReplyChannel"                    
+                    ref="httpRestInboundService"
+                    method="handleRqeust"
+                    requires-reply="true"
+                    send-timeout="30000" />
+                    
+    <bean id="headerMapper"
+        class="org.springframework.integration.http.support.DefaultHttpHeaderMapper">
+        <property name="inboundHeaderNames" value="*" />
+        <property name="outboundHeaderNames" value="*" />
+        <property name="userDefinedHeaderPrefix" value="" />
+    </bean>
+                    
+    
+    <int:service-activator input-channel="httpErrorChannel" ref="httpRestErrorService" method="createErrorResponse" />
+    
+    <int:logging-channel-adapter id="httpInboundRequestLogger" log-full-message="true" level="INFO" logger-name="HttpInboundRequestLogger"/>
+    <int:logging-channel-adapter id="httpInboundResponseLogger" log-full-message="true" level="INFO" logger-name="HttpInboundResponseLogger"/>
+    <int:logging-channel-adapter id="httpInboundErrorLogger" log-full-message="true" level="ERROR" logger-name="HttpInboundErrorLogger"/>
+    <!-- Note: The default parameter name for favorParameter is 'format'. For instance, when this flag is true, a request for /httpRestInbound?format=xml will result
+            in an MappingJacksonJsonView being resolved, while the Accept header can be the browser-defined text/html,application/xhtml+xml  -->
+
+    <bean id="ViewResolver" class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+        <property name="order" value="1" />
+        <property name="contentNegotiationManager">
+            <bean class="org.springframework.web.accept.ContentNegotiationManagerFactoryBean">
+                <property name="defaultContentType" value="application/xml"/>
+                <property name="favorParameter" value="true"/>
+                <property name="ignoreAcceptHeader" value="true" />
+                <property name="mediaTypes">
+                    <map>
+                        <entry key="xml" value="application/xml" />
+                    </map>
+                </property>
+            </bean>
+        </property>
+        <property name="defaultViews">
+            <list>
+                <bean class="org.springframework.web.servlet.view.xml.MarshallingView" >
+                    <constructor-arg ref="marshaller"/>
+                </bean>
+            </list>
+        </property>
+    </bean>
+
+    <oxm:jaxb2-marshaller id="marshaller"  >
+       <oxm:class-to-be-bound name="com.ntels.ifg.httpRest.domain.RequestVO"/>
+       <oxm:class-to-be-bound name="com.ntels.ifg.httpRest.domain.ResponseVO"/>
+    </oxm:jaxb2-marshaller>
+</beans>
+

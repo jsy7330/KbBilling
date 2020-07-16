@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.log.logMng.AccessLogHistMapper">
+	<select id="list" parameterType="com.ntels.ccbs.system.domain.log.logMng.AccessLogHistVO" resultType="com.ntels.ccbs.system.domain.log.logMng.AccessLogHistVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+			  A.USER_ID
+			  ,(SELECT B.USER_NAME FROM TSYCO_USER B WHERE A.USER_ID=B.USER_ID)AS USER_NAME
+			  ,(CONCAT(A.LOGIN_DATE , A.LOGIN_TIME)) AS FULL_LOGIN
+			  ,(CONCAT(A.LOGOUT_DATE , A.LOGOUT_TIME)) AS FULL_LOGOUT
+			  ,A.SESSION_ID
+			  ,A.REMOTE_ADDR
+			  ,(SELECT C.ORG_ID FROM TSYCO_USER B,TSYCO_ORG_INFO C WHERE A.USER_ID=B.USER_ID AND B.ORG_ID=C.ORG_ID)AS ORG_ID
+			  ,(SELECT C.ORG_NM FROM TSYCO_USER B,TSYCO_ORG_INFO C WHERE A.USER_ID=B.USER_ID AND B.ORG_ID=C.ORG_ID)AS ORG_NM
+			  ,(SELECT NAME.CODE_NM
+	              FROM TSYCO_CODE_MAST MAST
+	                    , TSYCO_CODE_MAST_NAME MNAME
+	                    , TSYCO_CODE_DETAIL DETAIL
+	                    , TSYCO_CODE_DETAIL_NAME NAME
+	              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                    AND MNAME.LNG_TYP     =#{lng, jdbcType=VARCHAR}
+	                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                    AND NAME.LNG_TYP      =#{lng, jdbcType=VARCHAR}
+	                    AND MAST.COMMON_GRP   ='SY00008'
+	                    AND DETAIL.USE_YN     ='Y'
+	                    AND MAST.USE_YN       ='Y'
+	                    AND DETAIL.COMMON_CD = LOGOUT_STATUS) AS LOGOUT_STATUS
+			FROM TSYCO_LOGIN_HIST A
+		WHERE A.LOGIN_DATE &lt;= #{access.edate}
+        AND A.LOGIN_DATE &gt;= #{access.sdate} 
+		<if test="access.condUserId != null and access.condUserId != ''">
+			AND A.USER_ID LIKE CONCAT(#{access.condUserId, jdbcType=VARCHAR},'%')
+		</if>
+	  	<if test="sidx != null and sidx == 'userId'">
+	       ORDER BY A.USER_ID ${sord}
+	  	</if>
+	  	<if test="sidx != null and sidx == 'fullLogin'">
+	       ORDER BY A.LOGIN_DATE ${sord}
+	  	</if>
+	  	<if test="sidx != null and sidx == 'fullLogout'">
+	       ORDER BY A.LOGOUT_DATE ${sord}
+	  	</if>
+	  	<if test="sidx == ''">
+	       ORDER BY A.LOGIN_DATE DESC,A.LOGIN_TIME DESC
+	 	</if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="count" parameterType="com.ntels.ccbs.system.domain.log.logMng.AccessLogHistVO" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM TSYCO_LOGIN_HIST A
+		WHERE A.LOGIN_DATE &lt;= #{access.edate}
+        AND A.LOGIN_DATE &gt;= #{access.sdate} 
+		<if test="access.condUserId != null and access.condUserId != ''">
+			AND A.USER_ID LIKE CONCAT(#{access.condUserId, jdbcType=VARCHAR},'%')
+		</if>
+	</select>
+    
+    <select id="listExcel" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+            SELECT
+              A.USER_ID
+              ,(SELECT B.USER_NAME FROM TSYCO_USER B WHERE A.USER_ID=B.USER_ID)AS USER_NAME
+              ,(CONCAT(A.LOGIN_DATE , A.LOGIN_TIME)) AS FULL_LOGIN
+              ,(CONCAT(A.LOGOUT_DATE , A.LOGOUT_TIME)) AS FULL_LOGOUT
+              ,A.SESSION_ID
+              ,A.REMOTE_ADDR
+              ,(SELECT C.ORG_ID FROM TSYCO_USER B,TSYCO_ORG_INFO C WHERE A.USER_ID=B.USER_ID AND B.ORG_ID=C.ORG_ID)AS ORG_ID
+              ,(SELECT C.ORG_NM FROM TSYCO_USER B,TSYCO_ORG_INFO C WHERE A.USER_ID=B.USER_ID AND B.ORG_ID=C.ORG_ID)AS ORG_NM
+              ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng, jdbcType=VARCHAR}
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      =#{lng, jdbcType=VARCHAR}
+                        AND MAST.COMMON_GRP   ='SY00008'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = LOGOUT_STATUS) AS LOGOUT_STATUS
+            , 5000000 AS TEST_NUMBER1
+            , 5000000 AS TEST_NUMBER2
+            , 5000000 AS TEST_NUMBER3
+            , SYSDATE AS DATE_TYPE
+            FROM TSYCO_LOGIN_HIST A
+        WHERE A.LOGIN_DATE &lt;= #{edate}
+        AND A.LOGIN_DATE &gt;= #{sdate} 
+        <if test="userId != null and  userId != ''">
+            AND A.USER_ID LIKE CONCAT(#{userId},'%')
+        </if>
+    </select>
+</mapper>

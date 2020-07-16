@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.menu.menuMng.MenuMngMapper">
+	<select id="getAuthList" parameterType="MenuMngVO" resultType="MenuMngVO">
+		SELECT
+			A.MENU_NO
+			,COALESCE(
+            	(SELECT MENU_NAME
+                 	FROM    TSYCO_MENU_LANGUAGE B
+                    WHERE   B.MENU_NO = A.MENU_NO
+                    AND B.LANGUAGE_CODE = #{lng, jdbcType=VARCHAR}), A.MENU_NAME
+                    ) AS MENU_NAME
+			,A.UP_MENU_NO
+			,COALESCE(
+            	(SELECT MENU_NAME
+                 	FROM    TSYCO_MENU_LANGUAGE B
+                    WHERE   B.MENU_NO = A.UP_MENU_NO
+                    AND B.LANGUAGE_CODE = #{lng, jdbcType=VARCHAR}), A.MENU_NAME
+                    ) AS UP_MENU_NAME
+			,A.VIEW_PATH
+			,A.STEP_NO
+			,A.DISPLAY_ORDER
+			,A.DESCRIPTION
+			,A.USE_YN
+		FROM TSYCO_MENU A
+		WHERE A.STEP_NO    = #{stepNo, jdbcType=VARCHAR}
+        AND   A.UP_MENU_NO = #{upMenuNo, jdbcType=VARCHAR}
+        ORDER BY A.DISPLAY_ORDER,A.MENU_NO
+	</select>
+	
+	<select id="getDownMenuList" resultType="MenuMngVO">
+		SELECT
+			A.MENU_NO
+			,COALESCE(
+            	(SELECT MENU_NAME
+                 	FROM    TSYCO_MENU_LANGUAGE B
+                    WHERE   B.MENU_NO = A.MENU_NO
+                    AND B.LANGUAGE_CODE = #{lng}), A.MENU_NAME
+                    ) AS CD_MENU_NAME
+            ,A.MENU_NAME
+			,A.UP_MENU_NO
+			,COALESCE(
+            	(SELECT MENU_NAME
+                 	FROM    TSYCO_MENU_LANGUAGE B
+                    WHERE   B.MENU_NO = A.UP_MENU_NO
+                    AND B.LANGUAGE_CODE = #{lng}), A.MENU_NAME
+                    ) AS UP_MENU_NAME
+			,A.VIEW_PATH
+			,A.STEP_NO
+			,A.DISPLAY_ORDER
+			,A.DESCRIPTION
+			,A.USE_YN
+		FROM TSYCO_MENU A
+		WHERE A.STEP_NO = #{menu.stepNo}
+		<if test="topMenu != null and topMenu != '' and topMenu != 'ROOT'" >
+			AND A.UP_MENU_NO=#{condUpMenuNo}
+		</if>
+		<if test="topMenu != null and topMenu != '' and topMenu == 'ROOT'" >
+			AND A.UP_MENU_NO='0'
+		</if>
+		
+ 
+		 <if test="sidx != null and sidx == ''">
+            ORDER BY A.DISPLAY_ORDER ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'menuNo'">
+             ORDER BY A.MENU_NO ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'menuName'">
+             ORDER BY  A.MENU_NAME ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'displayOrder'">
+             ORDER BY A.DISPLAY_ORDER ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'useYn'">
+             ORDER BY A.USE_YN ${sord}
+         </if>
+	</select>
+	
+	<select id="getMenuLngList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+		SELECT 	A.MENU_NO
+			,A.MENU_NAME
+			,B.COUNTRY_CODE
+			,B.LANGUAGE_CODE
+      		,B.LANGUAGE_NAME 
+      	FROM TSYCO_MENU_LANGUAGE A 
+        	RIGHT OUTER JOIN TSYCO_COUNTRY_LANGUAGE B
+        ON A.LANGUAGE_CODE=B.LANGUAGE_CODE
+        AND A.MENU_NO=#{menuNo, jdbcType=VARCHAR}
+        ORDER BY A.LANGUAGE_CODE DESC
+	</select>
+	
+	<select id="getLngListAction" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+		SELECT LNG.LANGUAGE_CODE
+              ,LNG.LANGUAGE_NAME
+              ,'' AS MENU_NAME
+              ,LNG.COUNTRY_CODE
+        FROM TSYCO_COUNTRY_LANGUAGE LNG
+        ORDER BY LNG.LANGUAGE_CODE DESC
+	</select>
+	
+	<insert id="insertMenuAction" parameterType="MenuMngVO">
+		INSERT  INTO
+		TSYCO_MENU(
+			 MENU_NO
+			,MENU_NAME
+			,UP_MENU_NO
+			,VIEW_PATH
+			,DISPLAY_ORDER
+			,DESCRIPTION
+			,ISFOLDER
+			,USE_YN
+			,STEP_NO
+		)VALUES(
+			 #{menu.menuNo, jdbcType=VARCHAR}
+			,#{menu.menuName, jdbcType=VARCHAR}
+			,#{menu.upMenuNo, jdbcType=VARCHAR}
+			,#{menu.viewPath, jdbcType=VARCHAR}
+			,#{menu.displayOrder, jdbcType=VARCHAR}
+			,#{menu.description, jdbcType=VARCHAR}
+			<if test="menu.stepNo==4" >
+			,'false'
+			</if>
+			<if test="menu.stepNo!=4" >
+			,'true'
+			</if>
+			,#{menu.useYn, jdbcType=VARCHAR}
+			,#{menu.stepNo, jdbcType=VARCHAR}
+			)
+	</insert>
+	<insert id="insertLngMenu" parameterType="MenuMngVO">
+		INSERT  INTO
+		TSYCO_MENU_LANGUAGE(
+			 MENU_NO
+			,MENU_NAME
+			,COUNTRY_CODE
+			,LANGUAGE_CODE
+		)VALUES(
+			 #{menu.menuNo, jdbcType=VARCHAR}
+			,#{menu.menuNm, jdbcType=VARCHAR}
+			,#{menu.cntryCd, jdbcType=VARCHAR}
+			,#{menu.lngCd, jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="updateMenuAction"  parameterType="MenuMngVO">
+		UPDATE 
+			TSYCO_MENU 
+		SET
+			 MENU_NAME		=	#{menu.menuName, jdbcType=VARCHAR}
+			,VIEW_PATH		=	#{menu.viewPath, jdbcType=VARCHAR}
+			,DISPLAY_ORDER 	=	#{menu.displayOrder, jdbcType=VARCHAR}
+			,DESCRIPTION	=	#{menu.description, jdbcType=VARCHAR}
+			,USE_YN			=	#{menu.useYn, jdbcType=VARCHAR}
+		WHERE MENU_NO		=	#{menu.menuNo, jdbcType=VARCHAR}
+	</update>
+	
+	<delete id="deleteMenuAction" parameterType="MenuMngVO">
+		DELETE FROM TSYCO_MENU_LANGUAGE WHERE MENU_NO = #{menuNo}
+	</delete>
+	
+	<select id="getMenuNoList" resultType="MenuMngVO">
+		SELECT 
+			MENU_NO
+			,UP_MENU_NO
+			,MENU_NAME
+			,STEP_NO
+		FROM TSYCO_MENU WHERE UP_MENU_NO = #{menuNo}
+	</select>
+	
+	<delete id="deleteAction" parameterType="MenuMngVO">
+		DELETE FROM TSYCO_MENU WHERE MENU_NO= #{menuNo, jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteUpAction" parameterType="MenuMngVO">
+		DELETE FROM TSYCO_MENU WHERE UP_MENU_NO= #{menuNo, jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteMenuAuth" parameterType="MenuMngVO">
+		DELETE FROM TSYCO_USER_GROUP_AUTH A 
+		WHERE A.MENU_NO IN (SELECT MENU_NO FROM TSYCO_MENU B WHERE B.UP_MENU_NO= #{menuNo, jdbcType=VARCHAR})
+	</delete>
+	
+	<delete id="deleteLastMenuAuth" parameterType="MenuMngVO">
+		DELETE FROM TSYCO_USER_GROUP_AUTH 
+		WHERE MENU_NO= #{menuNo, jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteLastLng" parameterType="MenuMngVO">
+		DELETE FROM TSYCO_MENU_LANGUAGE A WHERE A.MENU_NO IN 
+		(SELECT MENU_NO FROM TSYCO_MENU B WHERE B.UP_MENU_NO= #{menuNo, jdbcType=VARCHAR})
+	</delete>
+	
+	<select id="checkMenu" resultType="int" parameterType="MenuMngVO">
+		SELECT COUNT(MENU_NO) FROM TSYCO_MENU WHERE MENU_NO = #{menu.menuNo, jdbcType=VARCHAR}
+	</select>
+</mapper>

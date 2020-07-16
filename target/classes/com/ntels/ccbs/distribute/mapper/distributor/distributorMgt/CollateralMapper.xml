@@ -1,0 +1,530 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.distributor.distributorMgt.CollateralMapper">
+
+	<!-- 직원 리스트 조회 -->
+	<select id="collateralList" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			
+			SELECT	A.SO_ID					--사업ID
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   --사업명
+					, A.ORG_ID				--조직ID
+					, B.ORG_NM				--조직명
+					, A.COLL_ORG			--담보순번
+					, A.COLL_KND_CD			--담보종류코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00045'
+								AND DETAIL.COMMON_CD = A.COLL_KND_CD
+		       		) AS COLL_KND_NM		--담보종류코드명
+					, C.REP_NM				--대표자명
+					, CASE WHEN A.STP_AMT IS NULL THEN 0 ELSE A.STP_AMT END AS STP_AMT		--설정금액
+					, CASE WHEN A.LOAN_AMT IS NULL THEN 0 ELSE A.LOAN_AMT END AS LOAN_AMT	--단말여신금액
+					, CASE WHEN A.LOAN_ARPI_AMT IS NULL THEN 0 ELSE A.LOAN_ARPI_AMT END AS LOAN_ARPI_AMT	--요금여신금액
+					, A.STP_DT
+
+			FROM	TDNDI_COLL_INFO A
+					LEFT OUTER JOIN TDNDI_ORG_INFO B ON A.ORG_ID = B.ORG_ID
+					LEFT OUTER JOIN TDNDI_DIST_INFO C ON A.ORG_ID = C.ORG_ID
+			WHERE 	1 = 1
+				<if test="collateralVO.orgIdList != null and collateralVO.orgIdList.size() != 0">
+					AND A.ORG_ID IN
+					<foreach collection="collateralVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+		        </if>
+		        <if test="collateralVO.collKndCd != null and collateralVO.collKndCd != ''">
+					AND A.COLL_KND_CD =  #{collateralVO.collKndCd}
+				</if>
+		
+			ORDER BY A.ORG_ID, A.COLL_KND_CD, A.CHG_DATE DESC
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	
+	<!-- 직원 리스트 카운트 -->
+	<select id="collateralCount" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDI_COLL_INFO A
+				LEFT OUTER JOIN TDNDI_ORG_INFO B ON A.ORG_ID = B.ORG_ID
+				LEFT OUTER JOIN TDNDI_DIST_INFO C ON A.ORG_ID = C.ORG_ID
+		WHERE 	1 = 1
+			<if test="collateralVO.orgIdList != null and collateralVO.orgIdList.size() != 0">
+				AND A.ORG_ID IN
+				<foreach collection="collateralVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+		            #{item}
+		        </foreach>
+	        </if>
+	</select>
+
+	
+	<!-- insert TDNDI_DIST_INFO 유통 정보망 인서트 -->
+	<insert id="insertCollInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		INSERT INTO TDNDI_COLL_INFO
+            ( SO_ID				--사업자ID
+			, ORG_ID			--조직ID
+			, COLL_ORG			--담보순번
+			, COLL_KND_CD		--담보종류코드
+			, STP_DT			--설정일
+			, STP_AMT			--설정금액
+			, LOAN_AMT			--단말여신금액
+			, LOAN_ARPI_AMT		--요금여신금액
+			, TERM_DT			--해지일
+			, RMRK				--특기사항
+			, INSU_CTRTR_NM		--보험계약자명
+			, STCK_NO			--증권번호
+			, ASSR_KND_CD		--보증보험종류코드
+			, ASSR_CT			--보증내용
+			, ASSR_STRT_DT		--보증개시일
+			, ASSR_END_DT		--보증만료일
+			, ASSR_CORP_CD		--보증회사코드
+			, ASSR_BR_NM		--보증보험지점명
+			, ASSR_AGNCY_NM		--보증보험대리점명
+			, COLL_OPT1			--구채무특약사항적시
+			, COLL_OPT2			--추가위험부담약관의무적시
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+			 )
+        VALUES
+            ( (SELECT SO_ID FROM TDNDI_ORG_INFO WHERE ORG_ID = #{collateralVO.orgId} )		--사업자ID
+            , #{collateralVO.orgId}			--조직ID
+            , #{collateralVO.collOrg}		--담보순번
+            , #{collateralVO.collKndCd}		--담보종류코드
+            , #{collateralVO.stpDt}			--설정일
+            , #{collateralVO.stpAmt}		--설정금액
+            , #{collateralVO.loanAmt}		--단말여신금액
+            , #{collateralVO.loanArpiAmt}	--요금여신금액
+            , #{collateralVO.termDt}		--해지일
+            , #{collateralVO.rmrk}			--특기사항
+            , #{collateralVO.insuCtrtrNm}	--보험계약자명
+            , #{collateralVO.stckNo}		--증권번호
+            , #{collateralVO.assrKndCd}		--보증보험종류코드
+            , #{collateralVO.assrCt}		--보증내용
+            , #{collateralVO.assrStrtDt}	--보증개시일
+            , #{collateralVO.assrEndDt}		--보증만료일
+            , #{collateralVO.assrCorpCd}	--보증회사코드
+            , #{collateralVO.assrBrNm}		--보증보험지점명
+            , #{collateralVO.assrAgncyNm}	--보증보험대리점명
+            , #{collateralVO.collOpt1}		--구채무특약사항적시
+            , #{collateralVO.collOpt2}		--추가위험부담약관의무적시
+			, #{collateralVO.regrId}		--등록자
+			, #{collateralVO.regDate}		--등록일시
+			, #{collateralVO.chgrId}		--수정자
+			, #{collateralVO.chgDate}		--수정일시
+			)
+	</insert>
+	
+	<!-- 조직 조회 -->
+	<select id="selectOrgInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		SELECT
+				A.LOAN_GV_FLG				--여신부여여부
+		FROM 	TDNDI_ORG_INFO A			--조직정보
+		WHERE	A.ORG_ID		= #{collateralVO.orgId}			--조직ID
+	</select>
+	
+	<!-- 담보상세정보 조회 -->
+	<select id="selectCollInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		SELECT
+				A.SO_ID						--사업ID
+				, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM		--사업명
+				, A.ORG_ID					--조직ID
+				, B.ORG_NM					--조직명
+				, C.REP_NM					--대표자명
+				, A.COLL_ORG				--담보순번
+				, A.COLL_KND_CD				--담보종류코드
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00045'
+							AND DETAIL.COMMON_CD = A.COLL_KND_CD
+	       		) AS COLL_KND_NM			--담보종류코드명
+				, A.LOC_LD					--소재지
+				, A.SECUR_KND_CD			-- 저당권종류코드
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00046'
+							AND DETAIL.COMMON_CD = A.SECUR_KND_CD
+	       		) AS SECUR_KND_NM			--저당권종류코드명
+				, A.SECUR_TP_CD				--저당권구분코드
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00047'
+							AND DETAIL.COMMON_CD = A.SECUR_TP_CD
+	       		) AS SECUR_TP_NM			--저당권구분코드명
+				, A.ARA						--면적
+				, A.OWNR_NM					--소유자명
+				, A.OWNR_REL_CD				--소유자관계코드
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00054'
+							AND DETAIL.COMMON_CD = A.OWNR_REL_CD
+	       		) AS OWNR_REL_NM			--소유자관계코드명
+				, A.STP_DT					--설정일
+				, A.STP_PRI					--설정순위
+				, A.APPR_YN					--감정유무
+				, A.APPR_OFFC				--감정사무소
+				, CASE WHEN A.APPR_AMT IS NULL THEN 0 ELSE A.APPR_AMT END AS APPR_AMT		--감정금액
+				, A.APPR_DT					-- 감정일
+				, CASE WHEN A.ASST_AMT IS NULL THEN 0 ELSE A.ASST_AMT END AS ASST_AMT		--순자산가액
+				, CASE WHEN A.STP_AMT IS NULL THEN 0 ELSE A.STP_AMT END AS STP_AMT			--설정금액
+				, CASE WHEN A.LOAN_AMT IS NULL THEN 0 ELSE A.LOAN_AMT END AS LOAN_AMT		--단말여신금액
+				, CASE WHEN A.LOAN_ARPI_AMT IS NULL THEN 0 ELSE A.LOAN_ARPI_AMT END AS LOAN_ARPI_AMT		--요금여신금액
+				, A.TERM_DT					--해지일
+				, A.GND_STP_YN				--지상권설정여부
+				, A.RMRK					--특기사항
+				, A.PRE_ORD_NM1				--선순위자명1
+				, A.PRE_ORD_AMT1			--선순위금액1
+				, A.PRE_ORD_NM2				--선순위자명2
+				, A.PRE_ORD_AMT2			--선순위금액2
+				, A.PRE_ORD_NM3				--선순위자명3
+				, A.PRE_ORD_AMT3			--선순위금액3
+				, A.BLD_MST					--건물주
+				, A.REG_NO					--등기번호
+				, A.LEAS_PSN				--전세권자
+				, A.LEAS_STP_AMT			--전세설정액
+				, A.INSU_CTRTR_NM			--보험계약자명
+				, A.STCK_NO					--증권번호
+				, A.ASSR_KND_CD				--보증보험종류코드
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00053'
+							AND DETAIL.COMMON_CD = A.ASSR_KND_CD
+	       		) AS ASSR_KND_NM			--보증보험종류코드명
+				, A.ASSR_CT					--보증내용
+				, A.ASSR_STRT_DT			--보증개시일
+				, A.ASSR_END_DT				--보증만료일
+				, A.ASSR_CORP_CD			--보증회사코드
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00055'
+							AND DETAIL.COMMON_CD = A.ASSR_CORP_CD
+	       		) AS ASSR_CORP_NM			--보증회사코드명
+				, A.ASSR_BR_NM				--보증보험지점명
+				, A.ASSR_AGNCY_NM			--보증보험대리점명
+				, A.COLL_OPT1				--구채무특약사항적시
+				, A.COLL_OPT2				--추가위험부담약관의무적시
+				, A.BNK_CD					--은행코드
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='CM00006'
+							AND DETAIL.COMMON_CD = A.BNK_CD
+	       		) AS BNK_NM					--은행코드명
+				, A.ACNT_NO					--계좌번호
+				, A.DPST_NM					--예금주명
+				, A.DPST_REL				--예금주와관계
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{collateralVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{collateralVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00054'
+							AND DETAIL.COMMON_CD = A.DPST_REL
+	       		) AS DPST_REL_NM			--예금주와관계코드명
+				, A.DPST_RNO				--예금주주민등록번호
+				, B.LOAN_GV_FLG				--여신부여여부
+		FROM 	TDNDI_COLL_INFO A
+				LEFT OUTER JOIN TDNDI_ORG_INFO B ON A.ORG_ID = B.ORG_ID
+				LEFT OUTER JOIN TDNDI_DIST_INFO C ON A.ORG_ID   = C.ORG_ID
+		WHERE	A.ORG_ID		= #{collateralVO.orgId}			--조직ID
+			AND A.COLL_ORG 		= #{collateralVO.collOrg}		
+	</select>
+	
+	
+	<!-- 직원 리스트 카운트 -->
+	<select id="loanInfoCount" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDI_LOAN_INFO
+		WHERE 	1 = 1
+			AND ORG_ID		= #{collateralVO.orgId}			--조직ID
+			AND LOAN_KND_CD = #{collateralVO.loanKndCd}		--여신종류코드
+	</select>
+	
+	<!-- insert TDNDI_LOAN_INFO -->
+	<insert id="insertLoanInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		INSERT INTO TDNDI_LOAN_INFO
+            ( SO_ID				--사업ID
+			, ORG_ID			--조직ID
+			, LOAN_KND_CD		--여신종류코드
+			, NORM_LOAN_AMT		--일반여신금액
+			, SPCL_LOAN_AMT		--특별여신금액
+			, LOAN_USE_AMT		--여신사용금액
+			, LOAN_AVL_AMT		--여신가능금액
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+			 )
+        VALUES
+            ( (SELECT SO_ID FROM TDNDI_ORG_INFO WHERE ORG_ID = #{collateralVO.orgId} )		--사업자ID
+			, #{collateralVO.orgId}			--조직ID
+			, #{collateralVO.loanKndCd}		--여신종류코드
+			, 0								--일반여신금액
+			, 0								--특별여신금액
+			, 0								--여신사용금액
+			, 0								--여신가능금액
+			, #{collateralVO.regrId}		--등록자
+			, #{collateralVO.regDate}		--등록일시
+			, #{collateralVO.chgrId}		--수정자
+			, #{collateralVO.chgDate}		--수정일시
+			)
+	</insert>
+	
+	
+	<!-- update TDNDI_LOAN_INFO -->
+	<update id="updateLoanInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		UPDATE TDNDI_LOAN_INFO
+			SET	SO_ID			= (SELECT SO_ID FROM TDNDI_ORG_INFO WHERE ORG_ID = #{collateralVO.orgId} )		--사업자ID
+				, ORG_ID		= #{collateralVO.orgId}		--조직ID
+				, LOAN_KND_CD	= #{collateralVO.loanKndCd}	--여신종류코드
+				, NORM_LOAN_AMT	= 0							--일반여신금액
+				, SPCL_LOAN_AMT	= 0							--특별여신금액
+				, LOAN_USE_AMT	= 0							--여신사용금액
+				, LOAN_AVL_AMT	= 0							--여신가능금액
+				, CHGR_ID		= #{collateralVO.chgrId}	--수정자
+				, CHG_DATE		= #{collateralVO.chgDate}	--수정일시
+		WHERE 	1 = 1
+			AND ORG_ID		= #{collateralVO.orgId}			--조직ID
+			AND LOAN_KND_CD = #{collateralVO.loanKndCd}		--여신종류코드
+				
+	</update>
+	
+	
+	<!-- insert TDNDI_LOAN_DETAIL_INFO -->
+	<insert id="insertLoanDetailInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		INSERT INTO TDNDI_LOAN_DETAIL_INFO
+            ( SO_ID				--사업ID
+			, ORG_ID			--조직ID
+			, LOAN_KND_CD		--여신종류코드
+			, LOAN_ORD			--여신순번
+			, LOAN_TP_CD		--여신구분코드
+			, LOAN_STRT_DT		--여신일자From
+			, LOAN_END_DT		--여신일자To
+			, LOAN_STP_AMT		--여신설정금액
+			, LOAN_APPRR_ID		--여신결정자ID
+			, LOAN_APPRR_NM		--여신결정자명
+			, LOAN_STP_RESN		--여신결정사유
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+
+			 )
+        VALUES
+            ( (SELECT SO_ID FROM TDNDI_ORG_INFO WHERE ORG_ID = #{collateralVO.orgId} )		--사업자ID
+			, #{collateralVO.orgId}			--조직ID
+			, #{collateralVO.loanKndCd}		--여신종류코드
+			, #{collateralVO.loanOrd}		--여신순번
+			, #{collateralVO.loanTpCd}		--여신구분코드
+			, #{collateralVO.stpDt}			--여신일자From
+			, #{collateralVO.termDt}		--여신일자To
+			, #{collateralVO.loanStpAmt}	--여신설정금액
+			, #{collateralVO.loanApprrId}	--여신결정자ID
+			, #{collateralVO.loanApprrNm}	--여신결정자명
+			, #{collateralVO.loanStpResn}	--여신결정사유
+			, #{collateralVO.regrId}		--등록자
+			, #{collateralVO.regDate}		--등록일시
+			, #{collateralVO.chgrId}		--수정자
+			, #{collateralVO.chgDate}		--수정일시
+			)
+	</insert>
+	
+	
+	<!-- update TDNDI_LOAN_INFO -->
+	<update id="updateLoanInfo2" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		UPDATE TDNDI_LOAN_INFO
+			 SET ( NORM_LOAN_AMT			--일반여신금액
+					, LOAN_AVL_AMT			--여신가능금액 = 일반여신금액+특별여신금액-여신사용금액
+					, CHGR_ID				--수정자
+					, CHG_DATE				--수정일시
+				)
+			= 	( SELECT	CASE WHEN B.LOAN_STP_AMT IS NULL THEN 0 ELSE B.LOAN_STP_AMT END AS NORM_LOAN_AMT			--일반여신금액
+							, (CASE WHEN A.SPCL_LOAN_AMT IS NULL THEN 0 ELSE A.SPCL_LOAN_AMT END
+								+
+								CASE WHEN B.LOAN_STP_AMT IS NULL THEN 0 ELSE B.LOAN_STP_AMT END
+								-
+								CASE WHEN A.LOAN_USE_AMT IS NULL THEN 0 ELSE A.LOAN_USE_AMT END
+								)
+							, #{collateralVO.chgrId}
+							, #{collateralVO.chgDate}
+					FROM	TDNDI_LOAN_INFO A
+							LEFT OUTER JOIN (SELECT   ORG_ID
+										, LOAN_KND_CD
+										, SUM(LOAN_STP_AMT) AS LOAN_STP_AMT
+								FROM	TDNDI_LOAN_DETAIL_INFO
+								WHERE	ORG_ID         = #{collateralVO.orgId}		--조직ID
+									AND LOAN_KND_CD    = #{collateralVO.loanKndCd}	--여신종류코드
+									AND	LOAN_TP_CD     = '10'
+									AND	LOAN_STRT_DT   <![CDATA[ <= ]]> LOAN_END_DT
+									AND LOAN_STRT_DT   <![CDATA[ <= ]]> #{collateralVO.sysdate}
+									AND LOAN_END_DT    <![CDATA[ >= ]]> #{collateralVO.sysdate}
+								GROUP BY ORG_ID, LOAN_KND_CD
+							) B  ON A.ORG_ID = B.ORG_ID AND A.LOAN_KND_CD    = B.LOAN_KND_CD
+					WHERE	A.ORG_ID         = #{collateralVO.orgId}		--조직ID
+						AND A.LOAN_KND_CD    = #{collateralVO.loanKndCd}	--여신종류코드
+				)
+				
+		WHERE	ORG_ID		= #{collateralVO.orgId}			--조직ID
+			AND LOAN_KND_CD = #{collateralVO.loanKndCd}		--여신종류코드
+				
+	</update>
+	
+	
+	<!-- update TDNDI_LOAN_INFO -->
+	<update id="updateCollInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		UPDATE TDNDI_COLL_INFO
+			SET	COLL_KND_CD		= #{collateralVO.collKndCd}		--담보종류코드
+				, STP_DT		= #{collateralVO.stpDt}			--설정일
+				, STP_AMT		= #{collateralVO.stpAmt}		--설정금액
+				, LOAN_AMT		= #{collateralVO.loanAmt}		--단말여신금액
+				, LOAN_ARPI_AMT	= #{collateralVO.loanArpiAmt}	--요금여신금액
+				, TERM_DT		= #{collateralVO.termDt}		--해지일
+				, RMRK			= #{collateralVO.rmrk}			--특기사항
+				, INSU_CTRTR_NM	= #{collateralVO.insuCtrtrNm}	--보험계약자명
+				, STCK_NO		= #{collateralVO.stckNo}		--증권번호
+				, ASSR_KND_CD	= #{collateralVO.assrKndCd}		--보증보험종류코드
+				, ASSR_CT		= #{collateralVO.assrCt}		--보증내용
+				, ASSR_STRT_DT	= #{collateralVO.assrStrtDt}	--보증개시일
+				, ASSR_END_DT	= #{collateralVO.assrEndDt}		--보증만료일
+				, ASSR_CORP_CD	= #{collateralVO.assrCorpCd}	--보증회사코드
+				, ASSR_BR_NM	= #{collateralVO.assrBrNm}		--보증보험지점명
+				, ASSR_AGNCY_NM	= #{collateralVO.assrAgncyNm}	--보증보험대리점명
+				, COLL_OPT1		= #{collateralVO.collOpt1}		--구채무특약사항적시
+				, COLL_OPT2		= #{collateralVO.collOpt2}		--추가위험부담약관의무적시
+				, CHGR_ID		= #{collateralVO.chgrId}		--수정자
+				, CHG_DATE		= #{collateralVO.chgDate}		--수정일시
+		WHERE 	1 = 1
+			AND ORG_ID		= #{collateralVO.orgId}			--조직ID
+			AND COLL_ORG	= #{collateralVO.collOrg}		--
+				
+	</update>
+	
+	
+	<!-- update TDNDI_LOAN_INFO -->
+	<update id="updateLoanDetailInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		UPDATE TDNDI_LOAN_DETAIL_INFO
+			SET	LOAN_STRT_DT 	= #{collateralVO.stpDt}			--여신일자From
+				, LOAN_END_DT	= #{collateralVO.termDt}		--여신일자To
+				, LOAN_STP_AMT	= #{collateralVO.loanStpAmt}	--여신설정금액
+				, CHGR_ID		= #{collateralVO.chgrId}		--수정자
+				, CHG_DATE		= #{collateralVO.chgDate}		--수정일시
+		WHERE 	1 = 1
+			AND ORG_ID		= #{collateralVO.orgId}			--조직ID
+			AND LOAN_KND_CD	= #{collateralVO.loanKndCd}		--
+			AND LOAN_TP_CD	= #{collateralVO.loanTpCd}		--
+			AND LOAN_STP_RESN  LIKE CONCAT(CONCAT('%', #{collateralVO.loanStpResn} ), '%')
+	</update>
+	
+	<!-- delete TDNDI_COLL_INFO -->
+	<delete id="deleteCollInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		DELETE    
+		FROM	TDNDI_COLL_INFO
+		WHERE	ORG_ID		= #{collateralVO.orgId}			--조직ID
+			AND COLL_ORG	= #{collateralVO.collOrg}		--
+	</delete>
+	
+	
+	<!-- delete TDNDI_LOAN_DETAIL_INFO -->
+	<delete id="deleteLoanDetailInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.CollateralVO">
+		DELETE    
+		FROM	TDNDI_LOAN_DETAIL_INFO
+		WHERE	ORG_ID		= #{collateralVO.orgId}			--조직ID
+			AND LOAN_KND_CD	= #{collateralVO.loanKndCd}		--
+			AND LOAN_TP_CD	= #{collateralVO.loanTpCd}		--
+			AND LOAN_STP_RESN  LIKE CONCAT(CONCAT('%', #{collateralVO.loanStpResn} ), '%')
+	</delete>
+	
+	
+	
+</mapper>
+

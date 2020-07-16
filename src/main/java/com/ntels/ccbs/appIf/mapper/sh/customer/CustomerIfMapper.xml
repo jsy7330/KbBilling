@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.appIf.mapper.sh.customer.CustomerIfMapper">
+
+	<!-- 고객정보 조회 -->
+    <select id="getCustomer" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+
+		SELECT   A.SO_ID		/* MSO 식별 번호 */
+    			,A.CUST_ID		/* 고객ID */
+    			,A.CUST_NM		/* 고객명 */
+    			,A.CUST_TP		/* 고객유형 (A:개인, B:개인사업자, C:외국인, D:법인사업자, E:공공기관) */
+    			,A.MTEL_NO		AS SVC_TEL_NO	/* 휴대폰 번호 */
+    			,A.BIZ_REG_NO	/* 사업자번호 */
+    			/*,A.BUSI_TP*/		/* 업종 */
+    			,(SELECT NAME.CODE_NM
+	              FROM TSYCO_CODE_MAST MAST
+	                    , TSYCO_CODE_MAST_NAME MNAME
+	                    , TSYCO_CODE_DETAIL DETAIL
+	                    , TSYCO_CODE_DETAIL_NAME NAME
+	              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                    AND MNAME.LNG_TYP     =#{param.lng} 
+	                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                    AND NAME.LNG_TYP      = #{param.lng}
+	                    AND MAST.COMMON_GRP   ='CM00014'
+	                    AND DETAIL.USE_YN     ='Y'
+	                    AND MAST.USE_YN       ='Y'
+	                    AND DETAIL.COMMON_CD = A.BUSI_TP) AS BUSI_TP	/* 업종 */
+    			/*,A.BUSI_CNDT*/	/* 업태 */
+    			,(SELECT NAME.CODE_NM
+	              FROM TSYCO_CODE_MAST MAST
+	                    , TSYCO_CODE_MAST_NAME MNAME
+	                    , TSYCO_CODE_DETAIL DETAIL
+	                    , TSYCO_CODE_DETAIL_NAME NAME
+	              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                    AND MNAME.LNG_TYP     =#{param.lng} 
+	                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                    AND NAME.LNG_TYP      = #{param.lng}
+	                    AND MAST.COMMON_GRP   ='CM00013'
+	                    AND DETAIL.USE_YN     ='Y'
+	                    AND MAST.USE_YN       ='Y'
+	                    AND DETAIL.COMMON_CD = A.BUSI_CNDT) AS BUSI_CNDT	/* 업태 */
+		FROM 	TCMCU_CUST_INFO A
+		WHERE	A.SO_ID 	= #{param.SO_ID}
+		AND		A.CUST_ID 	= #{param.CUST_ID}		/* 고객ID */
+
+    </select>
+    
+    <!-- 계약 정보 조회 -->
+    <select id="getCtrtInfo" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+    
+		SELECT   A.CTRT_ID			/* 계약ID */
+    			,A.RATE_STRT_DT		/* 과금개시일 */
+    			,A.CTRT_STAT		/* 계약상태 */
+    			,A.PROD_CMPS_ID		/* 상품구성번호 */
+		FROM 	TCMCT_CTRT_INFO A
+		WHERE	A.CUST_ID 	= #{param.CUST_ID}		/* 고객ID */
+		<if test="param.CTRT_ID != null and param.CTRT_ID != ''">
+		AND 	A.CTRT_ID =  #{param.CTRT_ID}		/* 계약ID */
+		</if>
+		AND A.INACT_DTTM = '99991231235959'
+    </select>
+    
+    <!-- 계약 상품 정보 조회 -->
+    <select id="getProdCmpsInfo" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+    
+		SELECT   A.PROD_CMPS_ID		/* 상품구성ID */
+				,B.PROD_TYP 	AS PROD_TP	/* 기본상품여부(B:기본상품,V:부가상품,E:장비상품) */
+				,A.PROD_CD			/* 상품코드 */
+				,B.PROD_NM			/* 상품명 */
+				,A.OPEN_DD			/* 개통일 */
+				,A.PROD_STAT_CD		/* PROD_CMPS의 상태값 */
+				,1		AS PROD_CNT			/* 수량 : 1로 고정 */
+		FROM 	(SELECT *
+				FROM TCMCT_PROD_CMPS_INFO
+				WHERE SO_ID 		= #{param.SO_ID}
+				AND   CTRT_ID 		= #{param.CTRT_ID}		/* 계약ID */
+				AND   INACT_DTTM	= '99991231235959'
+				AND   PROD_STAT_CD	NOT IN (50, 90)
+				AND   PROD_CMPS_ID 	= #{param.PROD_CMPS_ID}
+				) A
+				LEFT OUTER JOIN TPMPD_PROD B ON A.PROD_CD	= B.PROD_CD
+		WHERE	1=1
+		
+<!-- 		select * from tcmct_prod_cmps_info
+where so_id='00'
+and ctrt_id='C000000139'
+and inact_dttm='99991231235959'
+and prod_stat_cd not in ('50','90'); -->
+
+    </select>
+    
+    
+
+</mapper>

@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.common.PostMngMapper">
+	<select id="list" parameterType="com.ntels.ccbs.system.domain.common.common.PostMngVO" resultType="com.ntels.ccbs.system.domain.common.common.PostMngVO">
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT  
+			ZIP_CD
+     	<choose>                          
+			<when test="'${dbms.kind}' == 'ORACLE'">                       
+				,SIDO_NM||' '||
+				GUGUN_NM||
+				CASE WHEN DONG_NM IS NOT NULL THEN ' '|| DONG_NM  END ||' '|| 
+				DONGMYON_NM ||' '|| 
+				CASE WHEN BLDG_NO1 IS NOT NULL THEN ' '|| BLDG_NO1 END || 
+				CASE WHEN BLDG_NO2 !=0 THEN '-'|| BLDG_NO2 END || 
+				CASE WHEN BLDG_NM IS NOT NULL THEN ' '|| BLDG_NM  END AS  address 
+		</when>                          
+		<when test="'${dbms.kind}' == 'MYSQL'">                         
+         	,concat(SIDO_NM,' ', GUGUN_NM, ' ',concat(' ',ifnull(DONG_NM, DONGMYON_NM),' '),ifnull(BLDG_NO1, ''),(if (BLDG_NO2 !=0,CONCAT('-',  BLDG_NO2),'')),( if (BLDG_NM IS NOT NULL, CONCAT(' ', BLDG_NM ), '') )) as address
+         </when>
+     	</choose>
+			,SIDO_NM
+			,GUGUN_NM
+			,DONG_NM
+			,DONGMYON_NM
+		FROM TSYCO_POST_NO
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+        <if test="postMng.str1 != null and postMng.str1 != ''" >
+        	AND SIDO_NM LIKE CONCAT(#{postMng.str1},'%')
+        </if>
+        <if test="postMng.str2 != null and postMng.str2 != ''" >
+            <if test="postMng.str3 != null and postMng.str3 != ''" >
+                AND GUGUN_NM LIKE CONCAT(CONCAT(CONCAT(#{postMng.str2},'%'),#{postMng.str3}),'%')
+            </if>
+            <if test="postMng.str3 == null or postMng.str3 == ''" >
+                AND GUGUN_NM LIKE CONCAT(#{postMng.str2},'%')
+            </if>
+        </if>
+        <if test="postMng.str4 != null and postMng.str4 != ''" >
+        	AND DONG_NM LIKE CONCAT(#{postMng.str4},'%')
+        </if>
+        <if test="postMng.str5 != null and postMng.str5 != ''" >
+            AND DONGMYON_NM LIKE CONCAT(#{postMng.str5},'%')
+        </if>
+        <if test="postMng.str6 != null and postMng.str6 != ''" >
+        	AND BLDG_NO1 = #{postMng.str6}
+        </if>
+        <if test="postMng.str7 != null and postMng.str7 != ''" >
+            AND BLDG_NO2 = #{postMng.str7}
+        </if>
+         <if test="postMng.srchBldg != null and postMng.srchBldg != ''" >
+        	AND BLDG_NM LIKE CONCAT(#{postMng.srchBldg},'%')
+        </if>
+		</trim>
+		ORDER BY SEQ DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+    
+	<select id="getSidoNm" parameterType="String" resultType="Int">
+		SELECT COUNT(SIDO_NM) FROM TSYCO_POST_NO
+		WHERE 
+		SIDO_NM LIKE CONCAT(#{str},'%')
+	</select>
+    
+	<select id="getGugunNmConcatString" parameterType="String" resultType="Int">
+		SELECT COUNT(GUGUN_NM) FROM TSYCO_POST_NO
+		WHERE 
+		GUGUN_NM LIKE CONCAT(CONCAT(CONCAT(#{str1},'%'),#{str2}),'%')
+	</select>
+    
+    
+    
+    <select id="getGugunNm" parameterType="String" resultType="Int">
+        SELECT COUNT(GUGUN_NM) FROM TSYCO_POST_NO
+        WHERE 
+        GUGUN_NM LIKE CONCAT(#{str},'%')
+    </select>
+    
+    
+    <select id="getDongNm" parameterType="String" resultType="Int">
+        SELECT COUNT(DONG_NM) FROM TSYCO_POST_NO
+        WHERE 
+        DONG_NM LIKE CONCAT(#{str},'%')
+    </select>
+    
+    <select id="getDongMyonNm" parameterType="String" resultType="Int">
+        SELECT COUNT(DONGMYON_NM) FROM TSYCO_POST_NO
+        WHERE 
+        DONGMYON_NM LIKE CONCAT(#{str},'%')
+    </select>
+    
+    
+    
+    <select id="getBilgNo1" parameterType="String" resultType="Int">
+        SELECT COUNT(BLDG_NO1) FROM TSYCO_POST_NO
+        WHERE 
+        BLDG_NO1 = #{str}
+    </select>
+    
+    
+    <select id="getBilgNo2" parameterType="String" resultType="Int">
+        SELECT COUNT(BLDG_NO2) FROM TSYCO_POST_NO
+        WHERE 
+        BLDG_NO2 = #{str}
+    </select>
+    
+    
+	<select id="count" parameterType="com.ntels.ccbs.system.domain.common.common.PostMngVO" resultType="int">
+		SELECT COUNT(SEQ) FROM TSYCO_POST_NO
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+        <if test="postMng.str1 != null and postMng.str1 != ''" >
+        	AND SIDO_NM LIKE CONCAT(#{postMng.str1},'%')
+        </if>
+       <if test="postMng.str2 != null and postMng.str2 != ''" >
+            <if test="postMng.str3 != null and postMng.str3 != ''" >
+                AND GUGUN_NM LIKE CONCAT(CONCAT(CONCAT(#{postMng.str2},'%'),#{postMng.str3}),'%')
+            </if>
+            <if test="postMng.str3 == null or postMng.str3 == ''" >
+                AND GUGUN_NM LIKE CONCAT(#{postMng.str2},'%')
+            </if>
+        </if>
+        <if test="postMng.str4 != null and postMng.str4 != ''" >
+        	AND DONG_NM LIKE CONCAT(#{postMng.str4},'%')
+        </if>
+        <if test="postMng.str5 != null and postMng.str5 != ''" >
+            AND DONGMYON_NM LIKE CONCAT(#{postMng.str5},'%')
+        </if>
+        <if test="postMng.str6 != null and postMng.str6 != ''" >
+        	AND BLDG_NO1 = #{postMng.str6}
+        </if>
+        <if test="postMng.str7 != null and postMng.str7 != ''" >
+            AND BLDG_NO2 = #{postMng.str7}
+        </if>
+         <if test="postMng.srchBldg != null and postMng.srchBldg != ''" >
+        	AND BLDG_NM LIKE CONCAT(#{postMng.srchBldg},'%')
+        </if>
+		</trim>
+	</select>
+
+</mapper>

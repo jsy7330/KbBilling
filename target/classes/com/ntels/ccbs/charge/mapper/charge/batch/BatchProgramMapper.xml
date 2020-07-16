@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.charge.batch.BatchProgramMapper">
+
+	<select id="getBatPgmIdCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TBLIV_BAT_PGM
+		WHERE BAT_PGM_ID = #{batPgmId}
+	</select>
+	
+	<sql id="selectBatchProgramList">
+		SELECT
+			PGM.BAT_PGM_ID
+			, PGM.PGM_NM
+			, PGM.EXEC_OBJ
+			, PGM.PKG_NM
+			, PGM.CLS_STP_CL
+			, PGM.CLS_TSK_CL
+			, PGM.PGM_CT
+			, PGM.REGR_ID
+			, PGM.REG_DATE
+			, PGM.CHGR_ID
+			, PGM.CHG_DATE
+			, STP_CL.CODE_NM AS CLS_STP_NM
+			, TSK_CL.CODE_NM AS CLS_TSK_NM
+	</sql>
+
+	<sql id="fromBatchProgramList">
+		FROM TBLIV_BAT_PGM PGM
+		LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME STP_CL
+			ON STP_CL.COMMON_GRP = 'BL00018'
+			AND STP_CL.LNG_TYP = #{lang}
+			AND PGM.CLS_STP_CL = STP_CL.COMMON_CD
+		LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME TSK_CL
+			ON TSK_CL.COMMON_GRP = 'BL00039'
+			AND TSK_CL.LNG_TYP = #{lang}
+			AND PGM.CLS_TSK_CL = TSK_CL.COMMON_CD
+	</sql>
+	
+	<sql id="whereBatchProgramList">
+		<where>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(pgmNm)">AND PGM_NM LIKE '%'||#{pgmNm}||'%'</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(batPgmId)">AND BAT_PGM_ID = #{batPgmId}</if>
+		</where>
+	</sql>
+
+	<select id="getBatchProgramCount" resultType="int">
+		SELECT COUNT(*)
+		<include refid="fromBatchProgramList"/>
+		<include refid="whereBatchProgramList"/>
+	</select>
+	
+	<select id="getBatchProgramList" resultType="com.ntels.ccbs.charge.domain.charge.batch.BatchProgramVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		<include refid="selectBatchProgramList"/>
+		<include refid="fromBatchProgramList"/>
+		<include refid="whereBatchProgramList"/>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<insert id="insertBatchProgram">
+		INSERT INTO TBLIV_BAT_PGM
+		(
+			BAT_PGM_ID
+			, PGM_NM
+			, EXEC_OBJ
+			, PKG_NM
+			, CLS_STP_CL
+			, CLS_TSK_CL
+			, PGM_CT
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)
+		VALUES
+		(
+			#{batPgmId}
+			, #{pgmNm}
+			, #{execObj}
+			, #{pkgNm}
+			, #{clsStpCl}
+			, #{clsTskCl}
+			, #{pgmCt}
+			, #{regrId}
+			, #{regDate}
+			, #{chgrId}
+			, #{chgDate}
+		)
+	</insert>
+	
+	<update id="updateBatchProgram">
+		UPDATE TBLIV_BAT_PGM
+		<set>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(pgmNm)">
+				PGM_NM = #{pgmNm},
+			</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(execObj)">
+				EXEC_OBJ = #{execObj},
+			</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(pkgNm)">
+				PKG_NM = #{pkgNm},
+			</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(clsStpCl)">
+				CLS_STP_CL = #{clsStpCl},
+			</if>
+			CLS_TSK_CL = #{clsTskCl},
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(pgmCt)">
+				PGM_CT = #{pgmCt},
+			</if>
+			CHGR_ID = #{chgrId},
+			CHG_DATE = #{chgDate},
+		</set>
+		<where>
+			AND BAT_PGM_ID = #{batPgmId}
+		</where>
+	</update>
+	
+	<delete id="deleteBatchProgram">
+		DELETE FROM TBLIV_BAT_PGM
+		WHERE BAT_PGM_ID = #{batPgmId}
+	</delete>
+	
+	<select id="getBatchProgramForBatGrp" resultType="com.ntels.ccbs.charge.domain.charge.batch.BatchProgramVO">
+		<include refid="selectBatchProgramList"/>
+		<include refid="fromBatchProgramList"/>
+		<where>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(batGrpId)">
+				BAT_PGM_ID NOT IN
+				(
+					SELECT BAT_PGM_ID
+					FROM TBLIV_BAT_WRK_MAP
+					WHERE BAT_GRP_ID = #{batGrpId}
+				)
+			</if>
+		</where>
+	</select>
+	
+</mapper>

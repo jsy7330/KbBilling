@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.referenceInfo.PurchaseUnitPriceMapper">
+
+	<!-- 제품 리스트 조회 -->
+	<select id="purchaseUnitPriceList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+			SELECT
+					A.SO_ID					/*사업ID*/
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM		/* 사업명*/
+					, A.ITEM_ID				/*제품ID*/
+					, A.ITEM_NM				/*제품명*/
+					, A.ITEM_TP_CD			/*제품유형코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{purchaseUnitPriceVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{purchaseUnitPriceVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM            /* 제품유형코드명*/
+		       		, A.MNCO_ID				/*제조사ID*/
+		       		, B.EFT_STRT_DT			/*효력시작일자*/
+		       		, B.EFT_END_DT			/*효력종료일자*/
+		       		, B.PRC_DTL_SEQ			/*단가상세일련번호*/
+		       		, B.MNCO_OTPT_UT_PRC	/*제조사출고단가*/
+		       		, C.MNCO_NM				/*제조사명*/   
+			FROM	TDNDT_ITEM A
+					, (
+						SELECT 
+								  AA.ITEM_ID
+								  , AA.MNCO_OTPT_UT_PRC
+								  , AA.EFT_STRT_DT
+								  , AA.EFT_END_DT
+								  , AA.PRC_DTL_SEQ
+						FROM 	TDNDT_MNCO_UT_PRC_DTL AA
+								, (
+									SELECT	
+											MAX(AAA.PRC_DTL_SEQ) AS PRC_DTL_SEQ
+											, AAA.ITEM_ID
+									FROM 	TDNDT_MNCO_UT_PRC_DTL AAA
+									GROUP BY AAA.ITEM_ID
+								) BB
+						WHERE AA.PRC_DTL_SEQ = BB.PRC_DTL_SEQ
+					)B
+					, TDNDT_MNCO C
+			WHERE	1 = 1
+				AND A.ITEM_ID	= B.ITEM_ID
+				AND A.MNCO_ID 	= C.MNCO_ID
+				
+			<if test="purchaseUnitPriceVO.soId != null and purchaseUnitPriceVO.soId != ''">
+				AND A.SO_ID =  #{purchaseUnitPriceVO.soId}
+			</if>
+			<if test="purchaseUnitPriceVO.mncoId != null and purchaseUnitPriceVO.mncoId != ''">
+				AND A.MNCO_ID =  #{purchaseUnitPriceVO.mncoId}
+			</if>
+			<if test="purchaseUnitPriceVO.itemId != null and purchaseUnitPriceVO.itemId != ''">
+				AND A.ITEM_ID =  #{purchaseUnitPriceVO.itemId}
+			</if>
+			<if test="purchaseUnitPriceVO.itemTpCd != null and purchaseUnitPriceVO.itemTpCd != ''">
+				AND A.ITEM_TP_CD =  #{purchaseUnitPriceVO.itemTpCd}
+			</if>
+			ORDER BY B.EFT_STRT_DT DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 제품 리스트 카운트 -->
+	<select id="purchaseUnitPriceCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_ITEM A
+				, (
+					SELECT 
+							  AA.ITEM_ID
+							  , AA.MNCO_OTPT_UT_PRC
+							  , AA.EFT_STRT_DT
+							  , AA.EFT_END_DT
+							  , AA.PRC_DTL_SEQ
+					FROM 	TDNDT_MNCO_UT_PRC_DTL AA
+							, (
+								SELECT	
+										MAX(AAA.PRC_DTL_SEQ) AS PRC_DTL_SEQ
+										, AAA.ITEM_ID
+								FROM 	TDNDT_MNCO_UT_PRC_DTL AAA
+								GROUP BY AAA.ITEM_ID
+							) BB
+					WHERE AA.PRC_DTL_SEQ = BB.PRC_DTL_SEQ
+				)B
+				, TDNDT_MNCO C
+		WHERE	1 = 1
+			AND A.ITEM_ID	= B.ITEM_ID
+			AND A.MNCO_ID 	= C.MNCO_ID
+			
+		<if test="purchaseUnitPriceVO.soId != null and purchaseUnitPriceVO.soId != ''">
+			AND A.SO_ID =  #{purchaseUnitPriceVO.soId}
+		</if>
+		<if test="purchaseUnitPriceVO.mncoId != null and purchaseUnitPriceVO.mncoId != ''">
+			AND A.MNCO_ID =  #{purchaseUnitPriceVO.mncoId}
+		</if>
+		<if test="purchaseUnitPriceVO.itemId != null and purchaseUnitPriceVO.itemId != ''">
+			AND A.ITEM_ID =  #{purchaseUnitPriceVO.itemId}
+		</if>
+		<if test="purchaseUnitPriceVO.itemTpCd != null and purchaseUnitPriceVO.itemTpCd != ''">
+			AND A.ITEM_TP_CD =  #{purchaseUnitPriceVO.itemTpCd}
+		</if>
+	</select>
+	
+	
+	<!-- 제품 매입단가 이력 조회 -->
+	<select id="mncoUtPrcDtlList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+			SELECT
+					A.ITEM_ID				/*제품ID*/
+					, A.ITEM_NM				/*제품명*/
+					, B.EFT_STRT_DT			/*효력시작일자*/
+		       		, B.EFT_END_DT			/*효력종료일자*/
+		       		, B.PRC_DTL_SEQ			/*단가상세일련번호*/
+		       		, B.MNCO_OTPT_UT_PRC	/*제조사출고단가*/
+			FROM	TDNDT_ITEM A
+					, TDNDT_MNCO_UT_PRC_DTL B
+			WHERE	1 = 1
+				AND A.ITEM_ID	= #{purchaseUnitPriceVO.itemId}
+				AND A.ITEM_ID	= B.ITEM_ID
+			ORDER BY B.REG_DATE DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 제품 매입단가 이력 카운트 -->
+	<select id="mncoUtPrcDtlCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_ITEM A
+				, TDNDT_MNCO_UT_PRC_DTL B
+		WHERE	1 = 1
+			AND A.ITEM_ID	= #{purchaseUnitPriceVO.itemId}
+			AND A.ITEM_ID	= B.ITEM_ID
+	</select>
+	
+	<!-- 제품 매입단가 이력 등록 -->
+	<insert id="insertMncoUtPrcDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO">
+	
+		INSERT INTO TDNDT_MNCO_UT_PRC_DTL
+			( PRC_DTL_SEQ		/*단가상세일련번호*/
+			, SO_ID				/*사업ID*/
+			, ITEM_ID			/*제품ID*/
+			, MNCO_OTPT_UT_PRC	/*제조사출고단가*/
+			, EFT_STRT_DT		/*효력시작일자*/
+			, EFT_END_DT		/*효력종료일자*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{purchaseUnitPriceVO.prcDtlSeq}		/*단가상세일련번호*/
+			, #{purchaseUnitPriceVO.soId}			/*사업ID*/
+			, #{purchaseUnitPriceVO.itemId}			/*제품ID*/
+			, #{purchaseUnitPriceVO.mncoOtptUtPrc}	/*제조사출고단가*/
+			, #{purchaseUnitPriceVO.eftStrtDt}		/*효력시작일자*/
+			, #{purchaseUnitPriceVO.eftEndDt}		/*효력종료일자*/
+			, #{purchaseUnitPriceVO.regrId}			/*등록자*/
+			, #{purchaseUnitPriceVO.regDate}		/*등록일시*/
+			, #{purchaseUnitPriceVO.chgrId}			/*수정자*/
+			, #{purchaseUnitPriceVO.chgDate}		/*수정일시*/
+			)			
+	</insert>
+	
+	<!--  제품 매입단가 이력 이전 날짜로 수정 -->
+	<update id="updateMncoUtPrcDtlEndDt" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO">
+		UPDATE TDNDT_MNCO_UT_PRC_DTL
+			SET	EFT_END_DT 			= #{purchaseUnitPriceVO.eftEndDt}		/*효력종료일자*/
+				, CHGR_ID 			= #{purchaseUnitPriceVO.chgrId}			/*수정자*/
+				, CHG_DATE 			= #{purchaseUnitPriceVO.chgDate}		/*수정일시*/      
+		WHERE	PRC_DTL_SEQ			= (
+										SELECT SUB.PRC_DTL_SEQ FROM( SELECT 	
+											MAX(A.PRC_DTL_SEQ) AS PRC_DTL_SEQ
+										FROM 	TDNDT_MNCO_UT_PRC_DTL A
+                  						WHERE ITEM_ID = #{purchaseUnitPriceVO.itemId}) SUB			/*제품ID*/
+										) 
+	</update>
+	
+	<!-- 제품의 매입단가 수정 -->
+	<update id="updateProductInfoPrc" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO">
+		UPDATE TDNDT_ITEM
+			SET	MNCO_OTPT_UT_PRC	= #{purchaseUnitPriceVO.mncoOtptUtPrc}	/*제조사출고단가*/
+				, CHGR_ID 			= #{purchaseUnitPriceVO.chgrId}			/*수정자*/
+				, CHG_DATE 			= #{purchaseUnitPriceVO.chgDate}		/*수정일시 */
+		WHERE	ITEM_ID				= #{purchaseUnitPriceVO.itemId}			/*제품ID*/
+	</update>
+	
+	<!--  제품 매입단가  수정 -->
+	<update id="updateMncoUtPrcDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO">
+		UPDATE TDNDT_MNCO_UT_PRC_DTL
+			SET	MNCO_OTPT_UT_PRC 	= #{purchaseUnitPriceVO.mncoOtptUtPrc}	/*제조사출고단가*/
+				, CHGR_ID 			= #{purchaseUnitPriceVO.chgrId}			/*수정자*/
+				, CHG_DATE 			= #{purchaseUnitPriceVO.chgDate}		/*수정일시*/
+		WHERE	PRC_DTL_SEQ			= #{purchaseUnitPriceVO.prcDtlSeq}		/*단가상세일련번호*/
+	</update>
+	
+	<!-- 제품의 유통단가 삭제 -->
+	<delete id="deleteMncoUtPrcDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.PurchaseUnitPriceVO">
+		DELETE
+		FROM	TDNDT_MNCO_UT_PRC_DTL
+		WHERE	PRC_DTL_SEQ			= #{purchaseUnitPriceVO.prcDtlSeq}		/*단가상세일련번호*/
+    </delete>
+    
+</mapper>	

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.RatingFactorUnitMapper">
+
+
+     <select id="getRatingFactorUnitList" resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactorUnit" 
+		parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactorUnit">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT RATE_FAC_UNIT
+             , EFF_DT
+             , EXP_DT
+             , RATE_FAC_UNIT_NM
+             , RATE_FAC
+             , ( SELECT DETAIL.COMMON_CD_NM
+				 FROM   TSYCO_CODE_MAST MAST, TSYCO_CODE_DETAIL DETAIL
+				 WHERE  1=1
+				 AND    MAST.COMMON_GRP = DETAIL.COMMON_GRP
+				 AND    DETAIL.COMMON_GRP = 'PP00212' 
+				 AND	COMMON_CD = RATE_FAC ) AS RATE_FAC_NM
+             , DEFAULT_UNIT_FLAG
+          FROM TOP_RATE_FAC_UNIT
+         WHERE 1=1
+         <if test="ratingFactorUnit.searchRateFacUnitNm != null and ratingFactorUnit.searchRateFacUnitNm != ''">
+           AND RATE_FAC_UNIT_NM LIKE ( '%' || #{ratingFactorUnit.searchRateFacUnitNm} || '%' ) 
+         </if>
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>  
+    
+    <select id="getRatingFactorUnitListCount" resultType="int" 
+		parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactorUnit">
+        SELECT COUNT(*) 
+         FROM (
+		        SELECT *
+		          FROM TOP_RATE_FAC_UNIT
+		         WHERE 1=1
+		           AND RATE_FAC_UNIT = #{ratingFactorUnit.searchRateFacUnit}
+         )
+    </select>  
+    
+     
+    <insert id="addRatingFactorUnit" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactorUnit" >
+        INSERT INTO TOP_RATE_FAC_UNIT (
+             RATE_FAC_UNIT  
+            ,EFF_DT
+            ,EXP_DT         
+            ,RATE_FAC_UNIT_NM         
+            ,RATE_FAC          
+            ,DEFAULT_UNIT_FLAG 
+            ,LAST_MOD_BY           
+            ,LAST_MOD_DT
+        )VALUES(
+              #{ratingFactorUnit.insertRateFacUnit}
+            , #{ratingFactorUnit.insertEffDt}
+            , #{ratingFactorUnit.insertExpDt}
+            , #{ratingFactorUnit.insertRateFacUnitNm}
+            , #{ratingFactorUnit.insertRateFac}
+            , #{ratingFactorUnit.defaultUnitFlag}
+            , #{ratingFactorUnit.userId}
+            , #{ratingFactorUnit.sysToDate}            
+         )
+        
+    </insert>
+    
+    <update id="modRatingFactorUnit" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactorUnit" >
+        
+		UPDATE TOP_RATE_FAC_UNIT
+		   SET
+		       RATE_FAC = #{ratingFactorUnit.modRateFac}
+		     , RATE_FAC_UNIT_NM = #{ratingFactorUnit.modRateFacUnitNm}
+		     , LAST_MOD_BY = #{ratingFactorUnit.userId}
+		     , LAST_MOD_DT = #{ratingFactorUnit.sysToDate}
+		 WHERE 1=1
+		   AND RATE_FAC_UNIT = #{ratingFactorUnit.modRateFacUnit}
+        
+    </update>
+    
+    <delete id="delRatingFactorUnit"  parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactorUnit" >
+        DELETE  TOP_RATE_FAC_UNIT
+        WHERE   RATE_FAC_UNIT = #{ratingFactorUnit.rateFacUnit}
+    </delete> 
+ 
+ </mapper>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.ManageRatingDefMapper">
+
+	<select id="getChargeList" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.ManageRatingDef"
+		resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.ManageRatingDef">
+	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+  		SELECT
+        		A.USG_TYP,
+           		A.CHRG_CD,
+           		A.EFF_DT,
+           		A.EXP_DT,
+           		( SELECT B.USG_TYP_NM 
+                	FROM TOP_USG_TYP B 
+               	   WHERE 1=1
+                 	 AND B.USG_TYP = A.USG_TYP ) AS USG_TYP_NM,
+           		A.DESCRIPTION
+          FROM (
+            	SELECT X.*
+              	  FROM (
+              	  		 SELECT
+                   		 		USG_TYP,
+                        		CHRG_CD,
+                        		EFF_DT,
+                        		EXP_DT,
+                	        	DESCRIPTION
+                    	   FROM TOP_CHRG_CD
+                    	  WHERE 1=1
+                    	    AND USG_TYP LIKE ('%' || #{manageRatingDef.searchUsgTyp} || '%')
+                       		AND CHRG_CD LIKE ('%' || #{manageRatingDef.searchChrgCd} || '%')
+                       		AND DESCRIPTION LIKE ('%' || #{manageRatingDef.searchDescription} || '%')
+                     	  ORDER BY CHRG_CD
+            	 ) X
+        ) A
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+        
+	</select>
+
+	<select id="getChargeListCount"
+		parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.ManageRatingDef" 
+		resultType="int">
+	
+		SELECT COUNT(*)
+		  FROM TOP_CHRG_CD
+		 WHERE 1=1 
+		   AND USG_TYP = #{manageRatingDef.usgTyp} 
+		   AND CHRG_CD = #{manageRatingDef.chrgCd}
+	
+	</select>
+
+	<insert id="addCharge" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.ManageRatingDef">
+      
+        INSERT INTO TOP_CHRG_CD(
+            USG_TYP,
+            CHRG_CD,
+            EFF_DT,
+            EXP_DT,
+            DESCRIPTION,
+            LAST_MOD_BY,
+            LAST_MOD_DT
+        )VALUES(
+            #{manageRatingDef.usgTyp},
+            #{manageRatingDef.chrgCd},
+            #{manageRatingDef.effDt},
+            #{manageRatingDef.expDt},
+            #{manageRatingDef.description},
+            #{manageRatingDef.userId},
+            #{manageRatingDef.sysToDate}
+        )
+
+    </insert>
+
+	<update id="modCharge" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.ManageRatingDef">
+	
+		UPDATE TOP_CHRG_CD
+           SET
+               EFF_DT      = #{manageRatingDef.effDt},
+               DESCRIPTION = #{manageRatingDef.description},
+               LAST_MOD_BY = #{manageRatingDef.userId},
+               LAST_MOD_DT = #{manageRatingDef.sysToDate}
+         WHERE 1=1 
+           AND USG_TYP = #{manageRatingDef.modUsgTyp}
+           AND CHRG_CD = #{manageRatingDef.chrgCd}
+	
+	</update>
+
+	<delete id="delCharge" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.ManageRatingDef">
+		
+		DELETE TOP_CHRG_CD
+         WHERE 1=1
+           AND USG_TYP = #{manageRatingDef.usgTyp}
+           AND CHRG_CD = #{manageRatingDef.chrgCd}
+        
+	</delete>
+	
+	<select id="manageRatingDefListExcel" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+  		
+  		SELECT
+            A.USG_TYP,
+            A.CHRG_CD,
+            (SELECT B.USG_TYP_NM FROM TOP_USG_TYP B WHERE B.USG_TYP = A.USG_TYP) AS USG_TYP_NM,
+            A.DESCRIPTION
+        FROM(
+            SELECT X.CHRG_CD,
+            		X.DESCRIPTION,
+            		X.USG_TYP
+              FROM (SELECT
+                            USG_TYP,
+                            CHRG_CD,
+                            DESCRIPTION
+                      FROM TOP_CHRG_CD
+                     WHERE 1=1
+                       --AND NVL(USG_TYP, ' ')  LIKE '%' || REPLACE('${manageRatingDef.usgTyp}', '[]', '') || '%'
+                       AND CHRG_CD LIKE     '%' || '${manageRatingDef.chrgCd}' || '%'
+                       AND DESCRIPTION LIKE '%' || '${manageRatingDef.description}' || '%'
+                     ORDER BY CHRG_CD
+                   ) X
+        )A
+        
+	</select>
+	
+</mapper>

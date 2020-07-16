@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.refInfo.commonInfo.TierMngMapper">
+
+<select id="getTierMngList" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng">
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	        
+			SELECT
+			    A.SO_ID,
+			    (SELECT SO_NM
+	              FROM TSYCO_SO_MAST
+	              WHERE SO_ID = A.SO_ID) AS SO_NM,
+			    P1.PROD_CD,
+			    P1.PROD_NM,
+			    A.TIER_SET_CD,
+			    P3.RATE_ITM_NM,
+		        -- SUBSTR(A.ACT_DT,1,4)||'.'||SUBSTR(A.ACT_DT,5,2)||'.'||SUBSTR(A.ACT_DT,7,2) AS ACT_DT,
+		        CONCAT(SUBSTR(A.ACT_DT,1,4), CONCAT('.', CONCAT(SUBSTR(A.ACT_DT,5,2), CONCAT('.',SUBSTR(A.ACT_DT,7,2))))) AS ACT_DT,
+		        A.VER ,
+            	A.PRICE_APPLY,
+	           (
+         		SELECT C.CODE_NM AS COMMON_CD_NM
+         		FROM   TSYCO_CODE_DETAIL B
+       			LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+		         ON 'ko'  = C.LNG_TYP
+		         AND B.COMMON_GRP = C.COMMON_GRP
+		         AND B.COMMON_CD = C.COMMON_CD
+		         WHERE  B.COMMON_GRP  = 'PP90011'
+		         AND    B.COMMON_CD   = A.PRICE_APPLY
+   				) AS PRICE_APPLY_NM	
+			 FROM TPMBI_TIER_SET        A,
+			      TPMPD_RATE_ITM        P3,
+			      TPMPD_PROD            P1
+			WHERE 1=1
+			<if test="tierMng.searchSoId != null">
+		       AND   A.SO_ID = #{tierMng.searchSoId}       
+		    </if>	
+			<if test="tierMng.searchProdCd != null">
+		       AND  P1.PROD_CD = #{tierMng.searchProdCd}
+		    </if>	
+			AND   P3.SO_ID         = A.SO_ID
+			AND   P3.RATE_ITM_CD   = A.TIER_SET_CD
+			AND   P3.ACT_DT   &lt;= #{tierMng.currentDay}
+		  	AND   P3.INACT_DT &gt;= #{tierMng.currentDay}   
+			AND   P1.SO_ID         = P3.SO_ID
+			AND   P1.PROD_CD       = P3.PROD_CD
+		    AND   P1.ACT_DT   &lt;= #{tierMng.currentDay}
+		  	AND   P1.INACT_DT &gt;= #{tierMng.currentDay}
+
+			ORDER BY A.SO_ID, A.TIER_SET_CD
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>	        
+</select>
+
+<select id="getTierMngListCount" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng">
+		SELECT COUNT(*)
+			 FROM TPMBI_TIER_SET        A,
+			      TPMPD_RATE_ITM        P3,
+			      TPMPD_PROD            P1
+			WHERE 1=1
+			<if test="tierMng.searchSoId != null">
+		       AND   A.SO_ID = #{tierMng.searchSoId}       
+		    </if>	
+			<if test="tierMng.searchProdCd != null">
+		       AND  P1.PROD_CD = #{tierMng.searchProdCd}
+		    </if>	
+			AND   P3.SO_ID         = A.SO_ID
+			AND   P3.RATE_ITM_CD   = A.TIER_SET_CD
+			AND   P3.ACT_DT   &lt;= #{tierMng.currentDay}
+		  	AND   P3.INACT_DT &gt;= #{tierMng.currentDay}   
+			AND   P1.SO_ID         = P3.SO_ID
+			AND   P1.PROD_CD       = P3.PROD_CD
+		    AND   P1.ACT_DT   &lt;= #{tierMng.currentDay}
+		  	AND   P1.INACT_DT &gt;= #{tierMng.currentDay} 
+		
+
+</select>
+
+<select id="getTierMngDtlList" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng">
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	        
+			SELECT
+			    B.TIER_SEGMT_NO,
+			    B.VER,    
+			    B.TIER_STRT_VAL,
+			    B.TIER_END_VAL,
+			    C1.COMMON_CD_NM,
+			    C.UNIT_APP_YN,
+			    C.UNIT_VAL,
+			    CASE WHEN C.UNIT_APP_YN = 'N' THEN TRUNCATE(C.RATE,2)
+         		WHEN C.UNIT_APP_YN = 'Y' THEN  TRUNCATE(C.UNIT_RATE,2)
+         		END AS RATE,
+			    C1.SORT_NO
+			 FROM TPMBI_TIER_SET        A,
+			      TPMBI_TIER_SEGMT      B,
+			      TPMBI_TIER_SEGMT_RATE C LEFT OUTER JOIN TSYCO_CODE_DETAIL     C1 ON C1.COMMON_GRP    = C.GRP_CD  and C1.COMMON_CD  = C.TIER_LVL,
+			      TPMPD_RATE_ITM        P3,
+			      TPMPD_PROD            P1
+			WHERE 1=1
+			AND   A.TIER_SET_CD  = #{tierMng.tierSetCd}
+			AND   B.SO_ID = A.SO_ID
+			AND   B.TIER_SET_CD    = A.TIER_SET_CD
+			AND   B.VER            = A.VER
+			AND   C.SO_ID          = B.SO_ID
+			AND   C.TIER_SET_CD    = B.TIER_SET_CD
+			AND   C.VER            = B.VER
+			AND   C.TIER_SEGMT_NO  = B.TIER_SEGMT_NO
+			AND   P3.SO_ID         = A.SO_ID
+			AND   P3.RATE_ITM_CD   = A.TIER_SET_CD
+			AND   P3.INACT_DT      = '99991231'
+			AND   P1.SO_ID         = P3.SO_ID
+			AND   P1.PROD_CD       = P3.PROD_CD
+			AND   P1.INACT_DT      = '99991231'
+			ORDER BY A.SO_ID,
+			         A.TIER_SET_CD,
+			         B.TIER_SEGMT_NO,
+			         C1.SORT_NO
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>	        
+</select>
+
+<select id="getTierMngDtlListCount" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng">
+		SELECT
+		    COUNT(*)
+			 FROM TPMBI_TIER_SET        A,
+			      TPMBI_TIER_SEGMT      B,
+			      TPMBI_TIER_SEGMT_RATE C LEFT OUTER JOIN TSYCO_CODE_DETAIL     C1 ON C1.COMMON_GRP    = C.GRP_CD  and C1.COMMON_CD  = C.TIER_LVL,
+			      TPMPD_RATE_ITM        P3,
+			      TPMPD_PROD            P1
+			WHERE 1=1
+			AND   A.TIER_SET_CD  = #{tierMng.tierSetCd}
+			AND   B.SO_ID = A.SO_ID
+			AND   B.TIER_SET_CD    = A.TIER_SET_CD
+			AND   B.VER            = A.VER
+			AND   C.SO_ID          = B.SO_ID
+			AND   C.TIER_SET_CD    = B.TIER_SET_CD
+			AND   C.VER            = B.VER
+			AND   C.TIER_SEGMT_NO  = B.TIER_SEGMT_NO
+			AND   P3.SO_ID         = A.SO_ID
+			AND   P3.RATE_ITM_CD   = A.TIER_SET_CD
+			AND   P3.INACT_DT      = '99991231'
+			AND   P1.SO_ID         = P3.SO_ID
+			AND   P1.PROD_CD       = P3.PROD_CD
+			AND   P1.INACT_DT      = '99991231'
+			ORDER BY A.SO_ID,
+			         A.TIER_SET_CD,
+			         B.TIER_SEGMT_NO,
+			         C1.SORT_NO
+</select>
+
+
+
+
+
+<select id="getSearchProdList" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng">
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	        
+		SELECT TDP.PROD_CD           ,
+		  TDP.INACT_DT        ,
+		  TDP.ACT_DT         ,
+		  TDP.PROD_NM     
+		FROM   TPMPD_PROD TDP
+		WHERE  1=1
+		  AND TDP.MSTR_FL = '1'
+		  AND   TDP.ACT_DT   &lt;= #{tierMng.currentDay}
+		  AND   TDP.INACT_DT &gt;= #{tierMng.currentDay}    
+		<if test="tierMng.searchSoIdPop != null">
+	       AND   TDP.SO_ID = #{tierMng.searchSoIdPop}       
+	    </if>	
+		<if test="tierMng.searchProdNmPop != null">
+	       AND  TDP.PROD_NM LIKE CONCAT(CONCAT('%', #{tierMng.searchProdNmPop}), '%')
+	    </if>	
+		ORDER BY TDP.PROD_CD DESC
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>	        
+</select>
+
+<select id="getSearchProdListCount" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.TierMng">
+		SELECT COUNT(*)   
+		FROM   TPMPD_PROD TDP
+		WHERE  1=1
+		  AND TDP.MSTR_FL = '1'
+		  AND   TDP.ACT_DT   &lt;= #{tierMng.currentDay}
+		  AND   TDP.INACT_DT &gt;= #{tierMng.currentDay}    
+		<if test="tierMng.searchSoId != null">
+	       AND   TDP.SO_ID = #{tierMng.searchSoId}       
+	    </if>	
+		<if test="tierMng.searchProdNm != null">
+	       AND  TDP.PROD_NM LIKE CONCAT(CONCAT('%', #{tierMng.searchProdNm}), '%')
+	    </if>	
+</select>
+</mapper>

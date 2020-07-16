@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.service.MenuNavigationInterceptorMapper">
+	<select id="getMenuList" resultType="Menu">
+        SELECT
+               MENU.MENU_NO
+         			<choose>                          
+   						<when test="'${dbms.kind}' == 'ORACLE'">                       
+                          ,NVL(
+						</when>                          
+						<when test="'${dbms.kind}' == 'MYSQL'">                         
+                          ,IFNULL(
+                        </when>
+        			</choose> 
+                 (
+                    SELECT
+                            MENU_NAME
+                    FROM    TSYCO_MENU_LANGUAGE                     
+                    WHERE   MENU_NO = MENU.MENU_NO 
+                    AND     COUNTRY_CODE = #{sessionCountry, jdbcType=VARCHAR}
+                    AND     LANGUAGE_CODE = #{sessionLanguage, jdbcType=VARCHAR}
+                ),MENU.MENU_NAME) AS MENU_NAME
+              , MENU.UP_MENU_NO
+              , MENU.VIEW_PATH
+        FROM    TSYCO_MENU MENU
+        WHERE  MENU.USE_YN = 'Y'
+        AND    MENU.STEP_NO = #{stepNo, jdbcType=VARCHAR}
+        AND    MENU.MENU_NO = #{selectMenuNo, jdbcType=VARCHAR}
+    </select>
+</mapper>

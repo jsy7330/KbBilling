@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.charge.charge.PaymentChargeCalculationMapper">
+
+	<!-- 요금내역 카운트 -->
+	<select id="getChrgeInfoCount" parameterType="com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo" resultType="int">
+        SELECT COUNT(1)
+        FROM  (
+               SELECT A.SO_ID
+                    ,(SELECT B.SO_NM FROM TSYCO_SO_MAST B WHERE B.SO_ID = A.SO_ID) AS SO_NM
+                    , A.CLC_WRK_NO
+                    , ''             AS CLC_WRK_CL
+                    , ''             AS PROC_DTTM
+                    , A.BILL_YYMM
+                    , A.BILL_CYCL
+                    , A.PYM_ACNT_ID
+                    , A.CUST_ID
+                    , A.CTRT_ID
+                    , SUM(A.USE_AMT) AS TOT_USE_AMT
+                    , SUM(A.USE_CNT) AS TOT_USE_CNT
+                    ,(SELECT C.CUST_NM FROM IFNBRM_CUST_INFO C WHERE C.SO_ID = A.SO_ID AND C.CUST_ID = A.CUST_ID) AS CUST_NM
+                    ,(SELECT E.PROD_NM
+                      FROM   IFNBRM_RATE_ITM_INFO D
+                           , TPMPD_PROD           E
+                      WHERE  D.SO_ID       = E.SO_ID
+                      AND    D.PROD_CD     = E.PROD_CD
+                      AND    D.RATE_ITM_CD = A.RATE_ITM_CD ) AS PROD_NM
+               FROM   TBLCH_CHRG A
+               WHERE  1=1
+               <if test="paymentChargeCalculationVo.soId != null and paymentChargeCalculationVo.soId != ''">
+               AND    A.SO_ID       = #{paymentChargeCalculationVo.soId}
+               </if>
+               <if test="paymentChargeCalculationVo.billYymm != null and paymentChargeCalculationVo.billYymm != ''">
+               AND    A.BILL_YYMM   = #{paymentChargeCalculationVo.billYymm}
+               </if>
+               <if test="paymentChargeCalculationVo.pymAcntId != null and paymentChargeCalculationVo.pymAcntId != ''">
+               AND    A.PYM_ACNT_ID = #{paymentChargeCalculationVo.pymAcntId}
+               </if>
+               GROUP  BY A.SO_ID, A.CLC_WRK_NO, A.BILL_YYMM, A.BILL_CYCL, A.PYM_ACNT_ID, A.CUST_ID, A.CTRT_ID
+              ) A
+	</select>
+	
+	<!-- 요금내역 리스트-->
+	<select id="getChrgeInfoList" parameterType="com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo" resultType="com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT A.SO_ID
+             ,(SELECT B.SO_NM FROM TSYCO_SO_MAST B WHERE B.SO_ID = A.SO_ID) AS SO_NM
+             , A.CLC_WRK_NO
+             , ''             AS CLC_WRK_CL
+             , ''             AS PROC_DTTM
+             , A.BILL_YYMM
+             , A.BILL_CYCL
+             , A.PYM_ACNT_ID
+             , A.CUST_ID
+             , A.CTRT_ID
+             , SUM(A.USE_AMT) AS TOT_USE_AMT
+             , SUM(A.USE_CNT) AS TOT_USE_CNT
+             ,(SELECT C.CUST_NM FROM IFNBRM_CUST_INFO C WHERE C.SO_ID = A.SO_ID AND C.CUST_ID = A.CUST_ID) AS CUST_NM
+             ,(SELECT E.PROD_NM
+               FROM   IFNBRM_RATE_ITM_INFO D
+                    , TPMPD_PROD           E
+               WHERE  D.SO_ID       = E.SO_ID
+               AND    D.PROD_CD     = E.PROD_CD
+               AND    D.RATE_ITM_CD = A.RATE_ITM_CD ) AS PROD_NM
+        FROM   TBLCH_CHRG A
+        WHERE  1=1
+        <if test="paymentChargeCalculationVo.soId != null and paymentChargeCalculationVo.soId != ''">
+        AND    A.SO_ID       = #{paymentChargeCalculationVo.soId}
+        </if>
+        <if test="paymentChargeCalculationVo.billYymm != null and paymentChargeCalculationVo.billYymm != ''">
+        AND    A.BILL_YYMM   = #{paymentChargeCalculationVo.billYymm}
+        </if>
+        <if test="paymentChargeCalculationVo.pymAcntId != null and paymentChargeCalculationVo.pymAcntId != ''">
+        AND    A.PYM_ACNT_ID = #{paymentChargeCalculationVo.pymAcntId}
+        </if>
+        GROUP  BY A.SO_ID, A.CLC_WRK_NO, A.BILL_YYMM, A.BILL_CYCL, A.PYM_ACNT_ID, A.CUST_ID, A.CTRT_ID
+        ORDER  BY SO_NM, A.CUST_ID, A.CTRT_ID, PROD_NM        
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getDtlList" parameterType="com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo" resultType="com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo">	
+        SELECT A.BILL_YYMM
+             , A.USE_YYMM
+             , A.SVC_CMPS_ID
+             , A.PROD_CMPS_ID
+             ,(SELECT E.PROD_NM
+               FROM   IFNBRM_RATE_ITM_INFO D
+                    , TPMPD_PROD           E
+               WHERE  D.SO_ID       = E.SO_ID
+               AND    D.PROD_CD     = E.PROD_CD
+               AND    D.RATE_ITM_CD = A.RATE_ITM_CD ) AS PROD_NM
+             , A.RATE_ITM_CD
+             ,(SELECT DISTINCT C.RATE_ITM_NM FROM TPMPD_RATE_ITM C WHERE C.RATE_ITM_CD = A.RATE_ITM_CD) AS RATE_ITM_NM
+             , A.USE_AMT
+             , A.USE_CNT
+        FROM   TBLCH_CHRG A
+        WHERE  1=1
+        <if test="paymentChargeCalculationVo.soId != null and paymentChargeCalculationVo.soId != ''">
+        AND    A.SO_ID        = #{paymentChargeCalculationVo.soId}
+        </if>
+        <if test="paymentChargeCalculationVo.billYymm != null and paymentChargeCalculationVo.billYymm != ''">
+        AND    A.BILL_YYMM    = #{paymentChargeCalculationVo.billYymm}
+        </if>
+        <if test="paymentChargeCalculationVo.billCycl != null and paymentChargeCalculationVo.billCycl != ''">
+        AND    A.BILL_CYCL    = #{paymentChargeCalculationVo.billCycl}
+        </if>
+        <if test="paymentChargeCalculationVo.clcWrkNo != null and paymentChargeCalculationVo.clcWrkNo != ''">
+        AND    A.CLC_WRK_NO   = #{paymentChargeCalculationVo.clcWrkNo}
+        </if>
+        <if test="paymentChargeCalculationVo.pymAcntId != null and paymentChargeCalculationVo.pymAcntId != ''">
+        AND    A.PYM_ACNT_ID  = #{paymentChargeCalculationVo.pymAcntId}
+        </if>
+        <if test="paymentChargeCalculationVo.custId != null and paymentChargeCalculationVo.custId != ''">
+        AND    A.CUST_ID      = #{paymentChargeCalculationVo.custId}
+        </if>
+        <if test="paymentChargeCalculationVo.ctrtId != null and paymentChargeCalculationVo.ctrtId != ''">
+        AND    A.CTRT_ID      = #{paymentChargeCalculationVo.ctrtId}
+        </if>
+        
+	</select>
+</mapper>	

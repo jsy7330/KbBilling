@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.refInfo.itemTypeMgt.BillingItemMapper">
+<select id="getInvoiceItemList" resultType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem">
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	        
+		SELECT A.INV_ITM_CD,
+			   A.ACT_DT,
+			   A.INACT_DT,
+			   A.INV_ITM_NM,
+			   A.INV_ITM_ABBR_NM,
+			   A.INV_ITM_ENG_NM,
+			   A.PRINT_PRI_NO,
+			   A.MSTR_FL,
+			   A.CHG_DATE,
+			   A.ACT_DT AS BASE_ACT_DT,
+               A.INV_ITM_GRP1 AS INV_ITM_GRP1,
+               (
+                   SELECT B.COMMON_CD_NM
+                   FROM   TSYCO_CODE_DETAIL      B
+                   LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+                   ON 	#{billingItem.lngTyp} = C.LNG_TYP
+			       AND    B.COMMON_GRP = C.COMMON_GRP
+			       AND 	  B.COMMON_CD = C.COMMON_CD                   
+                   WHERE  B.COMMON_GRP  = 'PP09911'
+                   AND    B.COMMON_CD   = A.INV_ITM_GRP1
+                ) INV_ITM_GRP1_NM,
+               A.INV_ITM_GRP2 AS INV_ITM_GRP2,
+               (
+                   SELECT B.COMMON_CD_NM
+                   FROM   TSYCO_CODE_DETAIL      B
+                   LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+                   ON 	#{billingItem.lngTyp} = C.LNG_TYP
+			       AND    B.COMMON_GRP = C.COMMON_GRP
+			       AND 	  B.COMMON_CD = C.COMMON_CD                    
+                   WHERE  B.COMMON_GRP  = 'PP09912'
+                   AND    B.COMMON_CD   = A.INV_ITM_GRP2
+                ) INV_ITM_GRP2_NM,
+               A.INV_PRT_GRP_STD AS INV_PRT_GRP_STD,
+               (
+                   SELECT B.COMMON_CD_NM
+                   FROM   TSYCO_CODE_DETAIL      B
+                   LEFT OUTER JOIN  TSYCO_CODE_DETAIL_NAME C
+                   ON 	#{billingItem.lngTyp} = C.LNG_TYP
+			       AND    B.COMMON_GRP = C.COMMON_GRP
+			       AND 	  B.COMMON_CD = C.COMMON_CD                    
+                   WHERE  B.COMMON_GRP  = 'PP09913'
+                   AND    B.COMMON_CD   = A.INV_PRT_GRP_STD
+                ) INV_PRT_GRP_STD_NM,
+                SO_ID,
+                (SELECT SO_NM FROM TSYCO_SO_MAST
+                	WHERE SO_ID = A.SO_ID) AS SO_NM
+		FROM   TPMBI_INV_ITM A
+		WHERE  A.INACT_DT >= #{billingItem.currentDay}
+		AND    A.MSTR_FL     = '1'
+		<if test="billingItem.invItmNm != null">
+	       AND  INV_ITM_NM LIKE CONCAT(CONCAT('%', #{billingItem.invItmNm}), '%')	       
+	    </if>		
+		ORDER BY PRINT_PRI_NO ASC
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>	        
+</select>
+
+<select id="getInvoiceItemListCount" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem">
+		SELECT COUNT(*)
+		FROM   TPMBI_INV_ITM A
+		WHERE  A.INACT_DT >= #{billingItem.currentDay}
+		AND    A.MSTR_FL     = '1'
+		<if test="billingItem.invItmNm != null">
+	       AND  INV_ITM_NM LIKE CONCAT(CONCAT('%', #{billingItem.invItmNm}), '%')
+	    </if>	
+</select>
+
+<select id="getInvoiceItmPriNo" resultType="int">
+		SELECT (CASE WHEN MAX(PRINT_PRI_NO + 1) IS NULL
+				THEN 1
+				ELSE MAX(PRINT_PRI_NO + 1)
+				END)	MAX_PRI_NO
+		FROM TPMBI_INV_ITM
+</select>
+
+<select id="getInvoiceItemDupCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem">
+		SELECT (CASE WHEN COUNT(INV_ITM_CD) IS NULL
+				THEN 0
+				ELSE COUNT(INV_ITM_CD) 
+				END) AS DATA_CNT
+	    FROM   TPMBI_INV_ITM
+        WHERE  INV_ITM_NM       =   #{billingItem.invItmNm}
+        AND    MSTR_FL          =   '1'
+        AND    INACT_DT  		>   #{billingItem.currentDay}
+        AND    SO_ID			=   #{billingItem.soId}
+</select>
+
+<insert id="addInvoiceItem" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem" >
+		INSERT INTO TPMBI_INV_ITM
+      	(
+      		 INV_ITM_CD           ,
+			 ACT_DT            ,
+			 INACT_DT           ,
+			 INV_ITM_NM           ,
+			 INV_ITM_ABBR_NM      ,
+			 INV_ITM_ENG_NM       ,
+			 PRINT_PRI_NO         ,
+			 MSTR_FL              ,
+			 REGR_ID         ,
+			 REG_DATE       ,
+			 CHGR_ID           ,
+			 CHG_DATE,
+             INV_ITM_GRP1		,
+             INV_ITM_GRP2		,
+             INV_PRT_GRP_STD		,
+             SO_ID
+      	)
+      	VALUES
+      	(
+      		 #{billingItem.invItmCd, jdbcType=VARCHAR }         ,
+			 #{billingItem.actDt, jdbcType=VARCHAR }          ,
+			 #{billingItem.inactDt, jdbcType=VARCHAR }         ,
+			 #{billingItem.invItmNm, jdbcType=VARCHAR }          ,
+			 #{billingItem.invItmAbbrNm, jdbcType=VARCHAR }    ,
+			 #{billingItem.invItmEngNm, jdbcType=VARCHAR }     ,
+			 #{billingItem.printPriNo, jdbcType=VARCHAR }       ,
+			 '1'                  ,
+			 #{billingItem.regrId, jdbcType=VARCHAR }       ,
+			 #{billingItem.sysDate}              ,
+			 #{billingItem.chgrId, jdbcType=VARCHAR }         ,
+			 #{billingItem.sysDate}		,
+             #{billingItem.invItmGrp1, jdbcType=VARCHAR }		,
+             #{billingItem.invItmGrp2, jdbcType=VARCHAR }		,
+             #{billingItem.invPrtGrpStd, jdbcType=VARCHAR }		,
+             #{billingItem.soId, jdbcType=VARCHAR }
+      	)
+
+
+</insert>
+
+<select id="getInvoiceItm" resultType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem">
+		SELECT A.INV_ITM_CD           ,
+			   A.ACT_DT            ,
+			   A.INACT_DT           ,
+			   A.INV_ITM_NM           ,
+			   A.INV_ITM_ABBR_NM      ,
+			   A.INV_ITM_ENG_NM       ,
+			   A.PRINT_PRI_NO         ,
+			   A.MSTR_FL              ,
+			   A.REGR_ID         ,
+			   A.CHGR_ID           ,
+			   A.ACT_DT AS BASE_ACT_DT,
+               A.INV_ITM_GRP1,
+               A.INV_ITM_GRP2,
+               A.INV_PRT_GRP_STD,
+               A.SO_ID
+		FROM   TPMBI_INV_ITM A
+		WHERE  INACT_DT     =   #{billingItem.inactDt}
+        AND    ACT_DT       =   #{billingItem.actDt}
+	    AND	   INV_ITM_CD   =   #{billingItem.invItmCd}
+	    AND    MSTR_FL		=	'1'
+	    AND	   SO_ID		=   #{billingItem.soId}
+</select>
+
+<select id="getInvoiceItemDupExpCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem">
+		SELECT (CASE WHEN COUNT(INV_ITM_CD) IS NULL
+				THEN 0
+				ELSE COUNT(INV_ITM_CD) 
+				END) AS DATA_CNT
+	    FROM   TPMBI_INV_ITM
+	    WHERE  INV_ITM_NM       =     #{billingItem.invItmNm}
+	    AND    MSTR_FL          =     '1'
+	    AND    INACT_DT       >     #{billingItem.currentDay}
+	    AND    INV_ITM_CD      !=     #{billingItem.invItmCd}
+	    AND	   SO_ID		=   #{billingItem.soId}
+</select>
+
+<update id="modInvoiceItm" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem" >
+		UPDATE TPMBI_INV_ITM
+		SET    INV_ITM_NM              =    #{billingItem.invItmNm},
+			   INV_ITM_ABBR_NM         =    #{billingItem.invItmAbbrNm},
+			   INV_ITM_ENG_NM          =    #{billingItem.invItmEngNm},
+			   PRINT_PRI_NO            =    #{billingItem.printPriNo},
+			   ACT_DT               =    #{billingItem.actDt},
+			   MSTR_FL                 =    #{billingItem.mstrFl},
+			   CHGR_ID 			   =    #{billingItem.chgrId},
+	           CHG_DATE     	   = 	#{billingItem.sysDate},
+               INV_ITM_GRP1        =    #{billingItem.invItmGrp1},
+               INV_ITM_GRP2        =    #{billingItem.invItmGrp2},
+               INV_PRT_GRP_STD     =    #{billingItem.invPrtGrpStd}
+		WHERE  INV_ITM_CD 		   =    #{billingItem.invItmCd}
+        AND    INACT_DT     	   = 	#{billingItem.inactDt}
+        AND    ACT_DT       	   = 	#{billingItem.baseActDt}
+        AND	   SO_ID		=   #{billingItem.soId}
+        
+</update>
+
+<update id="modInvoiceItmInactDt" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem" >
+        UPDATE TPMBI_INV_ITM
+        SET    INACT_DT          =  #{billingItem.inactDt},
+		       MSTR_FL             =  #{billingItem.mstrFl},
+               CHGR_ID          =  #{billingItem.chgrId},
+               CHG_DATE        =  #{billingItem.sysDate}
+        WHERE  INV_ITM_CD          =  #{billingItem.invItmCd}
+		AND    ACT_DT           =  #{billingItem.baseActDt}
+		AND	   SO_ID		=   #{billingItem.soId}
+</update>
+
+<update id="modInvoiceItmInactDtion" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.BillingItem" >
+		UPDATE TPMBI_INV_ITM
+        SET    INACT_DT          =  #{billingItem.inactDt},
+               CHGR_ID          =  #{billingItem.chgrId},
+		       MSTR_FL             =  #{billingItem.mstrFl},               
+               CHG_DATE        =  #{billingItem.sysDate}
+        WHERE  INV_ITM_CD          =  #{billingItem.invItmCd}
+		AND    ACT_DT           =  #{billingItem.baseActDt}
+		AND	   SO_ID		=   #{billingItem.soId}
+		AND	   MSTR_FL		=   '1'
+</update>
+
+
+</mapper>

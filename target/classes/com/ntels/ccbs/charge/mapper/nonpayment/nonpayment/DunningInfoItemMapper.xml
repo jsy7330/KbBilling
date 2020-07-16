@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.nonpayment.nonpayment.DunningInfoItemMapper">
+
+<!-- 대응기준정보 조회 -->
+	<select id="dunningCriteriaList" resultType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningInfoItemVO" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningInfoItemVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT A.SO_ID AS SO_ID
+				 , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM
+				 , A.UPYM_MNG_TP AS UPYM_MNG_TP
+				 , (SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                         , TSYCO_CODE_MAST_NAME MNAME
+                         , TSYCO_CODE_DETAIL DETAIL
+                         , TSYCO_CODE_DETAIL_NAME NAME
+                     WHERE MAST.COMMON_GRP = DETAIL.COMMON_GRP
+                       AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+                       AND MNAME.LNG_TYP     = #{dunningInfo.lngTyp}
+                       AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+                       AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+                       AND NAME.LNG_TYP      = #{dunningInfo.lngTyp}
+                       AND MAST.COMMON_GRP   = 'BL00109'
+                       AND DETAIL.USE_YN     = 'Y'
+                       AND MAST.USE_YN       = 'Y'
+                       AND DETAIL.COMMON_CD = A.UPYM_MNG_TP) AS UPYM_MNG_TP_NM
+				 , A.EFT_BGN_YYMM AS EFT_BGN_YYMM
+				 , A.EFT_END_YYMM AS EFT_END_YYMM
+				 , A.UPYM_MNG_BS_TP AS UPYM_MNG_BS_TP
+				 ,(SELECT NAME.CODE_NM
+                     FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP = DETAIL.COMMON_GRP
+                      AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+                      AND MNAME.LNG_TYP     = #{dunningInfo.lngTyp}
+                      AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+                      AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+                      AND NAME.LNG_TYP      = #{dunningInfo.lngTyp}
+                      AND MAST.COMMON_GRP   = 'BL00110'
+                      AND DETAIL.USE_YN     = 'Y'
+                      AND MAST.USE_YN       = 'Y'
+                      AND DETAIL.COMMON_CD = A.UPYM_MNG_BS_TP) AS UPYM_MNG_BS_TP_NM
+				 , A.UPYM_MONTHS_FROM AS UPYM_MONTHS_FROM
+				 , A.UPYM_MONTHS_TO AS UPYM_MONTHS_TO
+				 , A.UPYM_AMT_FROM AS UPYM_AMT_FROM
+				 , A.UPYM_AMT_TO AS UPYM_AMT_TO
+				 , A.UPYM_MNG_DESC AS UPYM_MNG_DESC
+				 , A.REGR_ID
+				 , A.REG_DATE
+				 , A.CHGR_ID
+				 , A.CHG_DATE
+              FROM TBLUP_UPYM_COPE_TP_BS A
+             WHERE 1 = 1
+			<if test="dunningInfo.searchSoId != null and dunningInfo.searchSoId != ''">
+				AND A.SO_ID = #{dunningInfo.searchSoId}
+			</if>
+			<if test="dunningInfo.searchTpCd != null and dunningInfo.searchTpCd != ''">
+				AND A.UPYM_MNG_TP = #{dunningInfo.searchTpCd}
+			</if>
+			<if test="dunningInfo.searchStrYymmFrom != null and dunningInfo.searchStrYymmFrom != ''">
+				AND A.EFT_BGN_YYMM BETWEEN #{dunningInfo.searchStrYymmFrom} AND #{dunningInfo.searchStrYymmTo}
+			</if>
+			<if test="dunningInfo.searchEndYymmFrom != null and dunningInfo.searchEndYymmFrom != ''">
+				AND A.EFT_END_YYMM BETWEEN #{dunningInfo.searchEndYymmFrom} AND #{dunningInfo.searchEndYymmTo}
+			</if>
+             ORDER BY A.UPYM_MNG_TP, A.UPYM_MNG_BS_TP, A.EFT_BGN_YYMM, A.EFT_END_YYMM
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<!-- 대응기준정보 카운트 -->
+	<select id="dunningCriteriaCount" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningInfoItemVO" resultType="int">
+			SELECT COUNT(0)
+              FROM TBLUP_UPYM_COPE_TP_BS
+             WHERE 1 = 1
+			<if test="dunningInfo.searchSoId != null and dunningInfo.searchSoId != ''">
+				AND SO_ID = #{dunningInfo.searchSoId}
+			</if>
+			<if test="dunningInfo.searchTpCd != null and dunningInfo.searchTpCd != ''">
+				AND UPYM_MNG_TP = #{dunningInfo.searchTpCd}
+			</if>
+			<if test="dunningInfo.searchStrYymmFrom != null and dunningInfo.searchStrYymmFrom != ''">
+				AND EFT_BGN_YYMM BETWEEN #{dunningInfo.searchStrYymmFrom} AND #{dunningInfo.searchStrYymmTo}
+			</if>
+			<if test="dunningInfo.searchEndYymmFrom != null and dunningInfo.searchEndYymmFrom != ''">
+				AND EFT_END_YYMM BETWEEN #{dunningInfo.searchEndYymmFrom} AND #{dunningInfo.searchEndYymmTo}
+			</if>
+	</select>
+	
+	<!-- 대응기준  상세 정보 조회 -->
+	<select id="getDunningCriteria" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningInfoItemVO"  resultType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningInfoItemVO">
+		SELECT A.SO_ID AS SO_ID
+			 , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM
+			 , A.UPYM_MNG_TP AS UPYM_MNG_TP
+			 , (SELECT NAME.CODE_NM
+			                  FROM TSYCO_CODE_MAST MAST
+			                     , TSYCO_CODE_MAST_NAME MNAME
+			                     , TSYCO_CODE_DETAIL DETAIL
+			                     , TSYCO_CODE_DETAIL_NAME NAME
+			                 WHERE MAST.COMMON_GRP = DETAIL.COMMON_GRP
+			                   AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+			                   AND MNAME.LNG_TYP     = #{dunningInfo.lngTyp}
+			                   AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+			                   AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+			                   AND NAME.LNG_TYP      = #{dunningInfo.lngTyp}
+			                   AND MAST.COMMON_GRP   = 'BL00109'
+			                   AND DETAIL.USE_YN     = 'Y'
+			                   AND MAST.USE_YN       = 'Y'
+			                   AND DETAIL.COMMON_CD = A.UPYM_MNG_TP) AS UPYM_MNG_TP_NM
+			 , A.EFT_BGN_YYMM AS EFT_BGN_YYMM
+			 , A.EFT_END_YYMM AS EFT_END_YYMM
+			 , A.UPYM_MNG_BS_TP AS UPYM_MNG_BS_TP
+			 ,(SELECT NAME.CODE_NM
+			                 FROM TSYCO_CODE_MAST MAST
+			                    , TSYCO_CODE_MAST_NAME MNAME
+			                    , TSYCO_CODE_DETAIL DETAIL
+			                    , TSYCO_CODE_DETAIL_NAME NAME
+			                WHERE MAST.COMMON_GRP = DETAIL.COMMON_GRP
+			                  AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+			                  AND MNAME.LNG_TYP     = #{dunningInfo.lngTyp}
+			                  AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+			                  AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+			                  AND NAME.LNG_TYP      = #{dunningInfo.lngTyp}
+			                  AND MAST.COMMON_GRP   = 'BL00110'
+			                  AND DETAIL.USE_YN     = 'Y'
+			                  AND MAST.USE_YN       = 'Y'
+			                  AND DETAIL.COMMON_CD = A.UPYM_MNG_BS_TP) AS UPYM_MNG_BS_TP_NM
+			 , A.UPYM_MONTHS_FROM AS UPYM_MONTHS_FROM
+			 , A.UPYM_MONTHS_TO AS UPYM_MONTHS_TO
+			 , A.UPYM_AMT_FROM AS UPYM_AMT_FROM
+			 , A.UPYM_AMT_TO AS UPYM_AMT_TO
+			 , A.UPYM_MNG_DESC AS UPYM_MNG_DESC
+			 , A.REGR_ID
+			 , A.REG_DATE
+			 , A.CHGR_ID
+			 , A.CHG_DATE
+		  FROM TBLUP_UPYM_COPE_TP_BS A
+		 WHERE 1 = 1
+		   AND A.SO_ID = #{dunningInfo.soId,jdbcType=VARCHAR}
+		   AND A.UPYM_MNG_TP = #{dunningInfo.upymMngTp,jdbcType=VARCHAR}
+		   AND A.UPYM_MNG_BS_TP = #{dunningInfo.upymMngBsTp,jdbcType=VARCHAR}
+		   AND A.EFT_BGN_YYMM = #{dunningInfo.eftBgnYymm,jdbcType=VARCHAR}
+		   AND A.EFT_END_YYMM = #{dunningInfo.eftEndYymm,jdbcType=VARCHAR}
+	</select>
+	
+	<!-- 대응기준정보 INSERT -->
+	<insert id="insertDunningInfo" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningInfoItemVO">
+		INSERT INTO TBLUP_UPYM_COPE_TP_BS
+		( 
+			SO_ID              /* SO_ID */
+          , UPYM_MNG_TP        /*미납대응유형(BL00109)*/
+          , EFT_BGN_YYMM       /*효력시작년월(YYYYMM)*/
+          , UPYM_MONTHS_FROM   /*개월시작값*/
+          , EFT_END_YYMM       /*효력종료년월(YYYYMM)*/
+          , UPYM_MNG_BS_TP     /*미납대응기준(BL00110)*/
+          , UPYM_MONTHS_TO     /*개월종료값*/
+          , UPYM_AMT_FROM      /*대상기준액[율]종료값*/
+          , UPYM_AMT_TO        /*대상기준액[율]종료값*/
+          , REGR_ID            /*등록자ID*/
+          , REG_DATE           /*등록일*/
+          , CHGR_ID            /*변경자ID*/
+          , CHG_DATE           /*변경일*/
+        ) VALUES (
+            #{dunningInfo.soId,jdbcType=VARCHAR}
+          , #{dunningInfo.upymMngTp,jdbcType=VARCHAR}
+          , #{dunningInfo.eftBgnYymm,jdbcType=VARCHAR}
+          , #{dunningInfo.upymMonthsFrom,jdbcType=VARCHAR}
+          , #{dunningInfo.eftEndYymm,jdbcType=VARCHAR}
+          , #{dunningInfo.upymMngBsTp,jdbcType=VARCHAR}
+          , #{dunningInfo.upymMonthsTo,jdbcType=VARCHAR}
+          , #{dunningInfo.upymAmtFrom,jdbcType=VARCHAR}
+          , #{dunningInfo.upymAmtTo,jdbcType=VARCHAR}
+          , #{dunningInfo.regrId,jdbcType=VARCHAR}
+          , #{dunningInfo.sysToDate,jdbcType=VARCHAR}
+          , #{dunningInfo.chgrId,jdbcType=VARCHAR}
+          , #{dunningInfo.sysToDate,jdbcType=VARCHAR}
+        )
+	</insert>
+	
+	<!-- 대응기준정보 UPDATE -->
+	<update id="updateDunningInfo" parameterType="com.ntels.ccbs.charge.domain.nonpayment.nonpayment.DunningInfoItemVO">
+		UPDATE TBLUP_UPYM_COPE_TP_BS SET
+			UPYM_AMT_FROM = #{dunningInfo.upymAmtFrom,jdbcType=VARCHAR}
+          , UPYM_AMT_TO = #{dunningInfo.upymAmtTo,jdbcType=VARCHAR}
+          , UPYM_MONTHS_FROM = #{dunningInfo.upymMonthsFrom,jdbcType=VARCHAR}
+          , UPYM_MONTHS_TO = #{dunningInfo.upymMonthsTo,jdbcType=VARCHAR}
+          , UPYM_MNG_DESC = #{dunningInfo.upymMngDesc,jdbcType=VARCHAR}
+          , CHGR_ID = #{dunningInfo.chgrId,jdbcType=VARCHAR}
+          , CHG_DATE = #{dunningInfo.sysToDate,jdbcType=VARCHAR}
+		 WHERE 1 = 1
+		   AND SO_ID = #{dunningInfo.soId,jdbcType=VARCHAR}
+		   AND UPYM_MNG_TP = #{dunningInfo.upymMngTp,jdbcType=VARCHAR}
+		   AND UPYM_MNG_BS_TP = #{dunningInfo.upymMngBsTp,jdbcType=VARCHAR}
+		   AND EFT_BGN_YYMM = #{dunningInfo.eftBgnYymm,jdbcType=VARCHAR}
+		   AND EFT_END_YYMM = #{dunningInfo.eftEndYymm,jdbcType=VARCHAR}
+	</update>
+	
+</mapper>

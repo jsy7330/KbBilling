@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+
+<!-- 단말기의 일련번호별 현재 상태 등록 -->
+	<insert id="insertEqt" parameterType="java.util.List">
+		INSERT INTO TDNDT_EQT
+			( EQT_SEQ			--단말기일련번호
+			, SO_ID				--사업ID
+			, ITEM_ID			--제품ID
+			, EQT_BAR_CD		--바코드
+			, EQT_RSRC_CL_CD	--단말자원구분코드
+			, EQT_USE_CD		--단말기용도코드
+			, EQT_STAT_CD		--단말기상태코드
+			, CLOR_CD			--색상코드
+			, LGST_PROC_STAT_CD	--물류처리상태코드
+			, LGST_PROC_DTTM	--물류처리일시
+			, OWN_LOC_CD		--소유위치코드
+			, FRST_IN_DT		--최초물류센터입고일자
+			, AGC_IN_DT			--대리점입고일자
+			, PRCHS_UT_PRC		--매입단가
+			, DSTRB_UT_PRC		--유통단가
+			, CT_ORG_ID			--접점조직
+			, CT_CHG_ID			--접점변경자
+			, CT_CHG_DT			--접점변경일
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+			)
+        VALUES
+        	<foreach collection="deliveryInspectionVOs" item="deliveryInspectionVO" index="index" separator="," open="" close="">
+				( #{deliveryInspectionVO.eqtSeq}		--단말기일련번호
+				, #{deliveryInspectionVO.soId}			--사업ID
+				, #{deliveryInspectionVO.itemId}		--제품ID
+				, #{deliveryInspectionVO.eqtBarCd}		--
+				, #{deliveryInspectionVO.eqtRsrcClCd}	--단말자원구분코드
+				, #{deliveryInspectionVO.eqtUseCd}		--단말기용도코드
+				, #{deliveryInspectionVO.eqtStatCd}		--단말기상태코드
+				, #{deliveryInspectionVO.clorCd}		--색상코드
+				, #{deliveryInspectionVO.lgstProcStatCd}	--물류처리상태코드
+				, #{deliveryInspectionVO.lgstProcDttm}		--물류처리일시
+				, #{deliveryInspectionVO.ownLocCd}		--소유위치코드
+				, #{deliveryInspectionVO.frstInDt}		--최초물류센터입고일자
+				, #{deliveryInspectionVO.agcInDt}		--대리점입고일자
+				, #{deliveryInspectionVO.prchsUtPrc}	--매입단가
+				, #{deliveryInspectionVO.dstrbUtPrc}	--유통단가
+				, #{deliveryInspectionVO.ctOrgId}		--접점조직
+				, #{deliveryInspectionVO.ctChgId}		--접점변경자
+				, #{deliveryInspectionVO.ctChgDt}		--접점변경일
+				, #{deliveryInspectionVO.regrId}		--등록자
+				, #{deliveryInspectionVO.regDate}		--등록일시
+				, #{deliveryInspectionVO.chgrId}		--수정자
+				, #{deliveryInspectionVO.chgDate}		--수정일시
+			)
+			</foreach>
+			
+	</insert>
+	
+	
+	
+	<!-- 단말기 일련번호별 기타 속성 등록 -->
+	<insert id="insertEqtOthsAttr" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+	
+		INSERT INTO TDNDT_EQT_OTHS_ATTR
+			( EQT_SEQ			--단말기일련번호
+			, SO_ID				--사업ID
+			, ITEM_ID			--제품ID
+			, VER_NO			--버전번호
+			, EQT_MGMT_STAT_CD	--단말기관리상태코드
+			, NM_CL_CD			--네이밍구분코드
+			, IMEI_NO			--IMEI번호
+			, PSC_MIN_NO		--물리MIN번호
+			, PSC_IMSI_NO		--물리IMSI번호
+			, V_IMSI_NO			--가변IMSI번호
+			, MAC_ADDR_VAL		--MAC주소
+			, MNCO_DT			--제조일
+			, RESULT_CD			--처리결과코드
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+			)
+        VALUES
+			( #{deliveryInspectionVO.eqtSeq}		--단말기일련번호
+			, #{deliveryInspectionVO.soId}			--사업ID
+			, #{deliveryInspectionVO.itemId}		--제품ID
+			, #{deliveryInspectionVO.verNo}			--버전번호
+			, #{deliveryInspectionVO.eqtMgmtStatCd}		--단말기관리상태코드
+			, #{deliveryInspectionVO.nmClCd}		--네이밍구분코드
+			, #{deliveryInspectionVO.imeiNo}		--IMEI번호
+			, #{deliveryInspectionVO.pscMinNo}		--물리MIN번호
+			, #{deliveryInspectionVO.pscImsiNo}		--물리IMSI번호
+			, #{deliveryInspectionVO.vImsiNo}		--가변IMSI번호
+			, #{deliveryInspectionVO.macAddrVal}	--MAC주소
+			, #{deliveryInspectionVO.mncoDt}		--제조일
+			, #{deliveryInspectionVO.resultCd}		--처리결과코드
+			, #{deliveryInspectionVO.regrId}		--등록자
+			, #{deliveryInspectionVO.regDate}		--등록일시
+			, #{deliveryInspectionVO.chgrId}		--수정자
+			, #{deliveryInspectionVO.chgDate}		--수정일시
+			)			
+	</insert>
+	
+	
+	<!-- 입출고 단말기 일련번호별로 관리 등록 -->
+	<insert id="insertInoutEqt" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+	
+		INSERT INTO TDNDT_INOUT_EQT
+			( SO_ID			--사업ID
+			, INOUT_ID		--입출고ID
+			, ITEM_ID		--제품ID
+			, EQT_SEQ		--단말기일련번호
+			, EQT_BAR_CD	--단말기바코드
+			, APPR_YN		--검수여부
+			, REGR_ID		--등록자
+			, REG_DATE		--등록일시
+			, CHGR_ID		--수정자
+			, CHG_DATE		--수정일시
+			)
+        VALUES
+			( #{deliveryInspectionVO.soId}			--사업ID
+			, #{deliveryInspectionVO.inoutId}		--입출고ID
+			, #{deliveryInspectionVO.itemId}		--제품ID
+			, #{deliveryInspectionVO.eqtSeq}		--단말기일련번호
+			, #{deliveryInspectionVO.eqtBarCd}		--단말기바코드
+			, #{deliveryInspectionVO.apprYn}		--검수여부
+			, #{deliveryInspectionVO.regrId}		--등록자
+			, #{deliveryInspectionVO.regDate}		--등록일시
+			, #{deliveryInspectionVO.chgrId}		--수정자
+			, #{deliveryInspectionVO.chgDate}		--수정일시
+			)			
+	</insert>
+	

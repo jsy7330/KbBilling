@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.subscription.subscription.SubscriptionMapper">
+    <select id="subscriptionList" resultType="OrderStatisticsVO">
+        SELECT 
+            RESULT.*
+        FROM (
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		        SELECT G.SO_NM
+		              ,A.SO_ID
+		              ,DECODE(B.ORDER_TP,'204',B.SUS_HOPE_DD,'205',B.MMT_SUS_HOPE_DD,'301',B.TERM_HOPE_DT,'302',B.TERM_HOPE_DT, B.SVC_STRT_HOPE_DT) AS SVC_STRT_HOPE_DT
+		              ,A.WRK_ACT_DT
+		              ,A.WRK_CMT_DT
+		              ,A.ORDER_ID
+		              ,B.ORDER_TP
+		              ,F.COMMON_CD_NM AS ORDER_TYPE
+		              ,A.WRK_SEQ_NO
+		              ,C.WRK_NAME
+		              ,E.COMMON_CD_NM AS WRK_STAT_NM
+		              ,D.PROD_NM
+		              ,A.WRK_DFT_WRKER
+		              ,B.RCPT_ID
+		              ,B.CUST_ID
+		              ,B.TRANS_CTRT_YN
+		              ,B.CTRT_ID
+		              ,A.WRK_STAT
+		              ,B.ORDER_STAT
+		              ,B.ORDER_DT
+		              ,H.CUST_NM
+		              ,I.SVC_WRK_GRP_NM
+		              ,B.SVC_TEL_NO
+		              , (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = B.CHGR_ID) AS CHGR_NM
+		             , B.CHG_DATE
+		             , (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID =B.REGR_ID) AS REGR_NM
+		             , B.REG_DATE
+		         FROM  TCMCT_SVC_WRK A
+		              ,TCMCT_OCTRT_INFO B
+		              ,TP_WRK C
+		              ,TPMPD_PROD D
+		              ,TSYCO_CODE_DETAIL E
+		              ,TSYCO_CODE_DETAIL F
+		              ,TSYCO_SO_MAST G
+		              ,TCMCU_CUST_INFO H
+		              ,TCMCT_SVC_WRK_GRP I
+		        WHERE 1=1
+		          AND A.ORDER_ID = B.ORDER_ID
+		          AND A.WRK_DEF_ID = C.WRK_DEF_ID
+		          AND A.PROD_CD = D.PROD_CD
+		          AND A.SO_ID = G.SO_ID
+		          AND F.COMMON_GRP = 'CMCT004'
+		          AND B.ORDER_TP = F.COMMON_CD
+				<if test="searchSoId != null and searchSoId != ''">
+				     AND   A.SO_ID = #{searchSoId}
+				</if>			      
+				<if test="searchStatDt != null and searchStatDt != ''">
+					<if test="searchEndDt != null and searchEndDt != ''">
+					 AND   A.WRK_REQ_DT  BETWEEN  #{searchStatDt} AND #{searchEndDt} 
+					</if>   
+				</if>   							      
+			      AND E.COMMON_GRP = 'CMWO301'
+			      AND A.WRK_STAT = E.COMMON_CD
+				<if test="wrkStat != null and wrkStat != ''">
+				      AND A.WRK_STAT  =  #{wrkStat}
+				</if>	      
+				<if test="condCustId != null and condCustId != ''">
+		     		AND   B.CUST_ID = #{condCustId}
+				</if>	      
+				<if test="orderTp != null and orderTp != ''">
+				     AND   B.ORDER_TP = #{orderTp}
+				</if>	
+				<if test="wrkDftWrker != null and wrkDftWrker != ''">
+				     AND A.WRK_DFT_WRKER IN (SELECT SVC_WRK_GRP_ID 
+				                                  FROM TCMCT_SVC_WRK_GRP_DTL
+				                                 WHERE USER_ID =  #{wrkDftWrker})
+				</if>	
+			      AND A.WRK_DFT_WRKER = I.SVC_WRK_GRP_ID
+			      AND B.CUST_ID = H.CUST_ID
+			      ORDER BY ORDER_DT DESC, ORDER_ID DESC, WRK_SEQ_NO ASC										
+            <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+            ) RESULT
+    </select> 
+    <select id="subscriptionListCnt" resultType="int">
+        SELECT 
+            COUNT(*)
+		         FROM  TCMCT_SVC_WRK A
+		              ,TCMCT_OCTRT_INFO B
+		              ,TP_WRK C
+		              ,TPMPD_PROD D
+		              ,TSYCO_CODE_DETAIL E
+		              ,TSYCO_CODE_DETAIL F
+		              ,TSYCO_SO_MAST G
+		              ,TCMCU_CUST_INFO H
+		              ,TCMCT_SVC_WRK_GRP I
+		        WHERE 1=1
+		          AND A.ORDER_ID = B.ORDER_ID
+		          AND A.WRK_DEF_ID = C.WRK_DEF_ID
+		          AND A.PROD_CD = D.PROD_CD
+		          AND A.SO_ID = G.SO_ID
+		          AND F.COMMON_GRP = 'CMCT004'
+		          AND B.ORDER_TP = F.COMMON_CD
+				<if test="searchSoId != null and searchSoId != ''">
+				     AND   A.SO_ID = #{searchSoId}
+				</if>			      
+				<if test="searchStatDt != null and searchStatDt != ''">
+					<if test="searchEndDt != null and searchEndDt != ''">
+					 AND   A.WRK_REQ_DT  BETWEEN  #{searchStatDt} AND #{searchEndDt} 
+					</if>   
+				</if>   							      
+			      AND E.COMMON_GRP = 'CMWO301'
+			      AND A.WRK_STAT = E.COMMON_CD
+				<if test="wrkStat != null and wrkStat != ''">
+				      AND A.WRK_STAT  =  #{wrkStat}
+				</if>	      
+				<if test="condCustId != null and condCustId != ''">
+		     		AND   B.CUST_ID = #{condCustId}
+				</if>	      
+				<if test="orderTp != null and orderTp != ''">
+				     AND   B.ORDER_TP = #{orderTp}
+				</if>	
+				<if test="wrkDftWrker != null and wrkDftWrker != ''">
+				     AND A.WRK_DFT_WRKER IN (SELECT SVC_WRK_GRP_ID 
+				                                  FROM TCMCT_SVC_WRK_GRP_DTL
+				                                 WHERE USER_ID =  #{wrkDftWrker})
+				</if>	
+			      AND A.WRK_DFT_WRKER = I.SVC_WRK_GRP_ID
+			      AND B.CUST_ID = H.CUST_ID
+    </select> 
+	<select id="subscription" parameterType="OrderStatisticsVO" resultType="OrderStatisticsVO">
+	    SELECT SUM(DECODE(A.WRK_STAT,'00',1,0)) AS JUB_DAE
+	          ,SUM(DECODE(A.WRK_STAT,'01',1,0)) AS JAK_JUB
+	          ,SUM(DECODE(A.WRK_STAT,'02',1,0)) AS JAK_JIN
+	          ,SUM(DECODE(A.WRK_STAT,'03',1,0)) AS JAK_CHUI
+	          ,SUM(DECODE(A.WRK_STAT,'04',1,0)) AS JAK_WAN
+	          ,SUM(1)                           AS TOTAL
+	      FROM TCMCT_SVC_WRK A 
+	          ,TCMCT_OCTRT_INFO B
+	     WHERE 1=1
+	       AND A.ORDER_ID = B.ORDER_ID
+		<if test="searchSoId != null and searchSoId != ''">
+		     AND   A.SO_ID = #{searchSoId}
+		</if>		
+		<if test="wrkDftWrker != null and wrkDftWrker != ''">
+		     AND A.WRK_DFT_WRKER IN (SELECT SVC_WRK_GRP_ID 
+		                                  FROM TCMCT_SVC_WRK_GRP_DTL
+		                                 WHERE USER_ID =  #{wrkDftWrker})
+		</if>			
+	</select>      
+</mapper>
+    

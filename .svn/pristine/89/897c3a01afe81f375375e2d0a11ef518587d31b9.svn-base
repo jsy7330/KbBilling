@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.common.ProductMngMapper">
+
+	<!-- 제품 리스트 조회 -->
+	<select id="productList" parameterType="com.ntels.ccbs.system.domain.common.common.ProductMngVO" resultType="com.ntels.ccbs.system.domain.common.common.ProductMngVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.SO_ID					/*사업ID*/
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM		/* 사업명*/
+					, A.ITEM_ID				/*제품ID*/
+					, A.ITEM_NM				/*제품명*/
+					, A.ITEM_TP_CD			/*제품유형코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productMngVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productMngVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM            /* 제품유형코드명*/
+					, A.ITEM_KND_CD			/*제품종류코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productMngVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productMngVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00064'
+								AND DETAIL.COMMON_CD = A.ITEM_KND_CD
+		       		) AS ITEM_KND_NM            /* 제품종류코드명*/
+					, C.MNCO_OTPT_UT_PRC	/*제조사출고단가*/
+					, B.MNCO_NM				/*제조사명    */
+					, B.MNCO_ID				/*제조사ID*/
+           	FROM	TDNDT_ITEM A
+           			, TDNDT_MNCO B
+           			, (
+						SELECT 
+								  AA.ITEM_ID
+								  , AA.MNCO_OTPT_UT_PRC
+								  , AA.EFT_STRT_DT
+								  , AA.EFT_END_DT
+								  , AA.PRC_DTL_SEQ
+						FROM 	TDNDT_MNCO_UT_PRC_DTL AA
+								, (
+									SELECT	
+											MAX(AAA.PRC_DTL_SEQ) AS PRC_DTL_SEQ
+											, AAA.ITEM_ID
+									FROM 	TDNDT_MNCO_UT_PRC_DTL AAA
+									GROUP BY AAA.ITEM_ID
+								) BB
+						WHERE AA.PRC_DTL_SEQ = BB.PRC_DTL_SEQ
+					) C
+           	WHERE 	1=1
+           		AND	A.MNCO_ID 	= B.MNCO_ID
+           		AND A.ITEM_ID	= C.ITEM_ID
+           		<if test="productMngVO.soId != null and productMngVO.soId != ''">
+					AND A.SO_ID =  #{productMngVO.soId}
+				</if>
+				<if test="productMngVO.searchType != null and productMngVO.searchType != '' and productMngVO.searchType == '01' ">
+					<if test="productMngVO.searchText != null and productMngVO.searchText != '' ">
+						AND A.ITEM_ID LIKE CONCAT( CONCAT('%', #{productMngVO.searchText} ), '%' )
+					</if>	
+				</if>
+				<if test="productMngVO.searchType != null and productMngVO.searchType != '' and productMngVO.searchType == '02' ">
+					<if test="productMngVO.searchText != null and productMngVO.searchText != '' ">
+						AND A.ITEM_NM LIKE CONCAT( CONCAT('%', #{productMngVO.searchText} ), '%' )
+					</if>	
+				</if>
+           		<if test="productMngVO.mncoId != null and productMngVO.mncoId != ''">
+					AND A.MNCO_ID =  #{productMngVO.mncoId}
+				</if>
+				<if test="productMngVO.itemTpCd != null and productMngVO.itemTpCd != ''">
+					AND A.ITEM_TP_CD =  #{productMngVO.itemTpCd}
+				</if>
+				<if test="productMngVO.itemKndCd != null and productMngVO.itemKndCd != ''">
+					AND A.ITEM_KND_CD =  #{productMngVO.itemKndCd}
+				</if>
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 제품 리스트 카운트 -->
+	<select id="productCount" parameterType="com.ntels.ccbs.system.domain.common.common.ProductMngVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL
+		FROM	TDNDT_ITEM A
+       			, TDNDT_MNCO B
+       			, (
+					SELECT 
+							  AA.ITEM_ID
+							  , AA.MNCO_OTPT_UT_PRC
+							  , AA.EFT_STRT_DT
+							  , AA.EFT_END_DT
+							  , AA.PRC_DTL_SEQ
+					FROM 	TDNDT_MNCO_UT_PRC_DTL AA
+							, (
+								SELECT	
+										MAX(AAA.PRC_DTL_SEQ) AS PRC_DTL_SEQ
+										, AAA.ITEM_ID
+								FROM 	TDNDT_MNCO_UT_PRC_DTL AAA
+								GROUP BY AAA.ITEM_ID
+							) BB
+					WHERE AA.PRC_DTL_SEQ = BB.PRC_DTL_SEQ
+				) C
+       	WHERE 	1=1
+       		AND	A.MNCO_ID 	= B.MNCO_ID
+       		AND A.ITEM_ID	= C.ITEM_ID
+       		<if test="productMngVO.soId != null and productMngVO.soId != ''">
+				AND A.SO_ID =  #{productMngVO.soId}
+			</if>
+			<if test="productMngVO.searchType != null and productMngVO.searchType != '' and productMngVO.searchType == '01' ">
+				<if test="productMngVO.searchText != null and productMngVO.searchText != '' ">
+					AND A.ITEM_ID LIKE CONCAT( CONCAT('%', #{productMngVO.searchText} ), '%' )
+				</if>	
+			</if>
+			<if test="productMngVO.searchType != null and productMngVO.searchType != '' and productMngVO.searchType == '02' ">
+				<if test="productMngVO.searchText != null and productMngVO.searchText != '' ">
+					AND A.ITEM_NM LIKE CONCAT( CONCAT('%', #{productMngVO.searchText} ), '%' )
+				</if>	
+			</if>
+			       		<if test="productMngVO.mncoId != null and productMngVO.mncoId != ''">
+				AND A.MNCO_ID =  #{productMngVO.mncoId}
+			</if>
+			<if test="productMngVO.itemTpCd != null and productMngVO.itemTpCd != ''">
+				AND A.ITEM_TP_CD =  #{productMngVO.itemTpCd}
+			</if>
+			<if test="productMngVO.itemKndCd != null and productMngVO.itemKndCd != ''">
+				AND A.ITEM_KND_CD =  #{productMngVO.itemKndCd}
+			</if>
+		
+	</select>
+
+
+</mapper>

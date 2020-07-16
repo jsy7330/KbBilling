@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.AllowanceDiscountMapper">
+     
+      <select id="getAllowanceDiscountList" resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.AllowanceDiscount"
+		 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.AllowanceDiscount">
+		 <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+       SELECT 
+             A.DISC_DEDT_CD,
+             A.DISC_DEDT_NM,
+             A.DEDT_DISC_FLAG as DEDT_DISC_FLAG,
+             (SELECT  B.COMMON_CD_NM 
+              FROM    TSYCO_CODE_DETAIL  B
+                    , TSYCO_CODE_DETAIL_NAME  C
+              WHERE   B.COMMON_GRP = 'PP00256' 
+              AND     B.COMMON_CD = A.DEDT_DISC_FLAG
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}             
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD ) AS DEDT_DISC_FLAG_NM,
+             A.FREE_TYP,
+             (SELECT  B.COMMON_CD_NM
+              FROM    TSYCO_CODE_DETAIL B 
+                    , TSYCO_CODE_DETAIL_NAME C
+              WHERE   B.COMMON_GRP = 'PP00291' 
+              AND     B.COMMON_CD = A.FREE_TYP
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD ) AS FREE_TYP_NM,
+             A.USG_TYP_LVL,
+             (SELECT  B.COMMON_CD_NM
+              FROM    TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C 
+              WHERE   B.COMMON_GRP = 'PP00226' 
+              AND     B.COMMON_CD = A.USG_TYP_LVL
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD ) AS USG_TYP_LVL_NM,
+             A.USG_TYP_GRP_CD, 
+             CASE
+                WHEN USG_TYP_LVL = 0 THEN '0000000000'
+                WHEN USG_TYP_LVL = 1 THEN (SELECT USG_TYP_NM FROM TOP_USG_TYP WHERE  USG_TYP = A.USG_TYP_GRP_CD)
+                WHEN USG_TYP_LVL = 2 THEN (SELECT B.COMMON_CD_NM
+                                           FROM   TSYCO_CODE_DETAIL B
+                                                , TSYCO_CODE_DETAIL_NAME C 
+                                           WHERE  B.COMMON_GRP = 'PP00214' 
+                                           AND    B.COMMON_CD = A.USG_TYP_GRP_CD
+                                           AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+                                           AND    C.COMMON_GRP(+) = B.COMMON_GRP
+                                           AND    C.COMMON_CD(+)  = B.COMMON_CD )
+             END AS USG_TYP_GRP_CD_NM,
+             A.USG_ITM_TYP,
+             (SELECT  B.COMMON_CD_NM
+              FROM    TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C
+              WHERE   B.COMMON_GRP = 'PP00238' 
+              AND     B.COMMON_CD = A.USG_ITM_TYP
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD ) AS USG_ITM_TYP_NM,
+             A.USG_ITM_CD,             
+             CASE
+                WHEN USG_ITM_TYP = 4 THEN '0000000000'
+                WHEN USG_ITM_TYP = 6 THEN (SELECT distinct(DESCRIPTION) FROM TOP_CHRG_CD  WHERE CHRG_CD = A.USG_ITM_CD)
+                WHEN USG_ITM_TYP = 7 THEN (SELECT B.COMMON_CD_NM
+                                           FROM   TSYCO_CODE_DETAIL B 
+                                                , TSYCO_CODE_DETAIL_NAME C
+                                           WHERE  B.COMMON_GRP = 'PP00214' 
+                                           AND    B.COMMON_CD = A.USG_TYP_GRP_CD
+                                           AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+                                           AND    C.COMMON_GRP(+) = B.COMMON_GRP
+                                           AND    C.COMMON_CD(+)  = B.COMMON_CD)
+             END AS USG_ITM_CD_NM,    
+             A.COND_RATE_FAC1,
+             A.COND_OPERATOR1,
+             A.COND_VAL1,
+             A.LOGICAL_OPERATOR1_2,
+             A.COND_RATE_FAC2,
+             A.COND_OPERATOR2,
+             A.COND_VAL2,     
+             A.SEGMENT_FLAG,
+             A.FREE_OF_CHRG_FLAG,
+             A.VOICE_CALL_DEDT_FLAG,
+             A.APPL_DISC_FLAG,
+             A.TM_DIVISION_FLAG,
+             A.SUBSC_PRORATE_FLAG,
+             A.TERM_PRORATE_FLAG,     
+             A.APPL_LVL,
+             (SELECT B.COMMON_CD_NM
+              FROM   TSYCO_CODE_DETAIL B
+                   , TSYCO_CODE_DETAIL_NAME C
+              WHERE  B.COMMON_GRP = 'PP00227' 
+              AND    B.COMMON_CD = A.APPL_LVL
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD) AS APPL_LVL_NM,
+             REPLENISH_CYCL,
+             (SELECT  B.COMMON_CD_NM
+              FROM   TSYCO_CODE_DETAIL B 
+                   , TSYCO_CODE_DETAIL_NAME C
+              WHERE  B.COMMON_GRP = 'PP00225' 
+              AND    B.COMMON_CD = A.REPLENISH_CYCL
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD) AS REPLENISH_CYCL_NM,
+             A.DEDT_TYP,
+             (SELECT B.COMMON_CD_NM
+              FROM   TSYCO_CODE_DETAIL B
+                   , TSYCO_CODE_DETAIL_NAME C 
+              WHERE  B.COMMON_GRP = 'PP00290' 
+              AND    B.COMMON_CD = A.DEDT_TYP
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD) AS DEDT_TYP_NM,
+             AMT_FLAG,
+             ( SELECT COMMON_CD_NM
+             	 FROM TSYCO_CODE_DETAIL
+             	WHERE 1=1
+             	  AND COMMON_GRP = 'PP00224'
+             	  AND COMMON_CD = AMT_FLAG ) AS AMT_FLAG_NM,  
+             AMT_UNIT,    
+             CASE
+                WHEN AMT_FLAG = 1 THEN (SELECT COMMON_CD_NM 
+                                        FROM (SELECT TO_CHAR(RATE_FAC_UNIT) AS COMMON_CD, TO_CHAR(RATE_FAC_UNIT_NM) AS COMMON_CD_NM 
+                                              FROM TOP_RATE_FAC_UNIT
+                                            UNION ALL        
+                                              SELECT TO_CHAR(B.COMMON_CD)  AS COMMON_CD
+                                                   , TO_CHAR(B.COMMON_CD_NM) as COMMON_CD_NM
+                                              FROM   TSYCO_CODE_DETAIL B 
+                                                   , TSYCO_CODE_DETAIL_NAME C
+                                              WHERE  B.COMMON_GRP = 'PP00281'
+                                              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+                                              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+                                              AND    C.COMMON_CD(+)  = B.COMMON_CD)
+                                        WHERE COMMON_CD = A.AMT_UNIT)
+                WHEN AMT_FLAG = 2 THEN (SELECT B.COMMON_CD_NM
+                                        FROM   TSYCO_CODE_DETAIL B
+                                             , TSYCO_CODE_DETAIL_NAME C 
+                                        WHERE  B.COMMON_GRP = 'PP00223' 
+                                        AND    B.COMMON_CD = A.AMT_UNIT
+                                        AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+                                        AND    C.COMMON_GRP(+) = B.COMMON_GRP
+                                        AND    C.COMMON_CD(+)  = B.COMMON_CD)
+             END AS AMT_UNIT_NM,
+             A.QUANTITY,
+             A.BAL_CR_OVR_METHOD,
+             (SELECT B.COMMON_CD_NM
+              FROM   TSYCO_CODE_DETAIL B
+                   , TSYCO_CODE_DETAIL_NAME C
+              WHERE  B.COMMON_GRP = 'PP00241' 
+              AND    B.COMMON_CD = A.BAL_CR_OVR_METHOD
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD ) AS BAL_CR_OVR_METHOD_NM,
+             A.BAL_CR_OVR_PERIOD,
+             A.MAX_ACCUM_BAL,
+             A.SMS_NOTI_CD,
+             A.SMS_NOTI_FLAG,
+             (SELECT B.COMMON_CD_NM
+              FROM   TSYCO_CODE_DETAIL B 
+                   , TSYCO_CODE_DETAIL_NAME C
+              WHERE  B.COMMON_GRP = 'PP00288' 
+              AND    B.COMMON_CD = A.SMS_NOTI_FLAG
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD ) AS SMS_NOTI_FLAG_NM,
+             CURR_OR_NEXT_CYCL,
+             (SELECT B.COMMON_CD_NM
+              FROM   TSYCO_CODE_DETAIL B 
+                   , TSYCO_CODE_DETAIL_NAME C
+              WHERE  B.COMMON_GRP = 'PP00272' 
+              AND    B.COMMON_CD = A.CURR_OR_NEXT_CYCL
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD ) AS CURR_OR_NEXT_CYCL_NM,
+             DURATION_UNIT,
+             (SELECT B.COMMON_CD_NM
+              FROM   TSYCO_CODE_DETAIL B 
+                   , TSYCO_CODE_DETAIL_NAME C
+              WHERE  B.COMMON_GRP = 'PP00285' 
+              AND    B.COMMON_CD = A.DURATION_UNIT 
+              AND    C.LNG_TYP(+)    = #{allowanceDiscount.lngTyp}
+              AND    C.COMMON_GRP(+) = B.COMMON_GRP
+              AND    C.COMMON_CD(+)  = B.COMMON_CD) AS DURATION_UNIT_NM,
+             A.DURATION,
+             A.EFF_DT,
+             A.EXP_DT
+         FROM TOP_DISC_DEDT_DEF A
+         WHERE 1=1
+         	AND A.DISC_DEDT_NM LIKE ( '%' || #{allowanceDiscount.discDedtNm} || '%' )
+        ORDER BY DISC_DEDT_CD DESC     
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getCommonCodeList" resultType="CommonCodeVO">
+			SELECT TO_CHAR(RATE_FAC_UNIT) AS COMMON_CD
+				 , TO_CHAR(RATE_FAC_UNIT_NM) AS COMMON_CD_NM
+			  FROM TOP_RATE_FAC_UNIT
+        	ORDER BY COMMON_CD
+    </select>
+   
+	<select id="getChrgCdList" resultType="CommonCodeVO">
+	
+	    SELECT CHRG_CD AS COMMON_CD
+	         , DESCRIPTION AS COMMON_CD_NM
+  		  FROM TOP_CHRG_CD
+ 		 WHERE 1=1
+   		   AND DESCRIPTION IS NOT NULL
+   		   
+	</select>
+     
+     <insert id="addAllowanceDiscount" 
+     	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.AllowanceDiscount">
+      
+        INSERT INTO TOP_DISC_DEDT_DEF(
+             DISC_DEDT_CD,
+             EFF_DT,
+             EXP_DT,
+             DISC_DEDT_NM,
+             USG_TYP_LVL,
+             USG_TYP_GRP_CD,
+             USG_ITM_TYP,
+             USG_ITM_CD,
+             DEDT_DISC_FLAG,
+             FREE_TYP,
+             COND_RATE_FAC1,
+             COND_OPERATOR1,
+             COND_VAL1,
+             LOGICAL_OPERATOR1_2,
+             COND_RATE_FAC2,
+             COND_OPERATOR2,
+             COND_VAL2,
+             QUANTITY,
+             SEGMENT_FLAG,
+             APPL_LVL,
+             FREE_OF_CHRG_FLAG,
+             REPLENISH_CYCL,
+             AMT_FLAG,
+             AMT_UNIT,
+             VOICE_CALL_DEDT_FLAG,
+             APPL_DISC_FLAG,
+             BAL_CR_OVR_METHOD,
+             BAL_CR_OVR_PERIOD,
+             MAX_ACCUM_BAL,
+             TM_DIVISION_FLAG,
+             SUBSC_PRORATE_FLAG,
+             TERM_PRORATE_FLAG,
+             DEDT_TYP,
+             SMS_NOTI_CD,
+             SMS_NOTI_FLAG,
+             CURR_OR_NEXT_CYCL,
+             MULTIPLE_DISC_METHOD,
+             DURATION_UNIT,
+             DURATION,                          
+             LAST_MOD_BY,
+             LAST_MOD_DT
+        )VALUES(
+             #{allowanceDiscount.insertDiscDedtCd},
+	 		 #{allowanceDiscount.insertEffDt},
+	 		 #{allowanceDiscount.expDt},
+	 		 #{allowanceDiscount.insertDiscDedtNm},
+			 #{allowanceDiscount.insertUsgTypLvl},
+			 #{allowanceDiscount.insertUsgTypGrpCd},
+			 #{allowanceDiscount.insertUsgItmTyp},
+			 #{allowanceDiscount.insertUsgItmCd},
+			 #{allowanceDiscount.insertDedtDiscFlag},
+			 #{allowanceDiscount.insertFreeTyp},
+			 #{allowanceDiscount.insertCondRatingFactor1},
+			 #{allowanceDiscount.insertCondOp1},
+			 #{allowanceDiscount.insertCondVal1},
+		  	 #{allowanceDiscount.insertLogicalOperator12},
+			 #{allowanceDiscount.insertCondRatingFactor2},
+			 #{allowanceDiscount.insertCondOp2},
+			 #{allowanceDiscount.insertCondVal2},
+			 #{allowanceDiscount.insertQuantity},
+			 #{allowanceDiscount.insertSegmentFlag},
+			 #{allowanceDiscount.insertApplLvl},
+			 #{allowanceDiscount.insertFreeOfChrgFlag},
+			 #{allowanceDiscount.insertReplenishCycl},
+			 #{allowanceDiscount.insertAmtFlag},
+			 #{allowanceDiscount.insertAmtUnit},
+			 #{allowanceDiscount.insertVoiceCallDedtFlag},
+			 #{allowanceDiscount.insertApplDiscFlag},
+			 #{allowanceDiscount.insertBalCrOvrMethod},
+			 #{allowanceDiscount.insertBalCrOvrPeriod},
+			 #{allowanceDiscount.insertMaxAccumBal},
+			 #{allowanceDiscount.insertTmDivisionFlag},
+			 #{allowanceDiscount.insertSubscProrateFlag},
+			 #{allowanceDiscount.insertTermProrateFlag},
+			 #{allowanceDiscount.insertDedtTyp},
+			 #{allowanceDiscount.insertSmsNotiCd},
+			 #{allowanceDiscount.insertSmsNotiFlag},
+			 #{allowanceDiscount.insertCurrOrNextCycl},
+			 #{allowanceDiscount.insertMultipleDiscMethod},
+			 #{allowanceDiscount.insertDurationUnit},
+			 #{allowanceDiscount.insertDuration},
+			 #{allowanceDiscount.userId},
+			 #{allowanceDiscount.sysToDate}           
+        ) 
+     </insert> 
+     
+     
+     <update id="modAllowanceDiscount" 
+     	 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.AllowanceDiscount">
+      
+        UPDATE  TOP_DISC_DEDT_DEF
+        SET 
+             DISC_DEDT_NM = #{allowanceDiscount.modDiscDedtNm},
+             USG_TYP_LVL = #{allowanceDiscount.modUsgTypLvl},
+             USG_TYP_GRP_CD = #{allowanceDiscount.modUsgTypGrpCd},
+             USG_ITM_TYP = #{allowanceDiscount.modUsgItmTyp},
+             USG_ITM_CD = #{allowanceDiscount.modUsgItmCd},
+             DEDT_DISC_FLAG = #{allowanceDiscount.modDedtDiscFlag},
+             FREE_TYP = #{allowanceDiscount.modFreeTyp},
+             COND_RATE_FAC1 = #{allowanceDiscount.modCondRateFac1},
+             COND_OPERATOR1 = #{allowanceDiscount.modCondOp1},
+             COND_VAL1 = #{allowanceDiscount.modCondVal1},
+             LOGICAL_OPERATOR1_2 = #{allowanceDiscount.modLogicalOperator12},
+             COND_RATE_FAC2 = #{allowanceDiscount.modCondRateFac2},
+             COND_OPERATOR2 = #{allowanceDiscount.modCondOp2},
+             COND_VAL2 = #{allowanceDiscount.modCondVal2},
+             QUANTITY = #{allowanceDiscount.modQuantity},
+             SEGMENT_FLAG = #{allowanceDiscount.modSegmentFlag},
+             APPL_LVL = #{allowanceDiscount.modApplLvl},
+             FREE_OF_CHRG_FLAG = #{allowanceDiscount.modFreeOfChrgFlag},
+             REPLENISH_CYCL = #{allowanceDiscount.modReplenishCycl},
+             AMT_FLAG = #{allowanceDiscount.modAmtFlag},
+             AMT_UNIT = #{allowanceDiscount.modAmtUnit},
+             VOICE_CALL_DEDT_FLAG = #{allowanceDiscount.modVoiceCallDedtFlag},
+             APPL_DISC_FLAG = #{allowanceDiscount.modApplDiscFlag},
+             BAL_CR_OVR_METHOD = #{allowanceDiscount.modBalCrOvrMethod},
+             BAL_CR_OVR_PERIOD = #{allowanceDiscount.modBalCrOvrPeriod},
+             MAX_ACCUM_BAL = #{allowanceDiscount.modMaxAccumBal},
+             TM_DIVISION_FLAG = #{allowanceDiscount.modTmDivisionFlag},
+             SUBSC_PRORATE_FLAG = #{allowanceDiscount.modSubscProrateFlag},
+             TERM_PRORATE_FLAG = #{allowanceDiscount.modTermProrateFlag},
+             DEDT_TYP = #{allowanceDiscount.modDedtTyp},
+             SMS_NOTI_CD = #{allowanceDiscount.modSmsNotiCd},
+             SMS_NOTI_FLAG = #{allowanceDiscount.modSmsNotiFlag},
+             CURR_OR_NEXT_CYCL = #{allowanceDiscount.modCurrOrNextCycl},
+             DURATION_UNIT = #{allowanceDiscount.modDurationUnit},
+             DURATION = #{allowanceDiscount.modDuration},
+             EXP_DT = #{allowanceDiscount.modExpDt},
+             MULTIPLE_DISC_METHOD = #{allowanceDiscount.modMultipleDiscMethod},
+             LAST_MOD_BY = #{allowanceDiscount.userId},
+             LAST_MOD_DT = #{allowanceDiscount.sysToDate}
+        WHERE DISC_DEDT_CD = #{allowanceDiscount.modDiscDedtCd}
+        	AND EFF_DT         = #{allowanceDiscount.modEffDt}
+     </update>      
+     
+     <delete id="delAllowanceDiscount"  
+			parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.AllowanceDiscount">
+        DELETE TOP_DISC_DEDT_DEF
+          WHERE DISC_DEDT_CD = #{allowanceDiscount.discDedtCd}
+        	AND EFF_DT = #{allowanceDiscount.effDt}
+     </delete>    
+</mapper>

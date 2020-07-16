@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.user.userMng.UserMngMapper">
+	<select id="list" parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO" resultType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			A.USER_ID
+			,A.PASSWORD
+			,A.USER_NAME
+			,A.USER_GROUP_ID
+			,(SELECT USER_GROUP_NAME FROM TSYCO_USER_GROUP B WHERE A.USER_GROUP_ID=B.USER_GROUP_ID)AS userGroupName
+			,A.ORG_ID
+			,A.CRR_TP
+			,A.EMP_NO
+			,A.TEL_NO
+			,A.MTEL_NO
+			,A.E_MAIL
+			,A.IP_BANDWIDTH
+			,A.LOGIN_FAIL_COUNT
+			,A.PASSWORD_DUE_DATE
+			,A.PASSWORD_CHANGE_PERIOD
+			,A.LAST_LOGIN_DATE
+			,A.LAST_LOGIN_TIME
+			,A.ACCOUNT_LOCK
+			,A.PASSWORD1
+			,A.PASSWORD2
+			,A.USE_YN
+			,A.REGR_ID
+			,A.REG_DATE
+			,A.CHGR_ID
+			,A.CHG_DATE
+			,C.ORG_NM AS orgNm
+			,(SELECT SO_NM FROM TSYCO_SO_MAST D WHERE C.SO_ID=D.SO_ID 
+				AND C.APPY_STRT_DT &lt;= #{today} AND C.APPY_END_DT &gt;= #{today})AS soNm
+		FROM TSYCO_USER A,TSYCO_ORG_INFO C
+		WHERE A.ORG_ID=C.ORG_ID 
+		AND C.APPY_STRT_DT &lt;= #{today}
+        AND C.APPY_END_DT &gt;= #{today}  
+        
+		<if test="user.condSoId != null and user.condSoId != '' and user.condSoId != 'SEL'" >
+			AND SO_ID =#{user.condSoId,jdbcType=VARCHAR}
+		</if>
+		 <if test="user.condSoId != null and user.condSoId == 'SEL'">
+            AND C.SO_ID IN
+            <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                #{item.so_id}
+            </foreach>
+        </if>
+        <if test="user.condUserNm != null and user.condUserNm != ''">
+			AND A.USER_NAME LIKE CONCAT(CONCAT('%',#{user.condUserNm,jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="user.condOrgId != null and user.condOrgId != ''">
+			AND A.ORG_ID = #{user.condOrgId,jdbcType=VARCHAR}
+		</if>
+		<if test="user.condYn !='SEL'">
+			AND A.USE_YN = #{user.condYn,jdbcType=VARCHAR}
+		</if>  
+		<if test="user.condLockYn !='SEL'">
+			AND A.ACCOUNT_LOCK = #{user.condLockYn,jdbcType=VARCHAR}
+		</if>    
+		 <if test="sidx != null and sidx == 'soNm'">
+            ORDER BY SO_ID ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'userId'">
+             ORDER BY A.USER_ID ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'userName'">
+             ORDER BY A.USER_NAME ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'useYn'">
+             ORDER BY A.USE_YN ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'regrId'">
+             ORDER BY A.REGR_ID ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'regDate'">
+             ORDER BY A.REG_DATE ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'chgrId'">
+             ORDER BY A.CHGR_ID ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'chgDate'">
+            ORDER BY A.CHG_DATE ${sord}
+         </if>
+         <if test="sidx == ''">
+                ORDER BY A.REG_DATE 
+         </if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="count"  parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO" resultType="int">
+		SELECT COUNT(*) 
+				FROM TSYCO_USER A,TSYCO_ORG_INFO C
+		WHERE A.ORG_ID=C.ORG_ID   
+		AND C.APPY_STRT_DT &lt;= #{today}
+        AND C.APPY_END_DT &gt;= #{today}  
+		<if test="user.condSoId != null and user.condSoId != '' and user.condSoId != 'SEL'" >
+			AND SO_ID =#{user.condSoId,jdbcType=VARCHAR}
+		</if>
+		 <if test="user.condSoId != null and user.condSoId == 'SEL'">
+            AND C.SO_ID IN
+            <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                #{item.so_id}
+            </foreach>
+        </if>
+        <if test="user.condUserNm != null and user.condUserNm != ''">
+			AND A.USER_NAME LIKE CONCAT(CONCAT('%',#{user.condUserNm,jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="user.condOrgId != null and user.condOrgId != ''">
+			AND A.ORG_ID = #{user.condOrgId,jdbcType=VARCHAR}
+		</if>
+		<if test="user.condYn !='SEL'">
+			AND A.USE_YN = #{user.condYn,jdbcType=VARCHAR}
+		</if>  
+		<if test="user.condLockYn !='SEL'">
+			AND A.ACCOUNT_LOCK = #{user.condLockYn,jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+	<insert id="insert" parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO">
+		INSERT INTO
+			TSYCO_USER
+		(
+			USER_ID
+			,PASSWORD
+			,USER_NAME
+			,USER_GROUP_ID
+			,ORG_ID
+			,CRR_TP
+			,EMP_NO
+			,TEL_NO
+			,MTEL_NO
+			,E_MAIL
+			,IP_BANDWIDTH
+			,LOGIN_FAIL_COUNT
+			,PASSWORD_DUE_DATE
+			,PASSWORD_CHANGE_PERIOD
+			,ACCOUNT_LOCK
+			,USE_YN
+			,REGR_ID
+			,REG_DATE
+			,CHGR_ID
+			,CHG_DATE
+		)VALUES(
+			 #{userId,jdbcType=VARCHAR}
+			 ,#{password,jdbcType=VARCHAR}
+			 ,#{userName,jdbcType=VARCHAR}
+			 ,#{userGroupId,jdbcType=VARCHAR}
+			 ,#{orgId,jdbcType=VARCHAR}
+			 ,#{crrTp,jdbcType=VARCHAR}
+			 ,#{empNo,jdbcType=VARCHAR}
+			 ,#{telNo,jdbcType=VARCHAR}
+			 ,#{mtelNo,jdbcType=VARCHAR}
+			 ,#{eMail,jdbcType=VARCHAR}
+			 ,#{ipBandwidth,jdbcType=VARCHAR}
+			 ,0
+			 ,#{passwordDueDate,jdbcType=VARCHAR}
+			 ,#{passwordChangePeriod,jdbcType=VARCHAR}
+			 ,#{accountLock,jdbcType=VARCHAR}
+			 ,#{useYn,jdbcType=VARCHAR}
+			 ,#{regrId,jdbcType=VARCHAR}
+			 ,#{sysToDate,jdbcType=VARCHAR}
+			 ,#{regrId,jdbcType=VARCHAR}
+			 ,#{sysToDate,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="update" parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO">
+		UPDATE
+			TSYCO_USER
+		SET
+			 PASSWORD=#{password,jdbcType=VARCHAR}
+            ,PASSWORD1=#{password1,jdbcType=VARCHAR} 
+            ,PASSWORD2=#{password2,jdbcType=VARCHAR} 
+			,USER_NAME=#{userName,jdbcType=VARCHAR}
+			,USER_GROUP_ID=#{userGroupId,jdbcType=VARCHAR}
+			,ORG_ID=#{orgId,jdbcType=VARCHAR}
+			,CRR_TP=#{crrTp,jdbcType=VARCHAR}
+			,EMP_NO=#{empNo,jdbcType=VARCHAR}
+			,TEL_NO=#{telNo,jdbcType=VARCHAR}
+			,MTEL_NO=#{mtelNo,jdbcType=VARCHAR}
+			,E_MAIL=#{eMail,jdbcType=VARCHAR}
+			,IP_BANDWIDTH=#{ipBandwidth,jdbcType=VARCHAR}
+			,LOGIN_FAIL_COUNT=#{loginFailCount,jdbcType=VARCHAR}
+			,PASSWORD_DUE_DATE=#{passwordDueDate,jdbcType=VARCHAR}
+			,PASSWORD_CHANGE_PERIOD=#{passwordChangePeriod,jdbcType=VARCHAR}
+			,ACCOUNT_LOCK=#{accountLock,jdbcType=VARCHAR}
+			,USE_YN=#{useYn,jdbcType=VARCHAR}
+			,CHGR_ID=#{chgrId,jdbcType=VARCHAR}
+			,CHG_DATE=#{sysToDate,jdbcType=VARCHAR}
+		WHERE USER_ID=#{userId,jdbcType=VARCHAR}
+	</update>
+	
+	<select id="checkUserId" parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO" resultType="int">
+		SELECT COUNT(USER_ID) FROM TSYCO_USER WHERE USER_ID=#{userId,jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="insertUserAuth" parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO">
+		INSERT INTO
+			TSYCO_USER_GROUP_ROLE
+			(
+				USER_GROUP_ID
+				,USER_ID
+			)VALUES(
+				#{userGroupId,jdbcType=VARCHAR}
+				,#{userId,jdbcType=VARCHAR}
+			)
+	</insert>
+	<insert id="insertSoAuth" parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO">
+		INSERT INTO
+			TSYCO_SO_AUTH_INFO
+			(
+				SO_ID
+				,USER_ID
+				,REGR_ID
+				,REG_DATE
+				,CHGR_ID
+				,CHG_DATE
+			)VALUES(
+				#{soId,jdbcType=VARCHAR}
+				,#{userId,jdbcType=VARCHAR}
+				,#{regrId,jdbcType=VARCHAR}
+				,#{sysToDate,jdbcType=VARCHAR}
+				,#{regrId,jdbcType=VARCHAR}
+				,#{sysToDate,jdbcType=VARCHAR}
+			)
+	</insert>
+	
+	<select id="selectSoId" parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO" resultType="string">
+		SELECT SO_ID FROM TSYCO_ORG_INFO WHERE ORG_ID=#{user.orgId,jdbcType=VARCHAR} 
+		AND APPY_STRT_DT &lt;= #{today} AND APPY_END_DT &gt;= #{today}
+	</select>
+	
+	<select id="userAuthCount" parameterType="com.ntels.ccbs.system.domain.user.userMng.UserMngVO" resultType="int">
+		SELECT COUNT(*) FROM TSYCO_USER_GROUP_ROLE WHERE USER_ID=#{userId,jdbcType=VARCHAR} AND USER_GROUP_ID=#{userGroupId,jdbcType=VARCHAR}
+	</select>
+    
+    
+   <select id="getUserInfo" parameterType="String" resultType="UserMngVO">
+        SELECT
+             A.USER_ID
+            ,A.PASSWORD
+            ,A.USER_NAME
+            ,A.USER_GROUP_ID
+            ,A.ORG_ID
+            ,A.CRR_TP
+            ,A.EMP_NO
+            ,A.TEL_NO
+            ,A.MTEL_NO
+            ,A.E_MAIL
+            ,A.IP_BANDWIDTH
+            ,A.LOGIN_FAIL_COUNT
+            ,A.PASSWORD_DUE_DATE
+            ,A.PASSWORD_CHANGE_PERIOD
+            ,A.LAST_LOGIN_DATE
+            ,A.LAST_LOGIN_TIME
+            ,A.ACCOUNT_LOCK
+            ,A.PASSWORD1
+            ,A.PASSWORD2
+            ,A.USE_YN
+            ,A.REGR_ID
+            ,A.REG_DATE
+            ,A.CHGR_ID
+            ,A.CHG_DATE
+        FROM TSYCO_USER A
+        WHERE USER_ID = #{userId} 
+    </select>
+</mapper>

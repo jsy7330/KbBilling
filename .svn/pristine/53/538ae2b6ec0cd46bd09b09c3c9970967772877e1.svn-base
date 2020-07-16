@@ -1,0 +1,1286 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.service.serviceMgt.ServiceMgtMapper">
+<select id="list" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">	
+ SELECT TARGET_CD,
+  TARGET_UPPER_CD,
+  TARGET_MAIN_SVC_CD,
+  TARGET_CHRG_CTGRY,
+  TARGET_NM,
+  TARGET_DISP_NO,
+  TARGET_GUBUN,
+  SVC_TYP ,
+  TREE_LEVEL,
+  INACT_DT,
+  CASE
+    WHEN TARGET_GUBUN IN ('T','S','I','A')
+    THEN 0
+    ELSE 2
+  END AS TARGET_IMAGE_ID,
+  ISFOLDER,
+  MSTR_FL,
+  TARGET_SO_ID
+FROM
+  (SELECT TARGET_CD,
+    TARGET_UPPER_CD,
+    TARGET_MAIN_SVC_CD,
+    TARGET_CHRG_CTGRY,
+    TARGET_NM,
+    TARGET_DISP_NO,
+    TARGET_GUBUN,
+    SVC_TYP ,
+    TREE_LEVEL,
+    INACT_DT,
+    ISFOLDER,
+    MSTR_FL,
+    TARGET_SO_ID
+  FROM
+    (SELECT '0' TARGET_CD,
+      'SERVICE' TARGET_UPPER_CD,
+      '0' TARGET_MAIN_SVC_CD,
+      '' TARGET_CHRG_CTGRY,
+      CASE
+        WHEN #{sessionLanguage} = 'en'
+        THEN 'Service'
+        ELSE '서비스'
+      END TARGET_NM,
+      0 TARGET_DISP_NO,
+      'T' TARGET_GUBUN,
+      '' SVC_TYP ,
+      0 TREE_LEVEL,
+      '99991231' INACT_DT,
+      'TRUE' ISFOLDER,
+      '1' MSTR_FL,
+      '0' TARGET_SO_ID
+    FROM DUAL
+    UNION ALL
+    <foreach collection="soAuthList" item="item" index="index"  separator="UNION ALL" close="UNION ALL">
+     SELECT #{item.so_id} TARGET_CD,
+      '0' TARGET_UPPER_CD,
+      '00' TARGET_MAIN_SVC_CD,
+      '' TARGET_CHRG_CTGRY,
+      #{item.so_nm} TARGET_NM,
+      1 TARGET_DISP_NO,
+      'T' TARGET_GUBUN,
+      '' SVC_TYP ,
+      1 TREE_LEVEL,
+      '99991231' INACT_DT,
+      'TRUE' ISFOLDER,
+      '1' MSTR_FL,
+      #{item.so_id} TARGET_SO_ID
+    FROM DUAL   
+    </foreach>       
+    SELECT A.SVC_CD TARGET_CD,
+      A.SO_ID TARGET_UPPER_CD,
+      A.MAIN_SVC_CD TARGET_MAIN_SVC_CD,
+      '' TARGET_CHRG_CTGRY,
+      A.SVC_NM TARGET_NM,
+      A.DISP_PRI_NO TARGET_DISP_NO,
+      'S' TARGET_GUBUN,
+      A.SVC_TYP SVC_TYP ,
+      2 TREE_LEVEL,
+      A.INACT_DT INACT_DT,
+      'TRUE' ISFOLDER,
+       A.MSTR_FL MSTR_FL,
+      A.SO_ID TARGET_SO_ID
+    FROM TPMSV_SVC A
+    WHERE MSTR_FL = '1'
+    AND SO_ID IN
+    <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+        #{item.so_id}
+    </foreach>
+    AND INACT_DT >= #{serviceMgt.currentDay}
+     
+    UNION ALL
+    SELECT X.SVC_RATE_ITM_TYP_CD TARGET_CD,
+      X.SVC_CD TARGET_UPPER_CD,
+      '' TARGET_MAIN_SVC_CD,
+      X.CHRG_CTGRY TARGET_CHRG_CTGRY,
+      X.SVC_RATE_ITM_TYP_NM TARGET_NM,
+      X.DISP_PRI_NO TARGET_DISP_NO,
+      'R' TARGET_GUBUN,
+      '' SVC_TYP ,
+      3 TREE_LEVEL,
+      X.INACT_DT INACT_DT,
+      'FALSE' ISFOLDER,
+      X.MSTR_FL MSTR_FL,
+      X.SO_ID TARGET_SO_ID
+    FROM TPMPD_SVC_RATE_ITM_TYP X
+    WHERE MSTR_FL = '1'
+    AND SO_ID IN
+    <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+        #{item.so_id}
+    </foreach>
+    AND INACT_DT >= #{serviceMgt.currentDay}
+         
+    )SVC_T_UNION
+  )SVC_T
+ORDER BY   TARGET_CD, 
+  TARGET_DISP_NO,
+  TARGET_UPPER_CD
+</select>
+
+<select id="serviceMgtComListCount" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt"  resultType="int">
+   SELECT COUNT(*)
+  FROM   TPMSV_SVC TS
+  WHERE  INACT_DT         >= #{serviceMgt.currentDay} 	
+  AND    UPR_SVC_CD       = #{serviceMgt.targetCd}
+  AND    MSTR_FL          = #{serviceMgt.mstrFl}
+  AND SO_ID = #{serviceMgt.soId}
+  ORDER BY DISP_PRI_NO ASC
+</select>
+
+<select id="serviceMgtComList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">	
+  <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+  SELECT SO_ID, 
+  		SVC_CD,
+        INACT_DT,
+        ACT_DT,
+        SVC_NM,
+        SVC_ENG_NM,
+        SVC_ABBR_NM,
+        UPR_SVC_CD,
+        SUBSCRIP_CMPS_FL,
+        SVC_TYP,
+        (SELECT TCD.COMMON_CD_NM
+         FROM   TSYCO_CODE_DETAIL TCD
+         LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME TCD1
+         ON TCD.COMMON_GRP = TCD1.COMMON_GRP
+         AND 'KOR' = TCD1.LNG_TYP
+         AND TCD.COMMON_CD = TCD1.COMMON_CD
+         WHERE  TCD.COMMON_GRP    =  'PP00075'
+         AND    TCD.COMMON_CD     =  TS.SVC_TYP                
+         ) AS SVC_TYP_NM,
+        MAIN_SVC_CD,
+        MAIN_SVC_FL,
+        DISP_PRI_NO,
+        MSTR_FL,
+        REGR_ID,
+        REG_DATE,
+        CHGR_ID,
+        CHG_DATE
+  FROM   TPMSV_SVC TS
+  WHERE  INACT_DT         >= #{serviceMgt.currentDay} 	
+  AND    UPR_SVC_CD       = #{serviceMgt.targetCd}
+  AND    MSTR_FL          = #{serviceMgt.mstrFl}
+  AND SO_ID = #{serviceMgt.soId}
+  ORDER BY DISP_PRI_NO ASC
+  <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+</select>
+
+<select id="getNextDispPriNo" resultType="String" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+SELECT (
+  CASE WHEN MAX(DISP_PRI_NO)
+     IS NULL
+    THEN 0
+    ELSE MAX(DISP_PRI_NO)
+  END  + 1 ) NEXT_DISP_PRI_NO
+FROM TPMSV_SVC
+WHERE INACT_DT >= #{serviceMgt.currentDay}
+AND UPR_SVC_CD  = #{serviceMgt.targetUpperCd} 
+</select>
+
+<select id="getDualSvcNmCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+	SELECT (  
+	  CASE WHEN COUNT(*)
+	  	 IS NULL
+	  	THEN 0
+	  	 ELSE COUNT(*)
+	  	 
+	  END ) AS SVC_CNT
+		FROM TPMSV_SVC
+	WHERE  INACT_DT  > #{serviceMgt.currentDay}
+	AND    MAIN_SVC_CD   = #{serviceMgt.targetMainSvcCd}
+	AND    SVC_NM        = #{serviceMgt.svcNm}
+	AND	   SO_ID = #{serviceMgt.soId}
+<if test="serviceMgt.svcCd != null">
+	AND    SVC_CD       != #{serviceMgt.svcCd}
+</if>
+
+</select>
+
+<insert id ="insertServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+	        INSERT INTO TPMSV_SVC(
+	       SO_ID,
+		   SVC_CD,
+		   INACT_DT,		
+		   ACT_DT,
+		   SVC_NM,
+		   SVC_ENG_NM,
+		   SVC_ABBR_NM,
+		   UPR_SVC_CD,
+		   SUBSCRIP_CMPS_FL,
+		   SVC_TYP,
+		   MAIN_SVC_CD,
+		   MAIN_SVC_FL,
+		   DISP_PRI_NO,
+		   MSTR_FL,
+		   REGR_ID,
+		   REG_DATE,
+		   CHGR_ID,
+		   CHG_DATE
+		) VALUES (
+		   #{serviceMgt.soId, jdbcType=VARCHAR },
+		   #{serviceMgt.svcCd, jdbcType=VARCHAR },
+		   #{serviceMgt.inactDt, jdbcType=VARCHAR},
+		   #{serviceMgt.actDt, jdbcType=VARCHAR},
+		   #{serviceMgt.svcNm, jdbcType=VARCHAR},
+		   #{serviceMgt.svcEngNm, jdbcType=VARCHAR},
+		   #{serviceMgt.svcAbbrNm, jdbcType=VARCHAR},
+		   #{serviceMgt.targetUpperCd, jdbcType=VARCHAR},
+		   #{serviceMgt.subscripCmpsFl, jdbcType=VARCHAR},
+		   #{serviceMgt.svcTyp, jdbcType=VARCHAR},
+		   #{serviceMgt.targetMainSvcCd, jdbcType=VARCHAR},
+		   #{serviceMgt.mainSvcFl, jdbcType=VARCHAR},
+		   #{serviceMgt.dispPriNo, jdbcType=VARCHAR},
+		   #{serviceMgt.mstrFl, jdbcType=VARCHAR},
+		   #{serviceMgt.regrId, jdbcType=VARCHAR},
+		   #{serviceMgt.sysdate},
+		   #{serviceMgt.chgrId, jdbcType=VARCHAR},
+		   #{serviceMgt.sysdate}
+		)
+
+</insert>
+
+<select id="getService" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" >
+		SELECT SO_ID,
+			   SVC_CD,
+		       INACT_DT,
+		       ACT_DT,
+		       SVC_NM,
+		       SVC_ENG_NM,
+		       SVC_ABBR_NM,
+		       UPR_SVC_CD,
+		       SUBSCRIP_CMPS_FL,
+		       SVC_TYP,
+		       MAIN_SVC_CD,
+		       MAIN_SVC_FL,
+		       DISP_PRI_NO,
+		       MSTR_FL,
+		       REGR_ID,
+		       REG_DATE,
+		       CHGR_ID,
+		       CHG_DATE,
+		       ACT_DT AS BASE_ACT_DT
+		FROM   TPMSV_SVC TS
+		WHERE  ACT_DT    = #{serviceMgt.actDt}
+		AND    SVC_CD    = #{serviceMgt.svcCd}
+		AND    SO_ID    = #{serviceMgt.soId}
+		AND    MSTR_FL = '1'
+</select>
+
+<update id ="updateServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+	UPDATE TPMSV_SVC
+	SET    INACT_DT            =       #{serviceMgt.inactDt}         ,
+	       SVC_NM              =       #{serviceMgt.svcNm}   	     ,
+	       SVC_ENG_NM          =       #{serviceMgt.svcEngNm}	     ,
+	       SVC_ABBR_NM         =       #{serviceMgt.svcAbbrNm}       ,
+	       UPR_SVC_CD          =       #{serviceMgt.targetUpperCd}   ,
+	       SUBSCRIP_CMPS_FL    =       #{serviceMgt.subscripCmpsFl}  ,
+	       SVC_TYP             =       #{serviceMgt.svcTyp}          ,
+	       MAIN_SVC_CD         =       #{serviceMgt.targetMainSvcCd} ,
+	       MAIN_SVC_FL         =       #{serviceMgt.mainSvcFl}       ,
+	       DISP_PRI_NO         =       #{serviceMgt.dispPriNo}       ,
+	       MSTR_FL             =       #{serviceMgt.mstrFl}          ,
+	       CHGR_ID             =       #{serviceMgt.chgrId}          ,
+	       CHG_DATE            =       #{serviceMgt.currentDay}      
+	WHERE  SVC_CD              =       #{serviceMgt.svcCd}           
+	AND    ACT_DT              =       #{serviceMgt.actDt}			 
+	AND    SO_ID			   =       #{serviceMgt.soId}
+</update>
+
+<update id ="updateSeriveMgtInactDt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+	UPDATE TPMSV_SVC
+	SET    INACT_DT   =  #{serviceMgt.inactDt}       ,
+	       MSTR_FL    =  #{serviceMgt.mstrFl}        ,
+	       CHGR_ID    =  #{serviceMgt.chgrId}        ,
+	       CHG_DATE   =  #{serviceMgt.currentDay}
+	WHERE  SVC_CD     =  #{serviceMgt.svcCd}
+	AND    ACT_DT     =  #{serviceMgt.baseActDt}
+	AND    SO_ID	  =  #{serviceMgt.soId}
+</update>
+
+<select id="getConTableDtCnt" resultType="hashMap" parameterType="map">
+	SELECT 
+		COUNT(*) AS DATA_CNT
+	FROM   ${conTableMap.CON_TABLE}
+	WHERE  ${conTableMap.
+	CON_COLUMN} = #{conTableMap.SVC_CD}
+	AND    INACT_DT    > #{conTableMap.INACT_DT}
+</select>
+
+<update id ="updateServiceInactDt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+	UPDATE TPMSV_SVC
+	SET    INACT_DT     =  	#{serviceMgt.actDt}       ,
+	       CHGR_ID      =   #{serviceMgt.chgrId}        ,
+	       MSTR_FL      =   '0'        ,
+	       CHG_DATE     =   #{serviceMgt.currentDay}
+	WHERE  SVC_CD       =   #{serviceMgt.svcCd}
+	AND    ACT_DT       =   #{serviceMgt.baseActDt}
+	AND    SO_ID		=   #{serviceMgt.soId}
+</update>
+
+
+<select id="getServiceMgtSaleItmListCount" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt"  resultType="int">
+   SELECT COUNT(*)
+	FROM   TPMBI_SALE_ITM TSI
+	WHERE  TSI.SVC_CD      = #{serviceMgt.targetCd}
+	AND    TSI.MSTR_FL     = '1'
+	AND    TSI.INACT_DT >= #{serviceMgt.currentDay}
+	AND    SO_ID = #{serviceMgt.soId}
+    
+</select>
+
+<select id="getServiceMgtSaleItmList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">	
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+	SELECT TSI.SO_ID,
+		   TSI.SVC_CD,
+	       TSI.SALE_ITM_CD ,
+	       TSI.RATE_ITM_TYP_CD,
+	       (SELECT TRIT.RATE_ITM_TYP_NM
+	        FROM   TPMBI_RATE_ITM_TYP TRIT
+	        WHERE  TRIT.RATE_ITM_TYP_CD = TSI.RATE_ITM_TYP_CD
+	        AND    TRIT.MSTR_FL     = '1'
+	        AND    TRIT.INACT_DT >= #{serviceMgt.currentDay} ) RATE_ITM_TYP_NM,
+	       TSI.INACT_DT,
+	       TSI.ACT_DT,
+	       TSI.SALE_ITM_NM ,
+	       TSI.SALE_ITM_ABBR_NM,
+	       TSI.SALE_ITM_ENG_NM,
+	       TSI.MSTR_FL,
+	       TSI.REGR_ID,
+	       TSI.REG_DATE,
+	       TSI.CHGR_ID,
+	       CHG_DATE,
+		  (SELECT B.COMMON_CD_NM	      
+		   FROM   TSYCO_CODE_DETAIL B
+		   LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+		   ON C.LNG_TYP = #{serviceMgt.lngTyp}
+           AND B.COMMON_GRP = C.COMMON_GRP
+           AND B.COMMON_CD = C.COMMON_CD     
+		   WHERE  B.COMMON_CD = TSI.SALE_TYP
+		   AND    B.USE_YN = 'Y'
+		   AND    B.COMMON_GRP = 'PP00188' ) AS SALE_TYP
+	FROM   TPMBI_SALE_ITM TSI
+	WHERE  TSI.SVC_CD      = #{serviceMgt.targetCd}
+	AND    TSI.MSTR_FL     = '1'
+	AND    TSI.INACT_DT >= #{serviceMgt.currentDay}
+	AND    SO_ID = #{serviceMgt.soId}
+    <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/> 
+</select>
+
+<select id="getRateItmTypComboList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+  	SELECT  '[]'   RATE_ITM_TYP_CD,
+  	        'SEL' RATE_ITM_TYP_NM
+  	  FROM  DUAL
+  	UNION ALL
+  	SELECT  A.RATE_ITM_TYP_CD,
+  	        A.RATE_ITM_TYP_NM
+  	  FROM  (
+		 SELECT  TRIT.RATE_ITM_TYP_CD,
+		         TRIT.RATE_ITM_TYP_NM
+		   FROM  TPMBI_RATE_ITM_TYP TRIT
+		  WHERE  TRIT.MSTR_FL      =   '1'
+		    AND  TRIT.INACT_DT  >= #{serviceMgt.currentDay}
+		  ORDER BY RATE_ITM_TYP_NM
+        ) A
+</select>
+
+<select id="getDualSaleItmNmCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+        SELECT (
+		  CASE WHEN COUNT(*)
+		  	 IS NULL
+		  	THEN 0
+		  	 ELSE COUNT(*)
+		  END ) AS SALE_ITM__CNT
+        FROM   TPMBI_SALE_ITM A
+        WHERE  A.INACT_DT  > #{serviceMgt.currentDay}
+        AND    SALE_ITM_NM   = #{serviceMgt.saleItmNm}
+        AND    SO_ID = #{serviceMgt.soId}
+		<if test="serviceMgt.saleItmCd != null">
+			AND    SALE_ITM_CD       != #{serviceMgt.saleItmCd}
+		</if>
+</select>
+
+<insert id ="insertServiceMgtSaleItm" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+	INSERT INTO TPMBI_SALE_ITM
+	(
+		SO_ID					,
+	    SVC_CD                  ,
+	    SALE_ITM_CD             ,
+	    INACT_DT                ,
+	    ACT_DT                  ,
+	    SALE_ITM_NM             ,
+	    SALE_ITM_ABBR_NM        ,
+	    SALE_ITM_ENG_NM         ,
+	    RATE_ITM_TYP_CD         ,
+	    MSTR_FL                 ,
+	    REGR_ID            		,
+	    REG_DATE          		,
+	    CHGR_ID              	,
+	    CHG_DATE		
+		<if test="serviceMgt.saleTyp != null">
+	    ,SALE_TYP
+	    </if>
+
+	)VALUES	(
+		#{serviceMgt.soId, jdbcType=VARCHAR },
+		#{serviceMgt.svcCd, jdbcType=VARCHAR },
+		#{serviceMgt.saleItmCd, jdbcType=VARCHAR },
+		#{serviceMgt.inactDt, jdbcType=VARCHAR },
+		#{serviceMgt.actDt, jdbcType=VARCHAR },
+		#{serviceMgt.saleItmNm, jdbcType=VARCHAR },
+		#{serviceMgt.saleItmAbbrNm, jdbcType=VARCHAR },
+		#{serviceMgt.saleItmEngNm, jdbcType=VARCHAR },
+		#{serviceMgt.rateItmTypCd, jdbcType=VARCHAR },
+		#{serviceMgt.mstrFl, jdbcType=VARCHAR },
+		#{serviceMgt.regrId, jdbcType=VARCHAR},
+		#{serviceMgt.sysdate},
+		#{serviceMgt.chgrId, jdbcType=VARCHAR},
+		#{serviceMgt.sysdate}
+		<if test="serviceMgt.saleTyp != null">
+	    ,#{serviceMgt.saleTyp, jdbcType=DATE}
+	    </if>
+	)
+</insert>
+
+<select id="getSaleItm" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" >
+		SELECT TSI.SO_ID,
+			   TSI.SVC_CD,
+		       TSI.SALE_ITM_CD ,
+		       TSI.RATE_ITM_TYP_CD,
+		       (SELECT TRIT.RATE_ITM_TYP_NM
+		        FROM   TPMBI_RATE_ITM_TYP TRIT
+		        WHERE  TRIT.RATE_ITM_TYP_CD = TSI.RATE_ITM_TYP_CD
+		        AND    TRIT.MSTR_FL         = '1'
+		        AND    TRIT.INACT_DT      >= #{serviceMgt.currentDay} ) RATE_ITM_TYP_NM,
+		       TSI.INACT_DT,
+		       TSI.ACT_DT,
+		       TSI.SALE_ITM_NM,
+		       TSI.SALE_ITM_ABBR_NM,
+		       TSI.SALE_ITM_ENG_NM,
+		       TSI.MSTR_FL,
+		       TSI.REGR_ID,
+		       TSI.REG_DATE,
+		       TSI.CHGR_ID,
+		       TSI.CHG_DATE ,
+		       TSI.ACT_DT AS BASE_ACT_DT,
+		       TSI.SALE_TYP
+		FROM   TPMBI_SALE_ITM TSI
+		WHERE  TSI.SALE_ITM_CD = #{serviceMgt.saleItmCd}
+		AND    TSI.ACT_DT   = #{serviceMgt.actDt}
+		AND    TSI.SO_ID    = #{serviceMgt.soId}		
+</select>
+
+<update id ="updateSaleItm" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		UPDATE TPMBI_SALE_ITM
+		SET    INACT_DT            =       #{serviceMgt.inactDt}           ,
+		       SALE_ITM_NM         =       #{serviceMgt.saleItmNm}          ,
+		       SALE_ITM_ABBR_NM    =       #{serviceMgt.saleItmAbbrNm}     ,
+		       SALE_ITM_ENG_NM     =       #{serviceMgt.saleItmEngNm}      ,
+		       CHGR_ID             =       #{serviceMgt.chgrId}      ,
+		       CHG_DATE            =       #{serviceMgt.currentDay}
+			<if test="serviceMgt.saleTyp != null">
+		       ,  SALE_TYP         =       #{serviceMgt.saleTyp}
+		    </if>		       
+		WHERE  SALE_ITM_CD         =       #{serviceMgt.saleItmCd}
+		AND    ACT_DT              =       #{serviceMgt.actDt}
+		AND    SO_ID               =       #{serviceMgt.soId}
+</update>
+
+<update id ="updateSaleItmInactDt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		UPDATE TPMBI_SALE_ITM
+		SET    INACT_DT       	=       #{serviceMgt.inactDt}       ,
+		       MSTR_FL          =       #{serviceMgt.mstrFl}        ,
+		       CHGR_ID       	=       #{serviceMgt.chgrId}       ,
+		       CHG_DATE     	=       #{serviceMgt.currentDay}
+		WHERE  SALE_ITM_CD      =       #{serviceMgt.saleItmCd}
+		AND    ACT_DT           =       #{serviceMgt.baseActDt}
+		AND    SO_ID            =       #{serviceMgt.soId}
+</update>
+
+<update id ="updateServiceMgtSaleItmInactDt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		UPDATE TPMBI_SALE_ITM
+		SET    INACT_DT       =       #{serviceMgt.actDt}       ,
+		<if test="serviceMgt.mstrFl != null">
+	     		MSTR_FL        =       #{serviceMgt.mstrFl},	
+	    </if>			
+		       CHGR_ID        =       #{serviceMgt.chgrId}       ,
+		       CHG_DATE    	  =       #{serviceMgt.currentDay}
+		WHERE  SALE_ITM_CD    =       #{serviceMgt.saleItmCd}
+		AND    ACT_DT         =       #{serviceMgt.baseActDt}
+		AND    SO_ID            =       #{serviceMgt.soId}
+		
+</update>
+
+<select id="getServiceMgtSvcRateItmTypListCount" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt"  resultType="int">
+	SELECT 
+		COUNT(*)
+	FROM   TPMPD_SVC_RATE_ITM_TYP TSRIT
+	WHERE  TSRIT.INACT_DT    >= #{serviceMgt.currentDay}
+		AND    TSRIT.SVC_CD         = #{serviceMgt.targetCd}
+		AND    TSRIT.MSTR_FL        = '1'
+		AND    TSRIT.SO_ID          = #{serviceMgt.soId}
+
+
+</select>
+
+<select id="getServiceMgtSvcRateItmTypList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">	
+	SELECT 
+		TSRIT.SVC_RATE_ITM_TYP_CD,
+		TSRIT.INACT_DT,
+		TSRIT.ACT_DT,
+		TSRIT.SVC_RATE_ITM_TYP_NM,
+		TSRIT.SVC_RATE_ITM_TYP_ENG_NM,
+		TSRIT.SVC_RATE_ITM_TYP_ABBR_NM,
+		TSRIT.SVC_CD,
+		TSRIT.RATE_ITM_TYP_CD,
+		TSRIT.CHRG_CTGRY,
+		(
+		SELECT 
+			B.COMMON_CD_NM
+		FROM   TSYCO_CODE_DETAIL B
+		LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+		ON B.COMMON_GRP = C.COMMON_GRP
+		AND B.COMMON_CD = C.COMMON_CD
+		AND #{serviceMgt.lngTyp} = C.LNG_TYP
+		WHERE  B.COMMON_GRP =  'PP00031'
+			AND    B.COMMON_CD  =  TSRIT.CHRG_CTGRY
+		) AS  CHRG_CTGRY_NM,
+		TSRIT.RATE_LOCAT,
+		(
+		SELECT 
+			B.COMMON_CD_NM
+		FROM   TSYCO_CODE_DETAIL B 
+		LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+		ON B.COMMON_GRP = C.COMMON_GRP
+		AND B.COMMON_CD = C.COMMON_CD
+		AND #{serviceMgt.lngTyp} = C.LNG_TYP
+		WHERE  B.COMMON_GRP =  'PP00034'
+			AND    B.COMMON_CD  =  TSRIT.RATE_LOCAT
+		) AS  RATE_LOCAT_NM,
+		TSRIT.SALE_ITM_CD,
+		(
+		SELECT 
+			SALE_ITM_NM
+		FROM   TPMBI_SALE_ITM TSI
+		WHERE  TSI.SALE_ITM_CD = TSRIT.SALE_ITM_CD
+			AND    TSI.MSTR_FL     = '1'
+			AND    TSI.INACT_DT >= #{serviceMgt.currentDay}
+		) SALE_ITM_NM,
+		TSRIT.INV_ITM_CD,
+		(
+		SELECT
+			INV_ITM_NM
+		FROM   TPMBI_INV_ITM TII
+		WHERE  TII.INV_ITM_CD = TSRIT.INV_ITM_CD
+			AND    TII.MSTR_FL     = '1'
+			AND    TII.INACT_DT >= #{serviceMgt.currentDay}
+		) INV_ITM_NM,
+		TSRIT.RATE_PRI_NO,
+		TSRIT.PAY_PRI_NO,
+		TSRIT.DISP_PRI_NO,
+		TSRIT.MSTR_FL,
+		TSRIT.REGR_ID,
+		TSRIT.REG_DATE,
+		TSRIT.CHGR_ID,
+		CHG_DATE,
+		SVC_RATE_ITM_TYP_DESC
+	FROM   TPMPD_SVC_RATE_ITM_TYP TSRIT
+	WHERE  TSRIT.INACT_DT    >= #{serviceMgt.currentDay}
+		AND    TSRIT.SVC_CD         = #{serviceMgt.targetCd}
+		AND    TSRIT.MSTR_FL        = '1'
+		AND    TSRIT.SO_ID          = #{serviceMgt.soId}	     		
+	ORDER BY TSRIT.DISP_PRI_NO ASC
+</select>
+
+<select id="getRateItmTypComboListBySvc" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+        SELECT '[]'   RATE_ITM_TYP_CD,
+               'SEL'  RATE_ITM_TYP_NM,
+               NULL   CHRG_CTGRY,
+               NULL   CHRG_CTGRY_NM,
+               NULL   DISP_PRI_NO,
+               NULL   NEXT_DISP_PRI_NO
+        FROM  DUAL
+    UNION ALL
+        SELECT A.RATE_ITM_TYP_CD,
+               A.RATE_ITM_TYP_NM,
+               A.CHRG_CTGRY,
+               A.CHRG_CTGRY_NM,
+               A.DISP_PRI_NO,
+               A.NEXT_DISP_PRI_NO
+        FROM   (
+                    SELECT TRIT.RATE_ITM_TYP_CD,
+                           TRIT.RATE_ITM_TYP_NM,
+                           TRIT.CHRG_CTGRY,
+                           (SELECT B.COMMON_CD_NM
+                            FROM   TSYCO_CODE_DETAIL B
+                            LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+							ON B.COMMON_GRP = C.COMMON_GRP
+							AND B.COMMON_CD = C.COMMON_CD
+                            AND #{serviceMgt.lngTyp} = C.LNG_TYP
+                            WHERE  B.COMMON_GRP = 'PP00031'
+                            AND    B.COMMON_CD  = TRIT.CHRG_CTGRY) AS CHRG_CTGRY_NM,
+                           TRIT.DISP_PRI_NO,
+                           (SELECT  CASE WHEN MAX(TSRIT.DISP_PRI_NO) IS NULL THEN 0
+		        			<choose>                          
+		   						<when test="'${dbms.kind}' == 'ORACLE'">                       
+		                         ELSE TO_NUMBER( SUBSTR(MAX(TSRIT.DISP_PRI_NO) + 1,3) )	
+								</when>                          
+								<when test="'${dbms.kind}' == 'MYSQL'">                         
+		                          ELSE SUBSTR(MAX(TSRIT.DISP_PRI_NO) + 1,3) 
+		                        </when>
+		        			</choose> 
+                                    END
+                            FROM    TPMPD_SVC_RATE_ITM_TYP TSRIT
+                            WHERE   TSRIT.CHRG_CTGRY = TRIT.CHRG_CTGRY ) AS NEXT_DISP_PRI_NO
+                    FROM   TPMBI_RATE_ITM_TYP TRIT
+                         ,(SELECT  RATE_ITM_TYP_CD
+                           FROM    TPMBI_SALE_ITM
+                           WHERE   SVC_CD = #{serviceMgt.svcCd}
+                           AND MSTR_FL = '1'
+                           GROUP BY RATE_ITM_TYP_CD ) SALE
+                    WHERE  TRIT.ACT_DT   &lt;= #{serviceMgt.currentDay}
+                    AND    TRIT.INACT_DT  &gt;= #{serviceMgt.currentDay}
+                    AND    TRIT.RATE_ITM_TYP_CD = SALE.RATE_ITM_TYP_CD
+                    ORDER BY RATE_ITM_TYP_NM ASC
+              ) A
+</select>
+
+<select id="getInvItmComboList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+  		SELECT '[]' AS INV_ITM_CD ,
+  		       'SEL' AS INV_ITM_NM
+  		FROM DUAL
+  		UNION ALL
+	   SELECT  A.INV_ITM_CD,
+		       A.INV_ITM_NM
+	   FROM    (
+					SELECT INV_ITM_CD,
+					       INV_ITM_NM
+					FROM   TPMBI_INV_ITM
+					ORDER BY INV_ITM_NM ASC
+			   ) A
+</select>
+
+<select id="getSaleItmComboList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+   		SELECT '[]' AS SALE_ITM_CD ,
+   		       'SEL' AS SALE_ITM_NM
+   		FROM DUAL
+   		UNION ALL
+	   SELECT A.SALE_ITM_CD,
+		      A.SALE_ITM_NM
+	   FROM   (
+					SELECT SALE_ITM_CD,
+					       SALE_ITM_NM
+					FROM   TPMBI_SALE_ITM
+					WHERE  SVC_CD  = #{serviceMgt.svcCd}
+					AND    RATE_ITM_TYP_CD = #{serviceMgt.rateItmTypCd}
+					AND MSTR_FL = '1'
+					ORDER BY SALE_ITM_NM ASC
+			  ) A
+</select>
+
+<select id="getSvcRateItmTypAttrList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		SELECT VWTS.SVC_RATE_ITM_TYP_CD,
+		  VWAT.ATTR_CD,
+		  VWAT.ATTR_NM,
+		  VWAT.REF_CD,
+		  VWAT.ATTR_STRT_VAL,
+		  VWAT.ATTR_END_VAL,
+		  VWTS.ATTR_VAL,
+		  VWTS.ATTR_VAL AS ATTR_VAL_REF_CD,
+	      (
+	      CASE
+	        WHEN (SELECT B.COMMON_CD_NM
+	          FROM TSYCO_CODE_DETAIL B ,
+	            TSYCO_CODE_DETAIL_NAME C
+	          WHERE B.COMMON_GRP  = VWAT.REF_CD
+	          AND B.COMMON_CD     = VWTS.ATTR_VAL
+	          AND C.LNG_TYP    = #{serviceMgt.lngTyp}
+	          AND C.COMMON_GRP = B.COMMON_GRP
+	          AND C.COMMON_CD  = B.COMMON_CD) IS NULL
+	        THEN VWTS.ATTR_VAL
+	        ELSE
+	          (SELECT B.COMMON_CD_NM
+	          FROM TSYCO_CODE_DETAIL B ,
+	            TSYCO_CODE_DETAIL_NAME C
+	          WHERE B.COMMON_GRP  = VWAT.REF_CD
+	          AND B.COMMON_CD     = VWTS.ATTR_VAL
+	          AND C.LNG_TYP    = #{serviceMgt.lngTyp}
+	          AND C.COMMON_GRP = B.COMMON_GRP
+	          AND C.COMMON_CD  = B.COMMON_CD
+	          )
+	      END) AS ATTR_VAL_NM,
+		  VWTS.INACT_DT,
+		  VWTS.ACT_DT,
+		  VWTS.ACT_DT   AS BASE_ACT_DT,
+		  '1'           AS MSTR_FL,
+		  VWTS.ATTR_VAL AS BASE_ATTR_VAL,
+		  VWTS.REGR_ID,
+		  VWTS.CHGR_ID
+		FROM
+		       ( SELECT  TA.ATTR_CD,
+		                 TATM.INACT_DT,
+		                 TATM.ACT_DT,
+		                 TA.ATTR_NM,
+		                 TA.REF_CD,
+		                 TA.ATTR_STRT_VAL,
+		                 TA.ATTR_END_VAL,
+		                 TA.CHGR_ID,
+		                 TA.CHG_DATE
+		         FROM    TPMBI_ATTR_TYP_MAP TATM,
+		                 TPMBI_ATTR TA
+		         WHERE   TATM.ATTR_CD     = TA.ATTR_CD
+		         AND     TATM.INACT_DT >= #{serviceMgt.currentDay}
+		         AND     TATM.MSTR_FL     = '1'
+		         AND     TATM.ATTR_TYP    = #{serviceMgt.attrTyp}
+		         AND     TATM.INACT_DT BETWEEN TA.ACT_DT AND TA.INACT_DT
+		       ) VWAT LEFT OUTER JOIN
+		       (
+		         SELECT *
+		         FROM   TPMPD_SVC_RATE_ITM_TYP_ATTR TSRITA
+		         WHERE  TSRITA.INACT_DT            >= #{serviceMgt.currentDay}
+		         AND    TSRITA.MSTR_FL                = '1'
+		         AND    TSRITA.SVC_RATE_ITM_TYP_CD    = #{serviceMgt.svcRateItmTypCd}
+		         AND    TSRITA.SO_ID = #{serviceMgt.soId}
+		       ) VWTS
+		       ON    ( VWAT.ATTR_CD  = VWTS.ATTR_CD)
+		ORDER BY VWAT.ATTR_NM
+</select>
+
+<select id="getSvcRateItmTypAttrList2" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		SELECT VWTS.SVC_RATE_ITM_TYP_CD,
+		  VWAT.ATTR_CD,
+		  VWAT.ATTR_NM,
+		  VWAT.REF_CD,
+		  VWAT.ATTR_STRT_VAL,
+		  VWAT.ATTR_END_VAL,
+		  VWTS.ATTR_VAL,
+		  VWTS.ATTR_VAL AS ATTR_VAL_REF_CD,
+	      VWTS.ATTR_VAL AS ATTR_VAL_NM,
+		  VWTS.INACT_DT,
+		  VWTS.ACT_DT,
+		  VWTS.ACT_DT   AS BASE_ACT_DT,
+		  '1'           AS MSTR_FL,
+		  VWTS.ATTR_VAL AS BASE_ATTR_VAL,
+		  VWTS.REGR_ID,
+		  VWTS.CHGR_ID
+		FROM
+		       ( SELECT  TA.ATTR_CD,
+		                 TATM.INACT_DT,
+		                 TATM.ACT_DT,
+		                 TA.ATTR_NM,
+		                 TA.REF_CD,
+		                 TA.ATTR_STRT_VAL,
+		                 TA.ATTR_END_VAL,
+		                 TA.CHGR_ID,
+		                 TA.CHG_DATE
+		         FROM    TPMBI_ATTR_TYP_MAP TATM,
+		                 TPMBI_ATTR TA
+		         WHERE   TATM.ATTR_CD     = TA.ATTR_CD
+		         AND     TATM.INACT_DT >= #{serviceMgt.currentDay}
+		         AND     TATM.MSTR_FL     = '1'
+		         AND     TATM.ATTR_TYP    = #{serviceMgt.attrTyp}
+		         AND     TATM.INACT_DT BETWEEN TA.ACT_DT AND TA.INACT_DT
+		       ) VWAT LEFT OUTER JOIN
+		       (
+		         SELECT *
+		         FROM   TPMPD_SVC_RATE_ITM_TYP_ATTR TSRITA
+		         WHERE  TSRITA.INACT_DT            >= #{serviceMgt.currentDay}
+		         AND    TSRITA.MSTR_FL                = '1'
+		         AND    TSRITA.SVC_RATE_ITM_TYP_CD    = #{serviceMgt.svcRateItmTypCd}
+		         AND    TSRITA.SO_ID = #{serviceMgt.soId}
+		       ) VWTS
+		       ON    ( VWAT.ATTR_CD  = VWTS.ATTR_CD)
+		ORDER BY VWAT.ATTR_NM
+</select>
+
+
+<select id="getSvcRateItmTypFctrList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		SELECT TSRITF.SVC_RATE_ITM_TYP_CD,
+		       TSRITF.FCTR_CD,
+		       TSRITF.INACT_DT,
+		       TSRITF.ACT_DT,
+		       TSRITF.FCTR_REF_TYP,
+		       TSRITF.TABLE_ID,
+		       TSRITF.COLMN_ID,
+		       TSRITF.DATA_TYP,
+		       TSRITF.REF_TABLE_ID,
+		       TSRITF.REF_COLMN_ID,
+		       TSRITF.REF_COLMN_NM,
+		       TSRITF.REF_TABLE_COND,
+		       TSRITF.REF_CD,
+		       TSRITF.MSTR_FL,
+		       TSRITF.FCTR_NO,
+		       TSRITF.REGR_ID,
+		       TSRITF.REG_DATE,
+		       TSRITF.CHGR_ID,
+		       TSRITF.CHG_DATE,
+		       TF.FCTR_NM,
+		       (
+		         SELECT B.COMMON_CD_NM as COMMON_CD_NM
+		         FROM   TSYCO_CODE_DETAIL B
+                 LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+				 ON #{serviceMgt.lngTyp} = C.LNG_TYP
+			     AND B.COMMON_GRP = C.COMMON_GRP
+			     AND B.COMMON_CD = C.COMMON_CD                 
+		         WHERE  B.COMMON_GRP  = 'PP00012'
+		         AND    B.COMMON_CD   = TSRITF.FCTR_REF_TYP
+		       ) FCTR_REF_TYP_NM,
+		       (
+		         SELECT B.COMMON_CD_NM as COMMON_CD_NM
+		         FROM   TSYCO_CODE_DETAIL B
+                 LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+				 ON #{serviceMgt.lngTyp} = C.LNG_TYP
+			     AND B.COMMON_GRP = C.COMMON_GRP
+			     AND B.COMMON_CD = C.COMMON_CD                  
+		         WHERE  B.COMMON_GRP  = 'PP00013'
+		         AND    B.COMMON_CD   = TSRITF.TABLE_ID
+		       ) TABLE_NM,
+		       (
+		         SELECT B.COMMON_CD_NM as COMMON_CD_NM
+		         FROM   TSYCO_CODE_DETAIL B
+                 LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C 
+				 ON #{serviceMgt.lngTyp} = C.LNG_TYP
+			     AND B.COMMON_GRP = C.COMMON_GRP
+			     AND B.COMMON_CD = C.COMMON_CD                  
+		         WHERE  B.COMMON_GRP  = (SELECT   TCD2.REF_CODE
+		                                   FROM   TSYCO_CODE_DETAIL TCD2
+		                                   WHERE  TCD2.COMMON_GRP  = 'PP00013'
+		                                   AND    TCD2.COMMON_CD   = TSRITF.TABLE_ID)
+		         AND    B.COMMON_CD   = TSRITF.COLMN_ID
+		       ) COLMN_NM,
+		       (
+		         SELECT B.COMMON_CD_NM as COMMON_CD_NM
+		         FROM   TSYCO_CODE_DETAIL B
+                 LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C 
+				 ON #{serviceMgt.lngTyp} = C.LNG_TYP
+			     AND B.COMMON_GRP = C.COMMON_GRP
+			     AND B.COMMON_CD = C.COMMON_CD                  
+		         WHERE  B.COMMON_GRP  = 'PP00024'
+		         AND    B.COMMON_CD   = TSRITF.DATA_TYP
+		       ) DATA_TYP_NM,
+		       (
+		         SELECT B.COMMON_GRP_NM as COMMON_GRP_NM
+		         FROM   TSYCO_CODE_MAST B
+                 LEFT OUTER JOIN TSYCO_CODE_MAST_NAME C
+				 ON #{serviceMgt.lngTyp} = C.LNG_TYP
+			     AND B.COMMON_GRP = C.COMMON_GRP                 
+		         WHERE  B.COMMON_GRP = TSRITF.REF_CD
+		       ) REF_NM,
+		       TSRITF.REF_FUNC
+		FROM   TPMPD_SVC_RATE_ITM_TYP_FCTR TSRITF,
+		       TPMBI_FCTR TF
+		WHERE  TSRITF.FCTR_CD             = TF.FCTR_CD
+		AND    TSRITF.INACT_DT         >= #{serviceMgt.currentDay}
+		AND    TSRITF.MSTR_FL             = '1'
+		AND    TSRITF.SVC_RATE_ITM_TYP_CD = #{serviceMgt.svcRateItmTypCd}
+		AND    TSRITF.INACT_DT   BETWEEN TF.ACT_DT AND TF.INACT_DT
+		ORDER BY FCTR_REF_TYP_NM ASC
+
+</select>
+
+<select id="getTableData" resultType="hashMap" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		SELECT  ${serviceMgt.refColmnNm} AS COLMN_DATA
+		FROM    ${serviceMgt.refTableId}
+		WHERE   ${serviceMgt.refColmnId} = #{serviceMgt.attrVal}
+</select>
+
+<select id="getTotalFactorListMergedeSvc" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		SELECT '0' CHK,
+					A.FCTR_CD,
+  					A.ACT_DT,
+  					A.INACT_DT,
+    				A.FCTR_NM,
+   					A.REGR_ID,
+   					REG_DATE,
+   					A.CHGR_ID,
+   					CHG_DATE,
+  					FCTR_REF_TYP,
+  					TABLE_ID,
+   					COLMN_ID,
+  					DATA_TYP,
+   					REF_CD,
+   					REF_FUNC,
+   					CHG_NULL_FL,
+   					CHG_NULL_VAL
+		FROM TPMBI_FCTR A
+		WHERE A.MSTR_FL = '1'
+		AND A.INACT_DT >= #{serviceMgt.currentDay}
+		<if test="serviceMgt.fctrNm != null">
+		  AND  FCTR_NM	LIKE CONCAT(CONCAT('%', #{serviceMgt.fctrNm}), '%')
+	    </if>	  		
+        AND FCTR_CD NOT IN ( SELECT FCTR_CD FROM TPMPD_SVC_RATE_ITM_TYP_FCTR WHERE SVC_RATE_ITM_TYP_CD = #{serviceMgt.svcRateItmTypCd} AND MSTR_FL = '1')
+		ORDER BY A.FCTR_NM ASC
+</select>
+
+<insert id ="addSvcRateItmTypFctr" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		INSERT INTO TPMPD_SVC_RATE_ITM_TYP_FCTR
+		(
+		    SVC_RATE_ITM_TYP_CD    ,
+		    FCTR_CD                ,
+		    INACT_DT             ,
+		    ACT_DT              ,
+		    FCTR_REF_TYP           ,
+		    TABLE_ID               ,
+		    COLMN_ID               ,
+		    DATA_TYP               ,
+		    REF_TABLE_ID           ,
+		    REF_COLMN_ID           ,
+		    REF_COLMN_NM           ,
+		    REF_TABLE_COND         ,
+		    REF_CD                 ,
+		    MSTR_FL                ,
+		    FCTR_NO                ,
+		    REGR_ID           ,
+		    REG_DATE         ,
+		    CHGR_ID             ,
+		    CHG_DATE		,
+		    REF_FUNC		,
+		    CHG_NULL_FL		,
+		    CHG_NULL_VAL
+		)
+		VALUES
+		(
+			#{serviceMgt.svcRateItmTypCd, jdbcType=VARCHAR },
+			#{serviceMgt.fctrCd, jdbcType=VARCHAR },
+			#{serviceMgt.inactDt, jdbcType=VARCHAR },
+			#{serviceMgt.actDt, jdbcType=VARCHAR },
+			#{serviceMgt.fctrRefTyp, jdbcType=VARCHAR },
+			#{serviceMgt.tableId, jdbcType=VARCHAR },
+			#{serviceMgt.colmnId, jdbcType=VARCHAR },
+			#{serviceMgt.dataTyp, jdbcType=VARCHAR },
+			#{serviceMgt.refTableId, jdbcType=VARCHAR },
+			#{serviceMgt.refColmnId, jdbcType=VARCHAR },
+			#{serviceMgt.refColmnNm, jdbcType=VARCHAR },
+			#{serviceMgt.refTableCond, jdbcType=VARCHAR },			
+			#{serviceMgt.refCd, jdbcType=VARCHAR },
+			#{serviceMgt.mstrFl, jdbcType=VARCHAR },
+		   '0'              ,
+		    #{serviceMgt.regrId, jdbcType=VARCHAR },
+		    #{serviceMgt.sysdate},
+		    #{serviceMgt.chgrId, jdbcType=VARCHAR },
+			#{serviceMgt.sysdate},
+			#{serviceMgt.refFunc, jdbcType=VARCHAR },
+			#{serviceMgt.chgNullFl, jdbcType=VARCHAR },
+			#{serviceMgt.chgNullVal, jdbcType=VARCHAR }
+		)
+
+</insert>
+
+<select id="getSvcRateItmTypNmDupCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		SELECT COUNT(TSRIT.SVC_RATE_ITM_TYP_CD) DATA_CNT
+		FROM   TPMSV_SVC TS,
+		       TPMPD_SVC_RATE_ITM_TYP TSRIT
+		WHERE  TSRIT.SVC_CD      = TS.SVC_CD
+		AND    TSRIT.INACT_DT  >  #{serviceMgt.currentDay}
+		AND    TS.MSTR_FL        =  #{serviceMgt.mstrFl}
+		AND    TS.MAIN_SVC_CD    =  #{serviceMgt.mainSvcCd}
+		AND    TSRIT.SVC_RATE_ITM_TYP_NM   = #{serviceMgt.svcRateItmTypNm}
+		<if test="serviceMgt.svcRateItmTypCd != null">
+	      AND  TSRIT.SVC_RATE_ITM_TYP_CD   != #{serviceMgt.svcRateItmTypCd}
+	    </if>		
+</select>
+
+<insert id ="addSvcRateItmTyp" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		INSERT INTO TPMPD_SVC_RATE_ITM_TYP
+		(
+		    SVC_RATE_ITM_TYP_CD,
+		    INACT_DT,
+		    ACT_DT,
+		    SVC_RATE_ITM_TYP_NM,
+		    SVC_RATE_ITM_TYP_ABBR_NM,
+		    SVC_RATE_ITM_TYP_ENG_NM,
+		    SVC_CD,
+		    RATE_ITM_TYP_CD,
+		    CHRG_CTGRY,
+		    RATE_LOCAT,
+		    SALE_ITM_CD,
+		    INV_ITM_CD,
+		    RATE_PRI_NO,
+		    PAY_PRI_NO,
+		    DISP_PRI_NO,
+		    SVC_RATE_ITM_TYP_DESC,
+		    MSTR_FL,
+		    REGR_ID,
+		    REG_DATE,
+		    CHGR_ID,
+		    CHG_DATE,
+		    SO_ID
+		)
+		VALUES
+		(
+		    #{serviceMgt.svcRateItmTypCd, jdbcType=VARCHAR },
+			#{serviceMgt.inactDt, jdbcType=VARCHAR },
+			#{serviceMgt.actDt, jdbcType=VARCHAR },
+			#{serviceMgt.svcRateItmTypNm, jdbcType=VARCHAR },
+			#{serviceMgt.svcRateItmTypAbbrNm, jdbcType=VARCHAR },
+		    #{serviceMgt.svcRateItmTypNm, jdbcType=VARCHAR },
+		    #{serviceMgt.svcCd, jdbcType=VARCHAR },
+		    #{serviceMgt.rateItmTypCd, jdbcType=VARCHAR },
+		    #{serviceMgt.chrgCtgry, jdbcType=VARCHAR },
+		    #{serviceMgt.rateLocat, jdbcType=VARCHAR },	
+		    #{serviceMgt.saleItmCd, jdbcType=VARCHAR },		
+		    #{serviceMgt.invItmCd, jdbcType=VARCHAR },
+		    #{serviceMgt.ratePriNo, jdbcType=VARCHAR },
+		    #{serviceMgt.payPriNo, jdbcType=VARCHAR },	
+		    #{serviceMgt.dispPriNo, jdbcType=VARCHAR },
+		    #{serviceMgt.svcRateItmTypDesc, jdbcType=VARCHAR },
+		    #{serviceMgt.mstrFl, jdbcType=VARCHAR },			    
+		    #{serviceMgt.regrId, jdbcType=VARCHAR },
+		    #{serviceMgt.sysdate},
+		    #{serviceMgt.chgrId, jdbcType=VARCHAR },
+		    #{serviceMgt.sysdate},
+		    #{serviceMgt.soId, jdbcType=DATE }
+		)
+
+</insert>
+
+<select id="getSvcRateItmTyp" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		SELECT TSRIT.SVC_RATE_ITM_TYP_CD,
+		       TSRIT.INACT_DT,
+		       TSRIT.ACT_DT,
+		       TSRIT.SVC_RATE_ITM_TYP_NM,
+		       TSRIT.SVC_RATE_ITM_TYP_ENG_NM,
+		       TSRIT.SVC_RATE_ITM_TYP_ABBR_NM,
+		       TSRIT.SVC_CD,
+		       TSRIT.RATE_ITM_TYP_CD,
+		       TRIT.RATE_ITM_TYP_NM,
+		       TSRIT.CHRG_CTGRY,
+		       (SELECT B.COMMON_CD_NM as COMMON_CD_NM
+		        FROM   TSYCO_CODE_DETAIL B
+                LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+                ON #{serviceMgt.lngTyp} = C.LNG_TYP
+			    AND B.COMMON_GRP = C.COMMON_GRP
+			    AND B.COMMON_CD = C.COMMON_CD                 
+		        WHERE  B.COMMON_GRP =  'PP00031'
+		        AND    B.COMMON_CD  =  TSRIT.CHRG_CTGRY) AS  CHRG_CTGRY_NM,
+		       TSRIT.RATE_LOCAT,
+		       (SELECT B.COMMON_CD_NM as COMMON_CD_NM
+		        FROM   TSYCO_CODE_DETAIL B
+                LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+                ON #{serviceMgt.lngTyp} = C.LNG_TYP
+			    AND B.COMMON_GRP = C.COMMON_GRP
+			    AND B.COMMON_CD = C.COMMON_CD                  
+		        WHERE  B.COMMON_GRP =  'PP00034'
+		        AND    B.COMMON_CD  =  TSRIT.RATE_LOCAT) AS  RATE_LOCAT_NM,
+		       TSRIT.SALE_ITM_CD,
+		       TSRIT.INV_ITM_CD,
+		       TSRIT.RATE_PRI_NO,
+		       TSRIT.PAY_PRI_NO,
+		       TSRIT.DISP_PRI_NO,
+		       TSRIT.MSTR_FL,
+		       TSRIT.REGR_ID,
+		       TSRIT.REG_DATE,
+		       TSRIT.CHGR_ID,
+		       TSRIT.CHG_DATE,
+		       TSRIT.ACT_DT AS BASE_ACT_DT,
+		       SVC_RATE_ITM_TYP_DESC,
+		       TSRIT.SO_ID
+		FROM   TPMPD_SVC_RATE_ITM_TYP TSRIT,
+		       TPMBI_RATE_ITM_TYP TRIT
+		WHERE  TSRIT.ACT_DT           = #{serviceMgt.actDt}
+		AND    TSRIT.SVC_RATE_ITM_TYP_CD = #{serviceMgt.svcRateItmTypCd}
+		AND    TSRIT.MSTR_FL             = '1'
+		AND    TSRIT.RATE_ITM_TYP_CD     = TRIT.RATE_ITM_TYP_CD
+        AND    TSRIT.INACT_DT BETWEEN TRIT.ACT_DT AND TRIT.INACT_DT
+
+</select>
+
+<update id ="modSvcRateItmTyp" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		UPDATE TPMPD_SVC_RATE_ITM_TYP
+		SET    INACT_DT                     =   #{serviceMgt.inactDt, jdbcType=VARCHAR },
+		       SVC_RATE_ITM_TYP_NM          =   #{serviceMgt.svcRateItmTypNm, jdbcType=VARCHAR },
+		       SVC_RATE_ITM_TYP_ABBR_NM     =   #{serviceMgt.svcRateItmTypAbbrNm, jdbcType=VARCHAR },
+		       SVC_RATE_ITM_TYP_ENG_NM      =   #{serviceMgt.svcRateItmTypNm, jdbcType=VARCHAR },
+		       SVC_CD                       =   #{serviceMgt.svcCd, jdbcType=VARCHAR },
+		       RATE_ITM_TYP_CD              =   #{serviceMgt.rateItmTypCd, jdbcType=VARCHAR },
+		       CHRG_CTGRY                   =   #{serviceMgt.chrgCtgry, jdbcType=VARCHAR },
+		       RATE_LOCAT                   =   #{serviceMgt.rateLocat, jdbcType=VARCHAR },
+		       SALE_ITM_CD                  =   #{serviceMgt.saleItmCd, jdbcType=VARCHAR },
+		       INV_ITM_CD                   =   #{serviceMgt.invItmCd, jdbcType=VARCHAR },
+		       RATE_PRI_NO                  =   #{serviceMgt.ratePriNo, jdbcType=VARCHAR },
+		       PAY_PRI_NO                   =   #{serviceMgt.payPriNo, jdbcType=VARCHAR },
+		       DISP_PRI_NO                  =   #{serviceMgt.dispPriNo, jdbcType=VARCHAR },
+		       SVC_RATE_ITM_TYP_DESC        =   #{serviceMgt.svcRateItmTypDesc, jdbcType=VARCHAR },
+		       MSTR_FL                      =   #{serviceMgt.mstrFl, jdbcType=VARCHAR },
+		       CHGR_ID                   =  #{serviceMgt.chgrId, jdbcType=VARCHAR },
+		       CHG_DATE                 =   #{serviceMgt.sysdate}
+		WHERE  SVC_RATE_ITM_TYP_CD          =   #{serviceMgt.svcRateItmTypCd, jdbcType=VARCHAR }
+		AND    ACT_DT                    =   #{serviceMgt.actDt, jdbcType=VARCHAR }
+</update>
+
+<update id ="modSvcRateItmTypInactDt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+        UPDATE TPMPD_SVC_RATE_ITM_TYP
+        SET    INACT_DT           =       #{serviceMgt.inactDt, jdbcType=VARCHAR },
+               MSTR_FL            =       #{serviceMgt.mstrFl, jdbcType=VARCHAR },
+               CHGR_ID            =       #{serviceMgt.chgrId, jdbcType=VARCHAR },
+               CHG_DATE           =       #{serviceMgt.sysdate}
+        WHERE  SVC_RATE_ITM_TYP_CD  =     #{serviceMgt.svcRateItmTypCd}
+        AND    ACT_DT            =     #{serviceMgt.baseActDt}
+</update>
+
+<update id="modSvcRateItmTypInactDtion" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" >
+       UPDATE TPMPD_SVC_RATE_ITM_TYP
+       SET    INACT_DT          =  #{serviceMgt.actDt, jdbcType=VARCHAR },
+		<if test="serviceMgt.mstrFl != null">       
+              MSTR_FL= #{serviceMgt.mstrFl, jdbcType=DATE },
+         </if>
+              CHGR_ID          =  #{serviceMgt.chgrId, jdbcType=VARCHAR },
+              CHG_DATE        =  #{serviceMgt.sysdate}
+       WHERE  SVC_RATE_ITM_TYP_CD =  #{serviceMgt.svcRateItmTypCd}
+	AND    ACT_DT           =  #{serviceMgt.baseActDt}
+	AND    SO_ID            =       #{serviceMgt.soId}
+   </update>
+
+
+<select id ="getModSvcRateItmTypFctrInit" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		SELECT TSRITF.SVC_RATE_ITM_TYP_CD,
+		       TSRITF.FCTR_CD,
+		       TF.FCTR_NM,
+		       TSRITF.INACT_DT,
+		       TSRITF.ACT_DT,
+		       TSRITF.FCTR_REF_TYP,
+		       TSRITF.TABLE_ID,
+		       TSRITF.COLMN_ID,
+		       TSRITF.DATA_TYP,
+		       TSRITF.REF_TABLE_ID,
+		       TSRITF.REF_COLMN_ID,
+		       TSRITF.REF_COLMN_NM,
+		       TSRITF.REF_TABLE_COND,
+		       TSRITF.REF_CD,
+		       (
+		         SELECT TCM.COMMON_GRP_NM
+		         FROM   TSYCO_CODE_MAST TCM
+		         WHERE  TCM.COMMON_GRP = TSRITF.REF_CD
+		       ) REF_NM ,
+		       TSRITF.MSTR_FL,
+		       TSRITF.FCTR_NO,
+		       TSRITF.REGR_ID,
+		       TSRITF.REG_DATE,
+		       TSRITF.CHGR_ID,
+		       TSRITF.CHG_DATE,
+		       TSRITF.ACT_DT AS BASE_ACT_DT
+		FROM   TPMPD_SVC_RATE_ITM_TYP_FCTR TSRITF,
+		       TPMBI_FCTR TF
+		WHERE  TSRITF.SVC_RATE_ITM_TYP_CD = #{serviceMgt.svcRateItmTypCd}
+		AND    TSRITF.FCTR_CD = #{serviceMgt.fctrCd}
+		AND    TSRITF.ACT_DT = #{serviceMgt.actDt}
+		AND    TSRITF.FCTR_CD =  TF.FCTR_CD
+		AND    TSRITF.INACT_DT   BETWEEN TF.ACT_DT AND TF.INACT_DT
+</select>
+
+<update id ="modSvcRateItmTypFctr" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		UPDATE TPMPD_SVC_RATE_ITM_TYP_FCTR
+		SET    INACT_DT    = #{serviceMgt.inactDt, jdbcType=VARCHAR },
+		       FCTR_REF_TYP  = #{serviceMgt.fctrRefTyp, jdbcType=VARCHAR },
+		       TABLE_ID      = #{serviceMgt.tableId, jdbcType=VARCHAR },
+		       COLMN_ID      = #{serviceMgt.colmnId, jdbcType=VARCHAR },
+		       DATA_TYP      = #{serviceMgt.dataTyp, jdbcType=VARCHAR },
+		       REF_TABLE_ID  = #{serviceMgt.refTableId, jdbcType=VARCHAR },
+		       REF_COLMN_ID  = #{serviceMgt.refColmnId, jdbcType=VARCHAR },
+		       REF_COLMN_NM  = #{serviceMgt.refColmnNm, jdbcType=VARCHAR },
+		       REF_TABLE_COND = #{serviceMgt.refTableCond, jdbcType=VARCHAR },
+		       REF_CD        = #{serviceMgt.refCd, jdbcType=VARCHAR },
+		       CHGR_ID    = #{serviceMgt.chgrId, jdbcType=VARCHAR },
+		       CHG_DATE  = #{serviceMgt.sysdate},
+		       REF_FUNC = #{serviceMgt.refFunc, jdbcType=VARCHAR },
+		        CHG_NULL_FL	= #{serviceMgt.chgNullFl, jdbcType=VARCHAR },
+		    CHG_NULL_VAL = #{serviceMgt.chgNullVal, jdbcType=VARCHAR }
+		WHERE  SVC_RATE_ITM_TYP_CD = #{serviceMgt.svcRateItmTypCd, jdbcType=VARCHAR }
+		AND    FCTR_CD             = #{serviceMgt.fctrCd, jdbcType=VARCHAR }
+		AND    ACT_DT           = #{serviceMgt.actDt, jdbcType=VARCHAR }	
+</update>
+
+<update id ="modSvcRateItmTypFctrInactDt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		UPDATE TPMPD_SVC_RATE_ITM_TYP_FCTR
+        SET    INACT_DT           =       #{serviceMgt.inactDt, jdbcType=VARCHAR },
+               MSTR_FL            =       #{serviceMgt.mstrFl, jdbcType=VARCHAR },
+               CHGR_ID            =       #{serviceMgt.chgrId, jdbcType=VARCHAR },
+               CHG_DATE           =       #{serviceMgt.sysdate}
+        WHERE  SVC_RATE_ITM_TYP_CD  =       #{serviceMgt.svcRateItmTypCd, jdbcType=VARCHAR }
+		AND    FCTR_CD              =       #{serviceMgt.fctrCd, jdbcType=VARCHAR }
+        AND    ACT_DT            =       #{serviceMgt.baseActDt, jdbcType=VARCHAR }
+</update>
+
+<select id="getProductAttrCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+        SELECT (CASE WHEN COUNT( ATTR_CD ) IS NULL THEN
+        		0 ELSE COUNT( ATTR_CD ) 
+        		END ) AS DATA_CNT
+        FROM TPMPD_SVC_RATE_ITM_TYP_ATTR  
+        WHERE   PROD_CD  = #{serviceMgt.svcRateItmTypCd}  
+          AND   ATTR_CD  = #{serviceMgt.attrCd}
+          AND   SO_ID = #{serviceMgt.soId}    
+</select>
+
+<insert id ="addSvcRateItmTypAttr" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		INSERT INTO TPMPD_SVC_RATE_ITM_TYP_ATTR
+		(
+		    SVC_RATE_ITM_TYP_CD,
+		    INACT_DT,
+		    ACT_DT,
+		    ATTR_CD,
+		    ATTR_VAL,
+		    MSTR_FL,
+		    REGR_ID,
+		    REG_DATE,
+		    CHGR_ID,
+		    CHG_DATE,
+		    SO_ID
+		)
+		VALUES
+		(
+		    #{serviceMgt.svcRateItmTypCd, jdbcType=VARCHAR },
+		    #{serviceMgt.inactDt, jdbcType=VARCHAR },
+		    #{serviceMgt.actDt, jdbcType=VARCHAR },
+		    #{serviceMgt.attrCd, jdbcType=VARCHAR },
+		    #{serviceMgt.attrVal, jdbcType=VARCHAR },
+		    #{serviceMgt.mstrFl, jdbcType=VARCHAR },
+		    #{serviceMgt.regrId, jdbcType=VARCHAR },
+		    #{serviceMgt.sysdate},
+		    #{serviceMgt.chgrId, jdbcType=VARCHAR },
+			#{serviceMgt.sysdate},
+			#{serviceMgt.soId, jdbcType=DATE }		    
+		)
+</insert>
+
+<update id ="modSvcRateItmTypAttr" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+		UPDATE TPMPD_SVC_RATE_ITM_TYP_ATTR
+		SET    ATTR_VAL                     =   #{serviceMgt.attrVal, jdbcType=VARCHAR },
+		       CHGR_ID                   =   #{serviceMgt.chgrId, jdbcType=VARCHAR },
+		       CHG_DATE                 =   #{serviceMgt.sysdate}
+		WHERE  SVC_RATE_ITM_TYP_CD          =   #{serviceMgt.svcRateItmTypCd}
+		AND    ATTR_CD                      =   #{serviceMgt.attrCd}
+		AND    ACT_DT                    =   #{serviceMgt.actDt}
+		AND	   SO_ID					= #{serviceMgt.soId}
+</update>
+
+<update id ="modSvcRateItmTypAttrInactDt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+        UPDATE TPMPD_SVC_RATE_ITM_TYP_ATTR
+        SET    INACT_DT           =       #{serviceMgt.inactDt, jdbcType=VARCHAR },
+               MSTR_FL              =       #{serviceMgt.mstrFl, jdbcType=VARCHAR },
+               CHGR_ID           =       #{serviceMgt.chgrId, jdbcType=VARCHAR },
+               CHG_DATE         =       #{serviceMgt.sysdate}	
+        WHERE  SVC_RATE_ITM_TYP_CD  =        #{serviceMgt.svcRateItmTypCd}
+		AND    ATTR_CD              =       #{serviceMgt.attrCd}
+        AND    ACT_DT            =       #{serviceMgt.baseActDt}
+        AND	   SO_ID					= #{serviceMgt.soId}
+        AND    MSTR_FL			=  '1'
+</update>
+
+<update id ="modSvcRateItmTypAttrInaction" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ServiceMgt">
+        UPDATE TPMPD_SVC_RATE_ITM_TYP_ATTR
+        SET    INACT_DT          =  #{serviceMgt.inactDt, jdbcType=VARCHAR },
+	    		<if test="serviceMgt.mstrFl != null">       
+	              MSTR_FL= #{serviceMgt.mstrFl},
+	         	</if>           
+               CHGR_ID          =  #{serviceMgt.chgrId, jdbcType=VARCHAR },
+               CHG_DATE        =  #{serviceMgt.sysdate}	
+        WHERE  SVC_RATE_ITM_TYP_CD =   #{serviceMgt.svcRateItmTypCd}
+		AND    ATTR_CD             =  #{serviceMgt.attrCd}
+		AND    ACT_DT           =  #{serviceMgt.actDt}
+		AND	   SO_ID					= #{serviceMgt.soId}
+		AND    MSTR_FL			=  '1'
+</update>
+
+</mapper>

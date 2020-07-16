@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.RatingFactorMapper">
+
+ <!-- 과금요소 관리 -->   
+	<select id="getRatingFactorList" resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactor" 
+		parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactor">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		  SELECT 
+   			A.USG_TYP,
+     		( SELECT DETAIL.COMMON_CD_NM
+				FROM   TSYCO_CODE_MAST MAST, TSYCO_CODE_DETAIL DETAIL
+				WHERE  1=1
+				AND    MAST.COMMON_GRP = DETAIL.COMMON_GRP
+				AND    DETAIL.COMMON_GRP = 'PP00212' 
+				AND    COMMON_CD = A.RATING_FAC ) AS RATING_FAC,
+			( SELECT DETAIL.COMMON_CD
+				FROM   TSYCO_CODE_MAST MAST, TSYCO_CODE_DETAIL DETAIL
+				WHERE  1=1
+				AND    MAST.COMMON_GRP = DETAIL.COMMON_GRP
+				AND    DETAIL.COMMON_GRP = 'PP00212' 
+				AND    COMMON_CD = A.RATING_FAC ) AS RATE_DETER,            
+     		'U' AS FLAG ,
+    		( SELECT USG_TYP_NM FROM TOP_USG_TYP WHERE USG_TYP  = A.USG_TYP ) AS USG_TYP_NM,
+    		EFF_DT,
+    		EXP_DT
+		FROM  TOP_RATE_FAC_CANDIDATE A
+		WHERE 1=1
+   			AND A.USG_TYP LIKE ( '%' || #{ratingFactor.searchUsgTyp} || '%' ) 
+		ORDER BY A.RATING_FAC 
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>  
+    
+    
+    <select id="getRatingFactorListCount" resultType="int" 
+		parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactor">
+		SELECT COUNT(*)
+		 FROM (
+			  SELECT *
+			    FROM TOP_RATE_FAC_CANDIDATE
+			   WHERE 1=1
+			     AND USG_TYP = #{ratingFactor.searchUsgTyp}
+			     AND RATING_FAC = #{ratingFactor.searchRatingFac}
+		)
+    </select>  
+   
+   <insert id="addRatingFactor" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactor">
+         INSERT INTO TOP_RATE_FAC_CANDIDATE(
+            USG_TYP,
+            RATING_FAC,
+            EFF_DT,
+            EXP_DT,
+            RATE_FAC_FLAG, 
+            LAST_MOD_BY,                
+            LAST_MOD_DT
+         )VALUES(
+            #{ratingFactor.insertUsgTyp},
+            #{ratingFactor.insertRatingFac},
+            #{ratingFactor.insertEffDt},
+            #{ratingFactor.insertExpDt},
+            TO_NUMBER(0),
+            #{ratingFactor.userId},                
+            #{ratingFactor.sysToDate}  
+        )  
+  </insert>
+  
+  <update id="modRatingFactor" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactor">
+  
+  		UPDATE TOP_RATE_FAC_CANDIDATE 
+  		   SET 
+  		       RATING_FAC = #{ratingFactor.modRatingFac}
+  		     , LAST_MOD_BY = #{ratingFactor.userId}
+  		     , LAST_MOD_DT = #{ratingFactor.sysToDate}
+  		 WHERE 1=1
+  		   AND USG_TYP = #{ratingFactor.modUsgTyp}
+  		   AND RATING_FAC = #{ratingFactor.ratingFac}
+  
+  </update>
+  
+  <delete id="delRatingFactor" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingFactor">
+        DELETE TOP_RATE_FAC_CANDIDATE
+         WHERE 1=1
+           AND USG_TYP = #{ratingFactor.usgTyp}
+       	   AND RATING_FAC = #{ratingFactor.ratingFac}
+  </delete>   
+   
+</mapper>

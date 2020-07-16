@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.appIf.mapper.sh.service.ServiceIfMapper">
+
+
+	<!-- 재고상태 조회 -->
+    <select id="getStockStat" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+
+		SELECT   'N' 	AS SN_STAT	/* S/N 등록 유무  : N으로 고정 */
+				,A.EQT_STAT_CD		/* 재고상태 */
+		FROM 	TDNDT_EQT A
+		WHERE	A.ITEM_ID 	= #{param.ITEM_ID}		/* 모델코드(제품ID) */
+		AND		A.EQT_SEQ 	= #{param.EQT_SEQ}		/* S/N번호 */
+
+    </select>
+    
+    <!-- 작업 정보 - 고객정보 조회 -->
+    <select id="getCustomer" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+
+		SELECT   A.SO_ID		/* MSO 식별 번호 */
+    			,A.CUST_ID		/* 계약ID */
+		FROM 	TCMCU_CUST_INFO A
+		WHERE	A.SO_ID 	= #{param.SO_ID}
+		AND		A.CUST_ID 	= #{param.CUST_ID}	/* 계약ID */
+
+    </select>
+    
+    <!-- 작업 정보 - 계약 정보 조회 -->
+    <select id="getCtrtInfo" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+    
+		SELECT   A.CTRT_ID		/* 계약ID */
+    			,A.ORDER_ID		/* 오더ID */
+    			,A.ORDER_TP		/* 신청유형 */
+    			,A.ORDER_STAT	/* 작업진행상태 */
+		FROM 	TCMCT_OCTRT_INFO A
+		WHERE	A.CUST_ID 	= #{param.CUST_ID}	/* 계약ID */
+		<if test="param.CTRT_ID != null and param.CTRT_ID != ''">
+		AND 	A.CTRT_ID =  #{param.CTRT_ID}	/* 계약ID */
+		</if>
+		AND     A.ORDER_TP = '101'
+		AND     A.ORDER_STAT = '02'
+
+    </select>
+
+	<!-- 작업 정보 - 계약 상품 정보 조회 -->
+    <select id="getProdCmpsInfo" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+    
+		SELECT   A.PROD_CMPS_ID		/* 상품구성ID */
+				,(SELECT 
+						ITEM_KND_CD 
+					FROM TDNDT_ITEM 
+					WHERE ITEM_ID = (SELECT MNO_PROD_CD FROM TPMPD_PROD WHERE PROD_CD = A.PROD_CD)
+				) AS ITEM_KND_CD	/* 장비유형 */
+				,B.PROD_TYP 	AS PROD_TP	/* 기본상품여부 */
+				,A.PROD_CD			/* 상품코드 */
+				,B.PROD_NM			/* 상품명 */
+				,1		AS PROD_CNT		/* 수량 : 고정값 1 */
+		FROM 	TCMCT_OPROD_CMPS_INFO A
+				LEFT OUTER JOIN TPMPD_PROD B ON A.PROD_CD	= B.PROD_CD		/* 상품코드 */
+		WHERE	1=1
+		AND		A.ORDER_ID 	= #{param.ORDER_ID}
+
+    </select>
+    
+    <!-- TCMCT_DEVICE_HIST 테이블 키 중복 체크하기 위한 조회 -->
+    <select id="getTcmctDeviceHistKeyCheck" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+    
+		SELECT	A.SO_ID				/* 사업ID */
+				,A.CTRT_ID			/* 계약ID */
+				,A.ITEM_MID_CD		/* 장비유형 */
+				,A.SERIAL_NO		/* 일련번호 */
+				,A.INACT_DTTM		/* 종료일시 */
+		FROM 	TCMCT_DEVICE_HIST A
+		WHERE	A.SO_ID			= #{param.SO_ID}
+		AND		A.CTRT_ID		= #{param.CTRT_ID}
+		AND		A.ITEM_MID_CD 	= #{param.ITEM_KND_CD}
+		AND 	A.SERIAL_NO		= #{param.NEW_SN}
+		AND 	A.INACT_DTTM	= #{param.INACT_DTTM}
+
+    </select>
+    
+    <!-- TCMCT_DEVICE_HIST 종료일자(키) 업데이트  -->
+    <update id="updateTcmctDeviceHistKey" parameterType="java.util.Map">
+        UPDATE TCMCT_DEVICE_HIST
+        SET
+			INACT_DTTM		= #{param.ACT_DTTM} 	/* 종료일시 (다음인서트 시작일시로 업데이트) */
+			,CHGR_ID		= #{param.CHGR_ID}		/* 수정자 */
+			,CHG_DATE		= #{param.CHG_DATE}		/* 수정일시 */
+             
+        WHERE	SO_ID			= #{param.SO_ID}
+		AND		CTRT_ID			= #{param.CTRT_ID}
+		AND		ITEM_MID_CD 	= #{param.ITEM_KND_CD}
+		AND 	SERIAL_NO		= #{param.NEW_SN}
+		AND 	INACT_DTTM		= #{param.INACT_DTTM}
+    </update>
+    
+    <!-- TCMCT_DEVICE_HIST 테이블 등록  -->
+    <insert id="setTcmctDeviceHist" parameterType="java.util.Map">
+		INSERT INTO TCMCT_DEVICE_HIST
+			(SO_ID			/* 사업ID */
+			,CTRT_ID		/* 계약ID */
+			,ITEM_MID_CD	/* 장비유형 */
+			,SERIAL_NO		/* 일련번호 */
+			,INACT_DTTM		/* 종료일시 */
+			,ACT_DTTM		/* 시작일시 */
+			,DEVICE_STATUS	/* 장비상태 */
+			,ITEM_ID		/* 장비코드 */
+			,PROD_CMPS_ID	/* 상품구성ID */
+			,REGR_ID		/* 등록자 */
+			,REG_DATE		/* 등록일시 */
+			,CHGR_ID		/* 수정자 */
+			,CHG_DATE		/* 수정일시 */
+			)
+		VALUES
+            ( #{param.SO_ID}			/* 사업ID */
+            , #{param.CTRT_ID}			/* 계약ID */
+            , #{param.ITEM_KND_CD}		/* 장비유형  ITEM_MID_CD */
+            , #{param.NEW_SN}			/* 일련번호 */
+            , #{param.INACT_DTTM}		/* 종료일시 */
+            , #{param.ACT_DTTM}			/* 시작일시 */
+            , #{param.DEVICE_STATUS}	/* 장비상태 */
+            , #{param.NEW_EQT_CL_ID}	/* 장비구분코드 */
+            , #{param.PROD_CMPS_ID}		/* 상품구성ID */
+            , #{param.REGR_ID}			/* 등록자ID */
+            , #{param.REG_DATE}			/* 등록일 */
+			, #{param.CHGR_ID}			/* 수정자ID */
+			, #{param.CHG_DATE}			/* 수정일 */
+			)
+	</insert>
+	
+    
+    <!-- TDNDT_EQT  EQT_SEQ 값 조회  -->
+    <select id="getTdndtEqtSeq" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+		SELECT	A.EQT_SEQ			/* 단말기일련번호 */
+				,A.SO_ID			/* 사업ID */
+				,A.ITEM_ID			/* 제품ID */
+				,A.EQT_STAT_CD		/* 단말기상태코드 */
+		FROM 	TDNDT_EQT A
+		WHERE	A.EQT_SEQ			= #{param.EQT_SEQ}
+		AND		A.SO_ID				= #{param.SO_ID}
+		AND 	A.ITEM_ID			= #{param.NEW_EQT_CL_ID}
+    </select>
+    
+    
+    
+    <!-- TDNDT_EQT 테이블 값 업데이트 -->
+    <update id="updateTdndtEqt" parameterType="java.util.Map">
+        UPDATE TDNDT_EQT
+        SET
+			EQT_STAT_CD			= #{param.EQT_STAT_CD} 			/* 단말기상태코드 */
+			,LGST_PROC_STAT_CD	= #{param.LGST_PROC_STAT_CD} 	/* 물류처리상태코드 */
+			,CHGR_ID			= #{param.CHGR_ID}		/* 수정자 */
+			,CHG_DATE			= #{param.CHG_DATE}		/* 수정일시 */
+             
+		WHERE	EQT_SEQ			= #{param.EQT_SEQ}
+		AND		SO_ID			= #{param.SO_ID}
+		AND 	ITEM_ID			= #{param.NEW_EQT_CL_ID}
+    </update>
+    
+    <!-- TDNDT_UPD_PROC_HIST 테이블 등록 -->
+    <insert id="setTdndtUpdProcHist" parameterType="java.util.Map">
+		INSERT INTO TDNDT_UPD_PROC_HIST
+			(HIST_SEQ		/* 이력일련번호 */
+			,UPD_PROC_CL_CD	/* 변경처리구분코드 */
+			,SO_ID			/* 사업ID */
+			,ITEM_ID		/* 제품ID */
+			,UPD_BFR_CD		/* 변경전코드 */
+			,AFTR_UPD_CD	/* 변경후코드 */
+			,UPD_PROC_ID	/* 변경처리자ID */
+			,UPD_PROC_DTTM	/* 변경처리일시 */
+			,REGR_ID		/* 등록자 */
+			,REG_DATE		/* 등록일시 */
+			,CHGR_ID		/* 수정자 */
+			,CHG_DATE		/* 수정일시 */
+			)
+		VALUES
+            ( #{param.HIST_SEQ}			/* 이력일련번호 */
+            , #{param.UPD_PROC_CL_CD}	/* 변경처리구분코드 */
+            , #{param.SO_ID}			/* 사업ID */
+            , #{param.ITEM_ID}			/* 제품ID */
+            , #{param.UPD_BFR_CD}		/* 변경전코드 */
+            , #{param.AFTR_UPD_CD}		/* 변경후코드 */
+            , #{param.UPD_PROC_ID}		/* 변경처리자ID */
+            , #{param.UPD_PROC_DTTM}	/* 변경처리일시 */
+            , #{param.REGR_ID}			/* 등록자ID */
+            , #{param.REG_DATE}			/* 등록일 */
+			, #{param.CHGR_ID}			/* 수정자ID */
+			, #{param.CHG_DATE}			/* 수정일 */
+			)
+	</insert>
+	
+    <!-- TCMCT_DEVICE_HIST 삭제 계약 아이디로 전부 삭제-->
+	<delete id="deleteDeviceHist" parameterType="java.util.Map">
+		DELETE
+		FROM	TCMCT_DEVICE_HIST
+		WHERE	CTRT_ID			= #{param.CTRT_ID}		/* 계약ID */
+    </delete>
+    
+    
+</mapper>

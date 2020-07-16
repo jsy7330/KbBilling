@@ -1,0 +1,1050 @@
+package com.ntels.ccbs.customer.service.contract.contract.impl;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.collections4.OrderedMap;
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
+import org.apache.commons.collections4.map.LinkedMap;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.ntels.ccbs.common.consts.Consts;
+import com.ntels.ccbs.common.exception.ServiceException;
+import com.ntels.ccbs.common.util.DateUtil;
+import com.ntels.ccbs.customer.domain.contract.contract.CtrtInfoVO;
+import com.ntels.ccbs.customer.domain.contract.contract.CtrtPromVO;
+import com.ntels.ccbs.customer.domain.contract.contract.CustInfoVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OCtrtMastExtVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OCtrtMastVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OProdCmpsExtVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OProdCmpsVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OSvcCmpsExtVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OSvcCmpsVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OrderAttrVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OrderCommonVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OrderInfoVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OrderMastInfoVO;
+import com.ntels.ccbs.customer.domain.contract.contract.PrecheckInfoVO;
+import com.ntels.ccbs.customer.domain.contract.contract.RcptInfoVO;
+import com.ntels.ccbs.customer.domain.customer.payment.PaymentAccountInfoVO;
+import com.ntels.ccbs.customer.mapper.contract.contract.OrderManagementMapper;
+import com.ntels.ccbs.customer.mapper.contract.contract.OrderPrecheckMapper;
+import com.ntels.ccbs.customer.mapper.contract.contract.OrderProcessMapper;
+import com.ntels.ccbs.customer.service.contract.contract.ContractManagementService;
+import com.ntels.ccbs.customer.service.contract.contract.OrderManagementService;
+import com.ntels.ccbs.customer.service.contract.contract.OrderPrecheckService;
+import com.ntels.ccbs.system.domain.configuration.codeMng.CommonCodeVO;
+import com.ntels.ccbs.system.service.common.service.CommonDataService;
+import com.ntels.nisf.util.message.MessageUtil;
+
+
+@Service
+public class OrderManagementServiceImpl implements OrderManagementService{
+	
+	@Autowired
+	private OrderManagementMapper orderManagementMapper;
+	
+	@Autowired
+	private OrderPrecheckMapper orderPrecheckMapper;
+	
+	@Autowired
+	private OrderProcessMapper orderProcessMapper;
+	
+	@Autowired
+	private CommonDataService commonDataService;
+	
+	@Autowired
+	private ContractManagementService contractManagementService;
+	
+	@Autowired
+	private OrderPrecheckService[] orderPrecheckServices = null;
+	
+	
+	@Override
+	public OrderCommonVO getOrderCommonInfo(String soId
+			, String custId
+			, String ctrtId
+			, String orderCd
+			, String rcptId
+	        , String lng
+	        , String today) {
+		
+		/*
+		 * Rcpt Info 조회
+		 */
+		RcptInfoVO rcptInfo = StringUtils.isEmpty(rcptId) ? new RcptInfoVO() : contractManagementService.getRcptInfo(rcptId, lng, today);
+	
+		/**
+		 * 신규 접수의 경우 기본 데이터 세팅
+		 */
+		if(StringUtils.isEmpty(rcptId)){
+			rcptInfo.setSoId(soId);
+			rcptInfo.setCustId(custId);
+			rcptInfo.setCtrtId(ctrtId);
+			rcptInfo.setRcptId("");
+			
+			//상담소분류조회
+			List<CommonCodeVO> slvCode = commonDataService.getCommonCodeListByRef3("CM00018", orderCd, lng);
+			rcptInfo.setCnslSlvCl(slvCode.get(0).getCommonCd());
+			rcptInfo.setCnslSlvClNm(slvCode.get(0).getCommonCdNm());
+			//상담중분류조회
+			CommonCodeVO midCode = commonDataService.getCommonCode("CM00017", slvCode.get(0).getRefCode(), lng);
+			rcptInfo.setCnslMidCl(midCode.getCommonCd());
+			rcptInfo.setCnslMidClNm(midCode.getCommonCdNm());
+			//상담대분류조회
+			CommonCodeVO mstCode = commonDataService.getCommonCode("CM00016", midCode.getRefCode(), lng);
+			rcptInfo.setCnslMstCl(mstCode.getCommonCd());
+			rcptInfo.setCnslMstClNm(mstCode.getCommonCdNm());
+		}
+		
+		/*
+		 * Order Code 조회
+		 */
+		CommonCodeVO code = commonDataService.getCommonCode("CM00018", rcptInfo.getCnslSlvCl(), lng);
+		
+		if(code == null || StringUtils.isEmpty(code.getRefCode3())){
+			throw new ServiceException("MSG.M09.MSG00021");
+		}
+			
+		/*
+		 * Order Mast 조회
+		 */
+		OrderMastInfoVO orderMastInfo = getOrderMastInfo(code.getRefCode3(), lng, soId);
+		if(orderMastInfo == null || StringUtils.isEmpty(orderMastInfo.getOrderCd())){
+			throw new ServiceException("MSG.M09.MSG00021");
+		}
+		
+		/*
+		 * 신규 계약의 경우 세팅 초기화
+		 */
+		if("101".equals(orderMastInfo.getOrderTp())){
+			rcptInfo.setCtrtId("0000000000");
+		}
+		
+		/*
+		 * 계약ID 확인
+		 */
+		
+		if(!"101".equals(orderMastInfo.getOrderTp())){
+			if("0000000000".equals(ctrtId) || StringUtils.isEmpty(ctrtId)){
+				throw new ServiceException("MSG.M01.MSG00064"); //계약을 선택해 주세요.
+				
+			}
+		}
+		
+		
+		/*
+		 * 가능시간 체크
+		 */
+		int nowTime = Integer.parseInt(DateUtil.getDateStringYYYYMMDDHH24MISS(0).substring(8));
+		getTimeCheckResult(orderMastInfo, nowTime, lng);
+		
+		/*
+		 * Url체크
+		 */
+		String url = getOrderUrl(orderMastInfo, nowTime, lng);
+		
+		/*
+		 * 일시 Block체크
+		 */
+		
+		if("Y".equals(orderMastInfo.getBlockYn())){
+			String[] arg = {orderMastInfo.getBlockDesc()};
+			throw new ServiceException("MSG.M08.MSG00058", arg);
+		}
+		
+		
+		/*
+		 * 고객정보조회
+		 */
+		CustInfoVO custInfo = contractManagementService.getCustInfo(rcptInfo.getSoId(), rcptInfo.getCustId(), lng, today);
+		if(custInfo == null || StringUtils.isEmpty(custInfo.getCustId())){
+			throw new ServiceException("MSG.M01.MSG00019");
+		}
+		
+		/*
+		 * 계약 조회
+		 */
+		CtrtInfoVO ctrtInfo = contractManagementService.getCtrtInfo(rcptInfo.getSoId(), rcptInfo.getCustId(), "0000000000".equals(rcptInfo.getCtrtId()) ? "" : rcptInfo.getCtrtId(), lng, today);
+		
+		/*
+		 * 오더 정보 조회
+		 */
+		OrderInfoVO orderInfo = getOrderMastInfoByRcptId(rcptInfo.getSoId(), rcptInfo.getCustId(), rcptInfo.getRcptId(), today, lng);
+		if(orderInfo != null && orderInfo.getOrderStat().equals("03")){
+			//취소 상태
+			throw new ServiceException("MSG.M10.MSG00035");
+		}else if(orderInfo != null && orderInfo.getOrderStat().equals("04")){
+			//완료 상태
+			throw new ServiceException("MSG.M08.MSG00024");
+		}
+		OrderCommonVO orderCommonInfo = new OrderCommonVO();
+		orderCommonInfo.setRcptId(rcptId);
+		orderCommonInfo.setSoId(rcptInfo.getSoId());
+		orderCommonInfo.setCtrtId("0000000000".equals(rcptInfo.getCtrtId()) ? "" : rcptInfo.getCtrtId());
+		orderCommonInfo.setCustId(rcptInfo.getCustId());
+		orderCommonInfo.setCustTp(custInfo.getCustTp());
+		orderCommonInfo.setCustTpNm(custInfo.getCustTpNm());
+		orderCommonInfo.setCustNm(custInfo.getCustNmAsMask());
+		if(ctrtInfo == null || StringUtils.isEmpty(ctrtInfo.getCtrtId())){
+			if(orderInfo == null || StringUtils.isEmpty(orderInfo.getOrderId())){
+				orderCommonInfo.setCtrtId("");
+				orderCommonInfo.setSvcTelNoAsMask("");
+			}else{
+				orderCommonInfo.setCtrtId(orderInfo.getCtrtId());
+				orderCommonInfo.setSvcTelNoAsMask(orderInfo.getSvcTelNoAsMask());
+			}
+		}else{
+			orderCommonInfo.setCtrtId(ctrtInfo.getCtrtId());
+			orderCommonInfo.setSvcTelNoAsMask(ctrtInfo.getSvcTelNoAsMask());
+		}
+		
+		if(orderInfo == null || StringUtils.isEmpty(orderInfo.getOrderId())){
+			orderCommonInfo.setOrderId("");
+			orderCommonInfo.setOrderStat("");
+			orderCommonInfo.setOrderStatNm("");
+		}else{
+			orderCommonInfo.setOrderId(orderInfo.getOrderId());
+			orderCommonInfo.setOrderStat(orderInfo.getOrderStat());
+			orderCommonInfo.setOrderStatNm(orderInfo.getOrderStatNm());
+		}
+		orderCommonInfo.setOrderCd(orderMastInfo.getOrderCd());
+		orderCommonInfo.setOrderTp(orderMastInfo.getOrderTp());
+		orderCommonInfo.setOrderTpNm(orderMastInfo.getOrderTpNm());
+		orderCommonInfo.setCnslMstCl(rcptInfo.getCnslMstCl());
+		orderCommonInfo.setCnslMstClNm(rcptInfo.getCnslMstClNm());
+		orderCommonInfo.setCnslMidCl(rcptInfo.getCnslMidCl());
+		orderCommonInfo.setCnslMidClNm(rcptInfo.getCnslMidClNm());
+		orderCommonInfo.setCnslSlvCl(rcptInfo.getCnslSlvCl());
+		orderCommonInfo.setCnslSlvClNm(rcptInfo.getCnslSlvClNm());
+		orderCommonInfo.setBasicSvcCd(orderMastInfo.getBasicSvcCd());
+		orderCommonInfo.setUrl(url);
+		
+		return orderCommonInfo;
+	}
+	
+	@Override
+	public OrderMastInfoVO getOrderMastInfo(String orderCd, String lng, String soId) {
+		
+		
+		OrderMastInfoVO orderMastInfo = orderManagementMapper.getOrderMastInfo(orderCd, lng, soId);
+		
+		List<OrderAttrVO> orderAttrList = orderManagementMapper.getOrderAttrList(orderCd, lng);
+		OrderedMap<String,OrderAttrVO> orderAttr = new LinkedMap<String,OrderAttrVO>();
+		for(OrderAttrVO attr : orderAttrList){
+			orderAttr.put(attr.getOrderAttrCd(), attr);
+		}
+		orderMastInfo.setOrderAttrMap(orderAttr);
+		return orderMastInfo;
+	}
+
+
+	private OrderInfoVO getOrderMastInfoByRcptId(String soId, String custId,
+	        String rcptId, String today, String lng) {
+		return orderManagementMapper.getOrderInfoByRcptId(soId, custId, rcptId, today, lng);
+	}
+
+
+	private void getTimeCheckResult(OrderMastInfoVO orderMastInfo,
+	        int nowTime, String lng) {
+		OrderAttrVO orderAttr = orderMastInfo.getOrderAttrMap().get("OA00000001");
+		
+		if(orderAttr == null){
+			return;
+		}
+		if(StringUtils.isEmpty(orderAttr.getOrderAttrVal())){
+			return;
+		}
+		
+		CommonCodeVO attrCode = commonDataService.getCommonCode("CM00028", "OA00000001", lng);
+		
+		if(attrCode == null || StringUtils.isEmpty(attrCode.getCommonCd())){
+			return;
+		}
+		
+		CommonCodeVO timeCode = commonDataService.getCommonCode(attrCode.getRefCode2(), orderAttr.getOrderAttrVal(), lng);
+		
+		int startTime = Integer.parseInt(timeCode.getRefCode() + "00");
+		int endTime = Integer.parseInt(timeCode.getRefCode2() + "00");
+		
+		if(startTime <= nowTime && nowTime <= endTime){
+			return;
+		}else{
+			String[] args = {DateUtil.getTimeFormat(timeCode.getRefCode() + "00"), DateUtil.getTimeFormat(timeCode.getRefCode2() + "00")};
+			throw new ServiceException("MSG.M08.MSG00031", args);
+		}
+	}
+	
+	private String getOrderUrl(OrderMastInfoVO orderMastInfo, int nowTime,
+	        String lng) {
+		
+		OrderAttrVO orderAttr = orderMastInfo.getOrderAttrMap().get("OA00000004");
+		
+		if(orderAttr == null){
+			throw new ServiceException("MSG.M08.MSG00019");
+		}
+		if(StringUtils.isEmpty(orderAttr.getOrderAttrVal())){
+			throw new ServiceException("MSG.M08.MSG00019");
+		}
+		
+		CommonCodeVO attrCode = commonDataService.getCommonCode("CM00028", "OA00000004", lng);
+		
+		if(attrCode == null || StringUtils.isEmpty(attrCode.getCommonCd())){
+			throw new ServiceException("MSG.M08.MSG00019");
+		}
+		
+		CommonCodeVO urlCode = commonDataService.getCommonCode(attrCode.getRefCode2(), orderAttr.getOrderAttrVal(), lng);
+		if(urlCode == null || StringUtils.isEmpty(urlCode.getRefCode())){
+			throw new ServiceException("MSG.M08.MSG00019");
+		}
+		return urlCode.getRefCode();
+	}
+
+	@Override
+	public List<PrecheckInfoVO> savePrecheckInfo(
+	        OrderCommonVO orderCommonInfo, String usrId,  String lng, String today) {
+		
+		List<PrecheckInfoVO> result = new ArrayList<PrecheckInfoVO>();
+		
+		//기존 데이터 삭제처리
+		orderPrecheckMapper.deletePrecheckData(orderCommonInfo.getSoId(), orderCommonInfo.getCustId(), orderCommonInfo.getRcptId());
+		
+		//오더 마스터 정보 조회
+		OrderMastInfoVO orderMastInfo = getOrderMastInfo(orderCommonInfo.getOrderCd(), lng, orderCommonInfo.getSoId());
+		Map<String, OrderAttrVO> orderAttrMap = orderMastInfo.getOrderAttrMap();
+		Collection<OrderAttrVO> attrList = orderAttrMap.values();
+		for(OrderAttrVO attr : attrList){
+			if(!"03".equals(attr.getOrderAttrTp())){
+				continue;
+			}
+
+			PrecheckInfoVO precheckInfo = null;
+			
+			for (int index = 0; precheckInfo == null && index < orderPrecheckServices.length; index++) {
+	            try {
+	            	precheckInfo = orderPrecheckServices[index].savePrecheckResult(orderCommonInfo, attr, usrId,  lng, today);
+	            } catch (Exception e) {
+	                throw new ServiceException("MSG.M09.MSG00014");
+	            }
+	        }
+			
+			if(precheckInfo != null){
+				result.add(precheckInfo);
+			}
+			
+		}
+		
+		return result;
+	}
+
+	@Override
+	public List<PaymentAccountInfoVO> getPymAcntInfoList(String soId,
+	        String custId, String today, String lng) {
+		return orderManagementMapper.getPymAcntInfoList(soId, custId, today, lng);
+	}       
+
+	@Override
+	public List<Map<String, Object>> getBasicProdGrpList(String soId,
+	        String basicSvcCd, String custTp, String today, String lng) {
+		return orderManagementMapper.getBasicProdGrpList(soId, basicSvcCd, custTp, today, lng);
+	}
+
+	@Override
+	public List<Map<String, Object>> getBasicProdList(String soId,
+	        String basicSvcCd, String basicProdGrp, String custTp, String today, String lng) {
+		
+		List<Map<String, Object>> result = new ArrayList<Map<String,Object>>();
+		
+		List<Map<String,Object>> list = orderManagementMapper.getBasicProdList(soId, basicSvcCd, basicProdGrp, today, lng);
+		List<CommonCodeVO> commonCdList = commonDataService.getCommonCodeList("CM00046", lng);
+		
+		for(Map<String,Object> data : list){
+			String b2b_b2c = (String)data.get("B2B_B2C");
+			for(CommonCodeVO code : commonCdList){
+				if(code.getRefCode().indexOf(custTp) != -1){
+					if(code.getCommonCd().equals(b2b_b2c)){
+						result.add(data);
+						break;
+					}
+				}
+			}
+		}
+		return result;
+	}
+	
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<CommonCodeVO> getPenaltyListByBasicProdCd(String soId, String basicProdGrp, String basicProdCd,
+			String today, String lng) {
+		
+		List<CommonCodeVO> penaltyCodeList = new ArrayList<CommonCodeVO>();
+		
+		//무약정 조회
+		penaltyCodeList.add(commonDataService.getCommonCode("CM00044", "00", lng));
+		boolean isPenalty = false;
+		
+		Map<String,Object> penaltyAttrInfo = orderManagementMapper.getProdAttr(soId, basicProdCd, Consts.PROD_ATTR.IS_PENALTY, today);
+		
+		if(penaltyAttrInfo == null ||  StringUtils.isEmpty((String)penaltyAttrInfo.get("ATTR_VAL")) || !"1".equals((String)penaltyAttrInfo.get("ATTR_VAL"))){
+			isPenalty = false;
+		}else if("1".equals(penaltyAttrInfo.get("ATTR_VAL").toString())){
+			isPenalty = true;
+		}
+		
+		if(isPenalty){
+			//12개월 
+			Map<String,Object> penalty12 = orderManagementMapper.getProdAttr(soId, basicProdCd, Consts.PROD_ATTR.PENALTY_12, today);
+			if("12".equals((String)penalty12.get("ATTR_VAL"))){
+				penaltyCodeList.add(commonDataService.getCommonCode("CM00044", penalty12.get("ATTR_VAL").toString(), lng));
+			}
+			
+			//24개월
+			Map<String,Object> penalty24 = orderManagementMapper.getProdAttr(soId, basicProdCd, Consts.PROD_ATTR.PENALTY_24, today);
+			if("24".equals((String)penalty24.get("ATTR_VAL"))){
+				penaltyCodeList.add(commonDataService.getCommonCode("CM00044", penalty24.get("ATTR_VAL").toString(), lng));
+			}
+			
+			//36개월
+			Map<String,Object> penalty36 = orderManagementMapper.getProdAttr(soId, basicProdCd, Consts.PROD_ATTR.PENALTY_36, today);
+			if("36".equals((String)penalty36.get("ATTR_VAL"))){
+				penaltyCodeList.add(commonDataService.getCommonCode("CM00044", penalty36.get("ATTR_VAL").toString(), lng));
+			}
+		}
+		return penaltyCodeList;
+	}
+	
+	@Override
+	public List<Map<String, Object>> getDeviceProdList(String soId,
+	        String basicProdGrp, String basicProdCd, String today, String lng) {
+		return orderManagementMapper.getDeviceProdList(soId,basicProdGrp,basicProdCd,today,lng);
+	}
+
+
+	@Override
+	public List<Map<String, Object>> getAddProdList(String soId,
+	        String basicProdGrp, String basicProdCd, String today, String lng) {
+		
+		List<Map<String,Object>> addProdList = orderManagementMapper.getAddProdList(soId, basicProdGrp, basicProdCd, today, lng);
+		for(Map<String,Object> addProd : addProdList){
+			StringBuffer mandatoryAddProducts = new StringBuffer();
+			StringBuffer exclusiveAddProducts = new StringBuffer();
+			
+			List<Map<String,Object>> mandatoryProdList = orderManagementMapper.getMandatoryProdList((String)addProd.get("so_id"), (String)addProd.get("add_prod_cd"), today);
+			for(Map<String,Object> mandatoryProd : mandatoryProdList){
+				mandatoryAddProducts.append(mandatoryProd.get("prod_nm"));
+				mandatoryAddProducts.append("(");
+				mandatoryAddProducts.append(mandatoryProd.get("prod_cd"));
+				mandatoryAddProducts.append("),");
+			}
+			addProd.put("rel_b_prod_list", StringUtils.isEmpty(mandatoryAddProducts.toString()) ? "" : mandatoryAddProducts.toString().subSequence(0, mandatoryAddProducts.toString().length()-1));
+			
+			List<Map<String,Object>> exclusiveProdList = orderManagementMapper.getExclusiveProdList((String)addProd.get("so_id"), (String)addProd.get("add_prod_cd"), today);
+			for(Map<String,Object> exclusiveProds : exclusiveProdList){
+				exclusiveAddProducts.append(exclusiveProds.get("prod_nm"));
+				exclusiveAddProducts.append("(");
+				exclusiveAddProducts.append(exclusiveProds.get("prod_cd"));
+				exclusiveAddProducts.append("),");
+			}
+			addProd.put("rel_x_prod_list", StringUtils.isEmpty(exclusiveAddProducts.toString()) ? "" : exclusiveAddProducts.toString().subSequence(0, exclusiveAddProducts.toString().length()-1));
+		}
+		return addProdList;
+	}
+
+	@Override
+	public List<PrecheckInfoVO> getPrecheckInfo(OrderCommonVO orderCommonInfo,
+	        String userId, String lng, String today) {
+		return orderPrecheckMapper.getPrecheckResultList(
+				orderCommonInfo.getSoId(),
+				orderCommonInfo.getCustId(),
+				orderCommonInfo.getRcptId(),
+				orderCommonInfo.getOrderCd(),
+				orderCommonInfo.getBasicSvcCd(),
+				orderCommonInfo.getCustTp(),
+				today,
+				lng);
+	}
+
+	@Override
+	public OCtrtMastVO getOCtrtMastInfo(String soId, String custId,
+	        String ctrtId, String orderId) {
+		return orderProcessMapper.getOctrtMastInfo(soId, ctrtId, orderId);
+	}
+
+	@Override
+	public OCtrtMastExtVO getOCtrtMastExtInfo(String orderId, String extId) {
+		return orderProcessMapper.getOCtrtMastExtInfo(extId, orderId);
+	}
+
+	@Override
+	public List<OProdCmpsVO> getOProdCmpsInfoList(String soId, String custId,
+	        String ctrtId, String orderId) {
+		return orderProcessMapper.getOProdCmpsInfoList(soId, ctrtId, orderId);
+	}
+
+	@Override
+	public OProdCmpsExtVO getOProdCmpsExtInfo(String orderId, String extId) {
+		return orderProcessMapper.getOProdCmpsExtInfo(extId, orderId);
+	}
+
+	@Override
+	public List<OSvcCmpsVO> getOSvcCmpsInfoList(String soId, String custId,
+	        String ctrtId, String orderId) {
+		return orderProcessMapper.getOSvcCmpsInfoList(soId, ctrtId, orderId);
+	}
+
+	@Override
+	public OSvcCmpsExtVO getOSvcCmpsExtInfo(String orderId, String extId) {
+		return orderProcessMapper.getOSvcCmpsExtInfo(extId, orderId);
+	}
+
+	@Override
+	public Map<String, Object> getProdRateInfoByChargeType(String soId, String basicProdCd, String rateItmTypCd,
+			String today) {
+		Map<String,Object> rateInfo = orderManagementMapper.getProdRateInfoByChargeType(soId, basicProdCd, rateItmTypCd, today);
+		if(rateInfo == null){
+			rateInfo = new CaseInsensitiveMap<String,Object>();
+			rateInfo.put("RATE_VAL", "0");
+		}else if(rateInfo.isEmpty()){
+			rateInfo.put("RATE_VAL", "0");
+		}
+		return rateInfo;
+	}
+
+	@Override
+	public Map<String, Object> getCtrtInfo(String soId, String custId, String ctrtId, String lng) {
+		
+		if(StringUtils.isEmpty(soId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M07.LAB00004")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(custId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00046")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(ctrtId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00032")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		
+		Map<String,Object> resultMap = new HashMap<String,Object>();
+		
+		boolean isTerm = false;
+		
+		String today = DateUtil.getDateStringYYYYMMDD(0);
+		
+		//기본계약정보조회
+		Map<String,Object> basicProdInfo = orderManagementMapper.getCtrtBasicInfoInUse(soId, custId, ctrtId, today, lng);
+		
+		if("50".equals(basicProdInfo.get("CTRT_STAT")) || "90".equals(basicProdInfo.get("CTRT_STAT"))){
+			isTerm = true;
+		}
+		
+		//사용중인 상품계약정보 조회
+		List<OProdCmpsVO> prodCmpsList = orderManagementMapper.getProdCmpsInfoInUse(soId, ctrtId, lng, isTerm ? (String)basicProdInfo.get("ORDER_ID") : "");
+		List<OProdCmpsExtVO> prodCmpsExtList = new ArrayList<OProdCmpsExtVO>();
+		for(OProdCmpsVO prodCmps : prodCmpsList){
+			if(StringUtils.isEmpty(prodCmps.getExtId())){
+				continue;
+			}
+			prodCmpsExtList.add(orderManagementMapper.getProdCmpsExtInfo(prodCmps.getExtId()));
+		}
+		String basicSvcCd = null;
+		//사용중인 서비스정보 조회
+		List<OSvcCmpsVO> svcCmpsList = orderManagementMapper.getSvcCmpsInfoInUse(soId, custId, ctrtId, isTerm ? (String)basicProdInfo.get("ORDER_ID") : "");
+		List<OSvcCmpsExtVO> svcCmpsExtList = new ArrayList<OSvcCmpsExtVO>();
+		for(OSvcCmpsVO svcCmps : svcCmpsList){
+			if(svcCmps.getProdCd().equals(basicProdInfo.get("PROD_CD"))){
+				basicSvcCd = svcCmps.getSvcCd();
+			}
+			if(StringUtils.isEmpty(svcCmps.getExtId())){
+				continue;
+			}
+			svcCmpsExtList.add(orderManagementMapper.getSvcCmpsExtInfo(svcCmps.getExtId()));
+		}
+		//기본상품리스트 조회
+		List<Map<String,Object>> basicProdInfoList = orderManagementMapper.getAllBasicProdList(soId, basicSvcCd, (String)basicProdInfo.get("PROD_GRP"), today, lng);
+		//단말상품리스트 조회
+		List<Map<String,Object>> deviceProdInfoList = orderManagementMapper.getAllDeviceProdList(soId, (String)basicProdInfo.get("PROD_GRP"), (String)basicProdInfo.get("PROD_CD"), today, lng);
+		//부가서비스리스트조회
+		List<Map<String,Object>> addProdInfoList = orderManagementMapper.getAllAddProdList(soId,  (String)basicProdInfo.get("PROD_GRP"), (String)basicProdInfo.get("PROD_CD"), today, lng);
+		
+		
+		//단말설정정보작성
+		List<Map<String,Object>> deviceConfList = new ArrayList<Map<String,Object>>();
+		for(OSvcCmpsVO svcCmps : svcCmpsList){
+			Map<String,Object> confDevice = new HashMap<String,Object>();
+			for(Map<String,Object> deviceInfo : deviceProdInfoList){
+				if(svcCmps.getProdCd().equals((String)deviceInfo.get("device_prod_cd"))){
+					confDevice.putAll(deviceInfo);
+					confDevice.put("prod_cmps_id", svcCmps.getProdCmpsId());
+					confDevice.put("rate_strt_dt", svcCmps.getRateStrtDt());
+					break;
+				}
+			}
+			
+			if(confDevice.isEmpty())
+				continue;
+			if(!StringUtils.isEmpty(svcCmps.getExtId())){
+				for(OSvcCmpsExtVO svcExt : svcCmpsExtList){
+					if(svcCmps.getExtId().equals(svcExt.getExtId())){
+						confDevice.put("device_cnt", svcExt.getProdCnt());
+						confDevice.put("monthly_fee", svcExt.getMonthlyAmt());
+						confDevice.put("onetime_fee", svcExt.getOnetimeAmt());
+						break;
+					}
+				}
+			}
+			deviceConfList.add(confDevice);
+		}
+		
+		//부가설정정보작성
+		List<Map<String,Object>> addConfList = new ArrayList<Map<String,Object>>();
+		for(OSvcCmpsVO svcCmps : svcCmpsList){
+			Map<String,Object> confAdd = new HashMap<String,Object>();
+			for(Map<String,Object> addInfo : addProdInfoList){
+				if(svcCmps.getProdCd().equals((String)addInfo.get("add_prod_cd"))){
+					confAdd.putAll(addInfo);
+					confAdd.put("prod_cmps_id", svcCmps.getProdCmpsId());
+					confAdd.put("rate_strt_dt", svcCmps.getRateStrtDt());
+					break;
+				}
+			}
+			
+			if(confAdd.isEmpty())
+				continue;
+			if(!StringUtils.isEmpty(svcCmps.getExtId())){
+				for(OSvcCmpsExtVO svcExt : svcCmpsExtList){
+					if(svcCmps.getExtId().equals(svcExt.getExtId())){
+						confAdd.put("add_cnt", svcExt.getProdCnt());
+						confAdd.put("monthly_fee", svcExt.getMonthlyAmt());
+						confAdd.put("onetime_fee", svcExt.getOnetimeAmt());					
+						confAdd.put("core_cnt", svcExt.getCoreCnt());
+						confAdd.put("local", svcExt.getLocal());
+						confAdd.put("os_typ", svcExt.getOsTyp());
+						confAdd.put("svc_lvl", svcExt.getSvcLvl());
+						confAdd.put("rt_id", svcExt.getRtId());
+						confAdd.put("cnt", svcExt.getCnt());
+						confAdd.put("basic_core_cnt", svcExt.getBasicCoreCnt());
+						confAdd.put("add_core_cnt", svcExt.getAddCoreCnt());
+						confAdd.put("m_no", svcExt.getmNo());						
+						confAdd.put("fix_rate", svcExt.getFixRate());
+						confAdd.put("use_rate", svcExt.getUseRate());
+						confAdd.put("m_cd", svcExt.getmCd());
+						confAdd.put("other", svcExt.getOther());
+						break;
+					}
+				}
+			}
+			addConfList.add(confAdd);
+		}
+		
+		//협정가 설정
+		List<Map<String,Object>> monthlyConfList = new ArrayList<Map<String,Object>>();
+		List<Map<String,Object>> onetimeConfList = new ArrayList<Map<String,Object>>();
+		for(OSvcCmpsVO svcCmps : svcCmpsList){
+			Map<String,Object> prodInfo = null;
+			String prodNm = null;
+			for(Map<String,Object> prod : basicProdInfoList){
+				if(svcCmps.getProdCd().equals(prod.get("basic_prod_cd"))){
+					prodInfo = prod;
+					prodNm = (String)prod.get("basic_prod_cd_nm");
+					break;
+				}
+			}
+			
+			if(prodInfo == null){
+				for(Map<String,Object> deviceProdInfo : deviceProdInfoList){
+					if(svcCmps.getProdCd().equals(deviceProdInfo.get("device_prod_cd"))){
+						prodInfo = deviceProdInfo;
+						prodNm = (String)deviceProdInfo.get("device_prod_cd_nm");
+						break;
+					}
+				}
+			}
+			if(prodInfo == null){
+				for(Map<String,Object> addProdInfo : addProdInfoList){
+					if(svcCmps.getProdCd().equals(addProdInfo.get("add_prod_cd"))){
+						prodInfo = addProdInfo;
+						prodNm = (String)addProdInfo.get("add_prod_nm");
+						break;
+					}
+				}
+			}
+			
+			if(prodInfo == null) continue;
+			
+			if(!StringUtils.isEmpty(svcCmps.getExtId())){
+				for(OSvcCmpsExtVO svcExt : svcCmpsExtList){
+					if(svcCmps.getExtId().equals(svcExt.getExtId())){
+						if(!"0".equals(svcExt.getMonthlyAmt())){
+							Map<String,Object> monthlyConf = new HashMap<String,Object>();
+							monthlyConf.put("so_id", svcCmps.getSoId());
+							monthlyConf.put("svc_grp", svcCmps.getSvcGrp());
+							monthlyConf.put("svc_cd", svcCmps.getSvcCd());
+							monthlyConf.put("prod_typ", (String)prodInfo.get("prod_typ"));
+							monthlyConf.put("nego_prod_cd", svcCmps.getProdCd());
+							monthlyConf.put("nego_prod_cd_nm", prodNm);
+							monthlyConf.put("nego_cnt", svcExt.getProdCnt());
+							monthlyConf.put("sale_amt", svcExt.getMonthlyAmt());
+							monthlyConf.put("discount_rate", svcExt.getMonthlyNegoRate());
+							monthlyConf.put("nego_amt", svcExt.getMonthlyNegoAmt());
+							
+							monthlyConfList.add(monthlyConf);
+						}
+						
+						if(!"0".equals(svcExt.getOnetimeAmt())){
+							Map<String,Object> onetimeConf = new HashMap<String,Object>();
+							onetimeConf.put("so_id", svcCmps.getSoId());
+							onetimeConf.put("svc_grp", svcCmps.getSvcGrp());
+							onetimeConf.put("svc_cd", svcCmps.getSvcCd());
+							onetimeConf.put("prod_typ", (String)prodInfo.get("prod_typ"));
+							onetimeConf.put("nego_prod_cd", svcCmps.getProdCd());
+							onetimeConf.put("nego_prod_cd_nm", prodNm);
+							onetimeConf.put("nego_cnt", svcExt.getProdCnt());
+							onetimeConf.put("sale_amt", svcExt.getOnetimeAmt());
+							onetimeConf.put("discount_rate", svcExt.getOnetimeNegoRate());
+							onetimeConf.put("nego_amt", svcExt.getOnetimeNegoAmt());
+							onetimeConfList.add(onetimeConf);
+						}
+					}
+				}
+			}
+		}
+		
+		
+		// 장비상품의 제품 정보 조회
+		for(Map<String,Object> deviceProd : deviceConfList){
+			Map<String,Object> itmInfo = orderManagementMapper.getItemInfo(soId, ctrtId, (String)deviceProd.get("prod_cmps_id"));
+			
+			if(itmInfo != null && !itmInfo.isEmpty()){
+				deviceProd.put("item_nm", itmInfo.get("ITEM_NM"));
+				deviceProd.put("serial_no", itmInfo.get("SERIAL_NO"));
+				
+			}else{
+				deviceProd.put("item_nm", "");
+				deviceProd.put("serial_no", "");
+			}
+		}
+
+		// 부가상품의 제품정보 조회
+		for(Map<String,Object> addProd : addConfList){
+			Map<String,Object> itmInfo = orderManagementMapper.getItemInfo(soId, ctrtId, (String)addProd.get("prod_cmps_id"));
+			
+			if(itmInfo != null && !itmInfo.isEmpty()){
+				addProd.put("item_nm", itmInfo.get("ITEM_NM"));
+				addProd.put("serial_no", itmInfo.get("SERIAL_NO"));
+				
+			}else{
+				addProd.put("item_nm", "");
+				addProd.put("serial_no", "");
+			}
+		}
+		
+		resultMap.put("basicProdInfo", basicProdInfo);    // 기본계약정보
+		resultMap.put("deviceInfoList", deviceConfList);  // 사용중인 장비상품정보
+		resultMap.put("addInfoList", addConfList);        // 사용중인 부가서비스정보
+		resultMap.put("monthlyFeeList", monthlyConfList); // 월정액 협정가 정보
+		resultMap.put("oneTimeFeeList", onetimeConfList); // 일회성 협정가 정보
+		
+		return resultMap;
+	}
+
+	@Override
+	public List<PaymentAccountInfoVO> getPymAcntListForChange(String soId, String ctrtId, String searchTp, String searchKey, String lng) {
+		/**
+		 *  사업ID 체크
+		 */
+		if(StringUtils.isEmpty(soId)){
+			String[] args = new String[] { MessageUtil.getMessage("LAB.M07.LAB00004") };
+			throw new ServiceException("MSG.M13.MSG00027", args);
+		}
+			
+		/**
+		 * 계약ID 체크
+		 */
+		if(StringUtils.isEmpty(ctrtId)){
+			String[] args = new String[] { MessageUtil.getMessage("LAB.M01.LAB00032") };
+			throw new ServiceException("MSG.M13.MSG00027", args);
+		}
+		
+		/**
+		 * 조회 항목 값 체크
+		 */
+		if(StringUtils.isEmpty(searchTp) || StringUtils.isEmpty(searchKey) || "SEL".equals(searchTp)){
+			String[] args = new String[] { MessageUtil.getMessage("LAB.M09.LAB00164") };
+			throw new ServiceException("MSG.M13.MSG00027", args);
+		}
+		
+		return orderManagementMapper.getPymAcntListForChange(soId, ctrtId, searchTp, searchKey, DateUtil.getDateStringYYYYMMDD(0), lng);
+	}
+
+	@Override
+	public Map<String, Object> getCtrtHist(String soId, String custId, String ctrtId, String lng) {
+		if(StringUtils.isEmpty(soId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M07.LAB00004")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(custId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00046")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(ctrtId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00032")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		
+		Map<String,Object> resultMap = new HashMap<String,Object>();
+		
+		//기본계약정보조회
+		List<Map<String,Object>> basicHistList = orderManagementMapper.getCtrtBasicInfoHist(soId, custId, ctrtId, lng);
+		
+		//장비상품 이력조회
+		List<Map<String,Object>> deviceHistList = orderManagementMapper.getDeviceProdHist(soId, custId, ctrtId, lng);
+		List<Map<String,Object>> deviceProdList = orderManagementMapper.getDeviceProdListForFilter(soId, custId, ctrtId, lng);
+		
+		//부가상품 이력조회
+		List<Map<String,Object>> addonHistList = orderManagementMapper.getAddonHist(soId, custId, ctrtId, lng);
+		List<Map<String,Object>> addonProdList = orderManagementMapper.getAddonProdListForFilter(soId, custId, ctrtId, lng);
+		
+		//일시정지이력조회
+		List<Map<String,Object>> suspentionHistList = orderManagementMapper.getSuspentionHist(soId, custId, ctrtId, lng);
+		List<CommonCodeVO> suspentionResnCodeList = commonDataService.getCommonCodeList("CM00049", lng);
+		
+		//설치주소 이력 조회
+		List<Map<String,Object>> instlAddrHistList = orderManagementMapper.getInstAddrHist(soId, custId, ctrtId, lng);
+		
+		//납부계정
+		List<Map<String,Object>> payerHistList = orderManagementMapper.getPayerHist(soId, custId, ctrtId, lng);
+		//공정률이력
+		List<Map<String,Object>> procRateHistList = orderManagementMapper.getProcRateHistList(soId, custId, ctrtId, lng);
+		
+		resultMap.put("basicHistList", basicHistList);
+		resultMap.put("deviceHistList", deviceHistList);
+		resultMap.put("addonHistList", addonHistList);
+		resultMap.put("deviceProdList", deviceProdList);
+		resultMap.put("addonProdList", addonProdList);
+		resultMap.put("suspentionHistList", suspentionHistList);
+		resultMap.put("suspentionResnCodeList", suspentionResnCodeList);
+		resultMap.put("instlAddrHistList", instlAddrHistList);
+		resultMap.put("payerHistList", payerHistList);
+		resultMap.put("procRateHistList", procRateHistList);
+		return resultMap;
+	}
+
+	@Override
+	public List<Map<String, Object>> getCtrtSusHist(String soId, String custId, String ctrtId, String lng) {
+		if(StringUtils.isEmpty(soId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M07.LAB00004")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(custId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00046")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(ctrtId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00032")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		return orderManagementMapper.getSuspentionHist(soId, custId, ctrtId, lng);
+	}
+
+	@Override
+	public CtrtPromVO getCtrtPromInfo(String promId, String ctrtId) {
+		return orderManagementMapper.getCtrtPromInfo(promId, ctrtId);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getProdListTobeChange(String soId, String custId, String ctrtId,
+			String basicProdGrp, String basicProdCd, String today, String lng) {
+		
+		if(StringUtils.isEmpty(soId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M07.LAB00004")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(custId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00046")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(ctrtId)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00032")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(basicProdGrp)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00211")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		if(StringUtils.isEmpty(basicProdCd)){
+			String[] arg = {MessageUtil.getMessage("LAB.M01.LAB00213")};
+			throw new ServiceException("MSG.M13.MSG00027", arg); // 필수값 체크
+		}
+		
+		Map<String, Object> changeList = new HashMap<String,Object>();
+		
+		List<Map<String,Object>> chageDeviceProdList = new ArrayList<Map<String,Object>>();
+		List<Map<String,Object>> chageAddProdList = new ArrayList<Map<String,Object>>();
+		
+		Map<String,Object> ctrtInfo = getCtrtInfo(soId, custId, ctrtId, lng);
+		List<Map<String,Object>> deviceInfoList = (List<Map<String,Object>>)ctrtInfo.get("deviceInfoList");
+		List<Map<String,Object>> addInfoList = (List<Map<String,Object>>)ctrtInfo.get("addInfoList");
+		List<Map<String,Object>> deviceProdAvailList = orderManagementMapper.getDeviceProdList(soId,basicProdGrp,basicProdCd,today,lng);
+		List<Map<String,Object>> addProdAvailList = orderManagementMapper.getAddProdList(soId,basicProdGrp,basicProdCd,today,lng);
+		
+		//삭제대상 장비 상품 검색
+		List<String> delDeviceProdCmpsIdList = new ArrayList<String>();
+		for(Map<String,Object> device : deviceInfoList){
+			boolean isAvail = false;
+			for(Map<String,Object> tobeDevice : deviceProdAvailList){
+				if(((String)device.get("device_prod_cd")).equals((String)tobeDevice.get("device_prod_cd"))){
+					isAvail = true;
+					break;
+				}
+			}
+			
+			if(isAvail == false){
+				delDeviceProdCmpsIdList.add((String)device.get("prod_cmps_id"));
+			}
+		}
+		
+		//삭제대상 부가 상품 검색
+		List<String> delAddProdCmpsIdList = new ArrayList<String>();
+		for(Map<String,Object> add : addInfoList){
+			boolean isAvail = false;
+			for(Map<String,Object> tobeAdd : addProdAvailList){
+				if(((String)add.get("add_prod_cd")).equals((String)tobeAdd.get("add_prod_cd"))){
+					isAvail = true;
+					break;
+				}
+			}
+			
+			if(isAvail == false){
+				delAddProdCmpsIdList.add((String)add.get("prod_cmps_id"));
+			}
+		}
+		
+		//장비필수추가(이미 가입중이면 제외)
+		List<String> addDeviceProdList = new ArrayList<String>();
+		for(Map<String,Object> tobeDevice : deviceProdAvailList){
+			if("Y".equals(tobeDevice.get("is_mandatory_yn"))){
+				boolean isInUse = false;
+				for(Map<String,Object> device : deviceInfoList){
+					if(((String)device.get("device_prod_cd")).equals((String)tobeDevice.get("device_prod_cd"))){
+						isInUse = true;
+						break;
+					}
+				}
+				
+				if(isInUse == false){
+					addDeviceProdList.add((String)tobeDevice.get("device_prod_cd"));
+				}
+			}
+		}
+		
+		//부가필수추가(이미 가입중이면 제외)
+		List<String> addAddProdList = new ArrayList<String>();
+		for(Map<String,Object> tobeAdd : addProdAvailList){
+			if("Y".equals(tobeAdd.get("add_prod_mandatory_yn"))){
+				boolean isInUse = false;
+				for(Map<String,Object> add : addInfoList){
+					if(((String)add.get("add_prod_cd")).equals((String)tobeAdd.get("add_prod_cd"))){
+						isInUse = true;
+						break;
+					}
+				}
+				
+				if(isInUse == false){
+					addAddProdList.add((String)tobeAdd.get("add_prod_cd"));
+				}
+			}
+		}
+		
+		
+		//삭제장비상품구성
+		for(Map<String,Object> device : deviceInfoList){
+			for(String delProdCmpsId : delDeviceProdCmpsIdList){
+				if( delProdCmpsId.equals((String)device.get("prod_cmps_id"))){
+					device.put("change_tp", "D");
+					device.put("change_tp_nm", commonDataService.getCommonCode("CM00054", "D", lng).getCommonCdNm());
+					chageDeviceProdList.add(device);
+					break;
+				}
+			}
+		}
+		
+		//추가부가상품구성
+		for(Map<String,Object> device : deviceProdAvailList){
+			for(String deviceProdCd : addDeviceProdList){
+				if( deviceProdCd.equals((String)device.get("device_prod_cd"))){
+					device.put("change_tp", "A");
+					device.put("change_tp_nm", commonDataService.getCommonCode("CM00054", "A", lng).getCommonCdNm());
+					device.put("prod_cmps_id","");
+					device.put("org_onetime_fee", device.get("onetime_fee"));
+					device.put("org_monthly_fee",device.get("monthly_fee"));
+					chageDeviceProdList.add(device);
+				}
+			}
+		} 
+		
+		
+		
+		
+		//삭제부가상품구성
+		for(Map<String,Object> add : addInfoList){
+			for(String delProdCmpsId : delAddProdCmpsIdList){
+				if( delProdCmpsId.equals((String)add.get("prod_cmps_id"))){
+					add.put("change_tp", "D");
+					add.put("change_tp_nm", commonDataService.getCommonCode("CM00054", "D", lng).getCommonCdNm());
+					chageAddProdList.add(add);
+					break;
+				}
+			}
+		}
+		
+		//추가부가상품구성
+		for(Map<String,Object> add : addProdAvailList){
+			for(String addProdCd : addAddProdList){
+				if( addProdCd.equals((String)add.get("add_prod_cd"))){
+					add.put("change_tp", "A");
+					add.put("change_tp_nm", commonDataService.getCommonCode("CM00054", "A", lng).getCommonCdNm());
+					add.put("prod_cmps_id","");
+					add.put("org_onetime_fee", add.get("onetime_fee"));
+					add.put("org_monthly_fee",add.get("monthly_fee"));
+					chageAddProdList.add(add);
+				}
+			}
+		} 
+		
+		changeList.put("chageDeviceProdList", chageDeviceProdList);
+		changeList.put("changeAddProdList", chageAddProdList);
+		return changeList;
+	}
+
+	@Override
+	public String getCustTp(String soId, String custId) {
+		return orderManagementMapper.getCustTp(soId, custId);
+	}
+
+	
+	@Override
+	public OrderInfoVO getBasicProdList2(String soId, String prodCd, String today, String lng) {
+		return orderManagementMapper.getBasicProdList2(soId, prodCd, today, lng);
+	}
+}

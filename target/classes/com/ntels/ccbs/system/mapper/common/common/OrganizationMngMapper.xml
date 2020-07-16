@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.common.OrganizationMngMapper">
+
+	<!-- 하위 조직 아이디 리스트 조회 -->
+	<select id="recursionOrganizationList" parameterType="java.util.ArrayList" resultType="com.ntels.ccbs.system.domain.common.common.OrganizationMngVO">
+		SELECT
+				A.ORG_ID
+				, A.UPP_ORG_ID
+		FROM 	TSYCO_ORG_INFO A
+		WHERE	A.UPP_ORG_ID IN
+		<foreach collection="organizationMngVO" item="item" index="index" separator="," open="(" close=")">
+            #{item.orgId}
+        </foreach>
+		
+	</select>
+
+	<!-- 조직 리스트 조회 -->
+	<select id="organizationList" parameterType="com.ntels.ccbs.system.domain.common.common.OrganizationMngVO" resultType="com.ntels.ccbs.system.domain.common.common.OrganizationMngVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+		SELECT
+				A.SO_ID                	/* 사업ID*/
+		       	, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+		       	, A.ORG_ID               /* 조직ID*/
+	       		, A.ORG_NM               /* 조직명*/
+	       		, A.TP_CD                /* 유형코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00038'
+							AND DETAIL.COMMON_CD = A.TP_CD
+	       		) AS TP_NM            /* 유형코드명*/
+	       		, A.TP_DTL_CD         /* 유형상세코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00039'
+							AND DETAIL.COMMON_CD = A.TP_DTL_CD
+	       		) AS TP_DTL_NM    	/* 유형상세코드명*/
+	       		, A.ORG_LV_CD            /* 조직레벨코드*/
+		       , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00052'
+							AND DETAIL.COMMON_CD = A.ORG_LV_CD
+	       		) AS ORG_LV_NM    		/* 조직레벨코드명*/
+	       		, A.APPY_STRT_DT         /* 적용시작일*/
+			    , A.APPY_END_DT          /* 적용종료일*/
+		       	, (SELECT REP_NM FROM TDNDI_DIST_INFO WHERE ORG_ID = A.ORG_ID) AS REP_NM /* 대표자이름*/
+		FROM TSYCO_ORG_INFO A
+		WHERE	1=1
+		<if test="organizationMngVO.soId != null and organizationMngVO.soId != ''">
+			AND A.SO_ID =  #{organizationMngVO.soId}
+		</if>
+		<if test="organizationMngVO.orgIdList != null and organizationMngVO.orgIdList.size() != 0">
+			AND A.ORG_ID IN
+			<foreach collection="organizationMngVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+	            #{item}
+	        </foreach>
+        </if>
+		<if test="organizationMngVO.tpCd != null and organizationMngVO.tpCd != ''">
+			AND A.TP_CD =  #{organizationMngVO.tpCd}
+		</if>
+		<if test="organizationMngVO.tpDtlCd != null and organizationMngVO.tpDtlCd != ''">
+			AND A.TP_DTL_CD =  #{organizationMngVO.tpDtlCd}
+		</if>
+		<if test="organizationMngVO.orgNm != null and organizationMngVO.orgNm != ''">
+			AND A.ORG_NM LIKE CONCAT(CONCAT('%', #{organizationMngVO.orgNm} ), '%')
+		</if>
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+	</select>
+	
+	
+	<!-- 조직 리스트 카운트 -->
+	<select id="organizationCount" parameterType="com.ntels.ccbs.system.domain.common.common.OrganizationMngVO"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM   TSYCO_ORG_INFO  A                                                    
+		WHERE	1=1
+		<if test="organizationMngVO.soId != null and organizationMngVO.soId != ''">
+			AND A.SO_ID =  #{organizationMngVO.soId}
+		</if>
+		<if test="organizationMngVO.orgIdList != null and organizationMngVO.orgIdList.size() != 0">
+			AND A.ORG_ID IN
+			<foreach collection="organizationMngVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+	            #{item}
+	        </foreach>
+        </if>
+		<if test="organizationMngVO.tpCd != null and organizationMngVO.tpCd != ''">
+			AND A.TP_CD =  #{organizationMngVO.tpCd}
+		</if>
+		<if test="organizationMngVO.tpDtlCd != null and organizationMngVO.tpDtlCd != ''">
+			AND A.TP_DTL_CD =  #{organizationMngVO.tpDtlCd}
+		</if>
+		<if test="organizationMngVO.orgNm != null and organizationMngVO.orgNm != ''">
+			AND A.ORG_NM LIKE CONCAT(CONCAT('%', #{organizationMngVO.orgNm} ), '%')
+		</if>
+		
+	</select>
+	
+	
+	<!-- 조직 리스트 조회 -->
+	<select id="organizationList2" parameterType="com.ntels.ccbs.system.domain.common.common.OrganizationMngVO" resultType="com.ntels.ccbs.system.domain.common.common.OrganizationMngVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+		SELECT
+				A.SO_ID					/*사업ID*/
+				, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+				, A.ORG_ID				/*조직ID*/
+				, A.ORG_NM				/*조직명*/
+				, B.USER_ID				/*사용자ID*/
+				, B.USER_NAME			/*사용자이름*/
+				, B.EMP_NO				/*직원ID*/
+				, A.TP_CD				/*유형코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00038'
+							AND DETAIL.COMMON_CD = A.TP_CD
+	       		) AS TP_NM				/*유형코드명*/
+	       		, A.TP_DTL_CD			/*유형상세코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00039'
+							AND DETAIL.COMMON_CD = A.TP_DTL_CD
+	       		) AS TP_DTL_NM			/*유형상세코드명*/
+	       		, A.AR_CL_CD			/*지역분류코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+							, TSYCO_CODE_MAST_NAME MNAME
+							, TSYCO_CODE_DETAIL DETAIL
+							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP       =DETAIL.COMMON_GRP
+						AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+						AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+						AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+						AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+						AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+						AND MAST.COMMON_GRP   ='DN00100'
+						AND DETAIL.COMMON_CD = A.AR_CL_CD
+				) AS AR_CL_NM			/*지역분류코드명*/	
+				, A.AR_TP_CD			/*지역구분코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+								, TSYCO_CODE_MAST_NAME MNAME
+								, TSYCO_CODE_DETAIL DETAIL
+								, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+							AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+							AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+							AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+							AND MAST.COMMON_GRP   ='DN00101'
+							AND DETAIL.COMMON_CD = A.AR_TP_CD
+				) AS AR_TP_NM			/*지역구분코드명*/
+	       		, A.INQ_PERM_CD			/*조회권한코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+								, TSYCO_CODE_MAST_NAME MNAME
+								, TSYCO_CODE_DETAIL DETAIL
+								, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+							AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+							AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+							AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+							AND MAST.COMMON_GRP   ='DN00051'
+							AND DETAIL.COMMON_CD = A.INQ_PERM_CD
+				) AS INQ_PERM_NM		/*조회권한코드명*/
+				, A.ORG_LV_CD			/*조직레벨코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+							, TSYCO_CODE_MAST_NAME MNAME
+							, TSYCO_CODE_DETAIL DETAIL
+							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+						AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+						AND MNAME.LNG_TYP     =#{organizationMngVO.lngTyp}
+						AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+						AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+						AND NAME.LNG_TYP      = #{organizationMngVO.lngTyp}
+						AND MAST.COMMON_GRP   ='DN00052'
+						AND DETAIL.COMMON_CD = A.ORG_LV_CD
+	       		) AS ORG_LV_NM			/*조직레벨코드명*/
+	       		, B.TEL_NO				/*전화번호*/
+	       		, B.MTEL_NO				/*휴대전화*/
+	       		, D.ZIP_CD				/*우편번호*/
+	       		, D.ADDR1				/*주소1*/
+	       		, D.ADDR2				/*주소2*/		       		
+		FROM	TDNDI_ORG_INFO A
+				INNER JOIN TSYCO_USER B ON A.ORG_ID = B.ORG_ID
+				LEFT OUTER JOIN TDNDI_DIST_INFO D ON A.ORG_ID = D.ORG_ID
+		WHERE	1=1
+		<if test="organizationMngVO.soId != null and organizationMngVO.soId != ''">
+			AND A.SO_ID =  #{organizationMngVO.soId}
+		</if>
+		<if test="organizationMngVO.orgIdList != null and organizationMngVO.orgIdList.size() != 0">
+			AND A.ORG_ID IN
+			<foreach collection="organizationMngVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+	            #{item}
+	        </foreach>
+        </if>
+		<if test="organizationMngVO.tpCd != null and organizationMngVO.tpCd != ''">
+			AND A.TP_CD =  #{organizationMngVO.tpCd}
+		</if>
+		<if test="organizationMngVO.tpDtlCd != null and organizationMngVO.tpDtlCd != ''">
+			AND A.TP_DTL_CD =  #{organizationMngVO.tpDtlCd}
+		</if>
+		<if test="organizationMngVO.orgNm != null and organizationMngVO.orgNm != ''">
+			AND A.ORG_NM LIKE CONCAT(CONCAT('%', #{organizationMngVO.orgNm} ), '%')
+		</if>
+		<if test="organizationMngVO.userName != null and organizationMngVO.userName != ''">
+			AND B.USER_NAME LIKE CONCAT(CONCAT('%', #{organizationMngVO.userName} ), '%')
+		</if>
+		<if test="organizationMngVO.arTpCd != null and organizationMngVO.arTpCd != ''">
+			AND A.AR_TP_CD =  #{organizationMngVO.arTpCd}
+		</if>
+		<if test="organizationMngVO.arClCd != null and organizationMngVO.arClCd != ''">
+			AND A.AR_CL_CD =  #{organizationMngVO.arClCd}
+		</if>
+		
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+	</select>
+	
+	<!-- 조직 리스트 카운트 -->
+	<select id="organizationCount2" parameterType="com.ntels.ccbs.system.domain.common.common.OrganizationMngVO"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDI_ORG_INFO A
+				INNER JOIN TSYCO_USER B ON A.ORG_ID = B.ORG_ID
+				LEFT OUTER JOIN TDNDI_DIST_INFO D ON A.ORG_ID = D.ORG_ID
+		WHERE	1=1
+		<if test="organizationMngVO.soId != null and organizationMngVO.soId != ''">
+			AND A.SO_ID =  #{organizationMngVO.soId}
+		</if>
+		<if test="organizationMngVO.orgIdList != null and organizationMngVO.orgIdList.size() != 0">
+			AND A.ORG_ID IN
+			<foreach collection="organizationMngVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+	            #{item}
+	        </foreach>
+        </if>
+		<if test="organizationMngVO.tpCd != null and organizationMngVO.tpCd != ''">
+			AND A.TP_CD =  #{organizationMngVO.tpCd}
+		</if>
+		<if test="organizationMngVO.tpDtlCd != null and organizationMngVO.tpDtlCd != ''">
+			AND A.TP_DTL_CD =  #{organizationMngVO.tpDtlCd}
+		</if>
+		<if test="organizationMngVO.orgNm != null and organizationMngVO.orgNm != ''">
+			AND A.ORG_NM LIKE CONCAT(CONCAT('%', #{organizationMngVO.orgNm} ), '%')
+		</if>
+		<if test="organizationMngVO.userName != null and organizationMngVO.userName != ''">
+			AND B.USER_NAME LIKE CONCAT(CONCAT('%', #{organizationMngVO.userName} ), '%')
+		</if>
+		<if test="organizationMngVO.arTpCd != null and organizationMngVO.arTpCd != ''">
+			AND A.AR_TP_CD =  #{organizationMngVO.arTpCd}
+		</if>
+		<if test="organizationMngVO.arClCd != null and organizationMngVO.arClCd != ''">
+			AND A.AR_CL_CD =  #{organizationMngVO.arClCd}
+		</if>
+		
+	</select>
+	
+</mapper>

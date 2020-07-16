@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.UsageTypeRuleMapper">
+
+	<select id="getUsageTypeRuleList" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeRule"
+		resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeRule">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT 
+		     DATA_NM
+		   , SEQ_NO
+		   , FLD_SEQ
+		   , FLD_NM
+		   , EFF_DT
+		   , LAST_MOD_BY
+		   , LAST_MOD_DT
+		 FROM TOP_USG_TYP_RULE
+		WHERE 1=1
+		  AND DATA_NM LIKE ( '%' || #{usageTypeRule.dataNm} || '%' )
+		  AND SEQ_NO LIKE ( '%' || #{usageTypeRule.seqNo } || '%' )
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getUsageTypeRuleListCount" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeRule"
+		resultType="int">
+		
+		SELECT
+		      COUNT(*)
+		  FROM (
+		  		SELECT *
+		  		  FROM TOP_USG_TYP_RULE
+		  		 WHERE 1=1
+		  		   AND DATA_NM = #{usageTypeRule.insertDataNm} 
+		  		   AND SEQ_NO = #{usageTypeRule.insertSeqNo}
+		  		   AND FLD_SEQ = #{usageTypeRule.insertFldSeq}
+		  		   AND EFF_DT = #{usageTypeRule.insertEffDt}
+		  )
+		 WHERE 1=1
+	
+	</select>
+	
+	<select id="getDataNmList" resultType="CommonCodeVO">
+	
+		   SELECT DISTINCT
+		          DATA_NM AS COMMON_CD
+                , DATA_NM AS COMMON_CD_NM
+             FROM TOP_USG_TYP_RULE
+            WHERE 1=1 
+	
+	</select>
+	
+	<select id="getSeqNoList" resultType="CommonCodeVO">
+	
+		SELECT DISTINCT
+			  SEQ_NO AS COMMON_CD
+			, SEQ_NO AS COMMON_CD_NM
+		  FROM TOP_USG_TYP_RULE
+		 WHERE 1=1
+		
+	</select>
+
+	<insert id="addUsageTypeRule" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeRule">
+    	
+    	INSERT INTO TOP_USG_TYP_RULE (
+    		DATA_NM
+          , SEQ_NO
+          , FLD_SEQ
+          , EFF_DT
+          , EXP_DT
+          , FLD_NM
+          , LAST_MOD_BY
+          , LAST_MOD_DT
+    	)
+    	VALUES (
+    		#{usageTypeRule.insertDataNm}
+    	  , #{usageTypeRule.insertSeqNo}
+    	  , #{usageTypeRule.insertFldSeq}
+    	  , #{usageTypeRule.insertEffDt}
+    	  , #{usageTypeRule.insertExpDt}
+    	  , #{usageTypeRule.insertFldNm}
+    	  , #{usageTypeRule.userId}
+    	  , #{usageTypeRule.sysToDate}
+    	)
+
+    </insert>
+    
+	<update id="modUsageTypeRule" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeRule">
+    	
+    	UPDATE TOP_USG_TYP_RULE
+    	   SET 
+    		   FLD_NM = #{usageTypeRule.modFldNm}
+    		 , LAST_MOD_BY = #{usageTypeRule.userId}
+    		 , LAST_MOD_DT = #{usageTypeRule.sysToDate}
+    	 WHERE 1=1
+    	   AND DATA_NM = #{usageTypeRule.modDataNm}
+    	   AND SEQ_NO = #{usageTypeRule.modSeqNo}
+    	   AND FLD_SEQ = #{usageTypeRule.modFldSeq}
+    	   AND EFF_DT = #{usageTypeRule.modEffDt}
+    	
+   
+	</update>
+	
+	<delete id="delUsageTypeRule" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeRule">
+   
+   		DELETE 
+   		  FROM TOP_USG_TYP_RULE
+   		 WHERE 1=1
+   		   AND DATA_NM = #{usageTypeRule.delDataNm}
+   		   AND SEQ_NO = #{usageTypeRule.delSeqNo}
+   		   AND FLD_SEQ = #{usageTypeRule.delFldSeq}
+   		   AND EFF_DT = #{usageTypeRule.delEffDt}
+	
+	</delete>
+
+
+</mapper>

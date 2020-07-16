@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.charge.charge.PaymentChargeCalculationMapper">
+
+	<!-- 요금내역 카운트 -->
+	<select id="getChrgeInfoCount" parameterType="com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo" resultType="int">
+		SELECT   COUNT(0)
+		   FROM
+		   (
+		   SELECT
+				B.SO_ID
+				, ''  AS CLC_WRK_NO
+				, '' AS CLC_WRK_CL
+				, '' AS  PROC_DTTM
+				, B.BILL_YYMM
+				, B.BILL_CYCL
+				, B.PYM_ACNT_ID
+				, B.CUST_ID
+				, B.CTRT_ID
+				, B.PROD_CD
+				, SUM(C.USE_AMT)		AS TOT_USE_AMT
+				, SUM(C.USE_CNT)		AS TOT_USE_CNT
+				, (SELECT DISTINCT CUST_NM
+					FROM IFNBRM_CUST_INFO		X		/* 고객정보 */
+					WHERE X.CUST_ID		= B.CUST_ID
+					AND X.SO_ID 		= B.SO_ID
+				)						AS CUST_NM
+				, (SELECT PROD_NM
+					FROM IFNBRM_PROD_INFO		X		/* 상품정보 */
+					WHERE X.PROD_CD		= B.PROD_CD
+				)						AS PROD_NM
+				, (SELECT SO_NM
+					FROM TSYCO_SO_MAST			X		/* SO 마스타*/
+					WHERE X.SO_ID		= B.SO_ID
+				)						AS SO_NM
+		FROM TBLCH_SVC_CMPS_MT	B		/* 서비스구성Master */
+			, TBLCH_CHRG		C		/* 요금내역 */
+		WHERE 	B.CLC_WRK_NO		= C.CLC_WRK_NO
+			AND B.BILL_YYMM			= C.BILL_YYMM
+			AND B.BILL_CYCL			= C.BILL_CYCL
+			AND B.USE_YYMM			= C.USE_YYMM
+			AND B.SVC_CMPS_ID		= C.SVC_CMPS_ID
+			AND B.SO_ID				= C.SO_ID
+			
+		<if test="paymentChargeCalculationVo.soId != null and paymentChargeCalculationVo.soId != ''">
+			AND B.SO_ID 			= #{paymentChargeCalculationVo.soId}
+		</if>			
+		<if test="paymentChargeCalculationVo.billYymm != null and paymentChargeCalculationVo.billYymm != ''">
+			AND B.BILL_YYMM			= #{paymentChargeCalculationVo.billYymm}
+		</if>
+		<if test="paymentChargeCalculationVo.pymAcntId != null and paymentChargeCalculationVo.pymAcntId != ''">
+			AND b.PYM_ACNT_ID 		= #{paymentChargeCalculationVo.pymAcntId}
+		</if>
+		
+		GROUP BY B.SO_ID, B.BILL_YYMM, B.BILL_CYCL, B.PYM_ACNT_ID, B.CUST_ID
+				, B.CTRT_ID, B.PROD_CD
+		) A
+	</select>
+	
+	<!-- 요금내역 리스트-->
+	<select id="getChrgeInfoList" parameterType="com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo" resultType="com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+		SELECT
+				B.SO_ID
+				, ''  AS CLC_WRK_NO
+				, '' AS CLC_WRK_CL
+				, '' AS  PROC_DTTM
+				, B.BILL_YYMM
+				, B.BILL_CYCL
+				, B.PYM_ACNT_ID
+				, B.CUST_ID
+				, B.CTRT_ID
+				, B.PROD_CD
+				, SUM(C.USE_AMT)		AS TOT_USE_AMT
+				, SUM(C.USE_CNT)		AS TOT_USE_CNT
+				, (SELECT DISTINCT CUST_NM
+					FROM IFNBRM_CUST_INFO		X		/* 고객정보 */
+					WHERE X.CUST_ID		= B.CUST_ID
+					and X.SO_ID 		= B.SO_ID
+				)						AS CUST_NM
+				, (SELECT PROD_NM
+					FROM IFNBRM_PROD_INFO		X		/* 상품정보 */
+					WHERE X.PROD_CD		= B.PROD_CD
+				)						AS PROD_NM
+				, (SELECT SO_NM
+					FROM TSYCO_SO_MAST			X		/* SO 마스타*/
+					WHERE X.SO_ID		= B.SO_ID
+				)						AS SO_NM
+		FROM TBLCH_SVC_CMPS_MT	B		/* 서비스구성Master */
+			, TBLCH_CHRG		C		/* 요금내역 */
+		WHERE 	B.CLC_WRK_NO		= C.CLC_WRK_NO
+			AND B.BILL_YYMM			= C.BILL_YYMM
+			AND B.BILL_CYCL			= C.BILL_CYCL
+			AND B.USE_YYMM			= C.USE_YYMM
+			AND B.SVC_CMPS_ID		= C.SVC_CMPS_ID
+			AND B.SO_ID				= C.SO_ID
+			
+		<if test="paymentChargeCalculationVo.soId != null and paymentChargeCalculationVo.soId != ''">
+			AND B.SO_ID 			= #{paymentChargeCalculationVo.soId}
+		</if>			
+		<if test="paymentChargeCalculationVo.billYymm != null and paymentChargeCalculationVo.billYymm != ''">
+			AND B.BILL_YYMM			= #{paymentChargeCalculationVo.billYymm}
+		</if>
+		<if test="paymentChargeCalculationVo.pymAcntId != null and paymentChargeCalculationVo.pymAcntId != ''">
+			AND b.PYM_ACNT_ID 		= #{paymentChargeCalculationVo.pymAcntId}
+		</if>
+		
+		GROUP BY B.SO_ID, B.BILL_YYMM, B.BILL_CYCL, B.PYM_ACNT_ID, B.CUST_ID
+				, B.CTRT_ID, B.PROD_CD
+		ORDER BY PROC_DTTM DESC, SO_NM, B.CUST_ID, B.CTRT_ID, PROD_NM
+        
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+</mapper>	

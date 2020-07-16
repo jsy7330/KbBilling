@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.billing.billingAdjust.BillingAfterAdjustApplyMapper">
+
+<!-- 수납 조회 -->
+    <!-- 요금조정신청내역 -->
+    <select id="getAfterAdjTgtList" parameterType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAfterAdjustApplyVO" resultType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAfterAdjustApplyVO">
+        SELECT Z.CHK_JOB
+             , Z.ADJ_NO
+             , Z.BILL_SEQ_NO
+             , Z.BILL_YYMM
+             , Z.BILL_DT
+             , Z.APPL_SO_ID
+             , Z.BILL_APLY_DT
+             , Z.APPL_DTTM
+             , Z.PAY_DUE_DT
+             , Z.ADJ_PRV_BILL_AMT
+             , Z.ADJ_APPL_AMT
+             , Z.ADJ_AMT
+             , Z.DCSN_PROC_STAT
+             , Z.DCSN_PROC_STAT_NM
+             , Z.ADJ_PT
+             , Z.PYM_ACNT_ID
+             , Z.APPNT_NM
+             , Z.RCPT_PSN_ID
+             , Z.RCPT_DTTM
+             , Z.ADJ_RESN_CD
+             , Z.HOPE_APLY_YYMM
+             , Z.PYM_ACNT_NM
+             , Z.RCPT_PSN_NM
+             , Z.APPL_SO_NM
+             , Z.CHGR_ID_NM
+             , Z.CHG_DTTM
+             , Z.TAX_BILL_YN_THIS
+             , Z.TAX_BILL_YN_THAT
+             , Z.ADJ_YN
+             , Z.RCPT_AMT
+             ,DECODE(Z.DCSN_PROC_STAT,'05',Z.ADJ_PRV_BILL_AMT + Z.ADJ_AMT-Z.ADJ_APPL_AMT,Z.ADJ_PRV_BILL_AMT + Z.ADJ_AMT) AS ADJ_PRV_BILL_AMT_A
+             ,DECODE(Z.DCSN_PROC_STAT,'05',Z.ADJ_APPL_AMT,0) AS ADJ_AMT_A
+             , Z.ADJ_PRV_BILL_AMT + Z.ADJ_AMT           AS BILL_AMT                              /* 청구금액 */
+             , Z.ADJ_PRV_BILL_AMT                       AS ADJ_PRE_AMT                           /* 기조정금액 */
+          FROM
+               (
+                SELECT (CASE WHEN ((A.DCSN_PROC_STAT = '01' OR A.DCSN_PROC_STAT = '03' OR A.DCSN_PROC_STAT = '12' OR A.DCSN_PROC_STAT = '89')
+                                   AND A.ADJ_PT = '2' AND TRIM(A.BILL_APLY_DT) IS NULL)            THEN '0'
+                             ELSE NULL
+                       END)                      AS CHK_JOB
+                     , ADJ_NO
+                     , BILL_SEQ_NO
+                     , BILL_YYMM
+                     , BILL_DT
+                     , APPL_SO_ID
+                     , BILL_APLY_DT
+                     , APPL_DTTM
+                     , ( SELECT PAY_DUE_DT
+                           FROM TBLIV_BILL_TGT_CUST    X
+                          WHERE A.BILL_SEQ_NO = X.BILL_SEQ_NO
+                            AND A.BILL_YYMM   = X.BILL_YYMM)     AS PAY_DUE_DT
+                     , NVL((SELECT SUM(ADJ_PRV_BILL_AMT)
+                              FROM TBLIV_BILL    X
+                             WHERE A.BILL_SEQ_NO = X.BILL_SEQ_NO
+                               AND A.BILL_YYMM   = X.BILL_YYMM)
+                           , 0)                   AS ADJ_PRV_BILL_AMT                           /* 조정전금액 */
+                     , NVL(( SELECT
+                                    SUM(Y.ADJ_APPL_AMT)
+                               FROM TBLIV_CHRG_ADJ_APLY     X
+                                  , TBLIV_CHRG_ADJ_APLY_DTL Y
+                              WHERE X.ADJ_NO       = Y.ADJ_NO
+                                AND X.ADJ_NO       = A.ADJ_NO
+                                AND X.BILL_SEQ_NO  = A.BILL_SEQ_NO
+                            ),0)            AS ADJ_APPL_AMT                      /* 신청금액 */
+                     , NVL(( SELECT
+                                   SUM(Y.ADJ_APPL_AMT)
+                              FROM TBLIV_CHRG_ADJ_APLY     X
+                                 , TBLIV_CHRG_ADJ_APLY_DTL Y
+                             WHERE X.ADJ_NO         = Y.ADJ_NO
+                               AND X.ADJ_NO         &lt;= A.ADJ_NO
+                               AND X.BILL_SEQ_NO    = A.BILL_SEQ_NO
+                               AND X.DCSN_PROC_STAT IN ('05')
+                          ),0)              AS ADJ_AMT                          /* 조정금액 */
+                     , A.DCSN_PROC_STAT
+                     ,(SELECT NAME.CODE_NM AS COMMON_CD_NM
+                          FROM TSYCO_CODE_MAST MAST
+                              ,TSYCO_CODE_MAST_NAME MNAME
+                              ,TSYCO_CODE_DETAIL DETAIL
+                              ,TSYCO_CODE_DETAIL_NAME NAME
+                         WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                           AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                           AND MNAME.LNG_TYP     = #{billingAfterAdjustApply.lngTyp}
+                           AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                           AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                           AND NAME.LNG_TYP      = #{billingAfterAdjustApply.lngTyp}
+                           AND MAST.COMMON_GRP   ='BL00025'
+                           AND DETAIL.COMMON_CD = DCSN_PROC_STAT
+                       ) AS DCSN_PROC_STAT_NM
+                     , A.ADJ_PT
+                     , A.PYM_ACNT_ID
+                     , A.APPNT_NM
+                     , A.RCPT_PSN_ID
+                     , A.RCPT_DTTM
+                     , A.ADJ_RESN_CD
+                     , A.HOPE_APLY_YYMM
+                     , (SELECT DISTINCT ACNT_NM
+                          FROM IFNBRM_CUST_INFO
+                         WHERE 1=1
+                           and SO_ID = A.APPL_SO_ID
+                           AND PYM_ACNT_ID    = A.PYM_ACNT_ID
+                       )                        AS PYM_ACNT_NM
+                     , (SELECT USER_NAME
+                            FROM TSYCO_USER   X
+                           WHERE X.USER_ID         = A.RCPT_PSN_ID
+                         )                        AS RCPT_PSN_NM                                  /* 접수자명 */
+                       , ( SELECT X.SO_NM
+                             FROM TSYCO_SO_MAST   X
+                            WHERE X.SO_ID        = A.APPL_SO_ID
+                         )                        AS APPL_SO_NM
+                       , (SELECT USER_NAME
+                            FROM TSYCO_USER   X
+                           WHERE X.USER_ID         = A.CHGR_ID
+                         )                        AS CHGR_ID_NM                                   /* 수정자명 */
+                     , A.CHG_DTTM                                         /* 수정일시 */
+                     , (SELECT /*+ INDEX(A IX_TBLIV_TAX_BILL_02) */
+                               (CASE  count(*) WHEN 0 THEN 'N' ELSE 'Y' END) AS TAX_BILL_YN
+                          FROM TBLIV_TAX_BILL   X                                           /* 세금계산서내역 */
+                         WHERE BILL_SEQ_NO      = A.BILL_SEQ_NO
+                           AND BILL_YYMM        = A.BILL_YYMM
+                           AND BILL_MM_TP       = '0'
+                           AND TAX_DCLR_CL      > '0'                                    /* 신고구분(0:신고전, 1:예정신고, 2:확정신고) */
+                       )                                            AS TAX_BILL_YN_THIS
+                     , (SELECT /*+ INDEX(A IX_TBLIV_TAX_BILL_02) */
+                               (CASE  count(*) WHEN 0 THEN 'N' ELSE 'Y' END) AS TAX_BILL_YN
+                          FROM TBLIV_TAX_BILL   X                                           /* 세금계산서내역 */
+                         WHERE BILL_SEQ_NO      = A.BILL_SEQ_NO
+                           AND BILL_YYMM        = A.BILL_YYMM
+                           AND BILL_MM_TP       = '1'
+                           AND TAX_DCLR_CL      > '0'                                    /* 신고구분(0:신고전, 1:예정신고, 2:확정신고) */
+                       )                                            AS TAX_BILL_YN_THAT
+                     , DECODE(ADJ_CNT,0,'N','Y')                    AS ADJ_YN            /* 연체료제외 조정여부 */
+                     , (SELECT /*+ INDEX(X IX_TBLPY_RCPT_05) */
+                               SUM (Y.RCPT_AMT)
+                          FROM TBLPY_RCPT       X                                           /* 수납내역 */
+                             , TBLPY_RCPT_DTL   Y
+                         WHERE X.PYM_SEQ_NO     = Y.PYM_SEQ_NO
+                           AND X.BILL_SEQ_NO    = A.BILL_SEQ_NO
+                           AND X.CNCL_YN        = 'N'
+                           AND X.DPST_CL       != '22'                                     /* (-)매출수납  */
+                       )                                            AS RCPT_AMT
+                  FROM (
+                          SELECT /*+ INDEX_ASC(A IX_TBLIV_CHRG_ADJ_APLY_04) */  /* 부분범위처리 */
+                                 ADJ_NO
+                               , APPL_SO_ID
+                               , BILL_APLY_DT
+                               , SUBSTR(APPL_DTTM, 1, 8)   AS APPL_DTTM
+                               , DCSN_PROC_STAT
+                               , APPNT_NM
+                               , RCPT_PSN_ID
+                               , RCPT_DTTM
+                               , ADJ_RESN_CD
+                               , BILL_SEQ_NO
+                               , BILL_YYMM
+                               , BILL_DT
+                               , ADJ_PT
+                               , PYM_ACNT_ID
+                               , HOPE_APLY_YYMM
+                               , CHGR_ID
+                               , CHG_DATE  AS CHG_DTTM
+                               , (SELECT COUNT(*)
+                                    FROM TBLIV_CHRG_ADJ_APLY_DTL X
+                                   WHERE X.ADJ_NO                = A.ADJ_NO)   AS ADJ_CNT
+                            FROM TBLIV_CHRG_ADJ_APLY      A                                   /* 요금조정신청내역 */
+                           WHERE 1=1
+                             AND APPL_SO_ID               = #{billingAfterAdjustApply.soId}
+                             AND SUBSTR(A.APPL_DTTM,1,8)  BETWEEN #{billingAfterAdjustApply.startDt} AND #{billingAfterAdjustApply.endDt}
+                             <if test="billingAfterAdjustApply.pymAcntId != null and billingAfterAdjustApply.pymAcntId != ''">
+                                 AND PYM_ACNT_ID              = #{billingAfterAdjustApply.pymAcntId}
+                             </if>
+                             <if test="billingAfterAdjustApply.billAplyYn != null and billingAfterAdjustApply.billAplyYn != ''">
+                                 <if test="billingAfterAdjustApply.billAplyYn == 'Y'.toString()">
+                                     AND BILL_APLY_DT             IS NOT NULL                        /* 청구반영여부(Y:반영) */
+                                 </if>
+                                 <if test="billingAfterAdjustApply.billAplyYn == 'N'.toString()">
+                                     AND BILL_APLY_DT             IS NULL                            /* 청구반영여부(N:미반영) */
+                                 </if>
+                             </if>
+                             AND ADJ_PT                   = '2'                               /* 청구후요금조정 */
+                       ) A
+             ) Z
+    </select>
+</mapper>

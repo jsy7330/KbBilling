@@ -1,0 +1,2169 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.voucherMgt.ChargeMngMapper">
+
+	<select id="getCustInfoView" resultType="ChargeMngVO">
+		SELECT 
+		    SO_ID
+		    , MTEL_NO
+		    , CUST_TP
+		    , (
+		        SELECT B.CODE_NM
+		        FROM TSYCO_CODE_DETAIL A
+		        LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME B
+		        ON B.LNG_TYP = #{chargeMngVO.lngTyp} AND A.COMMON_GRP = B.COMMON_GRP AND A.COMMON_CD = B.COMMON_CD
+		        WHERE A.COMMON_GRP = 'PP00182'
+		        AND A.COMMON_CD = A.CUST_TP
+		    ) AS CUST_TP_NM
+		    , CORP_REG_NO
+		    , BIZ_REG_NO
+		FROM TCMCU_CUST_INFO A
+		WHERE SO_ID = #{chargeMngVO.soId} AND CUST_ID = #{chargeMngVO.custId}
+	</select>
+	
+	<select id="getCtrtInfoListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TCMCT_CTRT_INFO A
+		    , TPMPD_PROD_ATTR C
+		WHERE 1 = 1
+		AND A.SO_ID = #{chargeMngVO.soId}
+		AND A.CUST_ID = #{chargeMngVO.custId}
+		AND A.INACT_DTTM = '99991231'
+		AND A.CTRT_STAT IN ('20','30','40') /*사용중, 일시 정지중, 직권 중지 중 */
+		AND A.PROD_CD = C.PROD_CD
+		AND C.ATTR_CD = 'AT00000004'
+		AND C.ATTR_VAL IN ('2','3')
+		ORDER BY A.CTRT_ID DESC
+	</select>
+	
+	<select id="getCtrtInfoList" resultType="ChargeMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+		    A.CUST_ID
+		    , A.OPEN_DD
+		    , A.PROD_CD
+		    , A.PROD_GRP AS BASIC_PROD_GRP
+		    , A.SO_ID
+		    , ( SELECT SO_NM FROM TSYCO_SO_MAST X WHERE X.SO_ID = A.SO_ID) AS SO_NM
+		    , A.SVC_TEL_NO
+		    , A.CTRT_ID
+		    , (
+		        SELECT PROD_NM
+		        FROM TPMPD_PROD X
+		        WHERE PROD_CD = A.PROD_CD
+		        AND MSTR_FL = '1'
+		    ) AS PROD_NM
+		    , A.CTRT_STAT
+		    , (
+		        SELECT CODE_NM
+		        FROM TSYCO_CODE_DETAIL_NAME
+		        WHERE CODE_NM = A.CTRT_STAT AND COMMON_GRP = 'CMCU036' AND LNG_TYP = #{chargeMngVO.lngTyp}
+		    ) AS CTRT_STAT_NM
+		    , CASE WHEN (
+		            SELECT ATTR_VAL
+		            FROM TPMPD_PROD_ATTR
+		            WHERE PROD_CD = A.PROD_CD
+		            AND ATTR_CD = 'AT00110350'
+		            AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+		            AND MSTR_FL = '1'
+		        ) IS NULL THEN '0'
+		        ELSE (
+		            SELECT ATTR_VAL
+		            FROM TPMPD_PROD_ATTR
+		            WHERE PROD_CD = A.PROD_CD
+		            AND ATTR_CD = 'AT00110350'
+		            AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+		            AND MSTR_FL = '1'
+		        ) END AS QOS_AMT
+		FROM TCMCT_CTRT_INFO A
+		    , TPMPD_PROD_ATTR C
+		WHERE 1 = 1
+		AND A.SO_ID = #{chargeMngVO.soId}
+		AND A.CUST_ID = #{chargeMngVO.custId}
+		AND A.INACT_DTTM = '99991231'
+		AND A.CTRT_STAT IN ('20','30','40') /*사용중, 일시 정지중, 직권 중지 중 */
+		AND A.PROD_CD = C.PROD_CD
+		AND C.ATTR_CD = 'AT00000004'
+		AND C.ATTR_VAL IN ('2','3')
+		ORDER BY A.CTRT_ID DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getCustIdBySvcTelNo" resultType="String">
+		SELECT A.CUST_ID
+        FROM TCMCT_CTRT_INFO A
+			, TCMCT_SVC_TELNO_HIST B
+		WHERE A.SO_ID = B.SO_ID
+		AND A.CTRT_ID = B.CTRT_ID
+		AND A.SVC_TEL_NO = B.SVC_TEL_NO
+		AND A.INACT_DTTM = B.INACT_DTTM
+		AND A.INACT_DTTM = '99991231235959'
+		AND A.CTRT_STAT NOT IN ('50','90')
+		AND A.SVC_TEL_NO = #{svcTelNo}
+	</select>
+	
+	<select id="getCustIdByCtrtId" resultType="String">
+		SELECT A.CUST_ID
+        FROM TCMCT_CTRT_INFO A
+        WHERE A.INACT_DTTM = '99991231235959'
+		AND A.CTRT_STAT NOT IN ('50','90')
+		AND A.CTRT_ID = #{ctrtId}
+	</select>
+	
+	<select id="getCustInfoListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TCMCU_CUST_INFO C1
+		<if test="(chargeMngVO.acntNo != null and chargeMngVO.acntNo != '') or (chargeMngVO.pymAcntId != null and chargeMngVO.pymAcntId != '')">
+			, TCMCU_PYM_ACNT_INFO P1
+		</if>
+		WHERE 1 = 1
+		<if test="(chargeMngVO.acntNo != null and chargeMngVO.acntNo != '') or (chargeMngVO.pymAcntId != null and chargeMngVO.pymAcntId != '')">
+			AND C1.CUST_ID = P1.CUST_ID
+			<if test="chargeMngVO.acntNo != null and chargeMngVO.acntNo != ''">
+				AND P1.ACNT_NO = #{chargeMngVO.acntNo}
+			</if>
+			<if test="chargeMngVO.pymAcntId != null and chargeMngVO.pymAcntId != ''">
+				AND P1.PYM_ACNT_ID = #{chargeMngVO.pymAcntId}
+			</if>
+		</if>
+		<if test="chargeMngVO.soId != null and chargeMngVO.soId != ''">
+			AND C1.SO_ID = #{chargeMngVO.soId}
+		</if>
+		<if test="chargeMngVO.custNm != null and chargeMngVO.custNm != ''">
+			AND UPPER(C1.CUST_NM) LIKE '%' || UPPER(#{chargeMngVO.custNm}) || '%'
+		</if>
+		<if test="chargeMngVO.custId != null and chargeMngVO.custId != ''">
+			AND C1.CUST_ID = #{chargeMngVO.custId}
+		</if>
+		<if test="chargeMngVO.svcTelNo != null and chargeMngVO.svcTelNo != ''">
+			AND C1.CUST_ID = #{chargeMngVO.svcTelNo}
+		</if>
+		<if test="chargeMngVO.ctrtId != null and chargeMngVO.ctrtId != ''">
+			AND C1.CUST_ID = #{chargeMngVO.ctrtId}
+		</if>
+		<if test="chargeMngVO.corpRegNo != null and chargeMngVO.corpRegNo != ''">
+			AND C1.CORP_REG_NO = #{chargeMngVO.corpRegNo}
+		</if>
+		<if test="chargeMngVO.bizRegNo != null and chargeMngVO.bizRegNo != ''">
+			AND C1.BIZ_REG_NO = #{chargeMngVO.bizRegNo}
+		</if>
+		<if test="chargeMngVO.repNm != null and chargeMngVO.repNm != ''">
+		 	AND C1.REP_NM = #{chargeMngVO.repNm}
+		</if>
+		<if test="chargeMngVO.custTp != null and chargeMngVO.custTp != ''">
+			AND C1.CUST_TP = #{chargeMngVO.custTp}
+		</if>
+	</select>
+	
+	<select id="getCustInfoList" resultType="ChargeMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT C1.CUST_ID
+		    , C1.CUST_NM
+		    , C1.CUST_TP
+		    , (
+		        SELECT NAME.CODE_NM
+		        FROM TSYCO_CODE_MAST MAST
+		            , TSYCO_CODE_MAST_NAME MNAME
+		            , TSYCO_CODE_DETAIL DETAIL
+		            , TSYCO_CODE_DETAIL_NAME NAME
+		        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+		        AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+		        AND MNAME.LNG_TYP     = #{chargeMngVO.lngTyp} 
+		        AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+		        AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+		        AND NAME.LNG_TYP      =  #{chargeMngVO.lngTyp} 
+		        AND MAST.COMMON_GRP   = 'CM00009'
+		        AND DETAIL.USE_YN     = 'Y'
+		        AND MAST.USE_YN       = 'Y'
+		        AND DETAIL.COMMON_CD = C1.CUST_TP
+		    ) AS CUST_TP_NM
+		    , C1.CUST_CL                                          -- 고객구분 코드
+		    , (
+		        SELECT NAME.CODE_NM
+		        FROM TSYCO_CODE_MAST MAST
+		            , TSYCO_CODE_MAST_NAME MNAME
+		            , TSYCO_CODE_DETAIL DETAIL
+		            , TSYCO_CODE_DETAIL_NAME NAME
+		        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+		        AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+		        AND MNAME.LNG_TYP     = #{chargeMngVO.lngTyp} 
+		        AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+		        AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+		        AND NAME.LNG_TYP      =  #{chargeMngVO.lngTyp} 
+		        AND MAST.COMMON_GRP   = 'CM00010'
+		        AND DETAIL.USE_YN     = 'Y'
+		        AND MAST.USE_YN       = 'Y'
+		        AND DETAIL.COMMON_CD = C1.CUST_CL
+		    ) AS CUST_CL_NM                                         -- 고객구분 이름
+		    , C1.CORP_REG_NO                                        -- 주민/법인번호
+		    , C1.BIZ_REG_NO                                         -- 사업자등록번호
+		    , C1.USR_ID                                            -- 회원ID
+		    , (
+		        SELECT SVC_TEL_NO
+		        FROM TCMCT_CTRT_INFO
+		        WHERE CTRT_ID = (
+		            SELECT MIN(B.CTRT_ID) 
+		            FROM TCMCU_CUST_INFO A
+		                , TCMCT_CTRT_INFO B
+		            WHERE A.SO_ID = B.SO_ID
+		            AND A.CUST_ID = B.CUST_ID
+		            AND B.INACT_DTTM='99991231235959'
+		            AND B.CTRT_STAT NOT IN ('50','90')
+		            AND A.CUST_ID = C1.CUST_ID
+		        )
+		        AND INACT_DTTM='99991231235959'
+		        AND CTRT_STAT NOT IN ('50','90')
+		    ) AS SVC_TEL_NO                                     -- 서비스번호
+		    , C1.SO_ID
+		    --, C1.SO_NM
+		    , C1.MTEL_NO
+		    , C1.TEL_NO
+		    , C1.ZIP_CD || ' ' || C1.BASE_ADDR || ' ' || C1.ADDR_DTL AS ADDR
+		FROM TCMCU_CUST_INFO C1
+		<if test="(chargeMngVO.acntNo != null and chargeMngVO.acntNo != '') or (chargeMngVO.pymAcntId != null and chargeMngVO.pymAcntId != '')">
+			, TCMCU_PYM_ACNT_INFO P1
+		</if>
+		WHERE 1 = 1
+		<if test="(chargeMngVO.acntNo != null and chargeMngVO.acntNo != '') or (chargeMngVO.pymAcntId != null and chargeMngVO.pymAcntId != '')">
+			AND C1.CUST_ID = P1.CUST_ID
+			<if test="chargeMngVO.acntNo != null and chargeMngVO.acntNo != ''">
+				AND P1.ACNT_NO = #{chargeMngVO.acntNo}
+			</if>
+			<if test="chargeMngVO.pymAcntId != null and chargeMngVO.pymAcntId != ''">
+				AND P1.PYM_ACNT_ID = #{chargeMngVO.pymAcntId}
+			</if>
+		</if>
+		<if test="chargeMngVO.soId != null and chargeMngVO.soId != ''">
+			AND C1.SO_ID = #{chargeMngVO.soId}
+		</if>
+		<if test="chargeMngVO.custNm != null and chargeMngVO.custNm != ''">
+			AND UPPER(C1.CUST_NM) LIKE '%' || UPPER(#{chargeMngVO.custNm}) || '%'
+		</if>
+		<if test="chargeMngVO.custId != null and chargeMngVO.custId != ''">
+			AND C1.CUST_ID = #{chargeMngVO.custId}
+		</if>
+		<if test="chargeMngVO.svcTelNo != null and chargeMngVO.svcTelNo != ''">
+			AND C1.CUST_ID = #{chargeMngVO.svcTelNo}
+		</if>
+		<if test="chargeMngVO.ctrtId != null and chargeMngVO.ctrtId != ''">
+			AND C1.CUST_ID = #{chargeMngVO.ctrtId}
+		</if>
+		<if test="chargeMngVO.corpRegNo != null and chargeMngVO.corpRegNo != ''">
+			AND C1.CORP_REG_NO = #{chargeMngVO.corpRegNo}
+		</if>
+		<if test="chargeMngVO.bizRegNo != null and chargeMngVO.bizRegNo != ''">
+			AND C1.BIZ_REG_NO = #{chargeMngVO.bizRegNo}
+		</if>
+		<if test="chargeMngVO.repNm != null and chargeMngVO.repNm != ''">
+		 	AND C1.REP_NM = #{chargeMngVO.repNm}
+		</if>
+		<if test="chargeMngVO.custTp != null and chargeMngVO.custTp != ''">
+			AND C1.CUST_TP = #{chargeMngVO.custTp}
+		</if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getChrgHistListCount" resultType="int">
+		SELECT COUNT(*)
+          FROM TCMBL_RCHRG_HIST A
+                LEFT OUTER JOIN TCMBL_THRWY_CHRG_INFO B ON A.THRWY_CHRG_ID = B.THRWY_CHRG_ID
+                LEFT OUTER JOIN TPMPD_PROD C ON A.SO_ID = C.SO_ID AND A.PROD_CD = C.PROD_CD
+             , ( SELECT SO_ID, THRWY_CHRG_ID
+                    , SUM(CASE RCHRG_STAT WHEN '10' THEN 0 WHEN '30' THEN 1 END) AS CNT
+                   FROM TCMBL_RCHRG_HIST
+                  GROUP BY SO_ID, THRWY_CHRG_ID ) D
+         WHERE 1=1
+           AND A.SO_ID = #{chargeMngVO.soId}
+           AND A.CTRT_ID = #{chargeMngVO.ctrtId}
+           AND A.SO_ID = D.SO_ID
+           AND A.THRWY_CHRG_ID = D.THRWY_CHRG_ID
+        <if test="chargeMngVO.rchrgTp != null and chargeMngVO.rchrgTp != ''">
+            AND A.RCHRG_TP = #{chargeMngVO.rchrgTp}
+        </if>
+        <if test="chargeMngVO.rchrgDt != null and chargeMngVO.rchrgDt != ''">
+            AND A.RCHRG_DT = #{chargeMngVO.rchrgDt}
+        </if>
+        <if test="chargeMngVO.prodCd != null and chargeMngVO.prodCd != ''">
+            AND A.PROD_CD = #{chargeMngVO.prodCd}
+        </if>
+        <if test="chargeMngVO.rchrgCnt != null and chargeMngVO.rchrgCnt != ''">
+            AND A.RCHRG_CNT = #{chargeMngVO.rchrgCnt}
+        </if>
+        <if test="chargeMngVO.mstrFl != null and chargeMngVO.mstrFl != ''">
+            AND B.MSTR_FL &lt;&gt; #{chargeMngVO.mstrFl}
+        </if>
+        <if test="chargeMngVO.otChrgStat != null and chargeMngVO.otChrgStat != ''">
+            AND B.OT_CHRG_STAT &lt;&gt; #{chargeMngVO.otChrgStat}
+        </if>
+        <if test="chargeMngVO.rchrgYmFrom != null and chargeMngVO.rchrgYmFrom != ''">
+            AND A.RCHRG_YM_FROM &gt;= #{chargeMngVO.rchrgYmFrom} || '01'
+        </if>
+        <if test="chargeMngVO.rchrgStat != null and chargeMngVO.rchrgStat != ''">
+            AND A.RCHRG_STAT = #{chargeMngVO.rchrgStat}
+        </if>
+        <if test="chargeMngVO.rchrgYm != null and chargeMngVO.rchrgYm != ''">
+            AND A.RCHRG_DT LIKE #{chargeMngVO.rchrgYm} || '%'
+        </if>
+         ORDER BY A.RCHRG_CHG_DT DESC, A.RCHRG_CNT DESC, A.RCHRG_STAT
+	</select>
+	
+	<select id="getChrgHistList" resultType="ChargeMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT A.RCHRG_SEQ_NO
+             , A.RCHRG_TP
+             , A.RCHRG_STAT
+             , A.APPR_TP
+             , CASE WHEN A.RCHRG_TP = '100'
+                    THEN CASE WHEN A.APPR_TP IS NOT NULL
+                              THEN (SELECT CODE_NM
+                                      FROM TSYCO_CODE_DETAIL_NAME
+                                     WHERE LNG_TYP = #{chargeMngVO.lngTyp}
+                                       AND COMMON_GRP = 'DN00102'
+                                       AND COMMON_CD = A.APPR_TP)
+                              ELSE ''
+                         END
+                    ELSE ''
+               END AS APPR_TP_NM
+             , A.RCHRG_DT
+             , A.RCHRG_CHG_DT
+             , A.RCHRG_CNT
+             , A.CUST_ID
+             , A.CTRT_ID
+             , A.SO_ID
+             , A.PROD_CD
+             , A.THRWY_CHRG_ID
+             , A.CHRG_AMT
+             , A.CHRG_ADD_TX
+             , A.CHRG_BILL_AMT
+             , A.DEL_FLG
+             , A.REGR_ID
+             , A.REG_DATE
+             , A.CHGR_ID
+             , A.CHG_DATE
+             , B.MSTR_FL
+             , C.PROD_NM
+             , B.PROD_CMPS_ID
+             , B.RCPT_ID
+             , A.TRGT_CUST_ID
+             , (SELECT CUST_NM FROM TCMCU_CUST_INFO WHERE SO_ID = A.SO_ID AND CUST_ID = A.TRGT_CUST_ID) TRGT_CUST_NM
+             , A.TRGT_CTRT_ID
+             , A.TRGT_SVC_TEL_NO
+             , A.VO_SEQ_NO
+             , A.VO_BAR_CD
+             , A.APPR_NO
+             , D.CNT AS CANCLE_CNT
+             , A.IF_SUC_YN
+             , A.IF_RSN_CD
+             , CASE WHEN A.RCHRG_TP = '300' THEN (SELECT VO_EXPIRED_DT FROM TDNDT_VEQT WHERE SO_ID = A.SO_ID AND VO_SEQ_NO = A.VO_SEQ_NO)
+                    WHEN A.RCHRG_TP = '700' THEN (SELECT VO_EXPIRED_DT FROM TDNDT_VEQT WHERE SO_ID = A.SO_ID AND VO_SEQ_NO = A.VO_SEQ_NO)
+                    ELSE ''
+               END AS VO_EXPIRED_DT
+             , A.RCHRG_TERM_DT
+             , A.DATA_QUOTA
+          FROM TCMBL_RCHRG_HIST A
+                LEFT OUTER JOIN TCMBL_THRWY_CHRG_INFO B ON A.THRWY_CHRG_ID = B.THRWY_CHRG_ID
+                LEFT OUTER JOIN TPMPD_PROD C ON A.SO_ID = C.SO_ID AND A.PROD_CD = C.PROD_CD
+             , ( SELECT SO_ID, THRWY_CHRG_ID
+                    , SUM(CASE RCHRG_STAT WHEN '10' THEN 0 WHEN '30' THEN 1 END) AS CNT
+                   FROM TCMBL_RCHRG_HIST
+                  GROUP BY SO_ID, THRWY_CHRG_ID ) D
+         WHERE 1=1
+           AND A.SO_ID = #{chargeMngVO.soId}
+           AND A.CTRT_ID = #{chargeMngVO.ctrtId}
+           AND A.SO_ID = D.SO_ID
+           AND A.THRWY_CHRG_ID = D.THRWY_CHRG_ID
+        <if test="chargeMngVO.rchrgTp != null and chargeMngVO.rchrgTp != ''">
+            AND A.RCHRG_TP = #{chargeMngVO.rchrgTp}
+        </if>
+        <if test="chargeMngVO.rchrgDt != null and chargeMngVO.rchrgDt != ''">
+            AND A.RCHRG_DT = #{chargeMngVO.rchrgDt}
+        </if>
+        <if test="chargeMngVO.prodCd != null and chargeMngVO.prodCd != ''">
+            AND A.PROD_CD = #{chargeMngVO.prodCd}
+        </if>
+        <if test="chargeMngVO.rchrgCnt != null and chargeMngVO.rchrgCnt != ''">
+            AND A.RCHRG_CNT = #{chargeMngVO.rchrgCnt}
+        </if>
+        <if test="chargeMngVO.mstrFl != null and chargeMngVO.mstrFl != ''">
+            AND B.MSTR_FL &lt;&gt; #{chargeMngVO.mstrFl}
+        </if>
+        <if test="chargeMngVO.otChrgStat != null and chargeMngVO.otChrgStat != ''">
+            AND B.OT_CHRG_STAT &lt;&gt; #{chargeMngVO.otChrgStat}
+        </if>
+        <if test="chargeMngVO.rchrgYmFrom != null and chargeMngVO.rchrgYmFrom != ''">
+            AND A.RCHRG_YM_FROM &gt;= #{chargeMngVO.rchrgYmFrom} || '01'
+        </if>
+        <if test="chargeMngVO.rchrgStat != null and chargeMngVO.rchrgStat != ''">
+            AND A.RCHRG_STAT = #{chargeMngVO.rchrgStat}
+        </if>
+        <if test="chargeMngVO.rchrgYm != null and chargeMngVO.rchrgYm != ''">
+            AND A.RCHRG_DT LIKE #{chargeMngVO.rchrgYm} || '%'
+        </if>
+         ORDER BY A.RCHRG_CHG_DT DESC, A.RCHRG_CNT DESC, A.RCHRG_STAT
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getRmnAmt" resultType="int">
+		SELECT
+		  CASE WHEN REMAIN_AMT IS NULL THEN 0 ELSE REMAIN_AMT END
+		FROM
+		(
+			SELECT
+				PROD_ID     -- 상품코드
+				, TYP_CD      -- 유형 (1: 종량, 2: 바우쳐금액, 3: 선물받은금액)
+				, AMT         -- 용량
+				, USED_AMT    -- 사용량
+				, REMAIN_AMT  -- 잔량
+			FROM TABLE(FOCRT_MONTH_AMT(#{chargeMngVO.ctrtId}, #{chargeMngVO.todayYM}))
+			WHERE TYP_CD = '2'
+		)
+	</select>
+	
+	<select id="getPreBasicProdInfo" resultType="ChargeMngVO">
+        SELECT CTRT_ID
+             , PROD_CD
+             , SUBSTR(OPEN_DD, 0, 6) AS STRT_YM
+             , OPEN_DD
+             , EFF_PERIOD
+             , CASE WHEN MNO_PROD_CD IS NULL THEN 'X' ELSE MNO_PROD_CD END AS PCRF_ID
+             , CASE WHEN MNO_PROD_CD IS NOT NULL AND PCRF_SERVICE_ID = '110' THEN 'Y' ELSE 'N' END AS PCRF_YN
+             , CASE WHEN PCRF_PROD_TP = '1' THEN 'Y' WHEN PCRF_PROD_TP = '0' THEN 'N' ELSE PCRF_PROD_TP END AS LITE_YN
+             , CASE WHEN CNT &gt; 0 THEN DISC_YN ELSE 'N' END AS DISC_YN
+             , DEDT_AMT
+             , RG_PROD_TP
+          FROM
+          (
+            SELECT CTRT_ID
+                 , PROD_CD
+                 , RATE_STRT_DT
+                 , EFF_PERIOD
+                 , MNO_PROD_CD
+                 , PCRF_SERVICE_ID
+                 , PCRF_PROD_TP
+                 , DISC_YN
+                 , DEDT_AMT
+                 , OPEN_DD
+                 , RG_PROD_TP
+                 , COUNT(MAP_PROD_CD) AS CNT
+              FROM
+              (
+                SELECT A.CTRT_ID
+                     , A.PROD_CD
+                     , A.RATE_STRT_DT
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT035'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT035'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS EFF_PERIOD
+					, (
+						SELECT MNO_PROD_CD
+						FROM TPMPD_PROD
+						WHERE PROD_CD = B.PROD_CD
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND BASIC_PROD_FL = 'V' -- B:기본요금제 , V:번들
+						AND MSTR_FL = '1'
+						AND MNO_PROD_CD LIKE '1%'
+					) AS MNO_PROD_CD
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00110707'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00110707'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PCRF_SERVICE_ID
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111205'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111205'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PCRF_PROD_TP
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111305'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'N' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111305'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS DISC_YN
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111405'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111405'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS RG_PROD_TP
+					, (
+						SELECT SUM(TR.INTERNAL_RATE * TD.QUANTITY/1024/1024/1024) AS AMT --공제량
+						FROM TOP_DISC_DEDT_PROD_MAP TM
+							, TOP_RATE TR
+							, TOP_DISC_DEDT_DEF TD
+						WHERE TM.PROD_ID = A.PROD_CD
+						AND TM.PROD_ID = TR.PROD_ID
+						AND TR.EXP_DT = '99991231235959'
+						AND TM.DISC_DEDT_CD = TD.DISC_DEDT_CD
+					) AS DEDT_AMT
+                     , ( SELECT MIN(C.OPEN_DD) AS OPEN_DD
+                           FROM TCMCT_CTRT_INFO B, TCMCT_SVC_CMPS_INFO C
+                          WHERE 1 = 1
+                            AND B.SO_ID = C.SO_ID
+                            AND B.CTRT_ID = C.CTRT_ID
+                            AND B.INACT_DTTM = '99991231235959'
+                            AND B.PROD_CMPS_ID = C.PROD_CMPS_ID
+                            AND B.CTRT_STAT NOT IN ('50','90')
+                            AND C.SVC_STS_CD NOT IN ('50','90')
+                            AND B.CTRT_ID = A.CTRT_ID ) AS OPEN_DD
+                     , B.PROD_CD AS MAP_PROD_CD
+                  FROM TCMCT_CTRT_INFO A
+                       LEFT OUTER JOIN TPMPD_PROD_REL B
+                         ON A.PROD_CD = B.REL_PROD_CD
+                        AND B.PROD_REL_TYP = 'P'
+                 WHERE A.SO_ID = #{chargeMngVO.soId}
+                   AND A.CTRT_ID = #{chargeMngVO.ctrtId}
+                   AND A.INACT_DTTM = '99991231235959'
+                   AND A.CTRT_STAT NOT IN ('50','90')
+                   AND A.PROD_CD != 'PD90000001'
+                   AND A.PROD_GRP IN ('a','d')
+              )
+            GROUP BY CTRT_ID
+                   , PROD_CD
+                   , RATE_STRT_DT
+                   , EFF_PERIOD
+                   , MNO_PROD_CD
+                   , PCRF_SERVICE_ID
+                   , PCRF_PROD_TP
+                   , DISC_YN
+                   , DEDT_AMT
+                   , OPEN_DD
+                   , RG_PROD_TP
+          )
+	</select>
+	
+	<select id="getPreBasicRemainInfo" resultType="String">
+		SELECT
+			CASE WHEN REMAIN_AMT > 0 THEN 'Y'
+			ELSE 'N' END AS REMAIN_YN
+		FROM (
+			SELECT SUM(REMAIN_AMT) AS REMAIN_AMT
+			FROM
+			(
+				SELECT REMAIN_AMT  -- 잔여
+				FROM TABLE(ORNOCS.FOCRT_MONTH_AMT(#{chargeMngVO.ctrtId}, #{chargeMngVO.strtYm}))
+				WHERE PROD_ID = #{chargeMngVO.prodCd}
+				AND TYP_CD = '1'
+				UNION ALL
+				SELECT 0 REMAIN_AMT
+				FROM DUAL
+			)
+		)
+	</select>
+	
+	<select id="getPreBundleProdCount" resultType="int">
+		SELECT SUM(ADD_CNT) - SUM(CNL_CNT) AS CNT
+		FROM (
+			SELECT COUNT(1) AS ADD_CNT, 0 AS CNL_CNT
+			FROM (
+				SELECT 
+					T1.CTRT_ID
+					, T1.BUNDLE_PROD_CD
+					, T1.RCHRG_DT
+					, T1.RCHRG_TERM_DT
+					, CASE WHEN T1.IF_SUC_YN = 'R' THEN 'Y'
+						ELSE (SELECT ORNOCS.FOC_CHK_DEDT_REMAIN(T1.CTRT_ID, T1.BUNDLE_PROD_CD, T1.THRWY_CHRG_ID) FROM DUAL) END AS REMAIN_YN
+				FROM (
+					SELECT 
+						CTRT_ID
+						, PROD_CD AS BUNDLE_PROD_CD
+						, SUBSTR(RCHRG_DT,0,6) AS RCHRG_DT
+						, RCHRG_TERM_DT
+						, IF_SUC_YN
+						, THRWY_CHRG_ID
+					FROM TCMBL_RCHRG_HIST
+					WHERE SO_ID = #{chargeMngVO.soId}
+					AND CTRT_ID = #{chargeMngVO.ctrtId}
+					AND RCHRG_TP IN ('500', '600', '700')
+					AND RCHRG_STAT = '10'
+					AND RCHRG_TERM_DT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+					ORDER BY RCHRG_SEQ_NO DESC
+				) T1
+			) T2
+			WHERE T2.REMAIN_YN = 'Y'
+			UNION ALL
+			SELECT 0 AS ADD_CNT, COUNT(1) AS CNL_CNT
+			FROM (
+				SELECT 
+					T1.CTRT_ID
+					, T1.BUNDLE_PROD_CD
+					, T1.RCHRG_DT
+					, T1.RCHRG_TERM_DT
+					, CASE WHEN T1.IF_SUC_YN = 'C' THEN 'Y'
+						ELSE (SELECT FOC_CHK_DEDT_REMAIN(T1.CTRT_ID, T1.BUNDLE_PROD_CD, T1.THRWY_CHRG_ID) FROM DUAL) END AS REMAIN_YN
+				FROM (
+					SELECT
+						CTRT_ID
+						, PROD_CD AS BUNDLE_PROD_CD
+						, SUBSTR(RCHRG_DT,0,6) AS RCHRG_DT
+						, RCHRG_TERM_DT 
+						, IF_SUC_YN
+						, THRWY_CHRG_ID
+					FROM TCMBL_RCHRG_HIST
+					WHERE SO_ID = #{chargeMngVO.soId}
+					AND CTRT_ID = #{chargeMngVO.ctrtId}
+					AND RCHRG_TP IN ('500', '600', '700')
+					AND RCHRG_STAT = '30'
+					AND RCHRG_TERM_DT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+					ORDER BY RCHRG_SEQ_NO DESC
+				) T1
+			) T2
+			WHERE T2.REMAIN_YN = 'Y'
+		)
+	</select>
+	
+	<select id="getPreBundleProdInfo" resultType="ChargeMngVO">
+        SELECT T2.CTRT_ID
+             , T2.BUNDLE_PROD_CD
+             , T2.RCHRG_DT
+             , T2.RCHRG_TERM_DT
+             , CASE WHEN T2.MNO_PROD_CD IS NULL THEN 'X' ELSE T2.MNO_PROD_CD END AS PCRF_ID
+             , CASE WHEN T2.MNO_PROD_CD IS NOT NULL AND T2.PCRF_SERVICE_ID = '110' THEN 'Y' ELSE 'N' END AS PCRF_YN
+             , CASE WHEN T2.PCRF_PROD_TP = '1' THEN 'Y' WHEN PCRF_PROD_TP = '0' THEN 'N' ELSE T2.PCRF_PROD_TP END AS LITE_YN
+             , T2.DISC_YN
+             , T2.IF_SUC_YN
+             , T2.RG_PROD_TP
+          FROM
+          (
+            SELECT T1.CTRT_ID
+                 , T1.BUNDLE_PROD_CD
+                 , T1.RCHRG_DT
+                 , T1.RCHRG_TERM_DT
+				, (
+					SELECT MNO_PROD_CD
+					FROM TPMPD_PROD
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND BASIC_PROD_FL = 'V' -- B:기본요금제 , V:번들
+					AND MSTR_FL = '1'
+					AND MNO_PROD_CD LIKE '1%'
+				) AS MNO_PROD_CD
+				, CASE WHEN (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND ATTR_CD = 'AT00110707'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) IS NULL THEN '0' ELSE (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND ATTR_CD = 'AT00110707'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) END AS PCRF_SERVICE_ID
+				, CASE WHEN (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND ATTR_CD = 'AT00111205'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) IS NULL THEN 'X' ELSE (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND ATTR_CD = 'AT00111205'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) END AS PCRF_PROD_TP
+				, CASE WHEN (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND ATTR_CD = 'AT00111305'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) IS NULL THEN 'N' ELSE (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND ATTR_CD = 'AT00111305'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) END AS DISC_YN
+				, CASE WHEN (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND ATTR_CD = 'AT00111405'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) IS NULL THEN 'X' ELSE (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = T1.BUNDLE_PROD_CD
+					AND ATTR_CD = 'AT00111405'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) END AS RG_PROD_TP
+				, CASE WHEN (
+					SELECT REMAIN_AMT
+					FROM TABLE(ORNOCS.FOCRT_MONTH_AMT(T1.CTRT_ID, T1.RCHRG_DT))
+					WHERE PROD_ID = T1.BUNDLE_PROD_CD
+					AND TYP_CD = '1'
+				) IS NULL THEN 0 ELSE (
+					SELECT REMAIN_AMT
+					FROM TABLE(ORNOCS.FOCRT_MONTH_AMT(T1.CTRT_ID, T1.RCHRG_DT))
+					WHERE PROD_ID = T1.BUNDLE_PROD_CD
+					AND TYP_CD = '1'
+				) END AS REMAIN_AMT
+                 , T1.IF_SUC_YN
+              FROM
+              (
+                SELECT A.CTRT_ID
+                     , A.PROD_CD AS BUNDLE_PROD_CD
+                     , SUBSTR(A.RCHRG_DT,0,6) AS RCHRG_DT
+                     , A.RCHRG_TERM_DT
+                     , TO_CHAR(A.REG_DATE,'YYYYMMDDHH24MMISS') AS REG_DT
+                     , IF_SUC_YN
+                  FROM TCMBL_RCHRG_HIST A
+                 WHERE A.SO_ID = #{chargeMngVO.soId}
+                   AND A.CTRT_ID = #{chargeMngVO.ctrtId}
+                   AND A.RCHRG_TP IN ('500', '600', '700')
+                   AND A.RCHRG_STAT = '10'
+                   AND A.IF_SUC_YN IN ('Y','R')
+                   AND RCHRG_TERM_DT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+                   AND NOT EXISTS (SELECT 1 FROM TCMBL_RCHRG_HIST WHERE SO_ID = A.SO_ID AND CTRT_ID = A.CTRT_ID AND THRWY_CHRG_ID = A.THRWY_CHRG_ID AND RCHRG_STAT = '30' AND IF_SUC_YN IN ('Y','C'))
+                 ORDER BY A.RCHRG_SEQ_NO DESC
+              ) T1
+             GROUP BY T1.CTRT_ID
+                    , T1.BUNDLE_PROD_CD
+                    , T1.RCHRG_DT
+                    , T1.RCHRG_TERM_DT
+                    , T1.IF_SUC_YN
+          ) T2
+	</select>
+	
+	<select id="getPreBundleRemainInfo" resultType="String">
+		SELECT
+			CASE WHEN #{chargeMngVO.ifSucYn} = 'Y' THEN 
+				CASE WHEN SUM(REMAIN_AMT) &gt; 0 THEN 'Y' ELSE 'N' END
+			WHEN #{chargeMngVO.ifSucYn} = 'R' THEN 'Y' END AS REMAIN_YN
+		FROM (
+			SELECT CASE WHEN SUM(REMAIN_AMT) IS NULL THEN 0 ELSE CASE WHEN SUM(REMAIN_AMT) END AS REMAIN_AMT
+			FROM (
+				SELECT REMAIN_AMT  -- 잔여
+				FROM TABLE(FOCRT_MONTH_AMT(#{chargeMngVO.ctrtId}, #{chargeMngVO.rchrgDt}))
+				WHERE PROD_ID = #BUNDLE_PROD_CD#
+				AND TYP_CD = '1'
+			)
+		)
+	</select>
+	
+	<select id="getPromoDtInfo" resultType="String">
+		SELECT
+			CASE WHEN PROMO_DT IS NULL THEN '00000000' ELSE PROMO_DT END
+		FROM TCMPM_PROMO_MST
+		WHERE PRO_YYMM = #{todayYm}
+	</select>
+	
+	<select id="getPromoPurCntInfo" resultType="int">
+        SELECT COUNT(1) AS PURCNT
+          FROM TCMBL_RCHRG_HIST A
+         WHERE A.RCHRG_TP IN ('500','600')
+           AND A.IF_SUC_YN = 'Y'
+           AND A.SO_ID = #{chargeMngVO.soId}
+           AND A.CTRT_ID = #{chargeMngVO.ctrtId}
+           AND NOT EXISTS ( SELECT 1 FROM TCMBL_RCHRG_HIST WHERE SO_ID = A.SO_ID AND CTRT_ID = A.CTRT_ID AND RCHRG_TP = A.RCHRG_TP AND RCHRG_STAT = '30' AND RCHRG_DT = A.RCHRG_DT AND THRWY_CHRG_ID = A.THRWY_CHRG_ID)
+           AND A.PROD_CD IN ( SELECT B.PROD_CD FROM TPMPD_PROD B WHERE B.SO_ID = A.SO_ID AND B.PROD_CD IN (SELECT PROD_CD FROM TPMPD_PROD_ATTR WHERE ATTR_CD = 'AT00111355' AND ATTR_VAL IS NOT NULL ))
+           AND A.RCHRG_DT = #{chargeMngVO.rchrgDt}
+	</select>
+	
+	<select id="getNotResPVCount" resultType="int">
+		SELECT COUNT(1) AS NOT_RES_CNT
+		FROM (
+			SELECT RCHRG_SEQ_NO
+			FROM TCMBL_RCHRG_HIST
+			WHERE 1=1
+			AND SO_ID = #{chargeMngVO.soId}
+			AND CTRT_ID = #{chargeMngVO.ctrtId}
+			AND IF_SUC_YN IS NULL
+			ORDER BY REG_DATE DESC
+		)
+	</select>
+	
+	<select id="getLatestBundleProdInfo" resultType="ChargeMngVO">
+        SELECT A.PROD_CD
+             , A.DISC_YN
+             , A.DEDT_AMT
+             , A.RCHRG_TERM_DT
+          FROM
+          (
+            SELECT A.PROD_CD
+				, CASE WHEN (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = A.PROD_CD
+					AND ATTR_CD = 'AT00111305'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) IS NULL THEN 'N' ELSE (
+					SELECT ATTR_VAL
+					FROM TPMPD_PROD_ATTR
+					WHERE PROD_CD = A.PROD_CD
+					AND ATTR_CD = 'AT00111305'
+					AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+					AND MSTR_FL = '1'
+				) END AS DISC_YN
+				, (
+					SELECT SUM(TR.INTERNAL_RATE * TD.QUANTITY/1024/1024/1024) AS AMT --공제량
+					FROM TOP_DISC_DEDT_PROD_MAP TM
+						, TOP_RATE TR
+						, TOP_DISC_DEDT_DEF TD
+					WHERE TM.PROD_ID = A.PROD_CD
+					AND TM.PROD_ID = TR.PROD_ID
+					AND TR.EXP_DT = '99991231235959'
+					AND TM.DISC_DEDT_CD = TD.DISC_DEDT_CD
+				) AS DEDT_AMT
+                 , A.RCHRG_TERM_DT
+              FROM TCMBL_RCHRG_HIST A
+             WHERE 1 = 1
+               AND A.SO_ID = #(chargeMngVO.soId)
+               AND A.CTRT_ID = #{chargeMngVO.ctrtId}
+               AND A.RCHRG_TP IN ('500','600')
+               AND A.IF_SUC_YN = 'Y'
+               AND NOT EXISTS ( SELECT 1 FROM TCMBL_RCHRG_HIST WHERE SO_ID = A.SO_ID AND CTRT_ID = A.CTRT_ID AND RCHRG_TP = A.RCHRG_TP AND RCHRG_STAT = '30' AND RCHRG_DT = A.RCHRG_DT AND THRWY_CHRG_ID = A.THRWY_CHRG_ID)
+             ORDER BY REG_DATE DESC
+          ) A
+	</select>
+	
+	<select id="getChrgVeqtListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TDNDT_VEQT VE
+			JOIN TDNDT_ITEM IT ON IT.SO_ID = VE.SO_ID AND IT.ITEM_ID = VE.ITEM_ID
+			<if test="chargeMngVO.rchrgTp != null and chargeMngVO.rchrgTp == '700'">
+				LEFT OUTER JOIN (
+					SELECT
+						B.SO_ID
+						, B.PROD_CD
+						, B.PROD_NM
+						, CASE WHEN (
+							SELECT RATE_VAL
+							FROM TPMPD_RATE
+							WHERE RATE_ITM_CD IN (
+								SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD
+							)
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT RATE_VAL
+							FROM TPMPD_RATE
+							WHERE RATE_ITM_CD IN (
+								SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD
+							)
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS PROD_AMT
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT034'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT034'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS QOS_AMT
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT038'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'D' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT038'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS DH_TYPE
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT035'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT035'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS EFF_PERIOD
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT037'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT037'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS RCMD_YN
+						, (
+							SELECT MNO_PROD_CD
+							FROM TPMPD_PROD
+							WHERE PROD_CD = B.PROD_CD
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND BASIC_PROD_FL = 'V' -- B:기본요금제 , V:번들
+							AND MSTR_FL = '1'
+							AND MNO_PROD_CD LIKE '1%'
+						) AS MNO_PROD_CD
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00110707'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00110707'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS PCRF_SERVICE_ID
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111205'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'X' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111205'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS PCRF_SERVICE_ID
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111305'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'N' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111305'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS DISC_YN
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111355'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'N' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111355'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS HOLI_YN
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111405'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'X' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111405'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS RG_PROD_TP
+					FROM TPMPD_PROD_ATTR A
+						, TPMPD_PROD B
+						, TPMPD_PROD_ATTR C
+					WHERE A.PROD_CD = B.PROD_CD
+					AND B.PROD_CD = C.PROD_CD
+					AND B.SO_ID = #{chargeMngVO.soId}
+					AND A.ATTR_CD = 'AT031'  /*BUNDLE YN*/
+					AND CASE WHEN A.ATTR_VAL IS NULL THEN '0' ELSE A.ATTR_VAL END = '1'
+					AND B.SUBS_FL = '1'
+					AND B.MSTR_FL = '1'
+					AND B.BASIC_PROD_FL IN ('V', 'P')
+					AND #{chargeMngVO.todayDt} BETWEEN B.ACT_DT AND B.INACT_DT
+					AND C.ATTR_CD = 'DF001'  /*POSTPAID,PREPAID,HYBRID*/
+					AND C.ATTR_VAL IN ('2','3')
+				)
+			</if>
+		WHERE 1=1
+		AND VE.SO_ID = #{chargeMngVO.soId}
+		AND VE.VO_STAT_CD IN ('30','80')
+		AND VE.LGST_PROC_STAT_CD IN ('401','902')
+		<if test="chargeMngVO.itemId != null and chargeMngVO.itemId != ''">
+			VE.ITEM_ID = #{chargeMngVO.itemId}
+		</if>
+		ORDER BY VE.VO_BAR_CD
+	</select>
+	
+	<select id="getChrgVeqtList" resultType="ChargeMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			VE.SO_ID
+			, ( SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = VE.SO_ID) AS SO_NM
+			, VE.VO_BAR_CD
+			, VE.VO_SEQ_NO
+			, VE.ITEM_ID
+			, IT.ITEM_NM
+			, VE.VO_ISSUE_DT
+			, VE.VO_EXPIRED_DT
+			, VE.VO_ISSUE_AMT
+			<if test="chargeMngVO.rchrgTp != null and chargeMngVO.rchrgTp == '700'">
+				, VE.VO_PROD_CD
+				, (SELECT PROD_NM FROM TPMPD_PROD WHERE SO_ID = VE.SO_ID AND PROD_CD = VE.VO_PROD_CD) AS VO_PROD_NM
+				, TP.QOS_AMT
+				, TP.DH_TYPE
+				, TP.EFF_PERIOD
+				, CASE WHEN TP.MNO_PROD_CD IS NULL THEN 'X' ELSE TP.MNO_PROD_CD END AS PCRF_ID
+				, CASE WHEN TP.MNO_PROD_CD IS NOT NULL AND TP.PCRF_SERVICE_ID = '110' THEN 'Y' ELSE 'N' END AS PCRF_YN
+				, CASE WHEN TP.PCRF_PROD_TP = '1' THEN 'Y' WHEN TP.PCRF_PROD_TP = '0' THEN 'N' ELSE TP.PCRF_PROD_TP END AS LITE_YN
+				, CASE WHEN TP.RCMD_YN = 'Y' THEN 'Y' ELSE
+					CASE WHEN (
+						SELECT COUNT(*) 
+						FROM TSYCO_CODE_DETAIL 
+						WHERE COMMON_GRP = 'DN00104' 
+						AND COMMON_CD IN
+						(
+							SELECT USER_GROUP_ID 
+							FROM TSYCO_USER_GROUP_ROLE 
+							WHERE USER_ID = #{chargeMngVO.userId}
+						)
+					) &gt; 0 THEN CASE WHEN #{chargeMngVO.todayDt} >= '20150501' THEN 'Y' ELSE 'N' END
+					ELSE 'N' END END AS RCMD_YN
+				, TP.DISC_YN
+				, TP.HOLI_YN
+				, TP.RG_PROD_TP
+				, (
+					SELECT SUM(TR.INTERNAL_RATE * TD.QUANTITY/1024/1024/1024) AS AMT --공제량
+					FROM TOP_DISC_DEDT_PROD_MAP TM
+						, TOP_RATE TR
+						, TOP_DISC_DEDT_DEF TD
+					WHERE TM.PROD_ID = TP.PROD_CD
+					AND TM.PROD_ID = TR.PROD_ID
+					AND TR.EXP_DT = '99991231235959'
+					AND TM.DISC_DEDT_CD = TD.DISC_DEDT_CD
+				) AS DEDT_AMT
+				, 'N' AS DN_TYPE
+			</if>
+			<if test="chargeMngVO.rchrgTp != null and chargeMngVO.rchrgTp == '300'">
+				, '' AS VO_PROD_CD
+				, '' AS VO_PROD_NM
+				, '' AS QOS_AMT
+				, '' AS DH_TYPE
+				, '' AS EFF_PERIOD
+				, '' AS PCRF_ID
+				, '' AS PCRF_YN
+				, '' AS LITE_YN
+				, '' AS RCMD_YN
+				, '' AS DISC_YN
+				, '' AS HOLI_YN
+				, '' AS RG_PROD_TP
+				, '' AS DEDT_AMT
+				, '' AS DN_TYPE
+			</if>
+		FROM TDNDT_VEQT VE
+			JOIN TDNDT_ITEM IT ON IT.SO_ID = VE.SO_ID AND IT.ITEM_ID = VE.ITEM_ID
+			<if test="chargeMngVO.rchrgTp != null and chargeMngVO.rchrgTp == '700'">
+				LEFT OUTER JOIN (
+					SELECT
+						B.SO_ID
+						, B.PROD_CD
+						, B.PROD_NM
+						, CASE WHEN (
+							SELECT RATE_VAL
+							FROM TPMPD_RATE
+							WHERE RATE_ITM_CD IN (
+								SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD
+							)
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT RATE_VAL
+							FROM TPMPD_RATE
+							WHERE RATE_ITM_CD IN (
+								SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD
+							)
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS PROD_AMT
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT034'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT034'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS QOS_AMT
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT038'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'D' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT038'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS DH_TYPE
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT035'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT035'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS EFF_PERIOD
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT037'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT037'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS RCMD_YN
+						, (
+							SELECT MNO_PROD_CD
+							FROM TPMPD_PROD
+							WHERE PROD_CD = B.PROD_CD
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND BASIC_PROD_FL = 'V' -- B:기본요금제 , V:번들
+							AND MSTR_FL = '1'
+							AND MNO_PROD_CD LIKE '1%'
+						) AS MNO_PROD_CD
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00110707'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00110707'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS PCRF_SERVICE_ID
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111205'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'X' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111205'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS PCRF_PROD_TP
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111305'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'N' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111305'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS DISC_YN
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111355'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'N' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111355'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS HOLI_YN
+						, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111405'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'X' ELSE (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT00111405'
+							AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS RG_PROD_TP
+					FROM TPMPD_PROD_ATTR A
+						, TPMPD_PROD B
+						, TPMPD_PROD_ATTR C
+					WHERE A.PROD_CD = B.PROD_CD
+					AND B.PROD_CD = C.PROD_CD
+					AND B.SO_ID = #{chargeMngVO.soId}
+					AND A.ATTR_CD = 'AT031'  /*BUNDLE YN*/
+					AND CASE WHEN A.ATTR_VAL IS NULL THEN '0' ELSE A.ATTR_VAL END = '1'
+					AND B.SUBS_FL = '1'
+					AND B.MSTR_FL = '1'
+					AND B.BASIC_PROD_FL IN ('V', 'P')
+					AND #{chargeMngVO.todayDt} BETWEEN B.ACT_DT AND B.INACT_DT
+					AND C.ATTR_CD = 'DF001'  /*POSTPAID,PREPAID,HYBRID*/
+					AND C.ATTR_VAL IN ('2','3')
+				)
+			</if>
+		WHERE 1=1
+		AND VE.SO_ID = #{chargeMngVO.soId}
+		AND VE.VO_STAT_CD IN ('30','80')
+		AND VE.LGST_PROC_STAT_CD IN ('401','902')
+		<if test="chargeMngVO.itemId != null and chargeMngVO.itemId != ''">
+			VE.ITEM_ID = #{chargeMngVO.itemId}
+		</if>
+		ORDER BY VE.VO_BAR_CD
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getChrgCtrtListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TCMCT_CTRT_INFO A
+			, TPMPD_PROD_ATTR C
+		WHERE 1=1
+		AND A.SO_ID = #{chargeMngVO.soId}
+		AND A.INACT_DTTM = '99991231235959'
+		AND A.CTRT_STAT IN ('20','30','40') /*사용중, 일시 정지중, 직권 중지 중 */
+		AND A.PROD_CD != 'PD90000001'    /*기본 구매상품 제외*/
+		AND A.CUST_ID = #{chargeMngVO.custId}
+		AND A.PROD_CD = C.PROD_CD
+		AND C.ATTR_CD = 'DF001'
+		AND C.ATTR_VAL IN ('2','3')
+	</select>
+	
+	<select id="getChrgCtrtList" resultType="ChargeMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			A.SO_ID
+			, ( SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM
+			, A.CTRT_ID
+			, A.CUST_ID
+			, (SELECT CUST_NM FROM TCMCU_CUST_INFO WHERE SO_ID = A.SO_ID AND CUST_ID = A.CUST_ID) AS CUST_NM
+			, A.SVC_TEL_NO
+			, A.CTRT_STAT
+		    , (
+		        SELECT NAME.CODE_NM
+		        FROM TSYCO_CODE_MAST MAST
+		            , TSYCO_CODE_MAST_NAME MNAME
+		            , TSYCO_CODE_DETAIL DETAIL
+		            , TSYCO_CODE_DETAIL_NAME NAME
+		        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+		        AND MAST.COMMON_GRP   = MNAME.COMMON_GRP
+		        AND MNAME.LNG_TYP     = #{chargeMngVO.lngTyp} 
+		        AND DETAIL.COMMON_GRP = NAME.COMMON_GRP
+		        AND DETAIL.COMMON_CD  = NAME.COMMON_CD
+		        AND NAME.LNG_TYP      =  #{chargeMngVO.lngTyp} 
+		        AND MAST.COMMON_GRP   = 'CM00023'
+		        AND DETAIL.USE_YN     = 'Y'
+		        AND MAST.USE_YN       = 'Y'
+		        AND DETAIL.COMMON_CD = A.CTRT_CL
+		    ) AS CTRT_STAT_NM
+		FROM TCMCT_CTRT_INFO A
+			, TPMPD_PROD_ATTR C
+		WHERE 1=1
+		AND A.SO_ID = #{chargeMngVO.soId}
+		AND A.INACT_DTTM = '99991231235959'
+		AND A.CTRT_STAT IN ('20','30','40') /*사용중, 일시 정지중, 직권 중지 중 */
+		AND A.PROD_CD != 'PD90000001'    /*기본 구매상품 제외*/
+		AND A.CUST_ID = #{chargeMngVO.custId}
+		AND A.PROD_CD = C.PROD_CD
+		AND C.ATTR_CD = 'DF001'
+		AND C.ATTR_VAL IN ('2','3')
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getChrgPopProdListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM (
+			SELECT
+				SO_ID
+				, SO_NM
+				, PROD_CD
+				, PROD_NM
+				, PROD_AMT
+				, QOS_AMT
+				, DH_TYPE
+				, EFF_PERIOD
+				, MNO_PROD_CD
+				, CASE WHEN MNO_PROD_CD IS NOT NULL AND PCRF_SERVICE_ID = '110' THEN 'Y' ELSE 'N' END AS PCRF_YN
+				, CASE WHEN PCRF_PROD_TP = '1' THEN 'Y' WHEN PCRF_PROD_TP = '0' THEN 'N' ELSE PCRF_PROD_TP END AS LITE_YN
+				, CASE WHEN RCMD_YN = 'Y' THEN 'Y' ELSE
+					CASE WHEN (
+						SELECT COUNT(*) 
+						FROM TSYCO_CODE_DETAIL 
+						WHERE COMMON_GRP = 'DN00104' 
+						AND COMMON_CD IN
+						(
+							SELECT USER_GROUP_ID 
+							FROM TSYCO_USER_GROUP_ROLE 
+							WHERE USER_ID = #{chargeMngVO.userId}
+						)
+					) &gt; 0 THEN CASE WHEN #{chargeMngVO.todayDt} >= '20150501' THEN 'Y' ELSE 'N' END
+					ELSE 'N' END END AS RCMD_YN
+				, PDVC_YN
+				, DISC_YN
+				, HOLI_YN
+				, RG_PROD_TP
+			FROM (
+				SELECT
+					B.SO_ID
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = B.SO_ID) AS SO_NM
+					, B.PROD_CD
+					, B.PROD_NM
+					, CASE WHEN (
+						SELECT RATE_VAL
+						FROM TPMPD_RATE
+						WHERE RATE_ITM_CD IN (
+							SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD
+						)
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT RATE_VAL
+						FROM TPMPD_RATE
+						WHERE RATE_ITM_CD IN (
+							SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD
+						)
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PROD_AMT
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT034'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT034'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS QOS_AMT
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT038'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'D' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT038'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS DH_TYPE
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT035'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT035'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS EFF_PERIOD
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT037'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT037'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS RCMD_YN
+					, (
+						SELECT MNO_PROD_CD
+						FROM TPMPD_PROD
+						WHERE PROD_CD = B.PROD_CD
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND BASIC_PROD_FL = 'V' -- B:기본요금제 , V:번들
+						AND MSTR_FL = '1'
+						AND MNO_PROD_CD LIKE '1%'
+					) AS MNO_PROD_CD
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00110707'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00110707'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PCRF_SERVICE_ID
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111205'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111205'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PCRF_PROD_TP
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111055'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111055'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PDVC_YN
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111305'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111305'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS DISC_YN
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111355'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111355'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS HOLI_YN
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111405'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111405'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS RG_PROD_TP
+				FROM TPMPD_PROD_ATTR A
+					, TPMPD_PROD B
+					, TPMPD_PROD_ATTR C
+				WHERE A.PROD_CD = B.PROD_CD
+				AND B.PROD_CD = C.PROD_CD
+				AND B.SO_ID = #{chargeMngVO.soId}
+				AND A.ATTR_CD = 'AT00110150'  /*BUNDLE YN*/
+				AND CASE WHEN A.ATTR_VAL IS NULL THEN '0' ELSE A.ATTR_VAL END = '1'
+				AND B.SUBS_FL = '1'
+				AND B.MSTR_FL = '1'
+				AND B.BASIC_PROD_FL IN ('V', 'P')
+				AND #{chargeMngVO.todayDt} BETWEEN B.EFFECT_DT AND B.EXPIRAT_DT
+				AND C.ATTR_CD = 'AT00000004'  /*POSTPAID,PREPAID,HYBRID*/
+				AND C.ATTR_VAL IN ('2','3')
+				AND CASE WHEN C.ATTR_VAL IS NULL THEN '' ELSE C.ATTR_VAL END = (
+					SELECT CASE WHEN ATTR_VAL IS NULL THEN '' ELSE ATTR_VAL END
+					FROM TPMPD_PROD_ATTR
+					WHERE ATTR_CD = 'AT00000004'
+					AND PROD_CD = (
+						SELECT PROD_CD
+						FROM TCMCT_CTRT_INFO
+						WHERE CTRT_ID = #{chargeMngVO.ctrtId}
+						AND INACT_DTTM = '99991231235959'
+					)
+				)
+			)
+			ORDER BY PROD_CD
+		) A
+		WHERE 1=1
+		A.PDVC_YN = 'N' -- Top-up : 상품바우쳐번들 미표시 일반번들 표시
+		AND NOT EXISTS (
+			SELECT 1
+			FROM TPMPD_PROD_REL
+			WHERE PROD_REL_TYP = 'P'
+			AND PROD_CD = A.PROD_CD
+			AND #{chargeMngVO.todayDt} BETWEEN EFFECT_DT AND EXPIRAT_DT
+			AND MSTR_FL = '1'
+		)
+		AND A.HOLI_YN = 'N'
+	</select>
+	
+	<select id="getChrgPopProdList" resultType="ChargeMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			A.SO_ID
+			, A.SO_NM
+			, A.PROD_CD
+			, A.PROD_NM
+			, A.PROD_AMT
+			, A.QOS_AMT
+			, A.DH_TYPE
+			, A.EFF_PERIOD
+			, CASE WHEN A.MNO_PROD_CD IS NULL THEN 'X' ELSE A.MNO_PROD_CD END AS PCRF_ID
+			, A.PCRF_YN
+			, A.LITE_YN
+			, A.RCMD_YN
+			, A.PDVC_YN
+			, A.DISC_YN
+			, A.HOLI_YN
+			, A.RG_PROD_TP
+			, (
+				SELECT SUM(TR.INTERNAL_RATE * TD.QUANTITY/1024/1024/1024) AS AMT --공제량
+				FROM TOP_DISC_DEDT_PROD_MAP TM
+					, TOP_RATE TR
+					, TOP_DISC_DEDT_DEF TD
+				WHERE TM.PROD_ID = A.PROD_CD
+				AND TM.PROD_ID = TR.PROD_ID
+				AND TR.EXP_DT = '99991231235959'
+				AND TM.DISC_DEDT_CD = TD.DISC_DEDT_CD
+			) AS DEDT_AMT
+			, 'N' AS DN_TYPE
+		FROM (
+			SELECT
+				SO_ID
+				, SO_NM
+				, PROD_CD
+				, PROD_NM
+				, PROD_AMT
+				, QOS_AMT
+				, DH_TYPE
+				, EFF_PERIOD
+				, MNO_PROD_CD
+				, CASE WHEN MNO_PROD_CD IS NOT NULL AND PCRF_SERVICE_ID = '110' THEN 'Y' ELSE 'N' END AS PCRF_YN
+				, CASE WHEN PCRF_PROD_TP = '1' THEN 'Y' WHEN PCRF_PROD_TP = '0' THEN 'N' ELSE PCRF_PROD_TP END AS LITE_YN
+				, CASE WHEN RCMD_YN = 'Y' THEN 'Y' ELSE
+					CASE WHEN (
+						SELECT COUNT(*) 
+						FROM TSYCO_CODE_DETAIL 
+						WHERE COMMON_GRP = 'DN00104' 
+						AND COMMON_CD IN
+						(
+							SELECT USER_GROUP_ID 
+							FROM TSYCO_USER_GROUP_ROLE 
+							WHERE USER_ID = #{chargeMngVO.userId}
+						)
+					) &gt; 0 THEN CASE WHEN #{chargeMngVO.todayDt} >= '20150501' THEN 'Y' ELSE 'N' END
+					ELSE 'N' END END AS RCMD_YN
+				, PDVC_YN
+				, DISC_YN
+				, HOLI_YN
+				, RG_PROD_TP
+			FROM (
+				SELECT
+					B.SO_ID
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = B.SO_ID) AS SO_NM
+					, B.PROD_CD
+					, B.PROD_NM
+					, CASE WHEN (
+						SELECT RATE_VAL
+						FROM TPMPD_RATE
+						WHERE RATE_ITM_CD IN (
+							SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD
+						)
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT RATE_VAL
+						FROM TPMPD_RATE
+						WHERE RATE_ITM_CD IN (
+							SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD
+						)
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PROD_AMT
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT034'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT034'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS QOS_AMT
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT038'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'D' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT038'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS DH_TYPE
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT035'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT035'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS EFF_PERIOD
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT037'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT037'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS RCMD_YN
+					, (
+						SELECT MNO_PROD_CD
+						FROM TPMPD_PROD
+						WHERE PROD_CD = B.PROD_CD
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND BASIC_PROD_FL = 'V' -- B:기본요금제 , V:번들
+						AND MSTR_FL = '1'
+						AND MNO_PROD_CD LIKE '1%'
+					) AS MNO_PROD_CD
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00110707'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN '0' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00110707'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PCRF_SERVICE_ID
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111205'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111205'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PCRF_PROD_TP
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111055'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111055'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS PDVC_YN
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111305'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111305'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS DISC_YN
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111355'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111355'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS HOLI_YN
+					, CASE WHEN (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111405'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) IS NULL THEN 'X' ELSE (
+						SELECT ATTR_VAL
+						FROM TPMPD_PROD_ATTR
+						WHERE PROD_CD = B.PROD_CD
+						AND ATTR_CD = 'AT00111405'
+						AND #{chargeMngVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+						AND MSTR_FL = '1'
+					) END AS RG_PROD_TP
+				FROM TPMPD_PROD_ATTR A
+					, TPMPD_PROD B
+					, TPMPD_PROD_ATTR C
+				WHERE A.PROD_CD = B.PROD_CD
+				AND B.PROD_CD = C.PROD_CD
+				AND B.SO_ID = #{chargeMngVO.soId}
+				AND A.ATTR_CD = 'AT00110150'  /*BUNDLE YN*/
+				AND CASE WHEN A.ATTR_VAL IS NULL THEN '0' ELSE A.ATTR_VAL END = '1'
+				AND B.SUBS_FL = '1'
+				AND B.MSTR_FL = '1'
+				AND B.BASIC_PROD_FL IN ('V', 'P')
+				AND #{chargeMngVO.todayDt} BETWEEN B.EFFECT_DT AND B.EXPIRAT_DT
+				AND C.ATTR_CD = 'AT00000004'  /*POSTPAID,PREPAID,HYBRID*/
+				AND C.ATTR_VAL IN ('2','3')
+				AND CASE WHEN C.ATTR_VAL IS NULL THEN '' ELSE C.ATTR_VAL END = (
+					SELECT CASE WHEN ATTR_VAL IS NULL THEN '' ELSE ATTR_VAL END
+					FROM TPMPD_PROD_ATTR
+					WHERE ATTR_CD = 'AT00000004'
+					AND PROD_CD = (
+						SELECT PROD_CD
+						FROM TCMCT_CTRT_INFO
+						WHERE CTRT_ID = #{chargeMngVO.ctrtId}
+						AND INACT_DTTM = '99991231235959'
+					)
+				)
+			)
+			ORDER BY PROD_CD
+		) A
+		WHERE 1=1
+		A.PDVC_YN = 'N' -- Top-up : 상품바우쳐번들 미표시 일반번들 표시
+		AND NOT EXISTS (
+			SELECT 1
+			FROM TPMPD_PROD_REL
+			WHERE PROD_REL_TYP = 'P'
+			AND PROD_CD = A.PROD_CD
+			AND #{chargeMngVO.todayDt} BETWEEN EFFECT_DT AND EXPIRAT_DT
+			AND MSTR_FL = '1'
+		)
+		AND A.HOLI_YN = 'N'
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<insert id="insertRchrgHist">
+		INSERT INTO TCMBL_RCHRG_HIST
+		(
+			RCHRG_SEQ_NO
+			, RCHRG_TP
+			, RCHRG_STAT
+			, RCHRG_DT
+			, RCHRG_CHG_DT
+			, RCHRG_CNT
+			, CUST_ID
+			, CTRT_ID
+			, SO_ID
+			, PROD_CD
+			, THRWY_CHRG_ID
+			, CHRG_AMT
+			, CHRG_ADD_TX
+			, CHRG_BILL_AMT
+			, DEL_FLG
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+			, IF_SUC_YN
+			, IF_RSN_CD
+			, SRV_TRX_SNO
+			, SVC_TEL_NO
+			, TRGT_CUST_ID
+			, TRGT_CTRT_ID
+			, TRGT_SVC_TEL_NO
+			, SVC_EFF_DTM
+			, VO_SEQ_NO
+			, VO_BAR_CD
+			, APPR_NO
+			, APPR_TP
+			, RCHRG_TERM_DT
+			, DATA_QUOTA
+			, RCHRG_TM
+			, RCHRG_TERM_TM
+		)
+		VALUES
+		(
+			#{ rchrgHistVO.newOrderId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.rchrgTp, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.rchrgStat, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.rchrgDt, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.rchrgChgDt, jdbcType = VARCHAR}
+		<if test="rchrgHistVO.rchrgCnt != null">
+			, #{ rchrgHistVO.rchrgCnt, jdbcType = INTEGER}
+		</if>
+		<if test="rchrgHIstVO.rchrgCnt == null">
+			, (
+				SELECT
+					CASE WHEN MAX(RCHRG_CNT) IS NULL THEN 0 ELSE MAX(RCHRG_CNT) END + 1
+				FROM TCMBL_RCHRG_HIST
+				WHERE SO_ID = #{rchrgHistVO.soId} 
+				AND CUST_ID = #{rchrgHistVO.custId}
+				AND CTRT_ID = #{rchrgHistVO.ctrtId}
+				AND SUBSTR(RCHRG_DT,'0','6') = SUBSTR(#{rchrgHistVO.rchrgDt},'0','6')
+			)
+		</if>
+			, #{ rchrgHistVO.custId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.ctrtId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.soId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.prodCd, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.thrwyChrgId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.chrgAmt, jdbcType = DOUBLE}
+			, #{ rchrgHistVO.chrgAddTx, jdbcType = DOUBLE}
+			, #{ rchrgHistVO.chrgBillAmt, jdbcType = DOUBLE}
+			, #{ rchrgHistVO.delFlg, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.regrId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.regDate, jdbcType = DATE}
+			, #{ rchrgHistVO.chgrId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.chgDate, jdbcType = DATE}
+			, #{ rchrgHistVO.ifSucYn, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.ifRsnCd, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.srvTrxSno, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.svcTelNo, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.trgtCustId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.trgtCtrtId, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.trgtSvcTelNo, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.svcEffDtm, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.voSeqNo, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.voBarCd, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.apprNo, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.apprTp, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.rchrgTermDt, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.dataQuota, jdbcType = VARCHAR}
+		<if test="rchrgHistVO.rchrgSeqNo != null">
+			, (SELECT RCHRG_TM FROM TCMBL_RCHRG_HIST WHERE RCHRG_SEQ_NO = #{rchrgHistVO.rchrgSeqNo})
+			, (SELECT RCHRG_TERM_TM FROM TCMBL_RCHRG_HIST WHERE RCHRG_SEQ_NO = #{rchrgHistVO.rchrgSeqNo})
+		</if>
+		<if test="rchrgHistVO.rchrgSeqNo == null">
+			, #{ rchrgHistVO.rchrgTm, jdbcType = VARCHAR}
+			, #{ rchrgHistVO.rchrgTermTm, jdbcType = VARCHAR}
+		</if>
+		)
+	</insert>
+
+    <!-- 바우쳐마스터 정보를 저장한다.(바우쳐상태, 물류처리상태) -->
+    <update id="updateVeqtInfoVoStatLgst">
+		UPDATE TDNDT_VEQT SET
+			VO_STAT_CD = #{veqtVO.voStatCd}							--바우쳐상태
+			<if test="veqtVO.lgstProcStatCd != null and veqtVO.lgstProcStatCd != ''">
+				, LGST_PROC_STAT_CD = #{veqtVO.lgstProcStatCd}		--물류처리상태코드
+				, LGST_PROC_DTTM = #{veqtVO.lgstProcDttm}
+			</if>
+			<if test="veqtVO.ownLocCd != null and veqtVO.ownLocCd != ''">
+				, OWN_LOC_CD = #{veqtVO.ownLocCd}					--소유위치코드
+			</if>
+			<if test="veqtVO.dstrbUtPrc != null and veqtVO.dstrbUtPrc != ''">
+				, DSTRB_UT_PRC = #{veqtVO.dstrbUtPrc}				--소유위치코드
+			</if>
+            <if test="veqtVO.frstInDt != null and veqtVO.frstInDt != ''">
+            	, FRST_IN_DT = #{veqtVO.frstInDt}					--최초물류센터입고일자
+            </if>
+            <if test="veqtVO.agcInDt != null and veqtVO.agcInDt != ''">
+            	, AGC_IN_DT = #{veqtVO.agcInDt}						--대리점입고일자
+            </if>
+            <if test="veqtVO.remark != null and veqtVO.remark != ''">
+            	, REMARK = #{veqtVO.remark}							--비고
+            </if>
+             , CHGR_ID = #{veqtVO.chgrId}
+             , CHG_DATE = #{veqtVO.chgDate}
+		WHERE SO_ID = #{veqtVO.soId}
+		AND VO_SEQ_NO = #{veqtVO.voSeqNo}
+		<if test="veqtVO.actTp == '001'">
+			AND VO_STAT_CD IN ('30','80')							-- 충전 (사용가능, 판매처리)
+		</if>
+		<if test="veqtVO.actTp == '002'">
+			AND VO_STAT_CD = '70'									-- 충전취소 (사용완료)
+		</if>
+        <if test="veqtVO.actTp == '003'">
+			AND VO_STAT_CD = '30'									-- 판매처리 (사용가능)
+        </if>
+	</update>
+	
+	<select id="getMaxCrtSeqNo" resultType="String">
+		SELECT
+			CASE WHEN MAX(CRT_SEQ_NO) IS NULL THEN '0' ELSE MAX(CRT_SEQ_NO) END
+		FROM TDNDT_VEQT_TRANS
+		WHERE VO_SEQ_NO = #{veqtVO.voSeqNo}
+	</select>
+	
+	<insert id="addVeqtTransInfoInit_voSeqNo">
+		INSERT INTO TDNDT_VEQT_TRANS
+		SELECT
+		    #{veqtVO.crtSeqNo}
+		    , SO_ID
+		    , VO_SEQ_NO
+		    , VO_BAR_CD
+		    , ITEM_ID
+		    , VO_STAT_CD
+		    , VO_ISSUE_DT
+		    , VO_EXPIRED_DT
+		    , VO_ISSUE_AMT
+		    , VO_PROD_CD
+		    , LGST_PROC_STAT_CD
+		    , LGST_PROC_DTTM
+		    , OWN_LOC_CD
+		    , FRST_IN_DT
+		    , AGC_IN_DT
+		    , PRCHS_UT_PRC
+		    , DSTRB_UT_PRC
+		    , CT_ORG_ID
+		    , CT_CHG_ID
+		    , CT_CHG_DT
+		    , REGR_ID
+		    , REG_DATE
+		    , CHGR_ID
+		    , CHG_DATE
+		    , REMARK
+		FROM TDNDT_VEQT
+		WHERE SO_ID = #{veqtVO.soId}
+		AND VO_SEQ_NO = #{veqtVO.voSeqNo}
+	</insert>
+	
+	<select id="getCtrtChrgCntList" resultType="ChargeMngVO">
+		SELECT
+			A.SVC_TEL_NO
+			, A.CTRT_ID
+			, A.RCHRG_TP
+			, A.RCHRG_STAT
+			, A.RCHRG_CNT
+			, A.RCHRG_DT
+			, A.CHRG_AMT
+			, A.VO_SEQ_NO
+			, A.VO_BAR_CD
+			, A.PROD_CD
+			, C.PROD_NM
+			, A.SVC_EFF_DTM
+			, A.THRWY_CHRG_ID
+			, A.CUST_ID
+			, A.APPR_TP
+			, A.APPR_NO
+			, A.DATA_QUOTA
+			, A.RCHRG_TERM_DT
+			, CASE WHEN A.RCHRG_TP = '100'
+				THEN CASE WHEN A.APPR_TP IS NOT NULL
+					THEN (
+						SELECT CODE_NM
+						FROM TSYCO_CODE_DETAIL_NAME
+						WHERE LNG_TYP = #{chargeMngVO.lngTyp}
+						AND COMMON_GRP = 'DN00102'
+						AND COMMON_CD = A.APPR_TP
+					) ELSE '' END
+				ELSE '' END AS APPR_TP_NM
+			, A.IF_SUC_YN
+		FROM TCMBL_RCHRG_HIST A
+			LEFT OUTER JOIN TPMPD_PROD C ON A.SO_ID = C.SO_ID AND A.PROD_CD = C.PROD_CD
+		WHERE 1=1
+		AND A.SO_ID = #{chargeMngVO.soId}
+		AND A.CTRT_ID = #{chargeMngVO.ctrtId}
+		AND A.RCHRG_SEQ_NO = #{chargeMngVO.rchrgSeqNo}
+		AND A.RCHRG_CNT = #{chargeMngVO.rchrgCnt}
+	</select>
+	
+    <!-- OCS로부터 취소가능여부를 조회한다. -->
+    <select id="getOcsCancelYn" resultType="String">
+        SELECT FOC_CNCL_BNDL_PROD(#{cahrgeMngVO.custId}, #{chargeMngVO.prodCd}, #{cahrgeMngVO.thrwyChrgId}) AS CNCL_YN
+          FROM DUAL
+    </select>
+    
+    <!-- 바우쳐마스터이력 정보를 조회한다. -->
+    <select id="getVeqtTransInfo" resultType="VeqtVO">
+        SELECT CRT_SEQ_NO, SO_ID, VO_SEQ_NO, VO_BAR_CD, VO_STAT_CD, LGST_PROC_STAT_CD
+          FROM
+          (
+            SELECT ROWNUM AS CNT, CRT_SEQ_NO, SO_ID, VO_SEQ_NO, VO_BAR_CD, VO_STAT_CD, LGST_PROC_STAT_CD
+              FROM TDNDT_VEQT_TRANS
+             WHERE SO_ID = #{veqtVO.soId}
+               AND VO_SEQ_NO = #{veqtVO.voSeqNo}
+             ORDER BY CRT_SEQ_NO DESC
+          )
+         WHERE CNT = 2
+    </select>
+
+</mapper>	

@@ -1,0 +1,280 @@
+package com.ntels.ccbs.customer.domain.contract.contract;
+
+import java.io.Serializable;
+import java.util.Date;
+
+import com.ntels.ccbs.system.domain.common.service.CommonVO;
+
+public class OSvcCmpsExtVO implements Serializable,CommonVO{
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 654097012274122001L;
+	private String extId; /* 확장ID */
+	private String orderId; /* 오더ID */
+	private String inactDttm; /* 유효종료일시 */
+	private String actDttm; /* 유효시작일시 */
+	private String monthlyAmt; /* 월정액금액 */
+	private String monthlyNegoRate; /* 월정액협정할인율 */
+	private String monthlyNegoAmt; /* 월정액협정금액 */
+	private String onetimeAmt; /* 일회성금액 */
+	private String onetimeInstlCnt; /* 일회성분납개월수 */
+	private String onetimeNegoRate; /* 일회성협정할인율 */
+	private String onetimeNegoAmt; /* 일회성협정금액 */
+	private String prodCnt; /* 상품구매수 */
+	private String other; /* 기타 */
+	private Date chgDate; /* 수정일시 */
+	private String chgrId; /* 수정자 */
+	private Date regDate; /* 등록일시 */
+	private String regrId; /* 등록자 */
+	/**
+	 * @return the extId
+	 */
+	public String getExtId() {
+		return extId;
+	}
+	/**
+	 * @param extId the extId to set
+	 */
+	public void setExtId(String extId) {
+		this.extId = extId;
+	}
+	/**
+	 * @return the orderId
+	 */
+	public String getOrderId() {
+		return orderId;
+	}
+	/**
+	 * @param orderId the orderId to set
+	 */
+	public void setOrderId(String orderId) {
+		this.orderId = orderId;
+	}
+	/**
+	 * @return the inactDttm
+	 */
+	public String getInactDttm() {
+		return inactDttm;
+	}
+	/**
+	 * @param inactDttm the inactDttm to set
+	 */
+	public void setInactDttm(String inactDttm) {
+		this.inactDttm = inactDttm;
+	}
+	/**
+	 * @return the actDttm
+	 */
+	public String getActDttm() {
+		return actDttm;
+	}
+	/**
+	 * @param actDttm the actDttm to set
+	 */
+	public void setActDttm(String actDttm) {
+		this.actDttm = actDttm;
+	}
+	/**
+	 * @return the monthlyAmt
+	 */
+	public String getMonthlyAmt() {
+		return monthlyAmt;
+	}
+	/**
+	 * @param monthlyAmt the monthlyAmt to set
+	 */
+	public void setMonthlyAmt(String monthlyAmt) {
+		this.monthlyAmt = monthlyAmt;
+	}
+	/**
+	 * @return the monthlyNegoRate
+	 */
+	public String getMonthlyNegoRate() {
+		return monthlyNegoRate;
+	}
+	/**
+	 * @param monthlyNegoRate the monthlyNegoRate to set
+	 */
+	public void setMonthlyNegoRate(String monthlyNegoRate) {
+		this.monthlyNegoRate = monthlyNegoRate;
+	}
+	/**
+	 * @return the monthlyNegoAmt
+	 */
+	public String getMonthlyNegoAmt() {
+		return monthlyNegoAmt;
+	}
+	/**
+	 * @param monthlyNegoAmt the monthlyNegoAmt to set
+	 */
+	public void setMonthlyNegoAmt(String monthlyNegoAmt) {
+		this.monthlyNegoAmt = monthlyNegoAmt;
+	}
+	/**
+	 * @return the onetimeAmt
+	 */
+	public String getOnetimeAmt() {
+		return onetimeAmt;
+	}
+	/**
+	 * @param onetimeAmt the onetimeAmt to set
+	 */
+	public void setOnetimeAmt(String onetimeAmt) {
+		this.onetimeAmt = onetimeAmt;
+	}
+	/**
+	 * @return the onetimeInstlCnt
+	 */
+	public String getOnetimeInstlCnt() {
+		return onetimeInstlCnt;
+	}
+	/**
+	 * @param onetimeInstlCnt the onetimeInstlCnt to set
+	 */
+	public void setOnetimeInstlCnt(String onetimeInstlCnt) {
+		this.onetimeInstlCnt = onetimeInstlCnt;
+	}
+	/**
+	 * @return the onetimeNegoRate
+	 */
+	public String getOnetimeNegoRate() {
+		return onetimeNegoRate;
+	}
+	/**
+	 * @param onetimeNegoRate the onetimeNegoRate to set
+	 */
+	public void setOnetimeNegoRate(String onetimeNegoRate) {
+		this.onetimeNegoRate = onetimeNegoRate;
+	}
+	/**
+	 * @return the onetimeNegoAmt
+	 */
+	public String getOnetimeNegoAmt() {
+		return onetimeNegoAmt;
+	}
+	/**
+	 * @param onetimeNegoAmt the onetimeNegoAmt to set
+	 */
+	public void setOnetimeNegoAmt(String onetimeNegoAmt) {
+		this.onetimeNegoAmt = onetimeNegoAmt;
+	}
+	/**
+	 * @return the prodCnt
+	 */
+	public String getProdCnt() {
+		return prodCnt;
+	}
+	/**
+	 * @param prodCnt the prodCnt to set
+	 */
+	public void setProdCnt(String prodCnt) {
+		this.prodCnt = prodCnt;
+	}
+	/**
+	 * @return the other
+	 */
+	public String getOther() {
+		return other;
+	}
+	/**
+	 * @param other the other to set
+	 */
+	public void setOther(String other) {
+		this.other = other;
+	}
+	/**
+	 * @return the chgDate
+	 */
+	public Date getChgDate() {
+		return chgDate;
+	}
+	/**
+	 * @param chgDate the chgDate to set
+	 */
+	public void setChgDate(Date chgDate) {
+		this.chgDate = chgDate;
+	}
+	/**
+	 * @return the chgrId
+	 */
+	public String getChgrId() {
+		return chgrId;
+	}
+	/**
+	 * @param chgrId the chgrId to set
+	 */
+	public void setChgrId(String chgrId) {
+		this.chgrId = chgrId;
+	}
+	/**
+	 * @return the regDate
+	 */
+	public Date getRegDate() {
+		return regDate;
+	}
+	/**
+	 * @param regDate the regDate to set
+	 */
+	public void setRegDate(Date regDate) {
+		this.regDate = regDate;
+	}
+	/**
+	 * @return the regrId
+	 */
+	public String getRegrId() {
+		return regrId;
+	}
+	/**
+	 * @param regrId the regrId to set
+	 */
+	public void setRegrId(String regrId) {
+		this.regrId = regrId;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("OSvcCmpsExtVO [extId=");
+		builder.append(extId);
+		builder.append(", orderId=");
+		builder.append(orderId);
+		builder.append(", inactDttm=");
+		builder.append(inactDttm);
+		builder.append(", actDttm=");
+		builder.append(actDttm);
+		builder.append(", monthlyAmt=");
+		builder.append(monthlyAmt);
+		builder.append(", monthlyNegoRate=");
+		builder.append(monthlyNegoRate);
+		builder.append(", monthlyNegoAmt=");
+		builder.append(monthlyNegoAmt);
+		builder.append(", onetimeAmt=");
+		builder.append(onetimeAmt);
+		builder.append(", onetimeInstlCnt=");
+		builder.append(onetimeInstlCnt);
+		builder.append(", onetimeNegoRate=");
+		builder.append(onetimeNegoRate);
+		builder.append(", onetimeNegoAmt=");
+		builder.append(onetimeNegoAmt);
+		builder.append(", prodCnt=");
+		builder.append(prodCnt);
+		builder.append(", other=");
+		builder.append(other);
+		builder.append(", chgDate=");
+		builder.append(chgDate);
+		builder.append(", chgrId=");
+		builder.append(chgrId);
+		builder.append(", regDate=");
+		builder.append(regDate);
+		builder.append(", regrId=");
+		builder.append(regrId);
+		builder.append("]");
+		return builder.toString();
+	}
+	
+	
+}

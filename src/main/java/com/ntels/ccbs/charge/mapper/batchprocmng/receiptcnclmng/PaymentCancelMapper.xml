@@ -1,0 +1,392 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.receiptcnclmng.PaymentCancelMapper">
+
+	<select id="getTransApplCheckCnt" parameterType="String" resultType="int">
+		SELECT	/* PaymentCancelMapper.xml.getTransApplCheckCnt, 양연희, 2018.01.04 */
+				A.APPL_CNT1 + B.APPL_CNT2 + C.APPL_CNT3 + D.APPL_CNT4
+		FROM	(SELECT  COUNT(TRANS_APPL_NO) AS APPL_CNT1
+                FROM    TBLPY_TRANS_APPL
+                WHERE   TRANS_APPL_CL = '03'
+                AND     TRANS_APPL_TGT_NO IN (SELECT  ASSR_OCC_SEQ_NO
+                                            FROM    TBLPY_RCPT_DTL A
+                                                    ,TBLPY_ASSR_TRANS_HIST B
+                                            WHERE   A.PYM_SEQ_NO = #{pymSeqNo}
+                                            AND     B.ASSR_TRANS_SEQ_NO = A.ASSR_TRANS_SEQ_NO
+                )
+                AND     DCSN_PROC_STAT IN ('01','03')) A
+				,(SELECT COUNT(C.RFND_SEQ_NO) AS APPL_CNT2
+				FROM	TBLPY_RCPT A
+						,TBLPY_DPST B
+						,TBLPY_RFND_APPL C
+				WHERE	A.PYM_SEQ_NO = #{pymSeqNo}
+				AND		B.DPST_SEQ_NO = A.DPST_SEQ_NO
+				AND		C.RFND_OCC_TGT_SEQ_NO = B.PREPAY_OCC_SEQ_NO 
+				AND		C.RFND_OCC_AMT_CL = '01'
+				AND		C.DCSN_PROC_STAT IN ('01','03')) B
+				,(SELECT COUNT(C.RFND_SEQ_NO) AS APPL_CNT3
+				FROM	TBLPY_RCPT A
+						,TBLPY_DPST B
+						,TBLPY_RFND_APPL C
+				WHERE	A.PYM_SEQ_NO = #{pymSeqNo}
+				AND		B.DPST_SEQ_NO = A.DPST_SEQ_NO
+				AND		C.RFND_OCC_TGT_SEQ_NO = B.AMBG_OCC_SEQ_NO 
+				AND		C.RFND_OCC_AMT_CL = '02'
+				AND		C.DCSN_PROC_STAT IN ('01','03')) C
+				,(SELECT COUNT(C.RFND_SEQ_NO) AS APPL_CNT4
+				FROM	TBLPY_RCPT A
+						,TBLPY_DPST B
+						,TBLPY_RFND_APPL C
+				WHERE	A.PYM_SEQ_NO = #{pymSeqNo}
+				AND		B.DPST_SEQ_NO = A.DPST_SEQ_NO
+				AND		C.RFND_OCC_TGT_SEQ_NO = B.ASSR_OCC_SEQ_NO 
+				AND		C.RFND_OCC_AMT_CL = '03'
+				AND		C.DCSN_PROC_STAT IN ('01','03')) D
+	</select>
+	
+	<select id="getReceiptCnclList" parameterType="String" resultType="ReceiptDtlVO">
+    SELECT /* PaymentCancelMapper.xml.getReceiptCnclList, 양연희, 2017.12.14 */
+           A.PYM_SEQ_NO
+         , A.PROD_CMPS_ID
+         , A.SVC_CMPS_ID
+         , A.CHRG_ITM_CD
+         , A.USE_YYMM
+         , A.SO_ID
+         , A.CUST_ID
+         , A.CTRT_ID
+         , A.BILL_AMT
+         , A.RCPT_AMT
+         , A.PRE_RCPT_AMT
+         , A.PRE_SO_ID
+         , A.PREPAY_TRANS_SEQ_NO
+         , A.AMBG_TRANS_SEQ_NO
+         , A.ASSR_TRANS_SEQ_NO
+         , B.DPST_SEQ_NO
+         , B.BILL_YYMM
+         , B.PYM_ACNT_ID
+         , B.BILL_SEQ_NO
+         , B.PAY_TP
+         , B.PREPAY_OCC_SEQ_NO
+         ,(SELECT PREPAY_BAL FROM TBLPY_PREPAY_OCC WHERE PREPAY_OCC_SEQ_NO = B.PREPAY_OCC_SEQ_NO) AS PREPAY_BAL
+    FROM   TBLPY_RCPT_DTL A
+          ,TBLPY_RCPT B
+    WHERE  A.PYM_SEQ_NO = #{spymSeqNo}
+    AND    B.PYM_SEQ_NO = A.PYM_SEQ_NO
+	</select>
+	
+	<update id="updatePrepayTransCncl" parameterType="PrepayTransHistVO">
+		UPDATE	/* PaymentCancelMapper.xml.updatePrepayTransCncl, 양연희, 2017.12.14 */
+				TBLPY_PREPAY_TRANS_HIST
+		SET		CNCL_YN 			= #{prepayTransHistVO.cnclYn}
+				,CNCL_DTTM			= #{prepayTransHistVO.cnclDttm}
+				,CHGR_ID			= #{prepayTransHistVO.regrId}
+				,CHG_DATE			= #{prepayTransHistVO.regDate}
+		WHERE	PREPAY_TRANS_SEQ_NO	= #{prepayTransHistVO.prepayTransSeqNo}
+	</update>
+	
+	<update id="updatePrepayOccCnclAmt" parameterType="PrepayOccVO">
+		UPDATE	/* PaymentCancelMapper.xml.updatePrepayOccCnclAmt, 양연희, 2017.12.14 */
+				TBLPY_PREPAY_OCC
+		SET		PREPAY_PROC_STAT	= DECODE(SIGN(NVL(PREPAY_BAL, 0) + #{prepayOccVO.prepayTransAmt}), 0, '02', '01')
+				,PREPAY_TRANS_AMT	= NVL(PREPAY_TRANS_AMT, 0) - #{prepayOccVO.prepayTransAmt}
+				,PREPAY_BAL			= NVL(PREPAY_BAL, 0) + #{prepayOccVO.prepayTransAmt}
+				,TRANS_CMPL_YN		= DECODE(SIGN(NVL(PREPAY_BAL, 0) + #{prepayOccVO.prepayTransAmt}), 0, 'Y', 'N')
+				,CHGR_ID			= #{prepayOccVO.regrId}
+				,CHG_DATE			= #{prepayOccVO.regDate}
+		WHERE	PREPAY_OCC_SEQ_NO	= (SELECT	PREPAY_OCC_SEQ_NO
+										FROM	TBLPY_PREPAY_TRANS_HIST
+										WHERE	PREPAY_TRANS_SEQ_NO = #{prepayOccVO.prepayTransSeqNo})
+	</update>
+	
+	<update id="updateAmbgTransCncl" parameterType="AmbgTransHistVO">
+		UPDATE	/* PaymentCancelMapper.xml.updateAmbgTransCncl, 양연희, 2017.12.14 */
+				TBLPY_AMBG_TRANS_HIST
+		SET		CNCL_YN 			= #{ambgTransHistVO.cnclYn}
+				,CNCL_DTTM			= #{ambgTransHistVO.cnclDttm}
+				,CHGR_ID			= #{ambgTransHistVO.regrId}
+				,CHG_DATE			= #{ambgTransHistVO.regDate}
+		WHERE	AMBG_TRANS_SEQ_NO	= #{ambgTransHistVO.ambgTransSeqNo}
+	</update>
+	
+	<update id="updateAmbgOccCnclAmt" parameterType="AmbgOccVO">
+		UPDATE	/* PaymentCancelMapper.xml.updateAmbgOccCnclAmt, 양연희, 2017.12.14 */
+				TBLPY_AMBG_OCC
+		SET		AMBG_PROC_STAT	= DECODE(SIGN(NVL(AMBG_BAL, 0) + #{ambgOccVO.ambgTransAmt}), 0, '02', '01')
+				,AMBG_TRANS_AMT	= NVL(AMBG_TRANS_AMT, 0) - #{ambgOccVO.ambgTransAmt}
+				,AMBG_BAL		= NVL(AMBG_BAL, 0) + #{ambgOccVO.ambgTransAmt}
+				,TRANS_CMPL_YN	= DECODE(SIGN(NVL(AMBG_BAL, 0) + #{ambgOccVO.ambgTransAmt}), 0, 'Y', 'N')
+				,CHGR_ID		= #{ambgOccVO.regrId}
+				,CHG_DATE		= #{ambgOccVO.regDate}
+		WHERE	AMBG_OCC_SEQ_NO	= (SELECT	AMBG_OCC_SEQ_NO
+									FROM	TBLPY_AMBG_TRANS_HIST
+									WHERE	AMBG_TRANS_SEQ_NO = #{ambgOccVO.ambgTransSeqNo})
+	</update>
+	
+	<update id="updateAssrTransCncl" parameterType="AssrTransHistVO">
+		UPDATE	/* PaymentCancelMapper.xml.updateAssrTransCncl, 양연희, 2017.12.14 */
+				TBLPY_ASSR_TRANS_HIST
+		SET		CNCL_YN 			= #{assrTransHistVO.cnclYn}
+				,CNCL_DTTM			= #{assrTransHistVO.cnclDttm}
+				,CHGR_ID			= #{assrTransHistVO.regrId}
+				,CHG_DATE			= #{assrTransHistVO.regDate}
+		WHERE	ASSR_TRANS_SEQ_NO 	= #{assrTransHistVO.assrTransSeqNo}
+	</update>
+	
+	<update id="updateAssrOccCnclAmt" parameterType="AssrOccVO">
+		UPDATE	/* PaymentCancelMapper.xml.updateAssrOccCnclAmt, 양연희, 2017.12.14 */
+				TBLPY_ASSR_OCC
+		SET		ASSR_PROC_STAT	= DECODE(SIGN(NVL(ASSR_BAL, 0) + #{assrOccVO.assrTransAmt}), 0, '02', '01')
+				,ASSR_TRANS_AMT	= NVL(ASSR_TRANS_AMT, 0) - #{assrOccVO.assrTransAmt}
+				,ASSR_BAL		= NVL(ASSR_BAL, 0) + #{assrOccVO.assrTransAmt}
+				,TRANS_CMPL_YN	= DECODE(SIGN(NVL(ASSR_BAL, 0) + #{assrOccVO.assrTransAmt}), 0, 'Y', 'N')
+				,CHGR_ID		= #{assrOccVO.regrId}
+				,CHG_DATE		= #{assrOccVO.regDate}
+		WHERE	ASSR_OCC_SEQ_NO	= (SELECT	ASSR_OCC_SEQ_NO
+									FROM	TBLPY_ASSR_TRANS_HIST
+									WHERE	ASSR_TRANS_SEQ_NO = #{assrOccVO.assrTransSeqNo})
+	</update>
+	
+	<update id="updateBillCnclAmt" parameterType="BillListVO">
+    UPDATE /* PaymentCancelMapper.xml.updateBillCnclAmt, gwhan, 2020.03.17 */
+           TBLIV_BILL A
+    SET    FULL_PAY_YN    = CASE WHEN (COALESCE(BILL_AMT, 0) + #{billListVO.rcptAmt}) = 0 THEN 'Y'
+                                 ELSE 'N'
+                            END
+         , RCPT_AMT       = COALESCE(RCPT_AMT, 0) - #{billListVO.rcptAmt}
+         , LAST_RCPT_DT   = (SELECT MAX(PAY_PROC_DT)
+                             FROM   TBLPY_RCPT
+                             WHERE  PYM_SEQ_NO != #{billListVO.pymSeqNo}
+                             AND    BILL_SEQ_NO = A.BILL_SEQ_NO
+                             AND    CNCL_YN != 'Y')
+         , CHGR_ID        = #{billListVO.chgrId}
+         , CHG_DATE       = #{billListVO.chgDate}
+    WHERE  BILL_SEQ_NO    = #{billListVO.billSeqNo}
+    AND    USE_YYMM       = #{billListVO.useYymm}
+    AND    SVC_CMPS_ID    = #{billListVO.svcCmpsId}
+    AND    PROD_CMPS_ID   = #{billListVO.prodCmpsId}
+    AND    CHRG_ITM_CD    = #{billListVO.chrgItmCd}
+	</update>	
+	
+	<insert id="insertReceiptCnclDtl" parameterType="PaymentCancelDtlVO">
+    /* PaymentCancelMapper.xml.insertReceiptCnclDtl, gwhan, 2020.03.17 */
+    INSERT INTO TBLPY_RCPT_CNCL_DTL
+    (
+        SO_ID
+      , PYM_SEQ_NO
+      , USE_YYMM
+      , PROD_CMPS_ID
+      , SVC_CMPS_ID
+      , CHRG_ITM_CD
+      , CUST_ID
+      , CTRT_ID
+      , BILL_AMT
+      , RCPT_AMT
+      , PRE_SO_ID
+      , PRE_RCPT_AMT
+      , INPT_MENU_ID
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    SELECT SO_ID
+         , PYM_SEQ_NO
+         , USE_YYMM
+         , PROD_CMPS_ID
+         , SVC_CMPS_ID
+         , CHRG_ITM_CD
+         , CUST_ID
+         , CTRT_ID
+         , BILL_AMT
+         , RCPT_AMT
+         , PRE_SO_ID
+         , PRE_RCPT_AMT
+         , #{paymentCancelDtlVO.inptMenuId}
+         , #{paymentCancelDtlVO.regrId}
+         , #{paymentCancelDtlVO.regDate}
+         , #{paymentCancelDtlVO.regrId}
+         , #{paymentCancelDtlVO.regDate}
+    FROM   TBLPY_RCPT_DTL
+    WHERE  SO_ID           = #{paymentCancelDtlVO.soId}
+    AND    PYM_SEQ_NO      = #{paymentCancelDtlVO.pymSeqNo}
+    AND    PROD_CMPS_ID    = #{paymentCancelDtlVO.prodCmpsId}
+    AND    SVC_CMPS_ID     = #{paymentCancelDtlVO.svcCmpsId}
+    AND    CHRG_ITM_CD     = #{paymentCancelDtlVO.chrgItmCd}
+    AND    USE_YYMM        = #{paymentCancelDtlVO.useYymm}
+	</insert>
+	
+	<insert id="insertReceiptCncl" parameterType="PaymentCancelVO">
+    /* PaymentCancelMapper.xml.insertReceiptCncl, gwhan, 2020.03.17 */
+    INSERT INTO TBLPY_RCPT_CNCL
+    (   SO_ID
+      , PYM_SEQ_NO
+      , DPST_SEQ_NO
+      , PYM_ACNT_ID
+      , BILL_SEQ_NO
+      , BILL_YYMM
+      , BILL_CYCL
+      , BILL_DT
+
+      , DPST_CL
+      , DPST_DT
+      , TRANS_DT
+      , DPST_PROC_DT
+      , PAY_PROC_DT
+
+      , PAY_TP
+      , PAY_OBJ_AMT
+      , PAY_APLY_AMT
+      , PREPAY_APLY_AMT
+      , RCPT_AMT
+
+      , PREPD_CTRT_ID
+
+      , CNCL_DT
+      , CNCL_EMP_ID
+      , CNCL_RESN
+      , ERP_SND_YN
+      , INPT_MENU_ID
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    SELECT SO_ID
+         , PYM_SEQ_NO
+         , DPST_SEQ_NO
+         , PYM_ACNT_ID
+         , BILL_SEQ_NO
+         , BILL_YYMM
+         , BILL_CYCL
+         , BILL_DT
+
+         , DPST_CL
+         , DPST_DT
+         , TRANS_DT
+         , DPST_PROC_DT
+         , PAY_PROC_DT
+
+         , PAY_TP
+         , PAY_OBJ_AMT
+         , PAY_APLY_AMT
+         , PREPAY_APLY_AMT
+         , RCPT_AMT
+
+         , PREPD_CTRT_ID
+
+         , #{paymentCancelVO.cnclDt}
+         , #{paymentCancelVO.cnclEmpId}
+         , #{paymentCancelVO.cnclResn}
+         , #{paymentCancelVO.erpSndYn}
+         , #{paymentCancelVO.inptMenuId}
+         , #{paymentCancelVO.regrId}
+         , #{paymentCancelVO.regDate}
+         , #{paymentCancelVO.regrId}
+         , #{paymentCancelVO.regDate}
+    FROM  TBLPY_RCPT
+    WHERE PYM_SEQ_NO = #{paymentCancelVO.pymSeqNo}
+	</insert>
+	
+	<update id="updateAssrOccCncl" parameterType="AssrOccVO">
+		UPDATE	/* PaymentCancelMapper.xml.updateAssrOccCncl, 양연희, 2017.12.14 */
+				TBLPY_ASSR_OCC
+		SET		CNCL_YN 	= #{assrOccVO.cnclYn}
+				,CNCL_DTTM	= #{assrOccVO.cnclDttm}
+				,CHGR_ID	= #{assrOccVO.regrId}
+				,CHG_DATE	= #{assrOccVO.regDate}
+		WHERE	PYM_SEQ_NO	= #{assrOccVO.pymSeqNo}
+	</update>
+	
+	<update id="updateAmbgOccPrepayAmt" parameterType="PrepayOccVO">
+		UPDATE	/* PaymentCancelMapper.xml.updateAmbgOccPrepayAmt, 양연희, 2018.01.22 */
+				TBLPY_AMBG_OCC
+		SET		AMBG_PROC_STAT	= DECODE(SIGN(NVL(AMBG_BAL, 0) + #{prepayOccVO.prepayBal}), 0, '02', '01')
+				,AMBG_TRANS_AMT	= NVL(AMBG_TRANS_AMT, 0) - #{prepayOccVO.prepayBal}
+				,AMBG_BAL		= NVL(AMBG_BAL, 0) + #{prepayOccVO.prepayBal}
+				,TRANS_CMPL_YN	= DECODE(SIGN(NVL(AMBG_BAL, 0) + #{prepayOccVO.prepayBal}), 0, 'Y', 'N')
+				,CHGR_ID		= #{prepayOccVO.regrId}
+				,CHG_DATE		= #{prepayOccVO.regDate}
+		WHERE	AMBG_OCC_SEQ_NO	= (SELECT	PREPAY_OCC_TGT_SEQ_NO
+									FROM	TBLPY_PREPAY_OCC
+									WHERE	PREPAY_OCC_SEQ_NO = #{prepayOccVO.prepayOccSeqNo})
+	</update>
+	
+	<insert id="insertPrepayOcc" parameterType="PrepayOccVO">
+	/* PaymentCancelMapper.xml.insertPrepayOcc, gwhan, 2020.03.20 */
+    INSERT INTO TBLPY_PREPAY_OCC
+    (
+        SO_ID
+      , PREPAY_OCC_SEQ_NO
+      , PYM_ACNT_ID
+      , PREPAY_OCC_DTTM
+      , PREPAY_OCC_TP
+      , PREPAY_OCC_RESN
+      , PREPAY_OCC_TGT_SEQ_NO
+      , DPST_DT
+      , DPST_PROC_DT
+      , PREPAY_PROC_STAT
+      , PREPAY_OCC_AMT
+      , PREPAY_TRANS_AMT
+      , PREPAY_BAL
+      , TRANS_CMPL_YN
+      , CNCL_YN
+      , CNCL_DTTM
+      , TRANS_DT
+      , ERP_SND_YN
+      , INPT_MENU_ID
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    SELECT SO_ID
+         , #{prepayOccVO.prepayOccSeqNo}
+         , #{prepayOccVO.pymAcntId}
+         , #{prepayOccVO.prepayOccDttm}
+         , #{prepayOccVO.prepayOccTp}
+         , #{prepayOccVO.prepayOccResn}
+         , #{prepayOccVO.prepayOccTgtSeqNo}
+         , DPST_DT
+         , DPST_PROC_DT
+         , #{prepayOccVO.prepayProcStat}
+         , RCPT_AMT
+         , 0
+         , RCPT_AMT
+         , 'N'
+         , #{prepayOccVO.cnclYn}
+         , #{prepayOccVO.cnclDttm}
+         , #{prepayOccVO.transDt}
+         , #{prepayOccVO.erpSndYn}
+         , #{prepayOccVO.inptMenuId}
+         , #{prepayOccVO.regrId}
+         , #{prepayOccVO.regDate}
+         , #{prepayOccVO.regrId}
+         , #{prepayOccVO.regDate}
+    FROM   TBLPY_RCPT
+    WHERE  PYM_SEQ_NO = #{prepayOccVO.prepayOccTgtSeqNo}
+	</insert>
+	
+	<update id="updateReceiptCncl" parameterType="ReceiptVO">
+		UPDATE	/* PaymentCancelMapper.xml.updateReceiptCncl, 양연희, 2017.12.14 */
+				TBLPY_RCPT
+		SET		CNCL_YN 			= #{receiptVO.cnclYn}
+				,PREPAY_OCC_SEQ_NO	= #{receiptVO.prepayOccSeqNo}
+				,CHGR_ID			= #{receiptVO.regrId}
+				,CHG_DATE			= #{receiptVO.regDate}
+		WHERE	PYM_SEQ_NO			= #{receiptVO.pymSeqNo}
+	</update>
+	
+	<update id="updateDepositCncl" parameterType="DepositVO">
+		UPDATE	/* PaymentCancelMapper.xml.updateDepositCncl, 양연희, 2017.12.14 */
+				TBLPY_DPST
+		SET		PAY_PROC_YN			= #{depositVO.payProcYn}
+				,PAY_PROC_DT		= #{depositVO.payProcDt}
+				,PAY_CNCL_YN		= #{depositVO.payCnclYn}
+				,CHGR_ID			= #{depositVO.regrId}
+				,CHG_DATE			= #{depositVO.regDate}
+		WHERE	DPST_SEQ_NO			= #{depositVO.dpstSeqNo}
+	</update>
+	
+</mapper>

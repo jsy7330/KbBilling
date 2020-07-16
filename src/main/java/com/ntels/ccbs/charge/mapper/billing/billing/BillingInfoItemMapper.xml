@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.billing.billing.BillingInfoItemMapper">
+
+<!-- 빌링 설정정보 조회 -->
+	<select id="billingInfoItemListAction" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingInfoItemVO" resultType="com.ntels.ccbs.charge.domain.billing.billing.BillingInfoItemVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			 SELECT A.SO_ID AS SO_ID
+                      , B.SET_ITM_ID AS SET_ITM_CD
+                      , B.EFT_BGN_YYMM AS EFT_BGN_YYMM
+                      , B.EFT_END_YYMM AS EFT_END_YYMM 
+                      , B.SET_ITM_NM AS SET_ITM_NM
+                      , B.SET_LOC AS SET_LOC
+                      , B.ESS_YN AS ESS_YN
+                      , B.FLD_TP AS FLD_TP
+                      , B.FLD_STRUCT AS FLD_STRUCT
+                      , B.FLD_CNT AS FLD_CNT
+                      , A.SET_VAL AS SET_VAL
+                      , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM
+              FROM  TBLIV_BILL_STP         A      /* 빌링설정정보  */
+                     , TBLIV_BILL_STP_ITM   B      /* 빌링설정항목 */
+            WHERE  1=1
+                AND  A.SET_ITM_ID       = B.SET_ITM_ID
+                AND  A.EFT_BGN_YYMM  = B.EFT_BGN_YYMM
+			<if test="billingInfoItemVO.searchSoId != null and billingInfoItemVO.searchSoId != ''">
+				AND  A.SO_ID =  #{billingInfoItemVO.searchSoId}
+			</if>
+			<if test="billingInfoItemVO.searchYymm != null and billingInfoItemVO.searchYymm != ''">
+				AND  #{billingInfoItemVO.searchYymm} BETWEEN B.EFT_BGN_YYMM AND B.EFT_END_YYMM
+			</if>
+			<if test="billingInfoItemVO.searchSetItmNm != null and billingInfoItemVO.searchSetItmNm != ''">
+				AND  UPPER(B.SET_ITM_NM)  LIKE CONCAT(CONCAT('%',UPPER(#{billingInfoItemVO.searchSetItmNm})),'%')
+			</if>
+				AND B.SET_LOC = '1'
+		ORDER BY A.SO_ID, B.SET_ITM_ID, B.EFT_BGN_YYMM
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<!-- 빌링 설정정보 카운트 -->
+	<select id="billingInfoItemListCount" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingInfoItemVO" resultType="int">
+			SELECT COUNT(0)
+              FROM  TBLIV_BILL_STP         A      /* 빌링설정정보  */
+                     , TBLIV_BILL_STP_ITM   B      /* 빌링설정항목 */
+            WHERE  1=1
+                AND  A.SET_ITM_ID       = B.SET_ITM_ID
+                AND  A.EFT_BGN_YYMM  = B.EFT_BGN_YYMM
+			<if test="billingInfoItemVO.searchSoId != null and billingInfoItemVO.searchSoId != ''">
+				AND  A.SO_ID =  #{billingInfoItemVO.searchSoId}
+			</if>
+			<if test="billingInfoItemVO.searchYymm != null and billingInfoItemVO.searchYymm != ''">
+				AND  #{billingInfoItemVO.searchYymm} BETWEEN B.EFT_BGN_YYMM AND B.EFT_END_YYMM
+			</if>
+			<if test="billingInfoItemVO.searchSetItmNm != null and billingInfoItemVO.searchSetItmNm != '' ">
+				AND  UPPER(B.SET_ITM_NM)  LIKE CONCAT(CONCAT('%',UPPER(#{billingInfoItemVO.searchSetItmNm})),'%')
+			</if>
+			    AND B.SET_LOC = '1'
+	</select>
+	
+</mapper>

@@ -1,0 +1,506 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.receipterpsndmng.ReceiptErpSndMapper">
+	
+	<select id="getErpZmis11List" parameterType="String" resultType="ErpZmis11VO">
+		SELECT	/* ReceiptErpSndMapper.xml.getErpZmis11List, 양연희, 2018.02.13 */
+				CASE WHEN SND_NO = '1' THEN
+						CASE WHEN REGU = '7' THEN 'C150000'
+							WHEN REGU = '9' THEN 'C150000'
+							WHEN REGU = '11' THEN 'C150000'
+							ELSE CARDCODE
+						END
+					WHEN SND_NO = '2' THEN
+						CASE WHEN REGU = '8' THEN 'V300241'
+							WHEN REGU = '10' THEN 'V301570'
+							WHEN REGU = '11' THEN 'V301570'
+							ELSE CARDCODE
+						END
+					ELSE
+						CARDCODE				
+				END AS CARDCODE
+				,CASE WHEN SND_NO = '1' THEN
+						CASE WHEN REGU = '7' THEN '본사'
+							WHEN REGU = '9' THEN '본사'
+							WHEN REGU = '11' THEN '본사'
+							ELSE CARDNAME
+						END
+					WHEN SND_NO = '2' THEN
+						CASE WHEN REGU = '8' THEN '(사)금융결제원'
+							WHEN REGU = '10' THEN '나이스페이먼츠'
+							WHEN REGU = '11' THEN '나이스페이먼츠'
+							ELSE CARDNAME
+						END
+					ELSE
+						CARDNAME				
+				END AS CARDNAME
+				,DOCDATE
+				,REGU
+				,INTERTYPE
+				,DOCSTATUS
+				,DECODE(BANKCD, '020', '1', '004', '2', '003', '3', '081', '4', '011', '5', '') AS BANKCD
+				,CASE WHEN SND_NO = '1' THEN
+						CASE WHEN REGU = '7' AND INTERTYPE != 'C' THEN 'V300241'
+						    WHEN REGU = '7' AND INTERTYPE = 'C' THEN 'C150000'
+							WHEN REGU = '9' AND INTERTYPE != 'C' THEN 'V301570'
+							WHEN REGU = '9' AND INTERTYPE = 'C' THEN 'C150000'
+							WHEN REGU = '11' THEN 'V301570'
+							ELSE INCARDC
+						END
+					WHEN SND_NO = '2' THEN
+						CASE WHEN REGU = '8' THEN 'C150000'
+							WHEN REGU = '10' THEN 'C150000'
+							WHEN REGU = '11' THEN 'C150000'
+							ELSE INCARDC
+						END
+					ELSE
+						INCARDC				
+				END AS INCARDC
+				,CASE WHEN SND_NO = '1' THEN
+						CASE WHEN REGU = '7' AND INTERTYPE != 'C' THEN '(사)금융결제원'
+						    WHEN REGU = '7' AND INTERTYPE = 'C' THEN '본사'
+							WHEN REGU = '9' AND INTERTYPE != 'C' THEN '나이스페이먼츠'
+							WHEN REGU = '9' AND INTERTYPE = 'C' THEN '본사'
+							WHEN REGU = '11' THEN '나이스페이먼츠'
+							ELSE INCARDN
+						END
+					WHEN SND_NO = '2' THEN
+						CASE WHEN REGU = '8' THEN '본사'
+							WHEN REGU = '10' THEN '본사'
+							WHEN REGU = '11' THEN '본사'
+							ELSE INCARDN
+						END
+					ELSE
+						INCARDN				
+				END AS INCARDN
+				,AMTTYPE
+				,SUM(BONDAMT) AS BONDAMT
+				,SUM(FEEAMT) AS FEEAMT
+		FROM	(SELECT  DECODE(DPST_CL, '02', '1', '04', '1', '0') AS SND_NO
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS CARDCODE
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,A.ERP_SND_AMT AS BONDAMT
+						,DECODE(DPST_CL, '01', 0, '02', 0, ERP_SND_FEE_AMT) AS FEEAMT   /* 20180726 지로 수수료 분리 */ 
+						,CASE DPST_CL
+							WHEN '01' THEN '2'
+							WHEN '02' THEN '7'
+							WHEN '04' THEN '9'
+							WHEN '05' THEN '1'
+							WHEN '06' THEN '1'
+							WHEN '07' THEN '1'
+							WHEN '03' THEN '5'
+							ELSE ''
+						END AS REGU
+						,'I' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,B.REF_CD3 AS BANKCD
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS INCARDC
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS INCARDN
+						,'N' AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+						,TSYCD_COMM_CD_DTL B
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM = '2001'
+				AND     B.COMM_CD_GRP(+) = 'BL00001'
+				AND     B.REF_CD2(+) = A.DPST_PROC_CNTER_BNKBNO
+				AND     A.STDR_DT > '20180228'
+				UNION ALL                          /* 20180726 지로 본사 수수료 금액 분리 */ 
+				SELECT   '0' AS SND_NO
+						,'C150000' AS CARDCODE
+						,'본사' AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,0 AS BONDAMT
+						,SUM(ERP_SND_FEE_AMT) AS FEEAMT
+						,'2' AS REGU
+						,'I' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,'020' AS BANKCD
+						,'C150000'  AS INCARDC
+						,'본사' AS INCARDN
+						,'N' AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM = '1001'
+				AND     A.DPST_CL = '01'
+				AND     A.STDR_DT > '20180228'
+				GROUP BY A.STDR_DT 
+				UNION ALL                          /* 20180726 농협카드 분리 */ 
+				SELECT   '0' AS SND_NO
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS CARDCODE
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,ERP_SND_AMT AS BONDAMT
+						,ERP_SND_FEE_AMT AS FEEAMT
+						,'12' AS REGU
+						,'I' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,B.REF_CD3 AS BANKCD
+						,'C150000' AS INCARDC
+						,'본사' AS INCARDN
+						,'N' AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+						,TSYCD_COMM_CD_DTL B
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM = '1002'
+				AND     A.DPST_CL = '08'
+				AND     B.COMM_CD_GRP(+) = 'BL00001'
+				AND     B.REF_CD2(+) = A.DPST_PROC_CNTER_BNKBNO
+				AND     A.STDR_DT > '20180228'
+				UNION ALL                          /* 20180726 농협카드 분리 */ 
+				SELECT   '0' AS SND_NO
+						,'C150000' AS CARDCODE
+						,'본사' AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,ERP_SND_AMT+ERP_SND_FEE_AMT AS BONDAMT
+						,ERP_SND_FEE_AMT AS FEEAMT
+						,'13' AS REGU
+						,'I' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,B.REF_CD3 AS BANKCD
+						,'C150000' AS INCARDC
+						,'본사' AS INCARDN
+						,'N' AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+						,TSYCD_COMM_CD_DTL B
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM = '1003'
+				AND     A.DPST_CL = '08'
+				AND     B.COMM_CD_GRP(+) = 'BL00001'
+				AND     B.REF_CD2(+) = A.DPST_PROC_CNTER_BNKBNO
+				AND     A.STDR_DT > '20180228'
+				UNION ALL
+				SELECT  DECODE(DPST_CL, '02', '1', '04', '1', '0') AS SND_NO
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS CARDCODE
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,A.ERP_SND_AMT AS BONDAMT
+						,A.ERP_SND_FEE_AMT AS FEEAMT
+						,CASE DPST_CL
+							WHEN '01' THEN '2'
+							WHEN '02' THEN '7'
+							WHEN '04' THEN '9'
+							WHEN '05' THEN '1'
+							WHEN '06' THEN '1'
+							WHEN '07' THEN '1'
+							WHEN '03' THEN '5'
+							ELSE ''
+						END AS REGU
+						,'I' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,B.REF_CD3 AS BANKCD
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS INCARDC
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS INCARDN
+						,'O' AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+						,TSYCD_COMM_CD_DTL B
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM = '3001'
+				AND     B.COMM_CD_GRP(+) = 'BL00001'
+				AND     B.REF_CD2(+) = A.DPST_PROC_CNTER_BNKBNO
+				AND     A.STDR_DT > '20180228' 
+				UNION ALL
+				SELECT  DECODE(DPST_CL, '02', '1', '04', '1', '0') AS SND_NO
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS CARDCODE
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,A.ERP_SND_AMT AS BONDAMT
+						,A.ERP_SND_FEE_AMT AS FEEAMT
+						,CASE DPST_CL
+							WHEN '01' THEN '2'
+							WHEN '02' THEN '7'
+							WHEN '04' THEN '9'
+							WHEN '05' THEN '1'
+							WHEN '06' THEN '1'
+							WHEN '07' THEN '1'
+							WHEN '03' THEN '5'
+							ELSE ''
+						END AS REGU
+						,'I' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,B.REF_CD3 AS BANKCD
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS INCARDC
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS INCARDN
+						,'U' AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+						,TSYCD_COMM_CD_DTL B
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM = '4001'
+				AND     B.COMM_CD_GRP(+) = 'BL00001'
+				AND     B.REF_CD2(+) = A.DPST_PROC_CNTER_BNKBNO
+				AND     A.STDR_DT > '20180228' 
+				UNION ALL
+				SELECT  '2' AS SND_NO
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS CARDCODE
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,A.ERP_SND_AMT+A.ERP_SND_FEE_AMT AS BONDAMT
+						,A.ERP_SND_FEE_AMT AS FEEAMT
+						,CASE DPST_CL
+							WHEN '02' THEN '8'
+							WHEN '04' THEN '10'
+							ELSE ''
+						END AS REGU
+						,'I' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,B.REF_CD3 AS BANKCD
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS INCARDC
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS INCARDN
+						,'N' AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+						,TSYCD_COMM_CD_DTL B
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM = '1001'
+				AND		A.DPST_CL IN ('02','04')
+				AND     B.COMM_CD_GRP(+) = 'BL00001'
+				AND     B.REF_CD2(+) = A.DPST_PROC_CNTER_BNKBNO
+				AND     A.STDR_DT > '20180228' 
+				UNION ALL
+				SELECT  DECODE(ERP_INTRLCK_ITM, '1006', '1', '1007', '1', '1008', '1', '1009', '2') AS SND_NO
+						,B.RMRK AS CARDCODE
+						,B.COMM_NM AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,A.ERP_SND_AMT AS BONDAMT
+						,A.ERP_SND_FEE_AMT AS FEEAMT
+						,DECODE(ERP_INTRLCK_ITM, '1009', '10', '11') AS REGU
+						,DECODE(ERP_INTRLCK_ITM, '1009', 'C', 'I') AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,B.REF_CD3 AS BANKCD
+						,B.RMRK AS INCARDC
+						,B.REF_CD1 AS INCARDN
+						,DECODE(ERP_INTRLCK_ITM, '1006', 'N', '1007', 'O', '1008', 'U', '1009', 'N', '') AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+						,TSYCD_COMM_CD_DTL B
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM IN ('1006', '1007', '1008', '1009')
+				AND     B.COMM_CD_GRP(+) = 'BL00001'
+				AND     B.REF_CD2(+) = '1005-902-450758'
+				UNION ALL
+				SELECT  '1' AS SND_NO
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS CARDCODE
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS CARDNAME
+						,A.STDR_DT AS DOCDATE
+						,A.ERP_SND_AMT AS BONDAMT
+						,A.ERP_SND_FEE_AMT AS FEEAMT
+						,CASE DPST_CL
+							WHEN '01' THEN '2'
+							WHEN '02' THEN '7'
+							WHEN '04' THEN '9'
+							WHEN '05' THEN '1'
+							WHEN '06' THEN '1'
+							WHEN '07' THEN '1'
+							WHEN '03' THEN '5'
+							ELSE ''
+						END AS REGU
+						,'C' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,B.REF_CD3 AS BANKCD
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ERP_CD FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.RMRK) AS INCARDC
+						,DECODE(A.DPST_PROC_CNTER_BNKBNO, NULL,(SELECT ORG_NM FROM TAWOR_ORG_INFO WHERE ORG_ID = A.MNG_CNTER_ORG_ID AND APLY_END_DT = '99991231'),B.REF_CD1) AS INCARDN
+						,'N' AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+						,TSYCD_COMM_CD_DTL B
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM = '2009'
+				AND     B.COMM_CD_GRP(+) = 'BL00001'
+				AND     B.REF_CD2(+) = A.DPST_PROC_CNTER_BNKBNO
+		)
+		GROUP BY SND_NO
+				,CARDCODE
+				,CARDNAME
+				,DOCDATE
+				,REGU
+				,INTERTYPE
+				,DOCSTATUS
+				,BANKCD
+				,INCARDC
+				,INCARDN
+				,AMTTYPE
+		ORDER BY DOCDATE
+				,CARDCODE
+	</select>
+	
+	<insert id="insertErpZmis11" parameterType="ErpZmis11VO">
+		INSERT INTO	/* ReceiptErpSndMapper.xml.insertErpZmis11, 양연희, 2018.02.13 */
+					ERP_ZMIS11
+					(INTER_IDEX
+					,PERNCODE
+					,PERNNAME
+					,CARDCODE
+					,CARDNAME
+					,ARTYPE
+					,INVTYPE
+					,DOCDATE
+					,BONDAMT
+					,FEEAMT
+					,PRFTCODE
+					,OCRCODE2
+					,MEMO
+					,REGU
+					,INTERTYPE
+					,DOCSTATUS
+					,INTERDATE
+					,ERPDATE
+					,ERPENTRY
+					,ERPLINE
+					,BANKCD
+					,INCARDC
+					,INCARDN
+					,AMTTYPE
+					)
+			VALUES	(#{erpZmis11VO.interIdex}
+					,#{erpZmis11VO.perncode}
+					,#{erpZmis11VO.pernname}
+					,#{erpZmis11VO.cardcode}
+					,#{erpZmis11VO.cardname}
+					,#{erpZmis11VO.artype}
+					,#{erpZmis11VO.invtype}
+					,#{erpZmis11VO.docdate}
+					,#{erpZmis11VO.bondamt}
+					,#{erpZmis11VO.feeamt}
+					,#{erpZmis11VO.prftcode}
+					,#{erpZmis11VO.ocrcode2}
+					,#{erpZmis11VO.memo}
+					,#{erpZmis11VO.regu}
+					,#{erpZmis11VO.intertype}
+					,#{erpZmis11VO.docstatus}
+					,SYSDATE
+					,#{erpZmis11VO.erpdate}
+					,#{erpZmis11VO.erpentry}
+					,#{erpZmis11VO.erpline}
+					,#{erpZmis11VO.bankcd}
+					,#{erpZmis11VO.incardc}
+					,#{erpZmis11VO.incardn}
+					,#{erpZmis11VO.amttype}
+					)
+	</insert>
+	
+	<select id="getErpZmis14List" parameterType="String" resultType="ErpZmis14VO">
+		SELECT	/* ReceiptErpSndMapper.xml.insertErpZmis14, 양연희, 2018.02.13 */
+				CARDCODE
+				,CARDNAME
+				,ARTYPE
+				,DOCDATE
+				,INTERTYPE
+				,DOCSTATUS
+				,INCARDC
+				,INCARDN
+				,GUBN
+				,AMTTYPE
+				,SUM(AMT) AS AMT
+		FROM	(SELECT  (SELECT DISTINCT RMRK FROM TSYCD_COMM_CD_DTL WHERE COMM_CD_GRP = 'BL00001' AND RMRK NOT LIKE 'V%' AND REF_CD4 = A.MNG_CNTER_ORG_ID) AS CARDCODE
+						,FSYOR_ORG_NM(A.MNG_CNTER_ORG_ID) AS CARDNAME
+						,'10' AS ARTYPE
+						,A.STDR_DT AS DOCDATE
+						,A.ERP_SND_AMT AS AMT
+						,'I' AS INTERTYPE
+						,'1' AS DOCSTATUS
+						,(SELECT DISTINCT RMRK FROM TSYCD_COMM_CD_DTL WHERE COMM_CD_GRP = 'BL00001' AND RMRK NOT LIKE 'V%' AND REF_CD4 = A.MNG_CNTER_ORG_ID) AS INCARDC
+						,FSYOR_ORG_NM(A.MNG_CNTER_ORG_ID) AS INCARDN
+						,DECODE(ERP_INTRLCK_ITM, '5002', '1', '4002', '3', '4003', '3', '2') AS GUBN
+						,DECODE(ERP_INTRLCK_ITM, '3003', 'D', '3004', 'U', '4003', 'O', 'N') AS AMTTYPE
+				FROM    TBLPY_RCPT_ERP_INTRLCK_DTL A
+				WHERE   1=1
+                AND     A.DATA_OCC_DT = #{dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+                AND     A.ERP_SND_YN = 'N'           /* 20180625 미전송건만 추가 처리 */
+				AND     A.ERP_INTRLCK_ITM IN ('3002', '3003', '3004', '4002', '4003', '5002') 
+				)
+		GROUP BY CARDCODE
+				,CARDNAME
+				,ARTYPE
+				,DOCDATE
+				,INTERTYPE
+				,DOCSTATUS
+				,INCARDC
+				,INCARDN
+				,GUBN
+				,AMTTYPE
+		ORDER BY DOCDATE
+				,CARDCODE
+	</select>
+	
+	<insert id="insertErpZmis14" parameterType="ErpZmis14VO">
+		INSERT	INTO /* ReceiptErpSndMapper.xml.insertErpZmis14, 양연희, 2018.02.13 */
+				ERP_ZMIS14
+	            (INTER_IDEX
+				,PERNCODE
+				,PERNNAME
+				,CARDCODE
+				,CARDNAME
+				,ARTYPE
+				,INVTYPE
+				,DOCDATE
+				,AMT
+				,PRFTCODE
+				,OCRCODE2
+				,MEMO
+				,INTERTYPE
+				,DOCSTATUS
+				,INTERDATE
+				,ERPDATE
+				,ERPENTRY
+				,ERPLINE
+				,INCARDC
+				,INCARDN
+				,GUBN
+				,AMTTYPE
+				)
+		VALUES	(#{erpZmis14VO.interIdex}
+				,#{erpZmis14VO.perncode}
+				,#{erpZmis14VO.pernname}
+				,#{erpZmis14VO.cardcode}
+				,#{erpZmis14VO.cardname}
+				,#{erpZmis14VO.artype}
+				,#{erpZmis14VO.invtype}
+				,#{erpZmis14VO.docdate}
+				,#{erpZmis14VO.amt}
+				,#{erpZmis14VO.prftcode}
+				,#{erpZmis14VO.ocrcode2}
+				,#{erpZmis14VO.memo}
+				,#{erpZmis14VO.intertype}
+				,#{erpZmis14VO.docstatus}
+				,SYSDATE
+				,#{erpZmis14VO.erpdate}
+				,#{erpZmis14VO.erpentry}
+				,#{erpZmis14VO.erpline}
+				,#{erpZmis14VO.incardc}
+				,#{erpZmis14VO.incardn}
+				,#{erpZmis14VO.gubn}
+				,#{erpZmis14VO.amttype}
+				)
+	</insert>
+	
+	<update id="updateErpSysSndYn" parameterType="ReceiptErpIntrVO">
+		UPDATE	/* ReceiptErpSndMapper.xml.updateErpSysSndYn, 양연희, 2018.02.13 */
+				TBLPY_RCPT_ERP_INTRLCK_DTL
+		SET		ERP_SND_YN		= #{receiptErpIntrVO.erpSndYn}
+				,ERP_SND_DT		= #{receiptErpIntrVO.erpSndDt}
+				,CHGR_ID		= #{receiptErpIntrVO.chgrId}
+				,CHG_DATE		= #{receiptErpIntrVO.chgDate}
+		WHERE	1=1
+        AND     DATA_OCC_DT = #{receiptErpIntrVO.dataOccDt} /* 20180625 STDR_DT 기준일 대신 처리일로 변경 */
+        AND     ERP_SND_YN = 'N'                            /* 20180625 미전송건만 추가 처리 */
+        AND     STDR_DT > '20180228'
+	</update>
+
+</mapper>

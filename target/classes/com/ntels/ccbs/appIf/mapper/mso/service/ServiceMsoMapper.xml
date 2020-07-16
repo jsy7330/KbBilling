@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.appIf.mapper.mso.service.ServiceMsoMapper">
+
+	<!-- 고객정보 등록시 org_id 검색 -->
+	<select id="getOrgIdList" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+
+		SELECT   A.ORG_ID
+		FROM 	TSYCO_ORG_INFO A
+		WHERE	A.SO_ID 	= #{param.SO_ID}
+		AND		TP_CD		= '4000'
+		AND 	TP_DTL_CD	= '4006'
+		ORDER BY A.REG_DATE DESC
+
+    </select>
+
+	<!-- 계정정보 리스트 -->
+	<select id="getPymAcntInfoList" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+		
+		SELECT 	A.PYM_ACNT_ID
+		FROM 	TCMCU_PYM_ACNT_INFO A
+		WHERE	A.SO_ID 	= #{param.SO_ID}
+		AND 	A.CUST_ID	= #{param.CUST_ID}
+		ORDER BY A.REG_DATE DESC
+	
+	</select>
+
+	<!-- 상품 셀렉트 -->
+	<select id="getProdInfoList" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+        SELECT
+             IFPROD.SO_ID
+            ,IFPROD.PROD_GRP AS BASIC_PROD_GRP 
+            ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='PP00141'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = IFPROD.PROD_GRP) AS BASIC_PROD_GRP_NM
+             ,IFPROD.PROD_CD AS BASIC_PROD_CD
+             ,IFPROD.PROD_NM AS BASIC_PROD_CD_NM
+             ,IFPROD.PROD_PRICE
+             ,IFPROD.SVC_GRP
+             ,IFPROD.SVC_CD
+             ,IFPROD.PROD_TYP
+             ,IFPROD.BASIC_PROD_FL
+             ,COALESCE(
+               (SELECT SUM(RATE_VAL)
+               FROM IFNCRM_PROD_RATE_INFO
+               WHERE SO_ID = IFPROD.SO_ID
+               AND   PROD_CD = IFPROD.PROD_CD
+        	   AND   CHRG_CTGRY = 'R'
+        	   AND   RATE_ITM_TYP_CD NOT IN ('CT007')
+               ),0) AS MONTHLY_FEE
+             ,COALESCE(
+               (SELECT SUM(RATE_VAL)
+               FROM IFNCRM_PROD_RATE_INFO
+               WHERE SO_ID = IFPROD.SO_ID
+               AND   PROD_CD = IFPROD.PROD_CD
+        	   AND   CHRG_CTGRY = 'N'
+               ),0) AS ONETIME_FEE
+             ,'1' AS PROD_CNT
+             ,COALESCE(
+                (SELECT 
+		    		 ATTR_VAL
+		    	FROM IFNCRM_PROD_ATTR_INFO
+		    	WHERE SO_ID     = IFPROD.SO_ID
+		    	 AND  PROD_CD   = IFPROD.PROD_CD
+		    	 AND  ATTR_CD   = 'AT031' 
+		    	 AND  ACT_DT &lt;= #{param.today}
+		         AND  INACT_DT &gt;= #{param.today}),'0') AS IS_NEGO
+		     ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='CM00045'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = COALESCE(
+							                (SELECT 
+									    		 ATTR_VAL
+									    	FROM IFNCRM_PROD_ATTR_INFO
+									    	WHERE SO_ID     = IFPROD.SO_ID
+									    	 AND  PROD_CD   = IFPROD.PROD_CD
+									    	 AND  ATTR_CD   = 'AT031' 
+									    	 AND  ACT_DT &lt;= #{param.today}
+									         AND  INACT_DT &gt;= #{param.today}),'0')) AS IS_NEGO_NM
+			,(SELECT 
+		    		 ATTR_VAL
+		    	FROM IFNCRM_PROD_ATTR_INFO
+		    	WHERE SO_ID     = IFPROD.SO_ID
+		    	 AND  PROD_CD   = IFPROD.PROD_CD
+		    	 AND  ATTR_CD   = 'AT023' 
+		    	 AND  ACT_DT &lt;= #{param.today}
+		         AND  INACT_DT &gt;= #{param.today}) B2B_B2C
+        FROM IFNCRM_PROD_INFO IFPROD
+        WHERE IFPROD.SO_ID = #{param.SO_ID}
+        <if test="param.PROD_CD != null and param.PROD_CD != ''">
+		AND 	IFPROD.PROD_CD =  #{param.PROD_CD}	
+		</if>
+        AND   IFPROD.SVC_CD = #{param.basicSvcCd}
+        AND   IFPROD.PROD_GRP = #{param.basicProdGrp}
+        AND   IFPROD.CTRT_YN = 'Y'
+        AND   IFPROD.PROD_TYP = '11'
+        AND   IFPROD.ACT_DT &lt;= #{param.today}
+        AND   IFPROD.INACT_DT &gt;= #{param.today}
+        ORDER BY IFPROD.PROD_CD
+    </select>
+
+	<!-- 부가서비스 상품 조회 -->
+	<select id="getAddProdList" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+        SELECT
+             IFPROD.SO_ID
+            ,IFPROD.PROD_GRP AS ADD_PROD_GRP 
+            ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='PP00141'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = IFPROD.PROD_GRP) AS ADD_PROD_GRP_NM
+             ,IFPROD.PROD_CD AS ADD_PROD_CD
+             ,IFPROD.PROD_NM AS ADD_PROD_NM
+             ,COALESCE(
+               (SELECT SUM(RATE_VAL)
+               FROM IFNCRM_PROD_RATE_INFO
+               WHERE SO_ID = IFPROD.SO_ID
+               AND   PROD_CD = IFPROD.PROD_CD
+        	   AND   CHRG_CTGRY = 'R'
+        	   AND   RATE_ITM_TYP_CD NOT IN ('CT007')
+               ),0) AS MONTHLY_FEE
+             ,COALESCE(
+               (SELECT SUM(RATE_VAL)
+               FROM IFNCRM_PROD_RATE_INFO
+               WHERE SO_ID = IFPROD.SO_ID
+               AND   PROD_CD = IFPROD.PROD_CD
+        	   AND   CHRG_CTGRY = 'N'
+               ),0) AS ONETIME_FEE
+             ,IFPROD.SVC_GRP
+             ,IFPROD.SVC_CD
+             ,IFPROD.PROD_TYP
+             ,IFPROD.BASIC_PROD_FL
+             ,REL.DEF_YN AS ADD_PROD_MANDATORY_YN
+             ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='CM00034'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = REL.DEF_YN) AS ADD_PROD_MANDATORY_YN_NM
+               ,'N' ADD_PROD_ADD_INFO_YN
+               ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='CM00035'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = 'N') AS ADD_PROD_ADD_INFO_YN_NM
+               ,'1' AS ADD_CNT
+               ,COALESCE(
+                (SELECT 
+		    		 ATTR_VAL
+		    	FROM IFNCRM_PROD_ATTR_INFO
+		    	WHERE SO_ID     = IFPROD.SO_ID
+		    	 AND  PROD_CD   = IFPROD.PROD_CD
+		    	 AND  ATTR_CD   = 'AT031' 
+		    	 AND  ACT_DT &lt;= #{param.today}
+		         AND  INACT_DT &gt;= #{param.today}),'0') AS IS_NEGO
+		     ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='CM00045'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = COALESCE(
+							                (SELECT 
+									    		 ATTR_VAL
+									    	FROM IFNCRM_PROD_ATTR_INFO
+									    	WHERE SO_ID     = IFPROD.SO_ID
+									    	 AND  PROD_CD   = IFPROD.PROD_CD
+									    	 AND  ATTR_CD   = 'AT031' 
+									    	 AND  ACT_DT &lt;= #{param.today}
+									         AND  INACT_DT &gt;= #{param.today}),'0')) AS IS_NEGO_NM
+               ,COALESCE(
+	                (SELECT 
+			    		 ATTR_VAL
+			    	FROM IFNCRM_PROD_ATTR_INFO
+			    	WHERE SO_ID     = IFPROD.SO_ID
+			    	 AND  PROD_CD   = IFPROD.PROD_CD
+			    	 AND  ATTR_CD   = 'AT014' 
+			    	 AND  ACT_DT &lt;= #{param.today}
+			         AND  INACT_DT &gt;= #{param.today}),'N') AS IS_DUP_YN
+			    ,COALESCE(
+	                (SELECT 
+			    		 ATTR_VAL
+			    	FROM IFNCRM_PROD_ATTR_INFO
+			    	WHERE SO_ID     = IFPROD.SO_ID
+			    	 AND  PROD_CD   = IFPROD.PROD_CD
+			    	 AND  ATTR_CD   = 'AT011' 
+			    	 AND  ACT_DT &lt;= #{param.today}
+			         AND  INACT_DT &gt;= #{param.today}),'') AS DUP_CNT
+        FROM IFNCRM_PROD_INFO IFPROD,
+             IFNCRM_PROD_REL_INFO REL
+        WHERE IFPROD.SO_ID = REL.SO_ID
+        AND   IFPROD.PROD_CD = REL.PROD_CD
+        <if test="param.SUB_PROD_CD != null and param.SUB_PROD_CD != ''">
+        AND   IFPROD.PROD_CD  = #{param.SUB_PROD_CD}
+        </if>
+        AND   REL.ACT_DT &lt;= #{param.today}
+        AND   REL.INACT_DT &gt;= #{param.today}
+        AND   REL.PROD_REL_TYP = 'P' 
+        AND   REL.SO_ID = #{param.SO_ID}
+        AND   REL.REL_PROD_CD = #{param.PROD_CD}
+        AND   IFPROD.CTRT_YN = 'Y'
+        AND   IFPROD.PROD_TYP = '21'
+        AND   IFPROD.ACT_DT &lt;= #{param.today}
+        AND   IFPROD.INACT_DT &gt;= #{param.today}
+        ORDER BY IFPROD.PROD_CD
+    </select>
+
+	<!-- 장비상품 조회 -->
+	<select id="getDeviceProdList" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+       SELECT
+             IFPROD.SO_ID
+            ,IFPROD.PROD_GRP AS DEVICE_PROD_GRP 
+            ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='PP00141'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = IFPROD.PROD_GRP) AS DEVICE_PROD_GRP_NM
+             ,IFPROD.PROD_CD AS DEVICE_PROD_CD
+             ,IFPROD.PROD_NM AS DEVICE_PROD_CD_NM
+             ,IFPROD.SVC_GRP
+             ,IFPROD.SVC_CD
+             ,IFPROD.PROD_TYP
+             ,IFPROD.BASIC_PROD_FL
+             ,COALESCE(
+               (SELECT SUM(RATE_VAL)
+               FROM IFNCRM_PROD_RATE_INFO
+               WHERE SO_ID = IFPROD.SO_ID
+               AND   PROD_CD = IFPROD.PROD_CD
+        	   AND   CHRG_CTGRY = 'R'
+        	   AND   RATE_ITM_TYP_CD NOT IN ('CT007')
+               ),0) AS MONTHLY_FEE
+             ,COALESCE(
+               (SELECT SUM(RATE_VAL)
+               FROM IFNCRM_PROD_RATE_INFO
+               WHERE SO_ID = IFPROD.SO_ID
+               AND   PROD_CD = IFPROD.PROD_CD
+        	   AND   CHRG_CTGRY = 'N'
+               ),0) AS ONETIME_FEE
+             ,REL.DEF_YN AS IS_MANDATORY_YN
+             ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='CM00034'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = REL.DEF_YN) AS IS_MANDATORY_YN_NM
+             ,'1' AS DEVICE_CNT
+             ,COALESCE(
+                (SELECT 
+		    		 ATTR_VAL
+		    	FROM IFNCRM_PROD_ATTR_INFO
+		    	WHERE SO_ID     = IFPROD.SO_ID
+		    	 AND  PROD_CD   = IFPROD.PROD_CD
+		    	 AND  ATTR_CD   = 'AT031' 
+		    	 AND  ACT_DT &lt;= #{param.today}
+		         AND  INACT_DT &gt;= #{param.today}),'0') AS IS_NEGO
+		     ,(SELECT
+                  NAME.CODE_NM
+               FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{param.lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{param.lng}
+                    AND MAST.COMMON_GRP   ='CM00045'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = COALESCE(
+							                (SELECT 
+									    		 ATTR_VAL
+									    	FROM IFNCRM_PROD_ATTR_INFO
+									    	WHERE SO_ID     = IFPROD.SO_ID
+									    	 AND  PROD_CD   = IFPROD.PROD_CD
+									    	 AND  ATTR_CD   = 'AT031' 
+									    	 AND  ACT_DT &lt;= #{param.today}
+									         AND  INACT_DT &gt;= #{param.today}),'0')) AS IS_NEGO_NM
+				,COALESCE(
+	                (SELECT 
+			    		 ATTR_VAL
+			    	FROM IFNCRM_PROD_ATTR_INFO
+			    	WHERE SO_ID     = IFPROD.SO_ID
+			    	 AND  PROD_CD   = IFPROD.PROD_CD
+			    	 AND  ATTR_CD   = 'AT014' 
+			    	 AND  ACT_DT &lt;= #{param.today}
+			         AND  INACT_DT &gt;= #{param.today}),'N') AS IS_DUP_YN
+			    ,COALESCE(
+	                (SELECT 
+			    		 ATTR_VAL
+			    	FROM IFNCRM_PROD_ATTR_INFO
+			    	WHERE SO_ID     = IFPROD.SO_ID
+			    	 AND  PROD_CD   = IFPROD.PROD_CD
+			    	 AND  ATTR_CD   = 'AT011' 
+			    	 AND  ACT_DT &lt;= #{param.today}
+			         AND  INACT_DT &gt;= #{param.today}),'') AS DUP_CNT
+        FROM IFNCRM_PROD_INFO IFPROD,
+             IFNCRM_PROD_REL_INFO REL
+        WHERE IFPROD.SO_ID = REL.SO_ID
+        AND   IFPROD.PROD_CD = REL.PROD_CD
+        <if test="param.SUB_PROD_CD != null and param.SUB_PROD_CD != ''">
+        AND   IFPROD.PROD_CD  = #{param.SUB_PROD_CD}
+        </if>
+        AND   REL.ACT_DT &lt;= #{param.today}
+        AND   REL.INACT_DT &gt;= #{param.today}
+        AND   REL.PROD_REL_TYP = 'P' 
+        AND   REL.SO_ID = #{param.SO_ID}
+        AND   REL.REL_PROD_CD = #{param.PROD_CD}
+        AND   IFPROD.CTRT_YN = 'Y'
+        AND   IFPROD.PROD_TYP = '23'
+        AND   IFPROD.ACT_DT &lt;= #{param.today}
+        AND   IFPROD.INACT_DT &gt;= #{param.today}
+        ORDER BY IFPROD.PROD_CD
+    </select>
+    
+    
+</mapper>

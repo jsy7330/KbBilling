@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.RatingCodeMapMapper">
+ 
+	<select id="getRatingCodeMapList" resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeMap"
+		 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeMap">
+		 <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT USG_TYP
+             , ( SELECT COMMON_CD_NM
+                   FROM TSYCO_CODE_DETAIL
+                  WHERE 1=1
+                    AND COMMON_GRP = 'PP00303'
+                    AND COMMON_CD = USG_TYP ) AS USG_TYP_NM
+             , CHRG_CD_SEQ
+             , SEQ_NO
+             , BRANCH1
+             , BRANCH2
+             , BRANCH3
+             , BRANCH4
+             , BRANCH5
+             , SUBSTR(EFF_DT, 1, 4) || '-' || SUBSTR(EFF_DT, 5, 2) || '-' || SUBSTR(EFF_DT, 7, 2) AS EFF_DT
+             , SUBSTR(EXP_DT, 1, 4) || '-' || SUBSTR(EXP_DT, 5, 2) || '-' || SUBSTR(EXP_DT, 7, 2) AS EXP_DT
+             , CHRG_CD
+             , ( SELECT DESCRIPTION 
+                   FROM TOP_CHRG_CD A
+                  WHERE 1=1
+                    AND A.CHRG_CD = B.CHRG_CD ) AS DESCRIPTION
+             , BILL_FLAG
+             , LAST_MOD_BY
+             , LAST_MOD_DT
+        FROM TOP_CHRG_CD_MAP B
+        WHERE 1=1
+           AND USG_TYP LIKE 	('%' || #{ratingCodeMap.searchUsgTyp} || '%') 
+           AND CHRG_CD_SEQ LIKE ('%' || #{ratingCodeMap.searchChrgCdSeq} || '%' ) 
+           AND SEQ_NO LIKE 		('%' || #{ratingCodeMap.searchSeqNo} || '%' )
+           <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>  
+   
+   	<select id="getRatingCodeMapListCount" resultType="int"
+	 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeMap">
+       SELECT COUNT(*) 
+       	FROM(
+	       SELECT USG_TYP
+	            , CHRG_CD_SEQ
+	            , SEQ_NO
+	            , BRANCH1
+	            , BRANCH2
+	            , BRANCH3
+	            , BRANCH4
+	            , BRANCH5
+	            , EFF_DT
+	            , EXP_DT
+	            , CHRG_CD
+	            , BILL_FLAG
+	            , LAST_MOD_BY
+	            , LAST_MOD_DT
+	       FROM TOP_CHRG_CD_MAP
+	       WHERE 1=1
+	          AND USG_TYP LIKE     ('%' || #{ratingCodeMap.insertUsgTyp} || '%') 
+	          AND CHRG_CD_SEQ LIKE ('%' || #{ratingCodeMap.insertChrgCdSeq} || '%' ) 
+	          AND SEQ_NO LIKE 	   ('%' || #{ratingCodeMap.insertSeqNo} || '%' )
+	          AND BRANCH1 LIKE 	   ('%' || #{ratingCodeMap.insertBranch1} || '%') 
+	          AND BRANCH2 LIKE 	   ('%' || #{ratingCodeMap.insertBranch2} || '%' ) 
+	          AND BRANCH3 LIKE 	   ('%' || #{ratingCodeMap.insertBranch3} || '%' )
+	          AND BRANCH4 LIKE 	   ('%' || #{ratingCodeMap.insertBranch4} || '%') 
+	          AND BRANCH5 LIKE	   ('%' || #{ratingCodeMap.insertBranch5} || '%' ) 
+	          AND EFF_DT LIKE 	   ('%' || #{ratingCodeMap.insertEffDt} || '%' )
+	    )
+    </select>  
+    
+   
+    <insert id="addRatingCodeMap" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeMap">
+      
+      INSERT INTO TOP_CHRG_CD_MAP(
+               USG_TYP
+             , CHRG_CD_SEQ
+             , SEQ_NO
+             , BRANCH1
+             , BRANCH2
+             , BRANCH3
+             , BRANCH4
+             , BRANCH5
+             , EFF_DT
+             , EXP_DT
+             , CHRG_CD
+             , BILL_FLAG
+             , LAST_MOD_BY
+             , LAST_MOD_DT
+        )VALUES(
+               #{ratingCodeMap.insertUsgTyp}
+             , #{ratingCodeMap.insertChrgCdSeq}
+             , #{ratingCodeMap.insertSeqNo}
+             , #{ratingCodeMap.insertBranch1}
+             , #{ratingCodeMap.insertBranch2}
+             , #{ratingCodeMap.insertBranch3}
+             , #{ratingCodeMap.insertBranch4}
+             , #{ratingCodeMap.insertBranch5}
+             , #{ratingCodeMap.insertEffDt}
+             , #{ratingCodeMap.insertExpDt}
+             , #{ratingCodeMap.insertChrgCd}
+             , #{ratingCodeMap.insertBillFlag}
+             , #{ratingCodeMap.userId}
+             , #{ratingCodeMap.sysToDate}
+        )
+    </insert>
+        
+    <update id="modRatingCodeMap"  parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeMap">
+        UPDATE  TOP_CHRG_CD_MAP
+           SET  EXP_DT        = #{ratingCodeMap.modExpDt}
+             ,  CHRG_CD       = #{ratingCodeMap.modChrgCd}
+             ,  BILL_FLAG     = #{ratingCodeMap.modBillFlag}
+             ,  LAST_MOD_BY   = #{ratingCodeMap.userId} 
+             ,  LAST_MOD_DT   = #{ratingCodeMap.sysToDate}
+        WHERE USG_TYP         = #{ratingCodeMap.modUsgTyp}
+          AND CHRG_CD_SEQ 	  = #{ratingCodeMap.modChrgCdSeq}
+          AND SEQ_NO          = #{ratingCodeMap.modSeqNo}
+          AND BRANCH1         = #{ratingCodeMap.modBranch1}
+          AND BRANCH2         = #{ratingCodeMap.modBranch2}
+          AND BRANCH3         = #{ratingCodeMap.modBranch3}
+          AND BRANCH4         = #{ratingCodeMap.modBranch4}
+          AND BRANCH5         = #{ratingCodeMap.modBranch5}
+          AND EFF_DT    	  = #{ratingCodeMap.modEffDt}
+    </update>
+    
+  
+    <delete id="delRatingCodeMap"  parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeMap">
+        DELETE  TOP_CHRG_CD_MAP
+         WHERE  USG_TYP         = #{ratingCodeMap.delUsgTyp}
+           AND  CHRG_CD_SEQ     = #{ratingCodeMap.delChrgCdSeq}
+           AND  SEQ_NO          = #{ratingCodeMap.delSeqNo}
+           AND  BRANCH1         = #{ratingCodeMap.delBranch1}
+           AND  BRANCH2         = #{ratingCodeMap.delBranch2}
+           AND  BRANCH3         = #{ratingCodeMap.delBranch3}
+           AND  BRANCH4         = #{ratingCodeMap.delBranch4}
+           AND  BRANCH5         = #{ratingCodeMap.delBranch5}
+           AND  EFF_DT          = #{ratingCodeMap.delEffDt}
+    </delete>
+    
+    <select id="getChrgCdList" resultType="CommonCodeVO">
+	
+		   SELECT DISTINCT
+		          CHRG_CD AS COMMON_CD
+                , CHRG_CD AS COMMON_CD_NM
+             FROM TOP_CHRG_CD
+            WHERE 1=1 
+	
+	</select>
+
+</mapper>

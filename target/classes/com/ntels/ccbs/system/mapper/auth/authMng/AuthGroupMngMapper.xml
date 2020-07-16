@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.auth.authMng.AuthGroupMngMapper">
+	<select id="list" parameterType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO" 
+						resultType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+				USER_GROUP_ID
+				,USER_GROUP_NAME
+				,USER_GROUP_LEVEL
+				,MAIN_VIEW
+				,DESCRIPTION
+				,DISPLAY_ORDER
+			FROM TSYCO_USER_GROUP
+			<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="authGroup.condGroupId != null and authGroup.condGroupId != ''">
+				AND USER_GROUP_ID like CONCAT(CONCAT('%',#{authGroup.condGroupId, jdbcType=VARCHAR}),'%')
+			</if>
+			<if test="authGroup.condGroupNm != null and authGroup.condGroupNm != ''">
+				AND USER_GROUP_NAME like CONCAT(CONCAT('%',#{authGroup.condGroupNm, jdbcType=VARCHAR}),'%')
+			</if>
+			</trim>
+			<if test="sidx != null and sidx == 'userGroupId'">
+	            ORDER BY USER_GROUP_ID ${sord}
+	         </if>
+	         <if test="sidx != null and sidx == 'userGroupName'">
+	             ORDER BY USER_GROUP_NAME ${sord}
+	         </if>
+	         <if test="sidx != null and sidx == 'displayOrder'">
+	             ORDER BY DISPLAY_ORDER ${sord}
+	         </if>
+	         <if test="sidx == ''">
+	             ORDER BY DISPLAY_ORDER ${sord}
+	         </if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="count"  parameterType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO" resultType="int">	
+		SELECT COUNT(*) FROM TSYCO_USER_GROUP
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+		<if test="authGroup.condGroupId != null and authGroup.condGroupId != ''">
+			AND USER_GROUP_ID like CONCAT(CONCAT('%',#{authGroup.condGroupId, jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="authGroup.condGroupNm != null and authGroup.condGroupNm != ''">
+			AND USER_GROUP_NAME like CONCAT(CONCAT('%',#{authGroup.condGroupNm, jdbcType=VARCHAR}),'%')
+		</if>
+		</trim>
+	</select>
+	
+	<select id="checkUserId" parameterType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO" resultType="int">
+		SELECT COUNT(USER_GROUP_ID) FROM TSYCO_USER_GROUP WHERE USER_GROUP_ID=#{userGroupId,jdbcType=VARCHAR}
+	</select>
+	
+	<insert id="insert" parameterType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO">
+		INSERT INTO
+			TSYCO_USER_GROUP(
+			USER_GROUP_ID
+			,USER_GROUP_NAME
+			,USER_GROUP_LEVEL
+			,MAIN_VIEW
+			,DESCRIPTION
+			,DISPLAY_ORDER	
+		)VALUES(
+			 #{userGroupId,jdbcType=VARCHAR}
+			 ,#{userGroupName,jdbcType=VARCHAR}
+			 ,#{userGroupLevel,jdbcType=VARCHAR}
+			 ,#{mainView,jdbcType=VARCHAR}
+			 ,#{description,jdbcType=VARCHAR}
+			 ,#{displayOrder,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="update" parameterType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO">
+		UPDATE TSYCO_USER_GROUP
+			SET
+			USER_GROUP_NAME=#{userGroupName,jdbcType=VARCHAR}
+			,USER_GROUP_LEVEL=#{userGroupLevel,jdbcType=VARCHAR}
+			,MAIN_VIEW=#{mainView,jdbcType=VARCHAR}
+			,DESCRIPTION=#{description,jdbcType=VARCHAR}
+			,DISPLAY_ORDER=#{displayOrder,jdbcType=VARCHAR}	
+		WHERE USER_GROUP_ID= #{userGroupId,jdbcType=VARCHAR}
+	</update>
+	
+	<delete id="deleteRole" parameterType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO">
+		DELETE FROM TSYCO_USER_GROUP_ROLE WHERE USER_GROUP_ID= #{userGroupId,jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="deleteAuth" parameterType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO">
+		DELETE FROM TSYCO_USER_GROUP_AUTH WHERE USER_GROUP_ID= #{userGroupId,jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="delete" parameterType="com.ntels.ccbs.system.domain.auth.authMng.AuthGroupMngVO">
+		DELETE FROM TSYCO_USER_GROUP WHERE USER_GROUP_ID= #{userGroupId,jdbcType=VARCHAR}
+	</delete>
+</mapper>

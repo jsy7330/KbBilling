@@ -1,0 +1,1122 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.distributor.distributorMgt.OrganizationMapper">
+
+	<!-- 하위 조직 아이디 리스트 조회 -->
+	<select id="recursionOrganizationList" parameterType="java.util.ArrayList" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		SELECT
+				A.ORG_ID
+				, A.PART_ORG_ID
+		FROM 	TDNDI_ORG_REL_HIST A
+		WHERE	A.PART_ORG_ID IN
+		<foreach collection="organization" item="item" index="index" separator="," open="(" close=")">
+            #{item.orgId}
+        </foreach>
+		
+	</select>
+	
+	<!-- 조직 리스트 조회 -->
+	<select id="organizationList" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+			SELECT	A.SO_ID                	/* 사업ID*/
+		       		, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+		       		, A.ORG_ID               /* 조직ID*/
+		       		, A.ORG_NM               /* 조직명*/
+		       		, A.TP_CD                /* 유형코드*/
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{organization.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00038'
+								AND DETAIL.COMMON_CD = A.TP_CD
+		       		) AS TP_NM            /* 유형코드명*/
+		       		, A.TP_DTL_CD         /* 유형상세코드*/
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{organization.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00039'
+								AND DETAIL.COMMON_CD = A.TP_DTL_CD
+		       		) AS TP_DTL_NM    	/* 유형상세코드명*/
+		       		, A.INQ_PERM_CD          /* 조회권한코드*/
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{organization.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00051'
+								AND DETAIL.COMMON_CD = A.INQ_PERM_CD
+		       		) AS INQ_PERM_NM    /* 조회권한코드명*/
+			       , A.PERM_LOGIN           /* 업무권한-로그인*/
+			       , A.PERM_SUBS            /* 업무권한-가입*/
+			       , A.PERM_CHG             /* 업무권한-기변*/
+			       , A.PERM_TERM            /* 업무권한-해지*/
+			       , A.PERM_PYM             /* 업무권한-수납*/
+			       , A.AR_CL_CD             /* 지역분류코드*/
+				   , (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP       =DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{organization.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00100'
+								AND DETAIL.COMMON_CD = A.AR_CL_CD
+		       		) AS AR_CL_NM    /* 지역분류코드명	*/
+		       	   , A.AR_TP_CD             /* 지역구분코드*/
+			       , (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{organization.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00101'
+								AND DETAIL.COMMON_CD = A.AR_TP_CD
+		       		) AS AR_TP_NM    /* 지역구분코드명*/
+			       , A.ORG_LV_CD            /* 조직레벨코드*/
+			       , (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{organization.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00052'
+								AND DETAIL.COMMON_CD = A.ORG_LV_CD
+		       		) AS ORG_LV_NM    		/* 조직레벨코드명*/
+			       , A.ORG_STAT_CD          /* 조직상태코드*/
+			       , (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{organization.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00041'
+								AND DETAIL.COMMON_CD = A.ORG_STAT_CD
+		       		) AS ORG_STAT_NM    	/* 조직상태코드명*/
+			       , A.ORG_STAT_CHG_DT      /* 조직상태변경일*/
+			       , A.APPY_STRT_DT         /* 적용시작일*/
+			       , A.APPY_END_DT          /* 적용종료일*/
+			       , A.LOAN_GV_FLG          /* 여신부여여부*/
+			       , A.TBI_FLG              /* 세금계산서발행여부*/
+			       , A.FEE_PV_FLG           /* 수수료지급여부*/
+			       , A.PRIV_TP_CD           /* 자사구분코드*/
+			       , A.ONLINE_CL_CD			/* 온라인구분코드*/
+			       , (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{organization.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00044'
+								AND DETAIL.COMMON_CD = A.PRIV_TP_CD
+		       		) AS PRIV_TP_NM  	/* 자사구분코드명*/
+			       , A.REG_DATE               /* 등록일자*/
+			       , A.REGR_ID               /* 등록자ID*/
+			       , A.CHG_DATE               /* 변경일자*/
+			       , A.CHGR_ID               /* 변경자ID*/
+		FROM     TDNDI_ORG_INFO  A      /* 조직정보*/
+		WHERE	1=1
+		<if test="organization.orgIdList != null and organization.orgIdList.size() != 0">
+			AND A.ORG_ID IN
+			<foreach collection="organization.orgIdList" item="item" index="index" separator="," open="(" close=")">
+	            #{item}
+	        </foreach>
+        </if>
+		<if test="organization.tpCd != null and organization.tpCd != ''">
+			AND A.TP_CD =  #{organization.tpCd}
+		</if>
+		<if test="organization.tpDtlCd != null and organization.tpDtlCd != ''">
+			AND A.TP_DTL_CD =  #{organization.tpDtlCd}
+		</if>
+		<if test="organization.arClCd != null and organization.arClCd != ''">
+			AND A.AR_CL_CD =  #{organization.arClCd}
+		</if>
+		<if test="organization.arTpCd != null and organization.arTpCd != ''">
+			AND A.AR_TP_CD =  #{organization.arTpCd}
+		</if>
+		<if test="organization.soId != null and organization.soId != ''">
+			AND A.SO_ID =  #{organization.soId}
+		</if>
+		<if test="organization.orgNm != null and organization.orgNm != ''">
+			AND A.ORG_NM LIKE CONCAT(CONCAT('%', #{organization.orgNm} ), '%')
+		</if>
+		    ORDER BY REG_DATE DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 조직 리스트 카운트 -->
+	<select id="organizationCount" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM   TDNDI_ORG_INFO  A                                                    
+		WHERE	1=1
+		<if test="organization.orgIdList != null and organization.orgIdList.size() != 0">
+			AND A.ORG_ID IN
+			<foreach collection="organization.orgIdList" item="item" index="index" separator="," open="(" close=")">
+	            #{item}
+	        </foreach>
+        </if>
+		<if test="organization.tpCd != null and organization.tpCd != ''">
+			AND A.TP_CD =  #{organization.tpCd}
+		</if>
+		<if test="organization.tpDtlCd != null and organization.tpDtlCd != ''">
+			AND A.TP_DTL_CD =  #{organization.tpDtlCd}
+		</if>
+		<if test="organization.arClCd != null and organization.arClCd != ''">
+			AND A.AR_CL_CD =  #{organization.arClCd}
+		</if>
+		<if test="organization.arTpCd != null and organization.arTpCd != ''">
+			AND A.AR_TP_CD =  #{organization.arTpCd}
+		</if>
+		<if test="organization.soId != null and organization.soId != ''">
+			AND A.SO_ID =  #{organization.soId}
+		</if>
+		<if test="organization.orgNm != null and organization.orgNm != ''">
+			AND A.ORG_NM LIKE CONCAT(CONCAT('%', #{organization.orgNm} ), '%')
+		</if>
+	</select>
+
+	<!-- 조직 상세 정보 조회 -->
+	<select id="getOrganization" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		SELECT	A.SO_ID                	/* 사업ID*/
+	       		, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+	       		, A.ORG_ID               /* 조직ID*/
+	       		, A.ORG_NM               /* 조직명*/
+	       		, A.TP_CD                /* 유형코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00038'
+							AND DETAIL.COMMON_CD = A.TP_CD
+	       		) AS TP_NM            /* 유형코드명*/
+	       		, A.TP_DTL_CD         /* 유형상세코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00039'
+							AND DETAIL.COMMON_CD = A.TP_DTL_CD
+	       		) AS TP_DTL_NM    	/* 유형상세코드명*/
+	       		, A.INQ_PERM_CD          /* 조회권한코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00051'
+							AND DETAIL.COMMON_CD = A.INQ_PERM_CD
+	       		) AS INQ_PERM_NM    /* 조회권한코드명*/
+		       , A.PERM_LOGIN           /* 업무권한-로그인*/
+		       , A.PERM_SUBS            /* 업무권한-가입*/
+		       , A.PERM_CHG             /* 업무권한-기변*/
+		       , A.PERM_TERM            /* 업무권한-해지*/
+		       , A.PERM_PYM             /* 업무권한-수납*/
+		       , A.AR_CL_CD             /* 지역분류코드*/
+			   , (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00100'
+								AND DETAIL.COMMON_CD = A.AR_CL_CD
+		       		) AS AR_CL_NM    /* 지역분류코드명	*/
+	       	   , A.AR_TP_CD             /* 지역구분코드*/
+		       , (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{organization.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00101'
+								AND DETAIL.COMMON_CD = A.AR_TP_CD
+		       		) AS AR_TP_NM    /* 지역구분코드명*/
+		       , A.ORG_LV_CD            /* 조직레벨코드*/
+		       , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00052'
+							AND DETAIL.COMMON_CD = A.ORG_LV_CD
+	       		) AS ORG_LV_NM    		/* 조직레벨코드명*/
+		       , A.ORG_STAT_CD          /* 조직상태코드*/
+		       , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00041'
+							AND DETAIL.COMMON_CD = A.ORG_STAT_CD
+	       		) AS ORG_STAT_NM    	/* 조직상태코드명*/
+		       , A.ORG_STAT_CHG_DT      /* 조직상태변경일*/
+		       , A.APPY_STRT_DT         /* 적용시작일*/
+		       , A.APPY_END_DT          /* 적용종료일*/
+		       , A.LOAN_GV_FLG          /* 여신부여여부*/
+		       , A.TBI_FLG              /* 세금계산서발행여부*/
+		       , A.FEE_PV_FLG           /* 수수료지급여부*/
+		       , A.PRIV_TP_CD           /* 자사구분코드*/
+		       , A.ONLINE_CL_CD			/* 온라인구분코드*/
+		       , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00044'
+							AND DETAIL.COMMON_CD = A.PRIV_TP_CD
+	       		) AS PRIV_TP_NM  	/* 자사구분코드명*/
+		       , A.REG_DATE               /* 등록일자*/
+		       , A.REGR_ID               /* 등록자ID*/
+		       , A.CHG_DATE               /* 변경일자*/
+		       , A.CHGR_ID               /* 변경자ID*/
+		FROM     TDNDI_ORG_INFO  A      /* 조직정보*/
+		WHERE    A.ORG_ID       = #{organization.orgId}
+		       
+	</select>
+
+	<!-- 조직 관계 이력 정보 -->
+	<select id="organizationRelList" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		
+		SELECT   A.SO_ID                                                    /* 사업자ID*/
+               ,(SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명 */
+               , A.ORG_ID                                                   /* 조직ID*/
+               , B.ORG_NM                                                   /* 조직명*/
+               , A.ORG_REL_ORD                                              /* 조직관계순번*/
+               , A.REL_TP_CD                                                /* 관계유형코드*/
+               , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00050'
+							AND DETAIL.COMMON_CD = A.REL_TP_CD
+	       		) AS REL_TP_NM            /* 관계유형코드명*/
+               , A.PART_ORG_ID                                              /* 상대조직 ID*/
+               , C.ORG_NM						AS PART_ORG_NM      /* 상대조직 명*/
+               , C.TP_CD						AS PART_TP_CD       /* 상대조직 유형코드*/
+               , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00038'
+							AND DETAIL.COMMON_CD = C.TP_CD
+	       		) AS PART_TP_NM            /* 상대조직 유형코드명*/
+               , C.TP_DTL_CD                            AS PART_TP_DTL_CD   /* 상대조직 유형상세코드*/
+               , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00039'
+							AND DETAIL.COMMON_CD = C.TP_DTL_CD
+	       		) AS PART_TP_DTL_NM            /* 상대조직 유형상세코드*/
+               , C.ORG_LV_CD                            AS PART_ORG_LV_CD   /* 상대조직 레벨코드*/
+               , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00052'
+							AND DETAIL.COMMON_CD = C.ORG_LV_CD
+	       		) AS PART_ORG_LV_NM            /* 상대조직 레벨코드명*/
+               , A.APPY_STRT_DT                                             /* 적용시작일*/
+               , A.APPY_END_DT                                              /* 적용종료일*/
+			   , A.REG_DATE               	/* 등록일자*/
+		       , A.REGR_ID               	/* 등록자ID*/
+		       , A.CHG_DATE               	/* 변경일자*/
+		       , A.CHGR_ID               	/* 변경자ID*/
+        FROM   TDNDI_ORG_REL_HIST  A  /* 조직관계이력*/
+               LEFT OUTER JOIN TDNDI_ORG_INFO  B ON A.ORG_ID      = B.ORG_ID     /* 조직정보*/
+               LEFT OUTER JOIN TDNDI_ORG_INFO  C ON A.PART_ORG_ID = C.ORG_ID     /* 조직정보(상대조직)*/
+        WHERE    A.ORG_ID      = #{organization.orgId}                 /* 조직ID*/
+/*      AND      A.APPY_END_DT = '99991231'*/
+        ORDER BY A.APPY_END_DT DESC
+		
+	</select>
+	
+	<!-- 조직 이력 리스트 -->
+	<select id="organizationHisList" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+		SELECT   A.SO_ID                /* 사업자ID*/
+				, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+           		, A.ORG_ID               /* 조직ID*/
+           		, A.ORG_HIST_ORD         /* 조직이력순번*/
+           		, A.ORG_NM               /* 조직명*/
+				, A.TP_CD                /* 유형코드*/
+           		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00038'
+							AND DETAIL.COMMON_CD = A.TP_CD
+	       		) AS TP_NM            /* 유형코드명*/
+           	   , A.TP_DTL_CD            /* 유형상세코드*/
+	           , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00039'
+							AND DETAIL.COMMON_CD = A.TP_DTL_CD
+	       		) AS TP_DTL_NM            /* 유형상세코드명*/
+	           , A.INQ_PERM_CD          /* 조회권한코드*/
+	           , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00051'
+							AND DETAIL.COMMON_CD = A.INQ_PERM_CD
+	       		) AS INQ_PERM_NM            /* 조회권한코드명*/
+	           , A.PERM_LOGIN           /* 업무권한-로그인*/
+	           , A.PERM_SUBS            /* 업무권한-가입*/
+	           , A.PERM_CHG             /* 업무권한-기변*/
+	           , A.PERM_TERM            /* 업무권한-해지*/
+	           , A.PERM_PYM             /* 업무권한-수납*/
+	           /*, SUBSTR(DECODE(A.PERM_LOGIN,'1',',Login')||DECODE(A.PERM_SUBS,'1',',Activation')||DECODE(A.PERM_CHG,'1',',Device Change')||*/
+	           /*  DECODE(A.PERM_TERM,'1',',Deactivation')||DECODE(A.PERM_PYM,'1',',Payment'),2,50) AS PERM*/     /* 업무권한-전체*/
+	           , SUBSTR(
+	           		CASE WHEN A.PERM_LOGIN = '1' THEN ',Login' ELSE '' END ||
+	           		CASE WHEN A.PERM_SUBS = '1' THEN ',Activation' ELSE '' END ||
+	           		CASE WHEN A.PERM_CHG = '1' THEN ',Device Change' ELSE '' END ||
+	             	CASE WHEN A.PERM_TERM = '1' THEN ',Deactivation' ELSE '' END ||
+	             	CASE WHEN A.PERM_PYM = '1' THEN ',Payment' ELSE '' END 
+	             ,2,50) AS PERM     /* 업무권한-전체*/
+	           , A.AR_CL_CD             /* 지역분류코드*/
+	           , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00100'
+							AND DETAIL.COMMON_CD = A.AR_CL_CD
+	       		) AS AR_CL_NM    /* 지역분류코드명*/
+	           , A.AR_TP_CD             /* 지역구분코드*/
+	           , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00101'
+							AND DETAIL.COMMON_CD = A.AR_TP_CD
+	       		) AS AR_TP_NM    /* 지역구분코드명*/
+	           , A.ORG_LV_CD            /* 조직레벨코드*/
+	           , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00052'
+							AND DETAIL.COMMON_CD = A.ORG_LV_CD
+	       		) AS ORG_LV_NM            /* 조직레벨코드명*/
+	           , A.ORG_STAT_CD          /* 조직상태코드*/
+	           , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00041'
+							AND DETAIL.COMMON_CD = A.ORG_STAT_CD
+	       		) AS ORG_STAT_NM            /* 조직상태코드명*/
+	           , A.ORG_STAT_CHG_DT      /* 조직상태변경일*/
+	           , A.APPY_STRT_DT         /* 적용시작일*/
+	           , A.APPY_END_DT          /* 적용종료일*/
+	           , A.LOAN_GV_FLG          /* 여신부여여부*/
+	           , A.TBI_FLG              /* 세금계산서발행여부*/
+	           , A.FEE_PV_FLG           /* 수수료지급여부*/
+	           , CASE WHEN A.LOAN_GV_FLG = '1' THEN 1 ELSE 0 END BL_LOAN_GV_FLG	
+	           , CASE WHEN A.TBI_FLG = '1' THEN 1 ELSE 0 END BL_TBI_FLG	
+	           , CASE WHEN A.FEE_PV_FLG = '1' THEN 1 ELSE 0 END BL_FEE_PV_FLG	
+	           , A.PRIV_TP_CD           /* 자사구분코드*/
+	           , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{organization.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{organization.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00044'
+							AND DETAIL.COMMON_CD = A.PRIV_TP_CD
+	       		) AS PRIV_TP_NM            /* 자사구분코드명*/
+			   , A.REG_DATE               	/* 등록일자*/
+		       , A.REGR_ID               	/* 등록자ID*/
+		       , A.CHG_DATE               	/* 변경일자*/
+		       , A.CHGR_ID               	/* 변경자ID*/
+    	FROM     TDNDI_ORG_HIST  A      /* 조직이력정보*/
+		WHERE    A.ORG_ID       = #{organization.orgId}                 /* 조직ID*/
+   		ORDER BY A.CHG_DATE DESC
+   		
+   		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+   		
+	</select>
+	
+	<!-- 조직 이력 리스트 카운트 -->
+	<select id="organizationHisCount" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM     TDNDI_ORG_HIST  A      /* 조직이력정보*/
+		WHERE    A.ORG_ID       = #{organization.orgId}                 /* 조직ID*/
+	</select>
+	
+	<!-- 조직 아이디 중복 체크 조회 -->
+	<select id="getExistOrganizationInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM     TDNDI_ORG_INFO  A      /* 조직정보*/
+		WHERE    A.ORG_ID       = #{organization.orgId}                 /* 조직ID*/
+	</select>
+	
+	<!-- 조직 아이디 만드는 코드값 추출 -->
+	<select id="getOrganizationKey" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO"  resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		SELECT
+			COMMON_GRP
+			, COMMON_CD
+			, COMMON_CD_NM
+			, REF_CODE
+			, REF_CODE2
+			, REF_CODE3
+			, REF_CODE4
+		FROM TSYCO_CODE_DETAIL
+		WHERE 	COMMON_GRP 		= 'DN00038'
+			AND COMMON_CD		= #{organization.commonCd}
+			<!-- AND REF_CODE		= #{organization.refCode} -->
+	</select>
+	
+	<!-- update  TSYCO_CODE_DETAIL 순번 업데이트-->
+	<update id="updateOrganizationKey" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		UPDATE   TSYCO_CODE_DETAIL
+        	SET      REF_CODE3          = #{organization.refCode3}           /* ORG_ID 순번*/
+        WHERE    SYS_FLG            = 'Y'
+	        AND      USE_YN             = 'Y'
+	        AND      COMMON_GRP         = 'DN00038'
+	        AND      REF_CODE          = #{organization.refCode}
+	</update>
+	
+	<!-- insert TDNDI_DIST_INFO 유통 정보망 인서트 -->
+	<insert id="insertTdndiDistInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		INSERT INTO TDNDI_DIST_INFO
+            ( SO_ID                 /* 사업자ID*/
+            , ORG_ID                /* 조직ID*/
+            , REG_DATE              /* 등록일*/
+			, REGR_ID               /* 등록자ID*/
+			, CHG_DATE              /* 수정일*/
+			, CHGR_ID )             /* 수정자ID*/
+        VALUES
+            ( #{organization.soId}               /* 사업자ID*/
+            , #{organization.orgId}              /* 조직ID*/
+            , #{organization.regDate}           /* 등록일*/
+			, #{organization.regrId}            /* 등록자ID*/
+			, #{organization.chgDate}           /* 수정일*/
+			, #{organization.chgrId} )          /* 수정자ID*/
+	</insert>
+	
+	
+	<!-- insert TDNDI_ORG_INFO 조직정보-->
+	<insert id="insertTdndiOrgInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		INSERT INTO TDNDI_ORG_INFO		/* 조직정보*/
+			( SO_ID             /* 사업자ID*/
+			, ORG_ID            /* 조직ID*/
+			, ORG_NM            /* 조직명*/
+			, TP_CD             /* 유형코드*/
+			, TP_DTL_CD         /* 유형상세코드*/
+			, INQ_PERM_CD       /* 조회권한코드*/
+			, PERM_LOGIN        /* 업무권한-로그인*/
+			, PERM_SUBS         /* 업무권한-가입*/
+			, PERM_CHG          /* 업무권한-기변*/
+			, PERM_TERM         /* 업무권한-해지*/
+			, PERM_PYM          /* 업무권한-수납*/
+			, AR_TP_CD          /* 지역구분코드*/
+			, AR_CL_CD          /* 지역분류코드*/
+			, ORG_LV_CD         /* 조직레벨코드*/
+			, ORG_STAT_CD       /* 조직상태코드*/
+			, ORG_STAT_CHG_DT   /* 조직상태변경일*/
+			, APPY_STRT_DT      /* 적용시작일*/
+			, APPY_END_DT       /* 적용종료일*/
+			, LOAN_GV_FLG       /* 여신부여여부*/
+			, TBI_FLG           /* 세금계산서발행여부*/
+			, FEE_PV_FLG        /* 수수료지급여부*/
+			, PRIV_TP_CD        /* 자사구분코드*/
+			, ONLINE_CL_CD		/* 온라인구분코드*/
+			, REG_DATE          /* 등록일*/
+			, REGR_ID           /* 등록자ID*/
+			, CHG_DATE          /* 수정일*/
+			, CHGR_ID )         /* 수정자ID*/
+			VALUES
+			( #{organization.soId}           /* 사업자ID*/
+			, #{organization.orgId}          /* 조직ID*/
+			, #{organization.orgNm}          /* 조직명*/
+			, #{organization.tpCd}           /* 유형코드*/
+			, #{organization.tpDtlCd}        /* 유형상세코드*/
+			, #{organization.inqPermCd}      /* 조회권한코드*/
+			, #{organization.permLogin}      /* 업무권한-로그인*/
+			, #{organization.permSubs}       /* 업무권한-가입*/
+			, #{organization.permChg}        /* 업무권한-기변*/
+			, #{organization.permTerm}       /* 업무권한-해지*/
+			, #{organization.permPym}        /* 업무권한-수납*/
+			, #{organization.arTpCd}         /* 지역구분코드*/
+			, #{organization.arClCd}         /* 지역분류코드*/
+			, #{organization.orgLvCd}        /* 조직레벨코드*/
+			, #{organization.orgStatCd}      /* 조직상태코드*/
+			, #{organization.orgStatChgDt}   /* 조직상태변경일*/
+			, #{organization.appyStrtDt}     /* 적용시작일*/
+			, #{organization.appyEndDt}      /* 적용종료일*/
+			, #{organization.loanGvFlg}      /* 여신부여여부*/
+			, #{organization.tbiFlg}         /* 세금계산서발행여부*/
+			, #{organization.feePvFlg}       /* 수수료지급여부*/
+			, #{organization.privTpCd}       /* 자사구분코드*/
+			, #{organization.onlineClCd}	 /* 온라인구분코드*/
+			, #{organization.regDate}        /* 등록일*/
+			, #{organization.regrId}         /* 등록자ID*/
+			, #{organization.chgDate}        /* 수정일*/
+			, #{organization.chgrId} )       /* 수정자ID */       
+	</insert>
+	
+	<!-- insert TDNDI_ORG_REL_HIST -->
+	<insert id="insertTdndiOrgRelHist" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+	
+		INSERT INTO TDNDI_ORG_REL_HIST          /* 조직관계이력*/
+            ( SO_ID                             /* 사업자ID*/
+            , ORG_ID                            /* 조직ID*/
+            , ORG_REL_ORD                       /* 조직관계순번*/
+            , REL_TP_CD                         /* 관계유형코드*/
+            , PART_ORG_ID                       /* 상대조직ID*/
+            , APPY_STRT_DT                      /* 적용시작일*/
+            , APPY_END_DT                       /* 적용종료일*/
+            , REG_DATE                          /* 등록일*/
+			, REGR_ID                           /* 등록자ID*/
+			, CHG_DATE                          /* 수정일*/
+			, CHGR_ID )                         /* 수정자ID*/
+        VALUES
+            ( #{organization.soId}              /* 사업자ID*/
+            , #{organization.orgId}             /* 조직ID*/
+            , #{organization.orgRelOrd}         /* 조직관계순번*/
+            , #{organization.relTpCd}           /* 관계유형코드(101:CJHV조직관계 Default 로 등록)*/
+            , #{organization.partOrgId}         /* 상대조직ID*/
+            , #{organization.appyStrtDt}        /* 적용시작일*/
+            , '99991231'                        /* 적용종료일 (default)*/
+            , #{organization.regDate}           /* 등록일*/
+			, #{organization.regrId}            /* 등록자ID*/
+			, #{organization.chgDate}           /* 수정일*/
+			, #{organization.chgrId} )          /* 수정자ID*/
+	</insert>
+	
+	<!-- insert TDNDI_ORG_HIST -->
+	<insert id="insertTdndiOrgHist" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		INSERT INTO TDNDI_ORG_HIST            /* 조직정보이력*/
+            ( SO_ID             /* 사업자ID*/
+            , ORG_ID            /* 조직ID*/
+            , ORG_HIST_ORD      /* 조직이력순번*/
+            , ORG_NM            /* 조직명*/
+            , TP_CD             /* 유형코드*/
+            , TP_DTL_CD         /* 유형상세코드*/
+            , INQ_PERM_CD       /* 조회권한코드*/
+            , PERM_LOGIN        /* 업무권한-로그인*/
+            , PERM_SUBS         /* 업무권한-가입*/
+            , PERM_CHG          /* 업무권한-기변*/
+            , PERM_TERM         /* 업무권한-해지*/
+            , PERM_PYM          /* 업무권한-수납*/
+            , AR_TP_CD          /* 지역구분코드*/
+            , AR_CL_CD          /* 지역분류코드*/
+            , ORG_LV_CD         /* 조직레벨코드*/
+            , ORG_STAT_CD       /* 조직상태코드*/
+            , ORG_STAT_CHG_DT   /* 조직상태변경일*/
+            , APPY_STRT_DT      /* 적용시작일*/
+            , APPY_END_DT       /* 적용종료일*/
+            , LOAN_GV_FLG       /* 여신부여여부*/
+            , TBI_FLG           /* 세금계산서발행여부*/
+            , FEE_PV_FLG        /* 수수료지급여부*/
+            , PRIV_TP_CD        /* 자사구분코드*/
+            , ONLINE_CL_CD		/* 온라인구분코드*/
+            , REG_DATE                          /* 등록일*/
+			, REGR_ID                           /* 등록자ID*/
+			, CHG_DATE                          /* 수정일*/
+			, CHGR_ID )                         /* 수정자ID*/
+        SELECT    SO_ID             /* 사업자ID*/
+               ,  ORG_ID            /* 조직ID*/
+               , #{organization.orgHistOrd}  /* 조직이력순번   */
+               , ORG_NM            /* 조직명*/
+               , TP_CD             /* 유형코드*/
+               , TP_DTL_CD         /* 유형상세코드*/
+               , INQ_PERM_CD       /* 조회권한코드*/
+               , PERM_LOGIN        /* 업무권한-로그인*/
+               , PERM_SUBS         /* 업무권한-가입*/
+               , PERM_CHG          /* 업무권한-기변*/
+               , PERM_TERM         /* 업무권한-해지*/
+               , PERM_PYM          /* 업무권한-수납*/
+               , AR_TP_CD          /* 지역구분코드*/
+               , AR_CL_CD          /* 지역분류코드*/
+               , ORG_LV_CD         /* 조직레벨코드*/
+               , ORG_STAT_CD       /* 조직상태코드*/
+               , ORG_STAT_CHG_DT   /* 조직상태변경일*/
+               , APPY_STRT_DT      /* 적용시작일*/
+               , APPY_END_DT       /* 적용종료일*/
+               , LOAN_GV_FLG       /* 여신부여여부*/
+               , TBI_FLG           /* 세금계산서발행여부*/
+               , FEE_PV_FLG        /* 수수료지급여부*/
+               , PRIV_TP_CD        /* 자사구분코드*/
+               , ONLINE_CL_CD		/* 온라인구분코드*/
+               , REG_DATE          /* 등록일*/
+			   , REGR_ID           /* 등록자ID*/
+			   , CHG_DATE          /* 수정일*/
+			   , CHGR_ID          /* 수정자ID*/
+        FROM     TDNDI_ORG_INFO
+        WHERE    ORG_ID  = #{organization.orgId}
+	</insert>
+	
+	
+	<!-- 조직 계층 구조 조회 TSYCO_ORG_HICH_STRU -->
+	<select id="getOrganizationHichStru" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationHichStruVO"  resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationHichStruVO">
+		SELECT
+			A.SO_ID				/*사업ID*/
+			, A.ORG_ID			/*조직ID*/
+			, A.ORG_LV_CD		/*조직레벨코드*/
+			, A.ORG_ID_LV1		/*조직ID_등급1*/
+			, A.ORG_ID_LV2		/*조직ID_등급2*/
+			, A.ORG_ID_LV3		/*조직ID_등급3*/
+			, A.ORG_ID_LV4		/*조직ID_등급4*/
+			, A.ORG_ID_LV5		/*조직ID_등급5*/
+			, A.ORG_ID_LV6		/*조직ID_등급6*/
+			, A.ORG_ID_LV7		/*조직ID_등급7*/
+			, A.ORG_ID_LV8		/*조직ID_등급8*/
+			, A.ORG_ID_LV9		/*조직ID_등급9*/
+		FROM TSYCO_ORG_HICH_STRU A
+		WHERE 	1 = 1 <!-- A.SO_ID 		= #{organizationHichStru.soId} -->
+			AND A.ORG_ID		= #{organizationHichStru.orgId}
+	</select>
+	
+	
+	<!-- insert TSYCO_ORG_HICH_STRU -->
+	<insert id="insertTsycoOrgHichStru" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationHichStruVO">
+		INSERT INTO TSYCO_ORG_HICH_STRU
+			(SO_ID			/* 사업ID*/
+			, ORG_ID		/* 조직ID*/
+			, ORG_LV_CD		/* 조직레벨코드*/
+			, ORG_ID_LV1	/* 조직ID_등급1*/
+			, ORG_ID_LV2	/* 조직ID_등급2*/
+			, ORG_ID_LV3	/* 조직ID_등급3*/
+			, ORG_ID_LV4	/* 조직ID_등급4*/
+			, ORG_ID_LV5	/* 조직ID_등급5*/
+			, ORG_ID_LV6	/* 조직ID_등급6*/
+			, ORG_ID_LV7	/* 조직ID_등급7*/
+			, ORG_ID_LV8	/* 조직ID_등급8*/
+			, ORG_ID_LV9	/* 조직ID_등급9*/
+			, REMARK		/* 비고*/
+			, REGR_ID		/* 등록자*/
+			, REG_DATE		/* 등록일시*/
+			, CHGR_ID		/* 수정자*/
+			, CHG_DATE		/* 수정일시*/
+			)
+		VALUES
+            ( #{organizationHichStru.soId}			/* 사업ID*/
+            , #{organizationHichStru.orgId}			/* 조직ID*/
+            , #{organizationHichStru.orgLvCd}		/* 조직레벨코드*/
+            , #{organizationHichStru.orgIdLv1}		/* 조직ID_등급1*/
+            , #{organizationHichStru.orgIdLv2}		/* 조직ID_등급2*/
+            , #{organizationHichStru.orgIdLv3}		/* 조직ID_등급3*/
+            , #{organizationHichStru.orgIdLv4}		/* 조직ID_등급4*/
+            , #{organizationHichStru.orgIdLv5}		/* 조직ID_등급5*/
+            , #{organizationHichStru.orgIdLv6}		/* 조직ID_등급6*/
+            , #{organizationHichStru.orgIdLv7}		/* 조직ID_등급7*/
+            , #{organizationHichStru.orgIdLv8}		/* 조직ID_등급8*/
+            , #{organizationHichStru.orgIdLv9}		/* 조직ID_등급9*/
+            , ''									/* 비고*/
+            , #{organizationHichStru.regrId}		/* 등록자ID*/
+            , #{organizationHichStru.regDate}		/* 등록일*/
+			, #{organizationHichStru.chgrId}		/* 수정자ID*/
+			, #{organizationHichStru.chgDate}		/* 수정일*/
+			)
+
+	</insert>
+	
+	
+	<!-- insert TSYCO_ORG_INFO -->
+	<insert id="insertTsycoOrgInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		INSERT INTO TSYCO_ORG_INFO
+			( SO_ID				/*사업ID*/
+			, ORG_ID			/*조직ID*/
+			, ORG_NM			/*조직명*/
+			, TP_CD				/*유형코드*/
+			, TP_DTL_CD			/*유형상세코드*/
+			, UPP_ORG_ID		/*상위조직ID*/
+			, ORG_LV_CD			/*조직레벨코드*/
+			, INQ_PERM_LV_CD	/*조회권한레벨코드*/
+			, INQ_PERM_ORG_ID	/*조회권한조직ID*/
+			, ORG_STAT_CD		/*조직상태코드*/
+			, ORG_STAT_CHG_DT	/*조직상태변경일*/
+			, APPY_STRT_DT		/*적용시작일*/
+			, APPY_END_DT		/*적용종료일*/
+			, REMARK			/*비고*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+		VALUES
+            ( #{organization.soId}			/* 사업자ID*/
+            , #{organization.orgId}			/* 조직ID*/
+            , #{organization.orgNm}			/* 조직명*/
+            , #{organization.tpCd}			/* 유형코드*/
+            , #{organization.tpDtlCd}		/* 유형상세코드*/
+            , #{organization.partOrgId}		/* 상위조직ID (상대조직ID)*/
+            , #{organization.orgLvCd}		/* 조직레벨코드*/
+            , #{organization.inqPermLvCd}	/* 조회권한레벨코드*/
+            , #{organization.inqPermOrgId}	/* 조회권한조직ID (조직ID)*/
+            , #{organization.orgStatCd}		/* 조직상태코드*/
+            , #{organization.orgStatChgDt}	/* 조직상태변경일*/
+            , #{organization.appyStrtDt}	/* 적용시작일*/
+            , #{organization.appyEndDt}		/* 적용종료일*/
+            , ''							/* 비고*/
+            , #{organization.regrId}		/* 등록자ID*/
+            , #{organization.regDate}		/* 등록일*/
+			, #{organization.chgrId}		/* 수정자ID*/
+			, #{organization.chgDate}		/* 수정일*/
+			)
+	</insert>
+	
+	<!-- insert TSYCO_ORG_BIZ_AUTH -->
+	<insert id="insertTsycoOrgBizAuth" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		INSERT INTO TSYCO_ORG_BIZ_AUTH
+			(SO_ID			/*사업ID*/
+			, ORG_ID		/*조직ID*/
+			, PERM_LOGIN	/*업무권한-로그인*/
+			, PERM_SUBS		/*업무권한-가입*/
+			, PERM_CHG		/*업무권한-기변*/
+			, PERM_TERM		/*업무권한-해지*/
+			, PERM_PYM		/*업무권한-수납*/
+			, APPY_STRT_DT	/*적용시작일*/
+			, APPY_END_DT	/*적용종료일*/
+			, REGR_ID		/*등록자*/
+			, REG_DATE		/*등록일시*/
+			, CHGR_ID		/*수정자*/
+			, CHG_DATE		/*수정일시*/
+			)
+		VALUES
+            ( #{organization.soId}			/* 사업ID*/
+            , #{organization.orgId}			/* 조직ID*/
+            , #{organization.permLogin}		/* 업무권한-로그인*/
+            , #{organization.permSubs}		/* 업무권한-가입*/
+            , #{organization.permChg}		/* 업무권한-기변*/
+            , #{organization.permTerm}		/* 업무권한-해지*/
+            , #{organization.permPym}		/* 업무권한-수납*/
+            , #{organization.appyStrtDt}	/* 적용시작일*/
+            , #{organization.appyEndDt}		/* 적용종료일*/
+            , #{organization.regrId}		/* 등록자ID*/
+            , #{organization.regDate}		/* 등록일*/
+			, #{organization.chgrId}		/* 수정자ID*/
+			, #{organization.chgDate}		/* 수정일*/
+			)
+	</insert>
+	
+
+	<!-- update  TDNDI_ORG_INFO 조직정보 -->
+	<update id="updateTdndiOrgInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		UPDATE TDNDI_ORG_INFO
+			SET	SO_ID				= #{organization.soId}           /* 사업자ID*/
+				, ORG_NM			= #{organization.orgNm}          /* 조직명*/
+				, TP_CD				= #{organization.tpCd}           /* 유형코드*/
+				, TP_DTL_CD			= #{organization.tpDtlCd}        /* 유형상세코드*/
+				, INQ_PERM_CD		= #{organization.inqPermCd}      /* 조회권한코드*/
+				, PERM_LOGIN		= #{organization.permLogin}      /* 업무권한-로그인*/
+				, PERM_SUBS			= #{organization.permSubs}       /* 업무권한-가입*/
+				, PERM_CHG			= #{organization.permChg}        /* 업무권한-기변*/
+				, PERM_TERM			= #{organization.permTerm}       /* 업무권한-해지*/
+				, PERM_PYM			= #{organization.permPym}        /* 업무권한-수납*/
+				, AR_CL_CD			= #{organization.arClCd}         /* 지역분류코드*/
+				, AR_TP_CD			= #{organization.arTpCd}         /* 지역구분코드*/
+				, ORG_LV_CD			= #{organization.orgLvCd}        /* 조직레벨코드*/
+				, ORG_STAT_CD		= #{organization.orgStatCd}      /* 조직상태코드*/
+				, APPY_STRT_DT		= #{organization.appyStrtDt}     /* 적용시작일*/
+				, APPY_END_DT		= #{organization.appyEndDt}      /* 적용종료일*/
+				, LOAN_GV_FLG		= #{organization.loanGvFlg}      /* 여신부여여부*/
+				, TBI_FLG			= #{organization.tbiFlg}         /* 세금계산서발행여부*/
+				, FEE_PV_FLG		= #{organization.feePvFlg}       /* 수수료지급여부*/
+				, PRIV_TP_CD		= #{organization.privTpCd}       /* 자사구분코드*/
+				, ONLINE_CL_CD		= #{organization.onlineClCd}	 /* 온라인구분코드*/
+				, CHG_DATE			= #{organization.chgDate}        /* 수정일*/
+				, CHGR_ID			= #{organization.chgrId}         /* 수정자ID    */    
+		WHERE	ORG_ID             	= #{organization.orgId}          /* 조직ID*/
+			AND SO_ID				= #{organization.soId}           /* 사업자ID*/
+	</update>
+	
+	
+	<!-- update  TSYCO_ORG_INFO 조직정보 -->
+	<update id="updateTsycoOrgInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		UPDATE TSYCO_ORG_INFO
+			SET	SO_ID				= #{organization.soId}           /* 사업자ID*/
+				, ORG_NM			= #{organization.orgNm}          /* 조직명*/
+				, TP_CD				= #{organization.tpCd}           /* 유형코드*/
+				, TP_DTL_CD			= #{organization.tpDtlCd}        /* 유형상세코드*/
+				, ORG_LV_CD			= #{organization.orgLvCd}        /* 조직레벨코드*/
+				, INQ_PERM_LV_CD	= #{organization.inqPermLvCd}    /* 조회권한레벨코드*/
+				, INQ_PERM_ORG_ID	= #{organization.inqPermOrgId}   /* 조회권한조직ID*/
+				, ORG_STAT_CD		= #{organization.orgStatCd}      /* 조직상태코드*/
+				, APPY_STRT_DT		= #{organization.appyStrtDt}     /* 적용시작일*/
+				, APPY_END_DT		= #{organization.appyEndDt}      /* 적용종료일*/
+				, CHG_DATE			= #{organization.chgDate}        /* 수정일*/
+				, CHGR_ID			= #{organization.chgrId}         /* 수정자ID     */   
+		WHERE	ORG_ID             	= #{organization.orgId}          /* 조직ID*/
+			AND SO_ID				= #{organization.soId}           /* 사업자ID*/
+			
+				
+	</update>
+	
+	
+	<!-- update  TSYCO_ORG_BIZ_AUTH 조직업무권한 -->
+	<update id="updateTsycoOrgBizAuth" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		UPDATE TSYCO_ORG_BIZ_AUTH
+			SET	SO_ID				= #{organization.soId}           /* 사업자ID*/
+				, PERM_LOGIN		= #{organization.permLogin}      /* 업무권한-로그인*/
+				, PERM_SUBS			= #{organization.permSubs}       /* 업무권한-가입*/
+				, PERM_CHG			= #{organization.permChg}        /* 업무권한-기변*/
+				, PERM_TERM			= #{organization.permTerm}       /* 업무권한-해지*/
+				, PERM_PYM			= #{organization.permPym}        /* 업무권한-수납*/
+				, APPY_STRT_DT		= #{organization.appyStrtDt}     /* 적용시작일*/
+				, APPY_END_DT		= #{organization.appyEndDt}      /* 적용종료일*/
+				, CHG_DATE			= #{organization.chgDate}        /* 수정일*/
+				, CHGR_ID			= #{organization.chgrId}         /* 수정자ID  */        
+		WHERE	ORG_ID             	= #{organization.orgId}          /* 조직ID*/
+			AND SO_ID				= #{organization.soId}           /* 사업자ID*/
+				
+	</update>
+	
+	
+	<!-- update  TDNDI_ORG_REL_HIST 조직업무권한 -->
+	<update id="updatetdndiOrgRelHist" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		UPDATE   TDNDI_ORG_REL_HIST
+        SET      APPY_STRT_DT   = #{organization.appyStrtDt}        /* 적용시작일*/
+               , APPY_END_DT    = #{organization.appyEndDt}         /* 적용종료일*/
+               , CHG_DATE		= #{organization.chgDate}           /* 수정일*/
+			   , CHGR_ID		= #{organization.chgrId}            /* 수정자ID   */   
+        WHERE    ORG_ID         = #{organization.orgId}             /* 조직ID*/
+        AND      ORG_REL_ORD    = ( SELECT MAX(ORG_REL_ORD) AS ORG_REL_ORD FROM TDNDI_ORG_REL_HIST WHERE ORG_ID = #{organization.orgId} )         /* 조직관계순번
+        	AND SO_ID			= #{organization.soId}           			/* 사업자ID*/
+	</update>
+	
+	<!-- update  TSYCO_ORG_HICH_STRU 조직계층구조 -->
+	<update id="updateTsycoOrgHichStru" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationHichStruVO">
+		UPDATE TSYCO_ORG_HICH_STRU
+			SET	ORG_ID_LV1				= #{organizationHichStruVO.orgIdLv1}           /* 조직ID_등급1*/
+				, ORG_ID_LV2			= #{organizationHichStruVO.orgIdLv2}           /* 조직ID_등급2*/
+				, ORG_ID_LV3			= #{organizationHichStruVO.orgIdLv3}           /* 조직ID_등급3*/
+				, ORG_ID_LV4			= #{organizationHichStruVO.orgIdLv4}           /* 조직ID_등급4*/
+				, ORG_ID_LV5			= #{organizationHichStruVO.orgIdLv5}           /* 조직ID_등급5*/
+				, ORG_ID_LV6			= #{organizationHichStruVO.orgIdLv6}           /* 조직ID_등급6*/
+				, ORG_ID_LV7			= #{organizationHichStruVO.orgIdLv7}           /* 조직ID_등급7*/
+				, ORG_ID_LV8			= #{organizationHichStruVO.orgIdLv8}           /* 조직ID_등급8*/
+				, ORG_ID_LV9			= #{organizationHichStruVO.orgIdLv9}           /* 조직ID_등급9*/
+				, CHG_DATE				= #{organizationHichStruVO.chgDate}        /* 수정일*/
+				, CHGR_ID				= #{organizationHichStruVO.chgrId}         /* 수정자ID    */      
+		WHERE	ORG_ID             		= #{organizationHichStruVO.orgId}          /* 조직ID*/
+			AND SO_ID					= #{organizationHichStruVO.soId}           			/* 사업자ID*/
+				
+	</update>
+	
+	<!-- update  TSYCO_ORG_INFO 조직정보2 -->
+	<update id="updateTsycoOrgInfo2" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.OrganizationVO">
+		UPDATE TSYCO_ORG_INFO
+			SET	INQ_PERM_LV_CD		= #{organizationVO.inqPermLvCd}		/* 조회권한레벨코드*/
+				, INQ_PERM_ORG_ID	= #{organizationVO.inqPermOrgId}	/* 조회권한조직ID*/
+				, UPP_ORG_ID		= #{organizationVO.partOrgId}		/* 상위조직아이디*/
+				, CHG_DATE			= #{organizationVO.chgDate}			/* 수정일*/
+				, CHGR_ID			= #{organizationVO.chgrId}			/* 수정자ID       */ 
+		WHERE	ORG_ID				= #{organizationVO.orgId}			/* 조직ID*/
+			AND SO_ID				= #{organizationVO.soId}           	/* 사업자ID*/
+	</update>
+	
+            
+</mapper>

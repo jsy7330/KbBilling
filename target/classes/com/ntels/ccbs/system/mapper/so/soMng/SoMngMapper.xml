@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.so.soMng.SoMngMapper">
+	<select id="list" parameterType="com.ntels.ccbs.system.domain.so.soMng.SoMngVO" resultType="com.ntels.ccbs.system.domain.so.soMng.SoMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			A.SO_ID
+			,A.SO_NM
+			,A.INCHRG_NM
+			,A.INCHRG_TEL_NO
+			,A.INCHRG_FAX_NO
+			,A.ZIP_CD
+			,A.BASE_ADDR
+			,A.ADDR_DTL
+			,A.CALLCENTER_TEL_NO
+			,A.CNSL_URL
+			,A.FAX_FROM
+			,A.FAX_TO
+			,A.USE_YN
+			,A.REGR_ID
+			,A.REG_DATE
+			,A.CHGR_ID
+			,A.CHG_DATE
+		FROM TSYCO_SO_MAST A
+      	<trim prefix="WHERE" prefixOverrides="AND|OR">
+		<if test="so.condSoId != null and so.condSoId != '' and so.condSoId != 'SEL'" >
+			AND A.SO_ID =#{so.condSoId,jdbcType=VARCHAR}
+		</if>
+		<if test="so.condSoNm != null and so.condSoNm != ''">
+			AND A.SO_NM LIKE CONCAT(CONCAT('%',#{so.condSoNm,jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="so.condSo != null and so.condSo != '' and so.condSo != 'SEL'">
+			AND A.USE_YN = #{so.condSo,jdbcType=VARCHAR}
+		</if>
+       </trim>
+		<if test="sidx != null and sidx == 'soId'">
+			ORDER BY SO_ID ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'soNm'">
+			ORDER BY A.SO_NM ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'useYn'">
+			ORDER BY A.USE_YN ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'regrId'">
+			ORDER BY A.REGR_ID ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'regDate'">
+			ORDER BY A.REG_DATE ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'chgrId'">
+			ORDER BY A.CHGR_ID ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'chgDate'">
+			ORDER BY A.CHG_DATE ${sord}
+		</if>
+		<if test="sidx == ''">
+			ORDER BY A.REG_DATE
+		</if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+        
+	</select>
+	
+	<select id="count"  parameterType="com.ntels.ccbs.system.domain.so.soMng.SoMngVO" resultType="int">
+		SELECT COUNT(*) FROM TSYCO_SO_MAST A
+		<trim prefix="WHERE" prefixOverrides="AND|OR">
+        <if test="so.condSoId != null and so.condSoId != '' and so.condSoId != 'SEL'" >
+			AND A.SO_ID =#{so.condSoId,jdbcType=VARCHAR}
+		</if>
+        <if test="so.condSoNm != null and so.condSoNm != ''">
+            AND A.SO_NM LIKE '%'||#{so.condSoNm,jdbcType=VARCHAR}||'%'
+        </if>
+        <if test="so.condSo != null and so.condSo != '' and so.condSo != 'SEL'">
+            AND A.USE_YN = #{so.condSo,jdbcType=VARCHAR}
+        </if>
+        </trim>
+	</select>
+    
+    
+    <select id="getMaxSo"  resultType="Integer">
+        SELECT MAX(SO_ID) FROM TSYCO_SO_MAST
+    </select>
+	
+	<insert id="insert" parameterType="com.ntels.ccbs.system.domain.so.soMng.SoMngVO">
+		INSERT INTO
+			TSYCO_SO_MAST(
+			SO_ID
+			,SO_NM
+			,INCHRG_NM
+			,INCHRG_TEL_NO
+			,INCHRG_FAX_NO
+			,ZIP_CD
+			,BASE_ADDR
+			,ADDR_DTL
+			,CALLCENTER_TEL_NO
+			,CNSL_URL
+			,FAX_FROM
+			,FAX_TO
+			,USE_YN
+			,REGR_ID
+			,REG_DATE
+			,CHGR_ID
+			,CHG_DATE
+		)VALUES(
+			  #{soId,jdbcType=VARCHAR}
+			 ,#{soNm,jdbcType=VARCHAR}
+			 ,#{inchrgNm,jdbcType=VARCHAR}
+			 ,#{inchrgTelNo,jdbcType=VARCHAR}
+			 ,#{inchrgFaxNo,jdbcType=VARCHAR}
+			 ,#{zipCd,jdbcType=VARCHAR}
+			 ,#{baseAddr,jdbcType=VARCHAR}
+			 ,#{addrDtl,jdbcType=VARCHAR}
+			 ,#{callcenterTelNo,jdbcType=VARCHAR}
+			 ,#{cnslUrl,jdbcType=VARCHAR}
+			 ,#{faxFrom,jdbcType=VARCHAR}
+			 ,#{faxTo,jdbcType=VARCHAR}
+			 ,#{useYn,jdbcType=VARCHAR}
+			 ,#{regrId,jdbcType=VARCHAR}
+			 ,#{sysToDate,jdbcType=VARCHAR}
+			 ,#{regrId,jdbcType=VARCHAR}
+			 ,#{sysToDate,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<update id="update" parameterType="com.ntels.ccbs.system.domain.so.soMng.SoMngVO">
+		UPDATE 
+			TSYCO_SO_MAST
+		SET
+			SO_NM=#{soNm,jdbcType=VARCHAR}
+			,INCHRG_NM=#{inchrgNm,jdbcType=VARCHAR}
+			,INCHRG_TEL_NO=#{inchrgTelNo,jdbcType=VARCHAR}
+			,INCHRG_FAX_NO=#{inchrgFaxNo,jdbcType=VARCHAR}
+			,ZIP_CD=#{zipCd,jdbcType=VARCHAR}
+			,BASE_ADDR=#{baseAddr,jdbcType=VARCHAR}
+			,ADDR_DTL=#{addrDtl,jdbcType=VARCHAR}
+			,CALLCENTER_TEL_NO=#{callcenterTelNo,jdbcType=VARCHAR}
+			,CNSL_URL=#{cnslUrl,jdbcType=VARCHAR}
+			,FAX_FROM=#{faxFrom,jdbcType=VARCHAR}
+			,FAX_TO=#{faxTo,jdbcType=VARCHAR}
+			,USE_YN=#{useYn,jdbcType=VARCHAR}
+			,CHGR_ID=#{chgrId,jdbcType=VARCHAR}
+			,CHG_DATE=#{sysToDate,jdbcType=VARCHAR}
+		WHERE SO_ID=#{soId,jdbcType=VARCHAR}
+	</update>
+	
+	<select id="soAuthList" parameterType="com.ntels.ccbs.system.domain.so.soMng.SoMngVO" resultType="com.ntels.ccbs.system.domain.so.soMng.SoMngVO">
+		SELECT SO_ID,SO_NM FROM TSYCO_SO_MAST ORDER BY SO_ID ASC
+	</select>
+	
+	<select id="checkSo" resultType="int" parameterType="com.ntels.ccbs.system.domain.so.soMng.SoMngVO">
+		SELECT COUNT(SO_ID) FROM TSYCO_SO_MAST WHERE SO_ID=#{soId,jdbcType=VARCHAR}
+	</select>
+</mapper>

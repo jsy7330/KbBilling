@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.billing.billing.BillingCycleInfoMapper">
+
+<!-- 빌링주기설정정보 조회 -->
+	<select id="BillingCycleInfoListAction" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO" resultType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT     
+					   A.SO_ID AS SO_ID
+                     , B.SET_ITM_ID AS SET_ITM_CD
+                     , B.EFT_BGN_YYMM AS EFT_BGN_YYMM
+                     , B.EFT_END_YYMM AS EFT_END_YYMM
+                     , B.SET_ITM_NM AS SET_ITM_NM
+                     , B.SET_LOC AS REFERENCE_TYPE
+                     , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{billingCycleInfoVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{billingCycleInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='BL00048'
+								AND DETAIL.COMMON_CD = B.ESS_YN
+		       		 ) AS REQUIRED
+                     , B.ESS_YN AS REQUIRED_CD
+                     , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{billingCycleInfoVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{billingCycleInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='BL00034'
+								AND DETAIL.COMMON_CD = B.FLD_TP
+		       		) AS FIELD_NATURE
+                     , B.FLD_TP AS FIELD_NATURE_CD
+                     , B.FLD_STRUCT AS FIELD_STRUCTURE
+                     , B.FLD_CNT AS FIELD_DIGIT
+                     , A.SET_VAL AS SET_VAL
+                     , CASE
+                           WHEN A.BILL_YYMM = NULL THEN #{billingCycleInfoVO.searchBillYymm}
+                           ELSE A.BILL_YYMM
+                         END AS BILL_YYMM
+                     , CASE
+                     	   WHEN A.BILL_CYCL = NULL THEN #{billingCycleInfoVO.billCycl}
+                     	   ELSE A.BILL_CYCL
+                     	 END AS BILL_CYCL
+                     , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM
+              FROM TBLIV_BILL_CYCL_STP  A                     /* 빌링주기설정정보 */
+              		/* 빌링설정항목 */
+                   LEFT OUTER JOIN TBLIV_BILL_STP_ITM B ON B.SET_ITM_ID = A.SET_ITM_ID AND B.EFT_BGN_YYMM = A.EFT_BGN_YYMM 
+             WHERE #{billingCycleInfoVO.searchBillYymm} BETWEEN B.EFT_BGN_YYMM AND B.EFT_END_YYMM
+                 AND A.BILL_YYMM     = #{billingCycleInfoVO.searchBillYymm}
+                 AND A.BILL_CYCL     = #{billingCycleInfoVO.billCycl}
+                 AND B.SET_LOC       = '2'
+                <if test="billingCycleInfoVO.searchSoId != null and billingCycleInfoVO.searchSoId != ''">
+			     AND A.SO_ID =  #{billingCycleInfoVO.searchSoId}
+			     </if>
+		 ORDER BY A.SO_ID, B.SET_ITM_ID, B.EFT_BGN_YYMM
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<!-- 빌링주기설정정보 카운트 -->
+	<select id="BillingCycleInfoListCount" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO" resultType="int">
+		SELECT   COUNT(0)
+		   FROM TBLIV_BILL_CYCL_STP  A                     /* 빌링주기설정정보 */
+              		/* 빌링설정항목 */
+                   LEFT OUTER JOIN TBLIV_BILL_STP_ITM B ON B.SET_ITM_ID = A.SET_ITM_ID AND B.EFT_BGN_YYMM = A.EFT_BGN_YYMM 
+             WHERE #{billingCycleInfoVO.searchBillYymm} BETWEEN B.EFT_BGN_YYMM AND B.EFT_END_YYMM
+                 AND A.BILL_YYMM     = #{billingCycleInfoVO.searchBillYymm}
+                 AND A.BILL_CYCL     = #{billingCycleInfoVO.billCycl}
+                 AND B.SET_LOC       = '2'
+                <if test="billingCycleInfoVO.searchSoId != null and billingCycleInfoVO.searchSoId != ''">
+			     AND A.SO_ID =  #{billingCycleInfoVO.searchSoId}
+			     </if>
+	</select>
+	
+	<select id="getBillSetupItemCycleCopyValidate" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO" resultType="int">
+		SELECT COUNT(*)
+          FROM  TBLIV_BILL_CYCL_STP              /* 빌링주기설정정보 */
+        WHERE  1=1
+           <if test="billingCycleInfoVO.searchSoId != null and billingCycleInfoVO.searchSoId != ''">
+			AND  SO_ID =  #{billingCycleInfoVO.searchSoId}
+			</if>
+			<if test="billingCycleInfoVO.lastYymm != null and billingCycleInfoVO.lastYymm != ''">
+			AND  BILL_YYMM =  #{billingCycleInfoVO.lastYymm}
+			</if>
+	</select>
+	
+	<select id="getBillSetupItemCycleCount" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO" resultType="int">
+		  SELECT  COUNT(*)
+		  	 FROM TBLIV_BILL_CYCL_STP
+		   WHERE SO_ID = #{billingCycleInfoVO.soId}
+		       AND BILL_YYMM = #{billingCycleInfoVO.billYymm}
+	</select>
+    
+    <insert id="registerBillSetupItemCycle" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO" >
+        INSERT INTO TBLIV_BILL_CYCL_STP A
+        SELECT #{billingCycleInfoVO.soId} AS SO_ID
+             , SET_ITM_ID
+             , EFT_BGN_YYMM
+             , #{billingCycleInfoVO.billYymm} AS BILL_YYMM
+             , BILL_CYCL
+             , EFT_END_YYMM
+             , CASE WHEN SET_ITM_ID = '00057' THEN CONCAT(#{billingCycleInfoVO.billYymm}, '25')
+                    ELSE  SET_VAL
+               END     AS SET_VAL
+             , REGR_ID AS REGR_ID
+             , NOW()   AS REG_DATE
+             , NULL    AS CHG_DATE
+             , NULL    AS CHGR_ID
+             , BS_SET_VAL AS BS_SET_VAL
+        FROM   TBLIV_BILL_CYCL_STP
+        WHERE  SO_ID     = #{billingCycleInfoVO.soId}
+        AND    BILL_YYMM = #{billingCycleInfoVO.billYymm}
+	</insert>
+	
+	<delete id="deleteBillSetupItemCycle" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO">
+        DELETE
+           FROM  TBLIV_BILL_CYCL_STP         /* 빌링주기설정정보 */
+         WHERE  1=1
+             AND  BILL_YYMM    = #{billingCycleInfoVO.billYymm}
+             AND  BILL_CYCL     = #{billingCycleInfoVO.billCycl}
+             AND  SET_ITM_ID   = #{billingCycleInfoVO.setItmCd}
+             AND  SO_ID           = #{billingCycleInfoVO.soId}
+    </delete>
+	
+	<insert id="insertBillSetupItemCycle" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO" >
+           INSERT INTO TBLIV_BILL_CYCL_STP
+           ( 
+             SO_ID,                
+             BILL_YYMM,    
+             BILL_CYCL,     
+             SET_ITM_ID,   
+             SET_VAL,
+             EFT_BGN_YYMM,   
+             REGR_ID,        
+             REG_DATE,     
+             CHGR_ID,        
+             CHG_DATE,
+             EFT_END_YYMM,   
+             BS_SET_VAL
+           )
+           VALUES
+           (
+             #{billingCycleInfoVO.soId, jdbcType=VARCHAR},            
+             #{billingCycleInfoVO.billYymm, jdbcType=VARCHAR},  
+             #{billingCycleInfoVO.billCycl, jdbcType=VARCHAR},  
+             #{billingCycleInfoVO.setItmCd, jdbcType=VARCHAR}, 
+             #{billingCycleInfoVO.setVal, jdbcType=VARCHAR},
+             #{billingCycleInfoVO.eftBgnYymm, jdbcType=VARCHAR}, 
+             #{billingCycleInfoVO.regId, jdbcType=VARCHAR},                
+             SYSDATE,                           
+             NULL,                                  
+             NULL,
+             #{billingCycleInfoVO.eftEndYymm, jdbcType=VARCHAR}, 
+             #{billingCycleInfoVO.setVal, jdbcType=VARCHAR}
+           )
+	</insert>
+	
+	<delete id="deleteBillSetupItemCycleCopy" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO">
+			DELETE 
+			   FROM TBLIV_BILL_CYCL_STP   /* 빌링주기설정정보 */
+             WHERE 1=1
+                 AND BILL_YYMM    = #{billingCycleInfoVO.searchBillYymm}
+             <if test="billingCycleInfoVO.searchSoId != null and billingCycleInfoVO.searchSoId != ''">    
+                 AND SO_ID           = #{billingCycleInfoVO.searchSoId}
+             </if>
+	</delete>
+	
+	<insert id="insertBillSetupItemCycleCopy" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO" >
+			INSERT INTO TBLIV_BILL_CYCL_STP                        /* 빌링주기설정정보 */
+	        (      
+	            SO_ID,              
+	            SET_ITM_ID, 
+	            EFT_BGN_YYMM, 
+	            BILL_YYMM,    
+	            BILL_CYCL,
+	            EFT_END_YYMM, 
+	            SET_VAL,   
+	            REGR_ID,      
+	            REG_DATE,     
+	            CHGR_ID,
+	            CHG_DATE,     
+	            BS_SET_VAL
+	        )
+	        SELECT 
+	            SO_ID
+	          , SET_ITM_ID
+	          , EFT_BGN_YYMM
+	          , #{billingCycleInfoVO.searchBillYymm} AS BILL_YYMM
+	          , BILL_CYCL
+	          , EFT_END_YYMM
+	          , CASE 
+	          		WHEN SET_ITM_ID = '00057' 
+	          				THEN CONCAT(#{billingCycleInfoVO.searchBillYymm}, SUBSTR(SET_VAL, 7, 2))
+	          		ELSE SET_VAL  
+	          	END AS SET_VAL
+	          , #{billingCycleInfoVO.regId}
+	          , SYSDATE
+	          , NULL
+	          , NULL
+	          , BS_SET_VAL
+	   FROM TBLIV_BILL_CYCL_STP              /* 빌링주기설정정보 */
+	 WHERE 1=1
+	     AND BILL_YYMM    = #{billingCycleInfoVO.lastYymm}
+	 <if test="billingCycleInfoVO.searchSoId != null and billingCycleInfoVO.searchSoId != ''">    
+         AND SO_ID           = #{billingCycleInfoVO.soId}
+    </if>
+	</insert>
+	
+	<update id="updateBillSetupItemCycle" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingCycleInfoVO">
+		UPDATE  TBLIV_BILL_CYCL_STP                            /* 빌링주기설정정보 */
+			SET  SET_VAL	= #{billingCycleInfoVO.setVal}
+				,CHGR_ID	= #{billingCycleInfoVO.chgId}
+				,CHG_DATE	= #{billingCycleInfoVO.chgDate}
+		WHERE  1=1
+             AND  BILL_YYMM		= #{billingCycleInfoVO.billYymm}
+             AND  SET_ITM_ID	= #{billingCycleInfoVO.setItmCd}
+             AND  SO_ID			= #{billingCycleInfoVO.soId}
+    </update>
+	
+</mapper>

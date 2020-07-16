@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.payment.payment.AdvanceReceivedMapper">
+
+
+	<!-- 선수금발생내역 카운트  -->
+	<select id="getDepositMoneyCount" parameterType="com.ntels.ccbs.charge.domain.payment.advanceReceived.AdvanceReceivedVO" resultType="int">
+		SELECT   COUNT(0)
+		FROM     TBLPY_PREPAY_OCC    A
+        WHERE  1 = 1
+        AND    (A.CNCL_YN  = 'N' OR A.CNCL_YN IS NULL)                     /* 2013.07.12 취소 건 제외 */
+		
+		
+		<if test="advanceReceivedVO.soId != null and advanceReceivedVO.soId != ''"><!-- 사업 -->
+			AND A.SO_ID 			= #{advanceReceivedVO.soId}
+		</if>
+		<if test="advanceReceivedVO.dpstCl != null and advanceReceivedVO.dpstCl != ''"><!-- 입금구분 -->
+			AND A.DPST_CL 			= #{advanceReceivedVO.dpstCl}
+		</if>
+		<if test="advanceReceivedVO.prepayOccTp != null and advanceReceivedVO.prepayOccTp != ''"><!-- 발생구분 -->
+			AND A.PREPAY_OCC_TP 			= #{advanceReceivedVO.prepayOccTp}
+		</if>
+		<if test="advanceReceivedVO.dtTp == '01'">    /* 발생일시  */
+			AND A.PREPAY_OCC_DTTM BETWEEN CONCAT(#{advanceReceivedVO.startDt}, '000000')  AND CONCAT(#{advanceReceivedVO.endDt}, '999999')
+		</if>
+		<if test="advanceReceivedVO.dtTp == '02'">    /* 입금일자  */
+			AND A.DPST_DT BETWEEN #{advanceReceivedVO.startDt} AND #{advanceReceivedVO.endDt}
+		</if>
+		<if test="advanceReceivedVO.dtTp == '03'">    /* 이체일자  */
+			AND A.TRANS_DT BETWEEN #{advanceReceivedVO.startDt} AND #{advanceReceivedVO.endDt}
+		</if>
+		<if test="advanceReceivedVO.prepayProcStat != null and advanceReceivedVO.prepayProcStat != ''"><!-- 처리상태 -->
+			AND A.PREPAY_PROC_STAT 			= #{advanceReceivedVO.prepayProcStat}
+		</if>
+		<if test="advanceReceivedVO.pymAcntId != null and advanceReceivedVO.pymAcntId != ''"><!-- 납부계정 -->
+			AND A.PYM_ACNT_ID 			= #{advanceReceivedVO.pymAcntId}
+		</if>
+	</select>
+    
+    
+    <!-- 선수금발생내역 리스트-->
+	<select id="getDepositMoneyList" parameterType="com.ntels.ccbs.charge.domain.payment.advanceReceived.AdvanceReceivedVO" resultType="com.ntels.ccbs.charge.domain.payment.advanceReceived.AdvanceReceivedVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+		SELECT   A.PREPAY_OCC_SEQ_NO   AS PREPAY_OCC_SEQ_NO   /* 발생일련번호 */
+				, A.PYM_ACNT_ID        AS PYM_ACNT_ID         /* 납부계정ID */
+				, (SELECT DISTINCT BB.ACNT_NM 
+					FROM IFNBRM_CUST_INFO BB 
+					WHERE BB.PYM_ACNT_ID = A.PYM_ACNT_ID
+				)	AS ACNT_NM 								  /* 납부계정명 */
+				, A.PREPAY_OCC_DTTM    AS PREPAY_OCC_DTTM     /* 선수금발생일시 */
+				, A.DPST_DT            AS DPST_DT             /* 입금일자 */
+				, A.TRANS_DT           AS TRANS_DT            /* 이체일자 */
+				, A.PREPAY_OCC_AMT     AS PREPAY_OCC_AMT      /* 발생금액 */
+				, A.PREPAY_TRANS_AMT   AS PREPAY_TRANS_AMT    /* 대체금액 */
+				, A.PREPAY_BAL         AS PREPAY_BAL          /* 잔액 */
+				, A.REG_DATE           AS REG_DATE            /* 등록일 */
+				, A.CHG_DATE           AS CHG_DATE            /* 최종수정일 */
+				, A.PREPAY_OCC_TP      AS PREPAY_OCC_TP       /* 발생구분코드(BLPY005) */
+				, (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{advanceReceivedVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{advanceReceivedVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00071'
+                                                                AND DETAIL.COMMON_CD = A.PREPAY_OCC_TP
+                                                       ) AS PREPAY_OCC_NM /* 발생구분코드(BL00071) */
+				, A.PREPAY_PROC_STAT   AS PREPAY_PROC_STAT    /* 처리상태코드(BLPY028) */
+				, (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{advanceReceivedVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{advanceReceivedVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00084'
+                                                                AND DETAIL.COMMON_CD = A.PREPAY_PROC_STAT
+                                                       ) AS PREPAY_PROC_STAT_NM /* 처리상태코드(BL00084) */
+				, A.DPST_CL            AS DPST_CL             /* 입금구분코드(BLPY001) */
+				, (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{advanceReceivedVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{advanceReceivedVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00067'
+                                                                AND DETAIL.COMMON_CD = A.DPST_CL
+                                                       ) AS DPST_CL_NM /* 입금구분코드(BL00067) */
+				, A.PREPAY_OCC_RESN    AS PREPAY_OCC_RESN     /* 발생사유코드(BLPY006) */
+				, (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{advanceReceivedVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{advanceReceivedVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00072'
+                                                                AND DETAIL.COMMON_CD = A.PREPAY_OCC_RESN
+                                                       ) AS PREPAY_OCC_RESN_NM /* 발생사유코드(BL00072) */
+				, A.REGR_ID            AS REGR_ID             /* 등록자ID */
+				, (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = A.REGR_ID) AS REGR_NM
+				, A.CHGR_ID            AS CHGR_ID             /* 최종수정자ID */
+				, (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = A.CHGR_ID) AS CHGR_NM
+        FROM     TBLPY_PREPAY_OCC    A
+        WHERE  1 = 1
+        AND    (A.CNCL_YN  = 'N' OR A.CNCL_YN IS NULL)                     /* 2013.07.12 취소 건 제외 */
+		
+		
+		<if test="advanceReceivedVO.soId != null and advanceReceivedVO.soId != ''"><!-- 사업 -->
+			AND A.SO_ID 			= #{advanceReceivedVO.soId}
+		</if>
+		<if test="advanceReceivedVO.dpstCl != null and advanceReceivedVO.dpstCl != ''"><!-- 입금구분 -->
+			AND A.DPST_CL 			= #{advanceReceivedVO.dpstCl}
+		</if>
+		<if test="advanceReceivedVO.prepayOccTp != null and advanceReceivedVO.prepayOccTp != ''"><!-- 발생구분 -->
+			AND A.PREPAY_OCC_TP 			= #{advanceReceivedVO.prepayOccTp}
+		</if>
+		<if test="advanceReceivedVO.dtTp == '01'">    /* 발생일시  */
+			AND A.PREPAY_OCC_DTTM BETWEEN CONCAT(#{advanceReceivedVO.startDt}, '000000')  AND CONCAT(#{advanceReceivedVO.endDt}, '999999')
+		</if>
+		<if test="advanceReceivedVO.dtTp == '02'">    /* 입금일자  */
+			AND A.DPST_DT BETWEEN #{advanceReceivedVO.startDt} AND #{advanceReceivedVO.endDt}
+		</if>
+		<if test="advanceReceivedVO.dtTp == '03'">    /* 이체일자  */
+			AND A.TRANS_DT BETWEEN #{advanceReceivedVO.startDt} AND #{advanceReceivedVO.endDt}
+		</if>
+		<if test="advanceReceivedVO.prepayProcStat != null and advanceReceivedVO.prepayProcStat != ''"><!-- 처리상태 -->
+			AND A.PREPAY_PROC_STAT 			= #{advanceReceivedVO.prepayProcStat}
+		</if>
+		<if test="advanceReceivedVO.pymAcntId != null and advanceReceivedVO.pymAcntId != ''"><!-- 납부계정 -->
+			AND A.PYM_ACNT_ID 			= #{advanceReceivedVO.pymAcntId}
+		</if>
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+</mapper>

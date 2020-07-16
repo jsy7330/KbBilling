@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.charge.charge.ChargeCalculationMapper">
+
+	
+	<select id="getRegularChargeJobCount" parameterType="com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM 
+			TBLIV_BAT_GRP A
+			LEFT OUTER JOIN TBLIV_BAT_WRK_MAP B on A.BAT_GRP_ID = B.BAT_GRP_ID
+			LEFT OUTER JOIN TBLIV_BAT_PGM C on B.BAT_PGM_ID = C.BAT_PGM_ID
+			LEFT OUTER JOIN TBLIV_BAT_PGM_LOG D on A.BAT_GRP_ID = D.BAT_GRP_ID AND B.BAT_PGM_ID = D.BAT_PGM_ID AND D.SO_ID = #{soId} AND D.BS_YYMM = #{bsYymm}
+			LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME E ON E.COMMON_GRP = 'BL00033' AND E.LNG_TYP = #{lang} AND D.BAT_PROC_STAT = E.COMMON_CD
+			
+		WHERE A.BAT_GRP_ID 	= #{batGrpId}
+		
+	</select>
+	
+	
+	<select id="getRegularChargeJobList" resultType="com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			A.BAT_GRP_ID
+			,B.BAT_PGM_ID
+			,C.PGM_NM
+			,B.WRK_PROC_ORD
+			,D.BAT_PROC_STAT
+			,E.CODE_NM		AS BAT_PROC_STAT_NM
+			,D.LOG_FILE_PTH
+			,D.LOG_FILE_NM
+			,D.READ_CNT
+			,D.PROC_CNT
+			,D.PGM_STRT_DTTM
+			,D.PGM_END_DTTM
+			,TO_CHAR (TO_DATE (TRUNC ( MOD( TO_DATE (D.PGM_END_DTTM, 'yyyy-mm-dd hh24:mi:ss') - TO_DATE (D.PGM_STRT_DTTM, 'yyyy-mm-dd hh24:mi:ss')  , 1) * 24 * 60 * 60), 'sssss'), 'hh24:mi:ss') AS START_END_TIME
+			,D.BS_YYMM
+			,D.PGM_EXE_SEQ_NO
+			,C.PKG_NM
+			,C.EXEC_OBJ
+			
+		FROM 
+			TBLIV_BAT_GRP A
+			LEFT OUTER JOIN TBLIV_BAT_WRK_MAP B on A.BAT_GRP_ID = B.BAT_GRP_ID
+			LEFT OUTER JOIN TBLIV_BAT_PGM C on B.BAT_PGM_ID = C.BAT_PGM_ID
+			LEFT OUTER JOIN TBLIV_BAT_PGM_LOG D on A.BAT_GRP_ID = D.BAT_GRP_ID AND B.BAT_PGM_ID = D.BAT_PGM_ID AND D.SO_ID = #{soId} AND D.BS_YYMM = #{bsYymm}
+			LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME E ON E.COMMON_GRP = 'BL00033' AND E.LNG_TYP = #{lang} AND D.BAT_PROC_STAT = E.COMMON_CD
+			
+		WHERE A.BAT_GRP_ID 	= #{batGrpId}
+		
+		ORDER BY B.WRK_PROC_ORD
+			
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+
+	<select id="getBatchLog" resultType="com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO">
+		SELECT
+			A.BAT_GRP_ID
+			,A.BS_YYMM
+			,A.BAT_PGM_ID
+			,A.PGM_EXE_SEQ_NO
+			,A.SO_ID
+			,A.BAT_PROC_STAT
+		FROM 
+			TBLIV_BAT_PGM_LOG A
+		WHERE A.BAT_GRP_ID		= #{batGrpId}
+			AND A.BAT_PGM_ID	= #{batPgmId}			
+			AND A.SO_ID			= #{soId}	
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(pgmExeSeqNo)">
+				AND A.PGM_EXE_SEQ_NO	= #{pgmExeSeqNo}
+			</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(bsYymm)">
+			AND A.BS_YYMM		= #{bsYymm}
+			</if>
+		ORDER BY A.PGM_EXE_SEQ_NO DESC
+	</select>
+	
+	<select id="getClcWrkNo" resultType="com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO">
+		SELECT
+			A.CLC_WRK_NO
+		FROM 
+			TBLCH_CLC_MAIN A
+		WHERE A.BILL_YYMM		= #{billYymm}
+			AND A.SO_ID			= #{soId}
+			AND A.BILL_CYCL		= #{billCycl}
+	</select>
+	
+	<insert id="inserttblchClcMain" parameterType="com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO" >
+		INSERT INTO TBLCH_CLC_MAIN
+		( 
+           	CLC_WRK_NO
+           	,BILL_YYMM
+           	,BILL_CYCL
+           	,SO_ID
+           	,REGR_ID
+           	,REG_DATE           	
+		)
+		VALUES
+		(
+			#{clcWrkNo}
+			,#{billYymm}
+			,#{billCycl}
+			,#{soId}
+			,#{regId}
+			,#{regDate}
+		)
+	</insert>
+	
+	<update id="updateBatPgmLog" parameterType="com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO">
+		UPDATE TBLIV_BAT_PGM_LOG
+	         SET BAT_PROC_STAT 	= #{batProcStat}
+	              
+		WHERE PGM_EXE_SEQ_NO	= #{pgmExeSeqNo}
+			AND BAT_GRP_ID   	= #{batGrpId}
+			AND BS_YYMM			= #{bsYymm}
+			AND BAT_PGM_ID		= #{batPgmId}
+			AND SO_ID			= #{soId}
+	</update>
+
+</mapper>

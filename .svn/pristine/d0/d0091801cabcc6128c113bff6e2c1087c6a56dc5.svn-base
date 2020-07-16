@@ -1,0 +1,75 @@
+package com.ntels.ccbs.system.service.sample.sample.impl;
+
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.ntels.ccbs.common.exception.ServiceException;
+import com.ntels.ccbs.product.domain.product.productDev.ProductDevMgt;
+import com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor;
+import com.ntels.ccbs.system.domain.auth.authMng.AuthMngVO;
+import com.ntels.ccbs.system.domain.sample.sample.TreeSampleVO;
+import com.ntels.ccbs.system.mapper.sample.sample.TreeSampleMapper;
+import com.ntels.ccbs.system.service.sample.sample.TreeSampleService;
+
+@Service
+public class TreeSampleServiceImpl implements TreeSampleService {
+
+	@Autowired
+	private TreeSampleMapper treeSampleMapper;
+
+	TreeSampleService treeSampleService;
+
+	@Override
+	public List<TreeSampleVO> getMenuList(String svcCd,String soId) {
+
+		List<Map<String,Object>> stepList = treeSampleMapper.getStepList(svcCd,soId);		
+		return treeSampleMapper.getAuthList(svcCd, stepList,soId);
+	}	
+
+	@Override
+	public List<TreeSampleVO> getComboList(String svcCd) {
+	
+		return treeSampleMapper.getComboList(svcCd);
+	}	
+
+	@Override
+	public List<TreeSampleVO> getPordListAction(String prodCd) {
+		return treeSampleMapper.getPordListAction(prodCd);
+	}
+	@Override
+	public List<TreeSampleVO> getInputProdList(String prodCd, String StartDt) {
+		return treeSampleMapper.getInputProdList(prodCd, StartDt);
+	}
+	@Override
+	public int getInputProdCnt(String prodCd, String StartDt) {
+		return treeSampleMapper.getInputProdCnt(prodCd, StartDt);
+	}
+
+	@Override
+	public List<TreeSampleVO> getInputProdList1(String prodCd, String StartDt) {
+		return treeSampleMapper.getInputProdList1(prodCd, StartDt);
+	}
+	@Override
+	public int getInputProdCnt1(String prodCd, String StartDt) {
+		return treeSampleMapper.getInputProdCnt1(prodCd, StartDt);
+	}	
+	
+	@Override
+	public List<TreeSampleVO> processEstimateList(String soId, String orderId) {
+		return treeSampleMapper.processEstimateList(soId, orderId);
+	}
+	@Override
+	public int processEstimateList1(String soId, String orderId) {
+		return treeSampleMapper.processEstimateList1(soId, orderId);
+	}
+	@Override
+	public List<TreeSampleVO> getEstimateList(String soId, String orderId) {
+		return treeSampleMapper.getEstimateList(soId, orderId);
+	}	
+}

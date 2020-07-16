@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.common.UserSearchMngMapper">
+	<select id="list" parameterType="UserSearchVO" resultType="UserSearchVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+			A.USER_ID
+			,A.PASSWORD
+			,A.USER_NAME
+			,A.USER_GROUP_ID
+			,(SELECT USER_GROUP_NAME FROM TSYCO_USER_GROUP B WHERE A.USER_GROUP_ID=B.USER_GROUP_ID)AS userGroupName
+			,A.ORG_ID
+			,A.CRR_TP
+			,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng, jdbcType=VARCHAR}
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng, jdbcType=VARCHAR}
+                    AND MAST.COMMON_GRP   ='SY00003'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = CRR_TP) AS CRR_TP_NM
+			,A.EMP_NO
+			,A.TEL_NO
+			,A.MTEL_NO
+			,A.E_MAIL
+			,A.IP_BANDWIDTH
+			,A.LOGIN_FAIL_COUNT
+			,A.PASSWORD_DUE_DATE
+			,A.PASSWORD_CHANGE_PERIOD
+			,A.LAST_LOGIN_DATE
+			,A.LAST_LOGIN_TIME
+			,A.ACCOUNT_LOCK
+			,A.PASSWORD1
+			,A.PASSWORD2
+			,A.USE_YN
+			,A.REGR_ID
+			,A.REG_DATE
+			,A.CHGR_ID
+			,A.CHG_DATE
+			,C.ORG_NM AS orgNm
+			,(SELECT D.SO_NM FROM TSYCO_SO_MAST D, TSYCO_ORG_INFO C WHERE C.SO_ID=D.SO_ID  AND A.ORG_ID=C.ORG_ID
+				AND C.APPY_STRT_DT &lt;= #{today} AND C.APPY_END_DT &gt;= #{today})AS SO_NM
+			,C.SO_ID
+		FROM TSYCO_USER A ,TSYCO_ORG_INFO C
+		WHERE A.ORG_ID=C.ORG_ID 
+		AND C.APPY_STRT_DT &lt;= #{today}
+        AND C.APPY_END_DT &gt;= #{today} 
+		AND A.USE_YN='Y'
+		<if test="userSearch.condSoId != null and userSearch.condSoId != '' and userSearch.condSoId != 'SEL'" >
+			AND C.SO_ID=#{userSearch.condSoId,jdbcType=VARCHAR}
+		</if>
+		 <if test="userSearch.condSoId != null and userSearch.condSoId == 'SEL'">
+            AND C.SO_ID IN
+            <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                #{item.so_id}
+            </foreach>
+        </if>
+        <if test="userSearch.condUserNm != null and userSearch.condUserNm != ''">
+			AND A.USER_NAME LIKE CONCAT(CONCAT('%',#{userSearch.condUserNm,jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="sidx != null and sidx == 'soNm'">
+            ORDER BY C.SO_ID ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'userId'">
+             ORDER BY A.USER_ID ${sord}
+         </if>
+         <if test="sidx != null and sidx == 'userName'">
+             ORDER BY A.USER_NAME ${sord}
+         </if>
+          <if test="sidx == ''">
+              ORDER BY C.SO_ID
+         </if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="count"  parameterType="UserSearchVO" resultType="int">
+		SELECT 
+			COUNT(*) 
+		FROM TSYCO_USER A ,TSYCO_ORG_INFO C
+		WHERE A.ORG_ID=C.ORG_ID 
+		AND C.APPY_STRT_DT &lt;= #{today}
+        AND C.APPY_END_DT &gt;= #{today} 
+		AND A.USE_YN='Y'
+		<if test="userSearch.condSoId != null and userSearch.condSoId != '' and userSearch.condSoId != 'SEL'" >
+			AND C.SO_ID=#{userSearch.condSoId,jdbcType=VARCHAR}
+		</if>
+		 <if test="userSearch.condSoId != null and userSearch.condSoId == 'SEL'">
+            AND C.SO_ID IN
+            <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                #{item.so_id}
+            </foreach>
+        </if>
+        <if test="userSearch.condUserNm != null and userSearch.condUserNm != ''">
+			AND A.USER_NAME LIKE CONCAT(CONCAT('%',#{userSearch.condUserNm,jdbcType=VARCHAR}),'%')
+		</if>
+	</select>
+</mapper>

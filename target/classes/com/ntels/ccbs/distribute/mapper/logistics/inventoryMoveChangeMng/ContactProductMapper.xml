@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.inventoryMoveChangeMng.ContactProductMapper">
+
+	<!-- 단말기 제품 내역 리스트 조회 -->
+	<select id="ownOrgEqtInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 	B.ORG_ID
+					, B.ORG_NM
+					, C.CT_ORG_ID
+					, D.ORG_NM		AS CT_ORG_NM
+					, C.ITEM_ID
+					, (SELECT ITEM_NM FROM TDNDT_ITEM  WHERE ITEM_ID = C.ITEM_ID) AS ITEM_NM
+					, C.CLOR_CD
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00078'
+								AND DETAIL.COMMON_CD = C.CLOR_CD
+		       		) AS COLOR_NM			--색상명
+					, C.EQT_SEQ
+					, C.EQT_BAR_CD
+					, C.CT_CHG_ID
+					, (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = C.CT_CHG_ID) AS CT_CHG_NM
+					, C.CT_CHG_DT
+					, C.EQT_STAT_CD
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = C.EQT_STAT_CD
+		       		) AS EQT_STAT_NM				--단말기상태코드명
+		       		, C.LGST_PROC_STAT_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00067'
+								AND DETAIL.COMMON_CD = C.LGST_PROC_STAT_CD
+		       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+		       		, C.AGC_IN_DT
+		       		, C.PRCHS_UT_PRC
+					, C.DSTRB_UT_PRC
+			FROM	TDNDI_ORG_INFO B
+					, TDNDT_EQT C
+					, TDNDI_ORG_INFO D
+			WHERE 	1 = 1
+				AND B.ORG_ID 		= C.OWN_LOC_CD
+				AND C.CT_ORG_ID 	= D.ORG_ID
+				<if test="contactProductVO.orgIdList != null and contactProductVO.orgIdList.size() != 0">
+					AND B.ORG_ID IN
+					<foreach collection="contactProductVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+        		</if>
+				<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+					AND C.ITEM_ID =  #{contactProductVO.itemId}
+				</if>	
+				
+			ORDER BY B.ORG_ID, C.CT_ORG_ID, C.ITEM_ID
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+	</select>
+
+
+	<!-- 단말기 제품 내역 카운트 -->
+	<select id="ownOrgEqtInfoCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="int">
+	
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDI_ORG_INFO B
+				, TDNDT_EQT C
+				, TDNDI_ORG_INFO D
+		WHERE 	1 = 1
+			AND B.ORG_ID 		= C.OWN_LOC_CD
+			AND C.CT_ORG_ID 	= D.ORG_ID
+			<if test="contactProductVO.orgIdList != null and contactProductVO.orgIdList.size() != 0">
+				AND B.ORG_ID IN
+				<foreach collection="contactProductVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+		            #{item}
+		        </foreach>
+       		</if>
+			<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+				AND C.ITEM_ID =  #{contactProductVO.itemId}
+			</if>
+			
+	</select>
+
+
+	<!-- usim 제품 내역 리스트 조회 -->
+	<select id="ownOrgUsimInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 	B.ORG_ID
+					, B.ORG_NM
+					, C.CT_ORG_ID
+					, D.ORG_NM		AS CT_ORG_NM
+					, C.ITEM_ID
+					, (SELECT ITEM_NM FROM TDNDT_ITEM  WHERE ITEM_ID = C.ITEM_ID) AS ITEM_NM
+					, C.USIM_SEQ 		AS EQT_SEQ
+					, C.USIM_BAR_CD 	AS EQT_BAR_CD
+					, C.CT_CHG_ID
+					, (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = C.CT_CHG_ID) AS CT_CHG_NM
+					, C.CT_CHG_DT
+					, C.USIM_STAT_CD	AS EQT_STAT_CD
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = C.USIM_STAT_CD
+		       		) AS EQT_STAT_NM				--단말기상태코드명
+		       		, C.LGST_PROC_STAT_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00067'
+								AND DETAIL.COMMON_CD = C.LGST_PROC_STAT_CD
+		       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+		       		, C.AGC_IN_DT
+		       		, C.PRCHS_UT_PRC
+					, C.DSTRB_UT_PRC
+			FROM	TDNDI_ORG_INFO B
+					, TDNDT_USIM C
+					, TDNDI_ORG_INFO D
+			WHERE 	1 = 1
+				AND B.ORG_ID 		= C.OWN_LOC_CD
+				AND C.CT_ORG_ID 	= D.ORG_ID
+				<if test="contactProductVO.orgIdList != null and contactProductVO.orgIdList.size() != 0">
+					AND B.ORG_ID IN
+					<foreach collection="contactProductVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+        		</if>
+				<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+					AND C.ITEM_ID =  #{contactProductVO.itemId}
+				</if>	
+				
+			ORDER BY B.ORG_ID, C.CT_ORG_ID, C.ITEM_ID
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+	</select>
+	
+
+	<!-- usim 제품 내역 카운트 -->
+	<select id="ownOrgUsimInfoCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="int">
+	
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDI_ORG_INFO B
+				, TDNDT_USIM C
+				, TDNDI_ORG_INFO D
+		WHERE 	1 = 1
+			AND B.ORG_ID 		= C.OWN_LOC_CD
+			AND C.CT_ORG_ID 	= D.ORG_ID
+			<if test="contactProductVO.orgIdList != null and contactProductVO.orgIdList.size() != 0">
+				AND B.ORG_ID IN
+				<foreach collection="contactProductVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+		            #{item}
+		        </foreach>
+       		</if>
+			<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+				AND C.ITEM_ID =  #{contactProductVO.itemId}
+			</if>
+			
+	</select>
+	
+	
+	<!-- 바우쳐 내역 리스트 조회 -->
+	<select id="ownOrgVeqtInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 	B.ORG_ID
+					, B.ORG_NM
+					, C.CT_ORG_ID
+					, D.ORG_NM		AS CT_ORG_NM
+					, C.ITEM_ID
+					, (SELECT ITEM_NM FROM TDNDT_ITEM  WHERE ITEM_ID = C.ITEM_ID) AS ITEM_NM
+					, C.VO_SEQ_NO 		AS EQT_SEQ
+					, C.VO_BAR_CD 		AS EQT_BAR_CD
+					, C.CT_CHG_ID
+					, (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = C.CT_CHG_ID) AS CT_CHG_NM
+					, C.CT_CHG_DT
+					, C.VO_STAT_CD 		AS EQT_STAT_CD
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = C.VO_STAT_CD
+		       		) AS EQT_STAT_NM				--단말기상태코드명
+		       		, C.LGST_PROC_STAT_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00067'
+								AND DETAIL.COMMON_CD = C.LGST_PROC_STAT_CD
+		       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+		       		, C.AGC_IN_DT
+		       		, C.PRCHS_UT_PRC
+					, C.DSTRB_UT_PRC
+			FROM	TDNDI_ORG_INFO B
+					, TDNDT_VEQT C
+					, TDNDI_ORG_INFO D
+			WHERE 	1 = 1
+				AND B.ORG_ID 		= C.OWN_LOC_CD
+				AND C.CT_ORG_ID 	= D.ORG_ID
+				<if test="contactProductVO.orgIdList != null and contactProductVO.orgIdList.size() != 0">
+					AND B.ORG_ID IN
+					<foreach collection="contactProductVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+        		</if>
+				<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+					AND C.ITEM_ID =  #{contactProductVO.itemId}
+				</if>	
+				
+			ORDER BY B.ORG_ID, C.CT_ORG_ID, C.ITEM_ID
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+	</select>
+	
+
+	<!-- 바우쳐 내역 카운트 -->
+	<select id="ownOrgVeqtInfoCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="int">
+	
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDI_ORG_INFO B
+					, TDNDT_VEQT C
+					, TDNDI_ORG_INFO D
+			WHERE 	1 = 1
+				AND B.ORG_ID 		= C.OWN_LOC_CD
+				AND C.CT_ORG_ID 	= D.ORG_ID
+				<if test="contactProductVO.orgIdList != null and contactProductVO.orgIdList.size() != 0">
+					AND B.ORG_ID IN
+					<foreach collection="contactProductVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+        		</if>
+				<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+					AND C.ITEM_ID =  #{contactProductVO.itemId}
+				</if>	
+			
+	</select>
+	
+	
+	<!-- 하위조직 리스트 조회 -->
+	<select id="orgList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+		
+		SELECT
+				A.ORG_ID
+				, B.ORG_NM
+		FROM 	TDNDI_ORG_REL_HIST A 
+				, TDNDI_ORG_INFO B
+		WHERE	1 = 1 
+			AND A.ORG_ID 		= B.ORG_ID
+			AND REL_TP_CD		='101'
+			AND A.APPY_END_DT 	= '99991231'
+			AND A.PART_ORG_ID	= #{contactProductVO.orgId}
+		
+	</select>
+	
+	
+	<!-- 접점등록 단말기내역 리스트 조회 -->
+	<select id="ctOrgEqtInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+		
+		SELECT
+				C.CT_ORG_ID
+				, D.ORG_NM AS CT_ORG_NM
+				, C.ITEM_ID
+				, (SELECT ITEM_NM FROM TDNDT_ITEM WHERE ITEM_ID = C.ITEM_ID) AS ITEM_NM
+				, C.CLOR_CD
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00078'
+							AND DETAIL.COMMON_CD = C.CLOR_CD
+	       		) AS COLOR_NM			--색상명
+	       		, C.EQT_SEQ
+	       		, C.EQT_BAR_CD
+	       		, C.EQT_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00066'
+							AND DETAIL.COMMON_CD = C.EQT_STAT_CD
+	       		) AS EQT_STAT_NM				--단말기상태코드명
+	       		, C.LGST_PROC_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = C.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+	       		, C.CT_CHG_ID
+	       		, E.ITEM_TP_CD
+		FROM 	TDNDT_EQT C
+				LEFT OUTER JOIN TDNDI_ORG_INFO D ON C.CT_ORG_ID = D.ORG_ID
+				INNER JOIN TDNDT_ITEM E ON C.ITEM_ID = E.ITEM_ID
+		WHERE 	1 = 1
+			AND C.OWN_LOC_CD = #{contactProductVO.ownLocCd}
+			<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+				AND C.ITEM_ID = #{contactProductVO.itemId}
+			</if>
+			<if test="contactProductVO.eqtStatCd != null and contactProductVO.eqtStatCd != ''">
+				AND C.EQT_STAT_CD = #{contactProductVO.eqtStatCd}
+			</if>	
+	       	<if test="contactProductVO.eqtSeqStart != null and contactProductVO.eqtSeqStart != ''">
+				AND C.EQT_SEQ <![CDATA[>=]]> #{contactProductVO.eqtSeqStart}
+			</if>	
+			<if test="contactProductVO.eqtSeqEnd != null and contactProductVO.eqtSeqEnd != ''">
+				AND C.EQT_SEQ <![CDATA[<=]]> #{contactProductVO.eqtSeqEnd}
+			</if>	
+			
+		ORDER BY C.ITEM_ID, C.EQT_SEQ
+	</select>
+	
+	
+	<!-- 접점등록 유심 리스트 조회 -->
+	<select id="ctOrgUsimInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+		
+		SELECT
+				C.CT_ORG_ID
+				, D.ORG_NM 			AS CT_ORG_NM
+				, C.ITEM_ID
+				, (SELECT ITEM_NM FROM TDNDT_ITEM WHERE ITEM_ID = C.ITEM_ID) AS ITEM_NM
+	       		, C.USIM_SEQ 		AS EQT_SEQ
+	       		, C.USIM_BAR_CD 	AS EQT_BAR_CD
+	       		, C.USIM_STAT_CD 	AS EQT_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00066'
+							AND DETAIL.COMMON_CD = C.USIM_STAT_CD
+	       		) AS EQT_STAT_NM				--단말기상태코드명
+	       		, C.LGST_PROC_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = C.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+	       		, C.CT_CHG_ID
+	       		, E.ITEM_TP_CD
+		FROM 	TDNDT_USIM C
+				LEFT OUTER JOIN TDNDI_ORG_INFO D ON C.CT_ORG_ID = D.ORG_ID
+				INNER JOIN TDNDT_ITEM E ON C.ITEM_ID = E.ITEM_ID
+		WHERE 	1 = 1
+			AND C.OWN_LOC_CD = #{contactProductVO.ownLocCd}
+			<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+				AND C.ITEM_ID = #{contactProductVO.itemId}
+			</if>
+			<if test="contactProductVO.eqtStatCd != null and contactProductVO.eqtStatCd != ''">
+				AND C.USIM_STAT_CD = #{contactProductVO.eqtStatCd}
+			</if>	
+	       	<if test="contactProductVO.eqtSeqStart != null and contactProductVO.eqtSeqStart != ''">
+				AND C.USIM_SEQ <![CDATA[>=]]> #{contactProductVO.eqtSeqStart}
+			</if>	
+			<if test="contactProductVO.eqtSeqEnd != null and contactProductVO.eqtSeqEnd != ''">
+				AND C.USIM_SEQ <![CDATA[<=]]> #{contactProductVO.eqtSeqEnd}
+			</if>	
+			
+		ORDER BY C.ITEM_ID, C.USIM_SEQ
+	</select>
+	
+	
+	<!-- 접점등록 바우쳐 리스트 조회 -->
+	<select id="ctOrgVeqtInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+		
+		SELECT
+				C.CT_ORG_ID
+				, D.ORG_NM 			AS CT_ORG_NM
+				, C.ITEM_ID
+				, (SELECT ITEM_NM FROM TDNDT_ITEM WHERE ITEM_ID = C.ITEM_ID) AS ITEM_NM
+	       		, C.VO_SEQ_NO 		AS EQT_SEQ
+	       		, C.VO_BAR_CD 		AS EQT_BAR_CD
+	       		, C.VO_STAT_CD 		AS EQT_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00066'
+							AND DETAIL.COMMON_CD = C.VO_STAT_CD
+	       		) AS EQT_STAT_NM				--단말기상태코드명
+	       		, C.LGST_PROC_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{contactProductVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{contactProductVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = C.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+	       		, C.CT_CHG_ID
+	       		, E.ITEM_TP_CD
+		FROM 	TDNDT_VEQT C
+				LEFT OUTER JOIN TDNDI_ORG_INFO D ON C.CT_ORG_ID = D.ORG_ID
+				INNER JOIN TDNDT_ITEM E ON C.ITEM_ID = E.ITEM_ID
+		WHERE 	1 = 1
+			AND C.OWN_LOC_CD = #{contactProductVO.ownLocCd}
+			<if test="contactProductVO.itemId != null and contactProductVO.itemId != ''">
+				AND C.ITEM_ID = #{contactProductVO.itemId}
+			</if>
+			<if test="contactProductVO.eqtStatCd != null and contactProductVO.eqtStatCd != ''">
+				AND C.VO_STAT_CD = #{contactProductVO.eqtStatCd}
+			</if>	
+	       	<if test="contactProductVO.eqtSeqStart != null and contactProductVO.eqtSeqStart != ''">
+				AND C.VO_SEQ_NO <![CDATA[>=]]> #{contactProductVO.eqtSeqStart}
+			</if>	
+			<if test="contactProductVO.eqtSeqEnd != null and contactProductVO.eqtSeqEnd != ''">
+				AND C.VO_SEQ_NO <![CDATA[<=]]> #{contactProductVO.eqtSeqEnd}
+			</if>	
+			
+		ORDER BY C.ITEM_ID, C.VO_SEQ_NO
+	</select>
+	
+	
+	
+	<!-- 단말기별 접점등록 업데이트 -->
+	<update id="updateEqtCtOrg" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+	
+		UPDATE TDNDT_EQT
+			SET	CT_ORG_ID			= #{contactProductVO.ctOrgId}			--접점
+				, CT_CHG_DT			= #{contactProductVO.ctChgDt}			--수정일
+				, CT_CHG_ID			= #{contactProductVO.ctChgId}			--수정자ID
+		WHERE	EQT_SEQ				= #{contactProductVO.eqtSeq}			--
+			AND ITEM_ID				= #{contactProductVO.itemId}			--제품ID
+
+	</update>
+	
+	
+	<!-- 유심별 접점등록 업데이트 -->
+	<update id="updateUsimCtOrg" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+	
+		UPDATE TDNDT_USIM
+			SET	CT_ORG_ID			= #{contactProductVO.ctOrgId}			--접점
+				, CT_CHG_DT			= #{contactProductVO.ctChgDt}			--수정일
+				, CT_CHG_ID			= #{contactProductVO.ctChgId}			--수정자ID
+		WHERE	USIM_SEQ			= #{contactProductVO.eqtSeq}			--
+			AND ITEM_ID				= #{contactProductVO.itemId}			--제품ID
+
+	</update>
+	
+	
+	<!-- 바우쳐별 접점등록 업데이트 -->
+	<update id="updateVeqtCtOrg" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ContactProductVO">
+	
+		UPDATE TDNDT_VEQT
+			SET	CT_ORG_ID			= #{contactProductVO.ctOrgId}			--접점
+				, CT_CHG_DT			= #{contactProductVO.ctChgDt}			--수정일
+				, CT_CHG_ID			= #{contactProductVO.ctChgId}			--수정자ID
+		WHERE	VO_SEQ_NO			= #{contactProductVO.eqtSeq}			--
+			AND ITEM_ID				= #{contactProductVO.itemId}			--제품ID
+
+	</update>
+	
+	
+	
+	
+</mapper>

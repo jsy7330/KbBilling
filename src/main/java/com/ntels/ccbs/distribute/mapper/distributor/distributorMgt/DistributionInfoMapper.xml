@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.distributor.distributorMgt.DistributionInfoMapper">
+
+	<!-- 유통정보 리스트 조회 -->
+	<select id="distributionInfoList" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT	A.SO_ID						/* 사업ID*/
+		       		, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+		       		, A.ORG_ID					/* 조직ID*/
+		       		, B.ORG_NM					/* 조직명*/
+		       		, A.BUSI_TP_CD				/*사업자구분코드*/
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00040'
+								AND DETAIL.COMMON_CD = A.BUSI_TP_CD
+		       		) AS BUSI_TP_NM			/*사업자구분코드명*/
+					, A.BOR_NO				/*사업자등록번호*/
+					, A.CORP_REG_NO			/*법인등록번호*/
+					, A.BUSI_TP				/*업종*/
+					, A.BUSI_CNDT			/*업태*/
+					, B.PRIV_TP_CD			/*자사구분코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00044'
+								AND DETAIL.COMMON_CD = B.PRIV_TP_CD
+		       		) AS PRIV_TP_NM			/*자사구분코드명*/
+					, A.REP_NM				/*대표자명*/
+					, A.REP_RNO				/*대표자주민번호*/
+					, A.HMPG				/*홈페이지*/
+					, A.TEL_NO				/*전화번호*/
+					, A.FAX_NO				/*팩스번호*/
+					, A.EML					/*이메일*/
+					, A.ZIP_CD				/*우편번호*/
+					, A.ADDR1				/*주소1*/
+					, A.ADDR2				/*주소2*/
+					, A.DPST_NM				/*예금주명*/
+					, A.BNK_CD				/*은행코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='CM00006'
+								AND DETAIL.COMMON_CD = A.BNK_CD
+		       		) AS BNK_NM				/*은행코드명*/
+					, A.ACNT_NO				/*계좌번호*/
+					, B.APPY_STRT_DT		/*적용시작일*/
+					, B.APPY_END_DT			/*적용종료일*/
+					, A.ONLN_TP_CD			/*온라인구분코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00043'
+								AND DETAIL.COMMON_CD = A.ONLN_TP_CD
+		       		) AS ONLN_TP_NM			/*온라인구분코드명*/
+					, B.ORG_STAT_CD			/*조직상태코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00041'
+								AND DETAIL.COMMON_CD = B.ORG_STAT_CD
+		       		) AS ORG_STAT_NM		/*조직상태코드명*/
+					, A.TERM_RESN			/*해지사유*/
+					, A.STTL_PSN_INCHRG		/*정산담당자*/
+					, ( SELECT	AA.USER_NAME
+					    FROM	TSYCO_USER AA
+					    WHERE	AA.USE_YN = 'Y'
+					    AND		AA.USER_ID = A.STTL_PSN_INCHRG ) AS STTL_PSN_INCHRG_NM		/*정산담당자명*/
+					, A.STTL_INCHRG_TEL		/*정산담당자전화번호*/
+					, A.STTL_INCHRG_CP		/*정산담당자핸드폰*/
+					, A.STTL_INCHRG_EML		/*정산담당자이메일*/
+					, A.EQT_SCHN_ACNT_NO	/*단말기가상계좌*/
+					, A.EQT_BNK_CD			/*단말기가상계좌은행코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='CM00006'
+								AND DETAIL.COMMON_CD = A.EQT_BNK_CD
+		       		) AS EQT_BNK_NM			/*단말기가상계좌은행코드명*/
+					, A.BILL_SCHN_ACNT_NO	/*공과금가상계좌*/
+					, A.BILL_BNK_CD			/*공과금가상계좌은행코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='CM00006'
+								AND DETAIL.COMMON_CD = A.BILL_BNK_CD
+		       		) AS BILL_BNK_NM		/*공과금가상계좌은행코드명*/
+					, A.PSN_INCHRG_ID		/*담당자ID*/
+					, ( SELECT	AA.USER_NAME
+					    FROM	TSYCO_USER AA
+					    WHERE	AA.USE_YN = 'Y'
+					    AND		AA.USER_ID = A.PSN_INCHRG_ID ) AS PSN_INCHRG_NM		/*담당자명*/
+					, A.MNGR_NM				/*실경영자명*/
+					, A.MNGR_RNO			/*실경영자주민번호*/
+			FROM	TDNDI_DIST_INFO A			/* 유통정보T*/
+					, TDNDI_ORG_INFO  B			/* 조직정보T*/
+			WHERE	A.ORG_ID		= B.ORG_ID
+				AND B.TP_CD			NOT IN ('6000')
+				<if test="distributionInfoVO.orgIdList != null and distributionInfoVO.orgIdList.size() != 0">
+					AND A.ORG_ID IN
+					<foreach collection="distributionInfoVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+			            #{item}
+			        </foreach>
+        		</if>
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 유통정보 리스트 카운트 -->
+	<select id="distributionInfoCount" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDI_DIST_INFO A			/* 유통정보T*/
+				, TDNDI_ORG_INFO  B			/* 조직정보T*/
+		WHERE	A.ORG_ID		= B.ORG_ID
+			AND B.TP_CD			NOT IN ('6000')
+			<if test="distributionInfoVO.orgIdList != null and distributionInfoVO.orgIdList.size() != 0">
+				AND A.ORG_ID IN
+				<foreach collection="distributionInfoVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+		            #{item}
+		        </foreach>
+       		</if>
+	</select>
+	
+
+	<!-- 유통정보 상세 조회 -->
+	<select id="selectDistributionInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO">	
+		SELECT	A.SO_ID						/* 사업ID*/
+	       		, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+	       		, A.ORG_ID					/* 조직ID*/
+	       		, B.ORG_NM					/* 조직명*/
+	       		, A.BUSI_TP_CD				/* 사업자구분코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00040'
+							AND DETAIL.COMMON_CD = A.BUSI_TP_CD
+	       		) AS BUSI_TP_NM			/*사업자구분코드명*/
+				, A.BOR_NO				/*사업자등록번호*/
+				, A.CORP_REG_NO			/*법인등록번호*/
+				, A.BUSI_TP				/*업종*/
+				, A.BUSI_CNDT			/*업태*/
+				, B.PRIV_TP_CD			/*자사구분코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00044'
+							AND DETAIL.COMMON_CD = B.PRIV_TP_CD
+	       		) AS PRIV_TP_NM			/*자사구분코드명*/
+				, A.REP_NM				/*대표자명*/
+				, A.REP_RNO				/*대표자주민번호*/
+				, A.HMPG				/*홈페이지*/
+				, A.TEL_NO				/*전화번호*/
+				, A.FAX_NO				/*팩스번호*/
+				, A.EML					/*이메일*/
+				, A.ZIP_CD				/*우편번호*/
+				, A.ADDR1				/*주소1*/
+				, A.ADDR2				/*주소2*/
+				, A.DPST_NM				/*예금주명*/
+				, A.BNK_CD				/*은행코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='CM00006'
+							AND DETAIL.COMMON_CD = A.BNK_CD
+	       		) AS BNK_NM				/*은행코드명*/
+				, A.ACNT_NO				/*계좌번호*/
+				, B.APPY_STRT_DT		/*적용시작일*/
+				, B.APPY_END_DT			/*적용종료일*/
+				, A.ONLN_TP_CD			/*온라인구분코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00043'
+							AND DETAIL.COMMON_CD = A.ONLN_TP_CD
+	       		) AS ONLN_TP_NM			/*온라인구분코드명*/
+				, B.ORG_STAT_CD			/*조직상태코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00041'
+							AND DETAIL.COMMON_CD = B.ORG_STAT_CD
+	       		) AS ORG_STAT_NM		/*조직상태코드명*/
+				, A.TERM_RESN			/*해지사유*/
+				, A.STTL_PSN_INCHRG		/*정산담당자*/
+				, ( SELECT	AA.USER_NAME
+				    FROM	TSYCO_USER AA
+				    WHERE	AA.USE_YN = 'Y'
+				    AND		AA.USER_ID = A.STTL_PSN_INCHRG ) AS STTL_PSN_INCHRG_NM		/*정산담당자명*/
+				, A.STTL_INCHRG_TEL		/*정산담당자전화번호*/
+				, A.STTL_INCHRG_CP		/*정산담당자핸드폰*/
+				, A.STTL_INCHRG_EML		/*정산담당자이메일*/
+				, A.EQT_SCHN_ACNT_NO	/*단말기가상계좌*/
+				, A.EQT_BNK_CD			/*단말기가상계좌은행코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='CM00006'
+							AND DETAIL.COMMON_CD = A.EQT_BNK_CD
+	       		) AS EQT_BNK_NM			/*단말기가상계좌은행코드명*/
+				, A.BILL_SCHN_ACNT_NO	/*공과금가상계좌*/
+				, A.BILL_BNK_CD			/*공과금가상계좌은행코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{distributionInfoVO.lngTyp}
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{distributionInfoVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='CM00006'
+							AND DETAIL.COMMON_CD = A.BILL_BNK_CD
+	       		) AS BILL_BNK_NM		/*공과금가상계좌은행코드명*/
+				, A.PSN_INCHRG_ID		/*담당자ID*/
+				, ( SELECT	AA.USER_NAME
+				    FROM	TSYCO_USER AA
+				    WHERE	AA.USE_YN = 'Y'
+				    AND		AA.USER_ID = A.PSN_INCHRG_ID ) AS PSN_INCHRG_NM		/*담당자명*/
+				, A.MNGR_NM				/*실경영자명*/
+				, A.MNGR_RNO			/*실경영자주민번호*/
+		FROM	TDNDI_DIST_INFO A			/* 유통정보T*/
+				, TDNDI_ORG_INFO  B			/* 조직정보T*/
+		WHERE	A.ORG_ID		= B.ORG_ID
+			AND A.ORG_ID		= #{distributionInfoVO.orgId}
+		
+	</select>
+	
+	<!-- insert TDNDI_DIST_INFO 유통 정보망 인서트 -->
+	<insert id="insertDistInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO">
+		INSERT INTO TDNDI_DIST_INFO
+            ( SO_ID				/*사업ID*/
+			, ORG_ID			/*조직ID*/
+			, BUSI_TP_CD		/*사업자구분코드*/
+			, BOR_NO			/*사업자등록번호*/
+			, CORP_REG_NO		/*법인등록번호*/
+			, BUSI_TP			/*업종*/
+			, BUSI_CNDT			/*업태*/
+			, REP_NM			/*대표자명*/
+			, REP_RNO			/*대표자주민번호*/
+			, HMPG				/*홈페이지*/
+			, TEL_NO			/*전화번호*/
+			, FAX_NO			/*팩스번호*/
+			, EML				/*이메일*/
+			, ZIP_CD			/*우편번호*/
+			, ADDR1				/*주소1*/
+			, ADDR2				/*주소2*/
+			, DPST_NM			/*예금주명*/
+			, BNK_CD			/*은행코드*/
+			, ACNT_NO			/*계좌번호*/
+			, ONLN_TP_CD		/*온라인구분코드*/
+			, TERM_RESN			/*해지사유*/
+			, STTL_PSN_INCHRG	/*정산담당자ID*/
+			, STTL_INCHRG_TEL	/*정산담당자전화번호*/
+			, STTL_INCHRG_CP	/*정산담당자휴대폰번호*/
+			, STTL_INCHRG_EML	/*정산담당자이메일*/
+			, EQT_SCHN_ACNT_NO	/*단말기가상계좌*/
+			, EQT_BNK_CD		/*단말기가상계좌은행코드*/
+			, BILL_SCHN_ACNT_NO	/*공과금가상계좌*/
+			, BILL_BNK_CD		/*공과금가상계좌은행코드*/
+			, PSN_INCHRG_ID		/*담당자ID*/
+			, MNGR_NM			/*실경영자명*/
+			, MNGR_RNO			/*실경영자주민번호*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			 )
+        VALUES
+            ( #{distributionInfoVO.soId}			/*사업ID*/
+			, #{distributionInfoVO.orgId}			/*조직ID*/
+			, #{distributionInfoVO.busiTpCd}		/*사업자구분코드*/
+			, #{distributionInfoVO.borNo}			/*사업자등록번호*/
+			, #{distributionInfoVO.corpRegNo}		/*법인등록번호*/
+			, #{distributionInfoVO.busiTp}		/*업종*/
+			, #{distributionInfoVO.busiCndt}		/*업태*/
+			, #{distributionInfoVO.repNm}			/*대표자명*/
+			, #{distributionInfoVO.repRno}		/*대표자주민번호*/
+			, #{distributionInfoVO.hmpg}			/*홈페이지*/
+			, #{distributionInfoVO.telNo}			/*전화번호*/
+			, #{distributionInfoVO.faxNo}			/*팩스번호*/
+			, #{distributionInfoVO.eml}			/*이메일*/
+			, #{distributionInfoVO.zipCd}			/*우편번호*/
+			, #{distributionInfoVO.addr1}			/*주소1*/
+			, #{distributionInfoVO.addr2}			/*주소2*/
+			, #{distributionInfoVO.dpstNm}		/*예금주명*/
+			, #{distributionInfoVO.bnkCd}			/*은행코드*/
+			, #{distributionInfoVO.acntNo}		/*계좌번호*/
+			, #{distributionInfoVO.onlnTpCd}		/*온라인구분코드*/
+			, #{distributionInfoVO.termResn}		/*해지사유*/
+			, #{distributionInfoVO.sttlPsnInchrg}	/*정산담당자ID*/
+			, #{distributionInfoVO.sttlInchrgTel}	/*정산담당자전화번호*/
+			, #{distributionInfoVO.sttlInchrgCp}	/*정산담당자휴대폰번호*/
+			, #{distributionInfoVO.sttlInchrgEml}	/*정산담당자이메일*/
+			, #{distributionInfoVO.eqtSchnAcntNo}	/*단말기가상계좌*/
+			, #{distributionInfoVO.eqtBnkCd}		/*단말기가상계좌은행코드*/
+			, #{distributionInfoVO.billSchnAcntNo}/*공과금가상계좌*/
+			, #{distributionInfoVO.billBnkCd}		/*공과금가상계좌은행코드*/
+			, #{distributionInfoVO.psnInchrgId}	/*담당자ID*/
+			, #{distributionInfoVO.mngrNm}		/*실경영자명*/
+			, #{distributionInfoVO.mngrRno}		/*실경영자주민번호*/
+			, #{distributionInfoVO.regrId}		/*등록자*/
+			, #{distributionInfoVO.regDate}		/*등록일시*/
+			, #{distributionInfoVO.chgrId}		/*수정자*/
+			, #{distributionInfoVO.chgDate}		/*수정일시*/
+			)
+	</insert>
+	
+	
+	<!-- update  TDNDI_ORG_INFO  업데이트-->
+	<update id="updateOrgInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO">
+		UPDATE	TDNDI_ORG_INFO
+			SET	ORG_NM          = #{distributionInfoVO.orgNm}		/*조직명*/
+				, PRIV_TP_CD	= #{distributionInfoVO.privTpCd}	/*자사구분코드*/
+				, ORG_STAT_CD	= #{distributionInfoVO.orgStatCd}	/*조직상태코드*/
+				, APPY_STRT_DT	= #{distributionInfoVO.appyStrtDt}	/*개설일*/
+				, APPY_END_DT	= #{distributionInfoVO.appyEndDt}	/*폐점일*/
+				, CHG_DATE		= #{distributionInfoVO.chgDate}		/*수정일시*/
+				, CHGR_ID		= #{distributionInfoVO.chgrId}		/*수정자	*/	
+		WHERE	ORG_ID			= #{distributionInfoVO.orgId}		/*조직ID*/
+	</update>
+	
+	<!-- update  TDNDI_ORG_REL_HIST 조직업무권한 -->
+	<update id="updateOrgRelHist" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO">
+		UPDATE   TDNDI_ORG_REL_HIST
+        SET      APPY_STRT_DT   = #{distributionInfoVO.appyStrtDt}        /* 적용시작일*/
+               , APPY_END_DT    = #{distributionInfoVO.appyEndDt}         /* 적용종료일*/
+               , CHG_DATE		= #{distributionInfoVO.chgDate}           /* 수정일*/
+			   , CHGR_ID		= #{distributionInfoVO.chgrId}            /* 수정자ID */     
+        WHERE    ORG_ID         = #{distributionInfoVO.orgId}             /* 조직ID*/
+        AND      ORG_REL_ORD    = ( SELECT A.ORG_REL_ORD FROM (SELECT MAX(ORG_REL_ORD) AS ORG_REL_ORD FROM TDNDI_ORG_REL_HIST WHERE ORG_ID = #{distributionInfoVO.orgId}) A )         /* 조직관계순번*/
+	</update>
+	
+	<!-- update  TDNDI_DIST_INFO  -->
+	<update id="updateDistInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.DistributionInfoVO">
+		UPDATE   TDNDI_DIST_INFO
+        SET      BUSI_TP_CD			= #{distributionInfoVO.busiTpCd}			/*사업자구분코드*/
+				, BOR_NO			= #{distributionInfoVO.borNo}				/*사업자등록번호*/
+				, CORP_REG_NO		= #{distributionInfoVO.corpRegNo}			/*법인등록번호*/
+				, BUSI_TP			= #{distributionInfoVO.busiTp}				/*업종*/
+				, BUSI_CNDT			= #{distributionInfoVO.busiCndt}			/*업태*/
+				, REP_NM			= #{distributionInfoVO.repNm}				/*대표자명*/
+				, REP_RNO			= #{distributionInfoVO.repRno}				/*대표자주민번호*/
+				, HMPG				= #{distributionInfoVO.hmpg}				/*홈페이지*/
+				, TEL_NO			= #{distributionInfoVO.telNo}				/*전화번호*/
+				, FAX_NO			= #{distributionInfoVO.faxNo}				/*팩스번호*/
+				, EML				= #{distributionInfoVO.eml}					/*이메일*/
+				, ZIP_CD			= #{distributionInfoVO.zipCd}				/*우편번호*/
+				, ADDR1				= #{distributionInfoVO.addr1}				/*주소1*/
+				, ADDR2				= #{distributionInfoVO.addr2}				/*주소2*/
+				, DPST_NM			= #{distributionInfoVO.dpstNm}				/*예금주명*/
+				, BNK_CD			= #{distributionInfoVO.bnkCd}				/*은행코드*/
+				, ACNT_NO			= #{distributionInfoVO.acntNo}				/*계좌번호*/
+				, ONLN_TP_CD		= #{distributionInfoVO.onlnTpCd}			/*온라인구분코드*/
+				, TERM_RESN			= #{distributionInfoVO.termResn}			/*해지사유*/
+				, STTL_PSN_INCHRG	= #{distributionInfoVO.sttlPsnInchrg}		/*정산담당자ID*/
+				, STTL_INCHRG_TEL	= #{distributionInfoVO.sttlInchrgTel}		/*정산담당자전화번호*/
+				, STTL_INCHRG_CP	= #{distributionInfoVO.sttlInchrgCp}		/*정산담당자휴대폰번호*/
+				, STTL_INCHRG_EML	= #{distributionInfoVO.sttlInchrgEml}		/*정산담당자이메일*/
+				, EQT_SCHN_ACNT_NO	= #{distributionInfoVO.eqtSchnAcntNo}		/*단말기가상계좌*/
+				, EQT_BNK_CD		= #{distributionInfoVO.eqtBnkCd}			/*단말기가상계좌은행코드*/
+				, BILL_SCHN_ACNT_NO	= #{distributionInfoVO.billSchnAcntNo}		/*공과금가상계좌*/
+				, BILL_BNK_CD		= #{distributionInfoVO.billBnkCd}			/*공과금가상계좌은행코드*/
+				, PSN_INCHRG_ID		= #{distributionInfoVO.psnInchrgId}			/*담당자ID*/
+				, MNGR_NM			= #{distributionInfoVO.mngrNm}				/*실경영자명*/
+				, MNGR_RNO			= #{distributionInfoVO.mngrRno}				/*실경영자주민번호*/
+				, CHGR_ID			= #{distributionInfoVO.chgrId}				/*수정자*/
+				, CHG_DATE			= #{distributionInfoVO.chgDate}				/*수정일시*/
+   
+        WHERE    ORG_ID         = #{distributionInfoVO.orgId}             /* 조직ID*/
+	</update>
+	
+</mapper>

@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.login.LoginMapper">
+
+    <select id="login" parameterType="String" resultType="SessionUser">
+        SELECT
+             TUSER.user_id
+            ,TUSER.user_name
+            ,TUSER.user_group_id
+            ,TGROUP.user_group_name
+            ,TGROUP.user_group_level
+            ,TGROUP.main_view
+            ,TUSER.ip_bandwidth
+            ,TUSER.login_fail_count
+            ,TUSER.last_login_date
+            ,TUSER.last_login_time
+        FROM
+            tsyco_user TUSER
+           ,tsyco_user_group TGROUP
+        WHERE 1=1
+        AND TUSER.user_group_id = TGROUP.user_group_id
+        AND TUSER.user_id=#{user_id, jdbcType=VARCHAR}
+        AND TUSER.password=#{password, jdbcType=VARCHAR}
+  
+     </select>
+     
+    <update id="updateLastLoginDateTime" parameterType="SessionUser">
+        UPDATE
+            TSYCO_USER
+        SET
+        <choose>
+            <when test="'${dbms.kind}' == 'MYSQL'">        
+            last_login_date = CONCAT(COALESCE(SUBSTRING_INDEX(last_login_date, '|', -1), ''), '|', DATE_FORMAT(now(), '%Y%m%d')),
+            last_login_time = CONCAT(COALESCE(SUBSTRING_INDEX(last_login_time, '|', -1), ''), '|', TIME_FORMAT(now(), '%H%i%s')),
+            </when>
+            <otherwise>
+            last_login_date = CASE WHEN INSTR(last_login_date, '|') = 0 OR last_login_date is null THEN '|'||TO_CHAR(SYSDATE, 'yyyymmdd')
+                                   WHEN INSTR(last_login_date, '|') = 1 THEN SUBSTR(last_login_date, 2)||'|'||TO_CHAR(SYSDATE, 'yyyymmdd')
+                                   WHEN INSTR(last_login_date, '|') = 9 THEN SUBSTR(last_login_date, 10)||'|'||TO_CHAR(SYSDATE, 'yyyymmdd')
+                                   ELSE ''
+                              END,
+            last_login_time = CASE WHEN INSTR(last_login_time, '|') = 0 OR last_login_date is null THEN '|'||TO_CHAR(SYSDATE, 'hh24miss')
+                                   WHEN INSTR(last_login_time, '|') = 1 THEN SUBSTR(last_login_time, 2)||'|'||TO_CHAR(SYSDATE, 'hh24miss')
+                                   WHEN INSTR(last_login_time, '|') = 7 THEN SUBSTR(last_login_time, 8)||'|'||TO_CHAR(SYSDATE, 'hh24miss')
+                                   ELSE ''
+                               END,            
+            </otherwise>
+        </choose>
+            login_fail_count = 0
+        WHERE
+            user_id=#{sessionUser.userId, jdbcType=VARCHAR}
+     </update>
+
+    <update id="updateLoginFailCount" parameterType="User">
+        UPDATE
+            TSYCO_USER
+        SET
+            login_fail_count = login_fail_count + 1
+        WHERE
+            user_id=#{user_id, jdbcType=VARCHAR}
+     </update>
+
+    <select id="isOverPasswordDueDate" parameterType="String" resultType="int">
+        SELECT
+            count(0)
+        FROM
+            TSYCO_USER
+        WHERE
+            user_id = #{user_id, jdbcType=VARCHAR}
+        <choose>
+            <when test="'${dbms.kind}' == 'MYSQL'">
+                AND password_due_date <![CDATA[<=]]> DATE_FORMAT(now(), '%Y%m%d')    
+            </when>
+            <otherwise>
+                AND password_due_date <![CDATA[<=]]> TO_CHAR(SYSDATE, 'YYYYMMDD')
+            </otherwise>
+        </choose>
+     </select>
+
+    <select id="getLoginFailCount" parameterType="String" resultType="Integer">
+        SELECT
+            login_fail_count
+        FROM
+            TSYCO_USER
+        WHERE
+            user_id = #{user_id, jdbcType=VARCHAR}
+     </select>
+
+    <select id="getLoginDate" parameterType="String" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT 
+             last_login_date as LOGIN_DATE,
+            last_login_time as LOGIN_TIME
+          FROM
+            TSYCO_USER
+        WHERE
+            user_id = #{user_id, jdbcType=VARCHAR}
+     </select>
+
+    <select id="getAccountLock" parameterType="String" resultType="String">
+        SELECT
+            account_lock
+        FROM
+            TSYCO_USER
+        WHERE
+            user_id = #{user_id, jdbcType=VARCHAR}
+     </select>
+
+    <update id="setAccountLock" parameterType="String">
+        UPDATE
+            TSYCO_USER
+        SET
+            account_lock = 'Y'
+        WHERE
+            user_id=#{user_id, jdbcType=VARCHAR}
+     </update>
+
+
+    <select id="getUserRole" parameterType="String" resultType="String">
+        SELECT
+             USER_GROUP_ID
+        FROM
+            TSYCO_USER_GROUP_ROLE
+        WHERE
+            user_id = #{user_id, jdbcType=VARCHAR}
+     </select>
+     
+     
+     <select id="getOrgId" parameterType="String" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT
+              ORG.SO_ID
+             ,(SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = ORG.SO_ID) AS SO_NM 
+             ,ORG.ORG_ID
+             ,ORG.ORG_NM
+        FROM
+             TSYCO_USER USR
+            ,TSYCO_ORG_INFO ORG
+        WHERE
+            USR.USER_ID = #{user_id, jdbcType=VARCHAR}
+        AND USR.ORG_ID = ORG.ORG_ID
+        AND ORG.APPY_STRT_DT &lt;= #{today}
+        AND ORG.APPY_END_DT &gt;= #{today}
+     </select>
+     
+     <select id="getSoAuthList" parameterType="String" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT
+             SO.SO_ID
+            ,SO.SO_NM
+        FROM
+            TSYCO_SO_AUTH_INFO AUTH
+            ,TSYCO_SO_MAST SO
+        WHERE
+            SO.SO_ID = AUTH.SO_ID
+        AND SO.USE_YN = 'Y'
+        AND USER_ID = #{user_id, jdbcType=VARCHAR}
+        ORDER BY SO.SO_ID
+     </select>
+     
+     <select id="listCountryLanguage" resultType="CountryLanguage">
+        SELECT
+            COUNTRY_CODE,
+            COUNTRY_NAME,
+            LANGUAGE_CODE,
+            LANGUAGE_NAME
+        FROM
+            TSYCO_COUNTRY_LANGUAGE
+        ORDER BY LANGUAGE_NAME
+    </select>
+    
+    
+    <insert id="insertLoginHistory" parameterType="LoginHistory">
+        INSERT INTO
+            TSYCO_LOGIN_HIST
+        (
+             USER_ID
+            ,LOGIN_DATE
+            ,LOGIN_TIME
+            ,SESSION_ID
+            ,REMOTE_ADDR
+        )
+        VALUES
+        (
+             #{loginHist.userId}
+            ,#{loginHist.loginDate}
+            ,#{loginHist.loginTime}
+            ,#{loginHist.sessionId}
+            ,#{loginHist.remoteAddr}
+        )    
+      </insert>
+      
+      <update id="updateLogoutHistory">
+        UPDATE
+            TSYCO_LOGIN_HIST
+        SET
+            LOGOUT_DATE   = #{logoutDate}
+           ,LOGOUT_TIME   = #{logoutTime}
+           ,LOGOUT_STATUS = #{logoutStatus}
+        WHERE
+            USER_ID    =#{sessionUser.userId}
+        AND SESSION_ID =#{sessionUser.sessionId} 
+        AND LOGOUT_STATUS IS NULL  
+      </update>
+      
+      <select id="getLoginHistoryRegCnt" parameterType="SessionUser" resultType="int">
+        SELECT COUNT(USER_ID)
+        FROM TSYCO_LOGIN_HIST
+        WHERE
+            USER_ID    =#{sessionUser.userId}
+        AND SESSION_ID =#{sessionUser.sessionId} 
+        AND LOGOUT_STATUS IS NOT NULL  
+      </select>
+      
+      <select id="getUserInfoConfirm" resultType="UserMngVO">
+      	SELECT
+      		USER_ID
+      		,USER_NAME
+      	FROM TSYCO_USER
+      	WHERE 	USER_ID = #{userId}
+      	AND		E_MAIL  = #{email}
+      </select>
+      
+      <update id="updatePassword" >
+      	UPDATE 
+      		TSYCO_USER
+      	SET 
+      		PASSWORD=#{passWord,jdbcType=VARCHAR}
+      		,LOGIN_FAIL_COUNT='0'
+      		,ACCOUNT_LOCK='N'
+      	WHERE USER_ID =#{userId,jdbcType=VARCHAR}
+      	AND E_MAIL = #{email,jdbcType=VARCHAR}
+      </update>
+</mapper>

@@ -1,0 +1,308 @@
+package com.ntels.ccbs.charge.domain.billing.billing;
+
+import com.ntels.ccbs.system.domain.common.service.PagingValue;
+import com.thoughtworks.xstream.annotations.XStreamAlias;
+
+@XStreamAlias("BillingStatisticsVO")
+public class BillingStatisticsVO extends PagingValue {
+
+	private String orgId;
+	private String orgNm;
+	private String lngTyp;
+	private String sidx;
+	private String sord;
+	private String soId;
+	private String soNm;
+	
+	private String chkJob;
+	private String pymAcntId;
+	private String billYymm;
+	private String billDt;
+	private String adjPrvBillAmt;
+	private String adjAmt;
+	private String billAmt;
+	private String rcptAmt;
+	private String unpayAmt;
+	private String fullPayYn;
+	private String smlAmtYn;
+	private String adjApplConts;
+	private String paymthd;
+	private String billSeqNo;
+	private String billTpNm;
+	private String billExptYn;
+	private String chgrNm;
+	private String chgDt;
+	private String smry;
+	private String custId;
+	private String ctrtId;
+	private String prodCd;
+	private String prodGrp;
+	private String prodNm;
+	private String custNm;
+	private String svcTelNo;
+	private String useYymm;
+	private String svcCd;
+	private String chrgItmCd;
+	private String usgCnt;
+	private String usgAmt;
+	private String payDueDt;
+	
+	public String getOrgId() {
+		return orgId;
+	}
+	public void setOrgId(String orgId) {
+		this.orgId = orgId;
+	}
+	public String getOrgNm() {
+		return orgNm;
+	}
+	public void setOrgNm(String orgNm) {
+		this.orgNm = orgNm;
+	}
+	public String getLngTyp() {
+		return lngTyp;
+	}
+	public void setLngTyp(String lngTyp) {
+		this.lngTyp = lngTyp;
+	}
+	public String getSidx() {
+		return sidx;
+	}
+	public void setSidx(String sidx) {
+		this.sidx = sidx;
+	}
+	public String getSord() {
+		return sord;
+	}
+	public void setSord(String sord) {
+		this.sord = sord;
+	}
+	public String getSoId() {
+		return soId;
+	}
+	public void setSoId(String soId) {
+		this.soId = soId;
+	}
+	public String getSoNm() {
+		return soNm;
+	}
+	public void setSoNm(String soNm) {
+		this.soNm = soNm;
+	}
+	public String getChkJob() {
+		return chkJob;
+	}
+	public void setChkJob(String chkJob) {
+		this.chkJob = chkJob;
+	}
+	public String getPymAcntId() {
+		return pymAcntId;
+	}
+	public void setPymAcntId(String pymAcntId) {
+		this.pymAcntId = pymAcntId;
+	}
+	public String getBillYymm() {
+		return billYymm;
+	}
+	public void setBillYymm(String billYymm) {
+		this.billYymm = billYymm;
+	}
+	public String getBillDt() {
+		return billDt;
+	}
+	public void setBillDt(String billDt) {
+		this.billDt = billDt;
+	}
+	public String getAdjPrvBillAmt() {
+		return adjPrvBillAmt;
+	}
+	public void setAdjPrvBillAmt(String adjPrvBillAmt) {
+		this.adjPrvBillAmt = adjPrvBillAmt;
+	}
+	public String getAdjAmt() {
+		return adjAmt;
+	}
+	public void setAdjAmt(String adjAmt) {
+		this.adjAmt = adjAmt;
+	}
+	public String getBillAmt() {
+		return billAmt;
+	}
+	public void setBillAmt(String billAmt) {
+		this.billAmt = billAmt;
+	}
+	public String getRcptAmt() {
+		return rcptAmt;
+	}
+	public void setRcptAmt(String rcptAmt) {
+		this.rcptAmt = rcptAmt;
+	}
+	public String getUnpayAmt() {
+		return unpayAmt;
+	}
+	public void setUnpayAmt(String unpayAmt) {
+		this.unpayAmt = unpayAmt;
+	}
+	public String getFullPayYn() {
+		return fullPayYn;
+	}
+	public void setFullPayYn(String fullPayYn) {
+		this.fullPayYn = fullPayYn;
+	}
+	public String getSmlAmtYn() {
+		return smlAmtYn;
+	}
+	public void setSmlAmtYn(String smlAmtYn) {
+		this.smlAmtYn = smlAmtYn;
+	}
+	public String getAdjApplConts() {
+		return adjApplConts;
+	}
+	public void setAdjApplConts(String adjApplConts) {
+		this.adjApplConts = adjApplConts;
+	}
+	public String getPaymthd() {
+		return paymthd;
+	}
+	public void setPaymthd(String paymthd) {
+		this.paymthd = paymthd;
+	}
+	public String getBillSeqNo() {
+		return billSeqNo;
+	}
+	public void setBillSeqNo(String billSeqNo) {
+		this.billSeqNo = billSeqNo;
+	}
+	public String getBillTpNm() {
+		return billTpNm;
+	}
+	public void setBillTpNm(String billTpNm) {
+		this.billTpNm = billTpNm;
+	}
+	public String getBillExptYn() {
+		return billExptYn;
+	}
+	public void setBillExptYn(String billExptYn) {
+		this.billExptYn = billExptYn;
+	}
+	public String getChgrNm() {
+		return chgrNm;
+	}
+	public void setChgrNm(String chgrNm) {
+		this.chgrNm = chgrNm;
+	}
+	public String getChgDt() {
+		return chgDt;
+	}
+	public void setChgDt(String chgDt) {
+		this.chgDt = chgDt;
+	}
+	public String getSmry() {
+		return smry;
+	}
+	public void setSmry(String smry) {
+		this.smry = smry;
+	}
+	public String getCustId() {
+		return custId;
+	}
+	public void setCustId(String custId) {
+		this.custId = custId;
+	}
+	public String getCtrtId() {
+		return ctrtId;
+	}
+	public void setCtrtId(String ctrtId) {
+		this.ctrtId = ctrtId;
+	}
+	public String getProdCd() {
+		return prodCd;
+	}
+	public void setProdCd(String prodCd) {
+		this.prodCd = prodCd;
+	}
+	public String getProdGrp() {
+		return prodGrp;
+	}
+	public void setProdGrp(String prodGrp) {
+		this.prodGrp = prodGrp;
+	}
+	public String getProdNm() {
+		return prodNm;
+	}
+	public void setProdNm(String prodNm) {
+		this.prodNm = prodNm;
+	}
+	public String getCustNm() {
+		return custNm;
+	}
+	public void setCustNm(String custNm) {
+		this.custNm = custNm;
+	}
+	public String getSvcTelNo() {
+		return svcTelNo;
+	}
+	public void setSvcTelNo(String svcTelNo) {
+		this.svcTelNo = svcTelNo;
+	}
+	public String getUseYymm() {
+		return useYymm;
+	}
+	public void setUseYymm(String useYymm) {
+		this.useYymm = useYymm;
+	}
+	public String getSvcCd() {
+		return svcCd;
+	}
+	public void setSvcCd(String svcCd) {
+		this.svcCd = svcCd;
+	}
+	public String getChrgItmCd() {
+		return chrgItmCd;
+	}
+	public void setChrgItmCd(String chrgItmCd) {
+		this.chrgItmCd = chrgItmCd;
+	}
+	public String getUsgCnt() {
+		return usgCnt;
+	}
+	public void setUsgCnt(String usgCnt) {
+		this.usgCnt = usgCnt;
+	}
+	public String getUsgAmt() {
+		return usgAmt;
+	}
+	public void setUsgAmt(String usgAmt) {
+		this.usgAmt = usgAmt;
+	}
+	public String getSvcNm() {
+		return svcNm;
+	}
+	public void setSvcNm(String svcNm) {
+		this.svcNm = svcNm;
+	}
+	public String getChrgItmNm() {
+		return chrgItmNm;
+	}
+	public void setChrgItmNm(String chrgItmNm) {
+		this.chrgItmNm = chrgItmNm;
+	}
+	public String getUseDt() {
+		return useDt;
+	}
+	public void setUseDt(String useDt) {
+		this.useDt = useDt;
+	}
+	private String svcNm;
+	private String chrgItmNm;
+	private String useDt;
+
+	public String getPayDueDt() {
+		return payDueDt;
+	}
+	public void setPayDueDt(String payDueDt) {
+		this.payDueDt = payDueDt;
+	}
+	
+	
+}

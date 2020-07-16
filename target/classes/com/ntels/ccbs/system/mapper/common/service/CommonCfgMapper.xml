@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper">
+
+	<sql id="paging_head">
+		<choose>
+			<when test="'${dbms.kind}' == 'MYSQL'">
+				SELECT * 
+				  FROM (
+						SELECT @rownum := @rownum + 1 AS rownum, listA.*
+						  FROM (SELECT @rownum := 0) r
+						     , (
+			</when>
+			<when test="'${dbms.kind}' == 'ORACLE'">
+				SELECT *
+				FROM (
+					SELECT originalQuery.*, ROWNUM AS RNUM
+					FROM (
+			</when>
+			<when test="'${dbms.kind}' == 'ALTIBASE'">
+				SELECT *
+				FROM (
+					SELECT originalQuery.*, ROWNUM AS RNUM
+					FROM (
+			</when>
+			<when test="'${dbms.kind}' == 'TIBERO'">
+				SELECT *
+				FROM (
+					SELECT originalQuery.*, ROWNUM AS RNUM
+					FROM (
+			</when>			
+		</choose>
+	</sql>
+
+	<sql id="paging_foot">
+		<choose>
+			<when test="'${dbms.kind}' == 'MYSQL'">
+								) listA
+						) listB
+				  WHERE 
+				<![CDATA[  
+						listB.rownum <= (#{end, jdbcType=VARCHAR}+#{start, jdbcType=VARCHAR})
+					AND listB.rownum > #{start, jdbcType=VARCHAR}
+			    ]]>
+			</when>
+			<when test="'${dbms.kind}' == 'ORACLE'">
+					) originalQuery		
+				<![CDATA[  
+					WHERE ROWNUM <= (#{end, jdbcType=VARCHAR}+#{start, jdbcType=VARCHAR})
+					)
+				WHERE RNUM > #{start, jdbcType=VARCHAR}
+			    ]]>
+			</when>
+			<when test="'${dbms.kind}' == 'ALTIBASE'">
+					) originalQuery		
+				<![CDATA[  
+					WHERE ROWNUM <= (#{end, jdbcType=VARCHAR}+#{start, jdbcType=VARCHAR})
+					)
+				WHERE RNUM > #{start, jdbcType=VARCHAR}
+			    ]]>
+			</when>
+			<when test="'${dbms.kind}' == 'TIBERO'">
+					) originalQuery		
+				<![CDATA[  
+					WHERE ROWNUM <= (#{end, jdbcType=VARCHAR}+#{start, jdbcType=VARCHAR})
+					)
+				WHERE RNUM > #{start, jdbcType=VARCHAR}
+			    ]]>
+			</when>
+		</choose>	
+	</sql>
+</mapper>

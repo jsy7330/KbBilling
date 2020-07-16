@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+<tiles-definitions>
+	<!-- Layout Definition -->
+	<definition name=".nondecoration" template="/WEB-INF/tiles/template/layout.simple.jsp">
+		<put-attribute name="js" value="/WEB-INF/tiles/attribute/default.javascript.jsp" />
+		<put-attribute name="body" value="/WEB-INF/tiles/attribute/default.body.jsp" />
+	</definition>
+
+	<definition name=".onlybody" template="/WEB-INF/tiles/template/layout.onlybody.jsp">
+		<put-attribute name="body" value="/WEB-INF/tiles/attribute/default.body.jsp" />
+	</definition>
+
+	<definition name=".main" template="/WEB-INF/tiles/template/layout.main.jsp">
+		<put-attribute name="js" value="/WEB-INF/tiles/attribute/default.javascript.jsp" />
+		<put-attribute name="header" value="/WEB-INF/tiles/attribute/default.header.jsp" />
+		<put-attribute name="body" value="/WEB-INF/tiles/attribute/default.body.jsp" />
+	</definition>
+	
+	<definition name=".default" template="/WEB-INF/tiles/template/layout.default.jsp">
+		<put-attribute name="js" value="/WEB-INF/tiles/attribute/default.javascript.jsp" />
+ 		<put-attribute name="header" value="/WEB-INF/tiles/attribute/default.header.jsp" />
+		<put-attribute name="left" value="/WEB-INF/tiles/attribute/default.left.jsp" />
+		<put-attribute name="body" value="/WEB-INF/tiles/attribute/default.body.jsp" />
+		<put-attribute name="right" value="/WEB-INF/tiles/attribute/default.right.jsp" />
+	</definition>
+
+	<definition name=".exception" template="/WEB-INF/tiles/template/layout.exception.jsp">
+		<put-attribute name="body" value="/WEB-INF/tiles/attribute/default.body.jsp" />
+	</definition>
+    
+    
+    <definition name=".popup" template="/WEB-INF/tiles/template/layout.popup.jsp">
+        <put-attribute name="js" value="/WEB-INF/tiles/attribute/default.javascript.jsp" />
+		<put-attribute name="header" value="/WEB-INF/tiles/attribute/popup.header.jsp" />
+		<put-attribute name="body" value="/WEB-INF/tiles/attribute/popup.body.jsp" />
+    </definition>
+
+
+	<!-- Extends Definition -->
+	<definition name="system/login/login" extends=".nondecoration">
+		<put-attribute name="body" value="/WEB-INF/views/system/login/login.jsp" />
+	</definition>
+	
+	<definition name="system/login/findPasswordPopup" extends=".popup">
+		<put-attribute name="body" value="/WEB-INF/views/system/login/findPasswordPopup.jsp" />
+	</definition>
+
+	<definition name="system/main/main" extends=".main">
+		<put-attribute name="body" value="/WEB-INF/views/system/main/main.jsp" />
+	</definition>
+
+	<definition name="exception/*" extends=".exception">
+		<put-attribute name="body" value="/WEB-INF/views/exception/{1}.jsp" />
+	</definition>
+
+	<definition name="*/*" extends=".default">
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}.jsp" />
+	</definition>
+	<definition name="*/ajax/*" extends=".onlybody">
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}.jsp" />
+	</definition>
+	
+	<definition name="*/*/*" extends=".default">
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}/{3}.jsp" />
+	</definition>
+
+	<definition name="*/*/ajax/*" extends=".onlybody">
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}/{3}.jsp" />
+	</definition>
+
+ 	<definition name="*/*/*/*" extends=".default">
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+
+	<definition name="*/*/*/ajax/*" extends=".onlybody">
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+    
+ 	<definition name="customer/*/*/*/*" extends=".default">
+		<put-attribute name="body" value="/WEB-INF/views/customer/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+	
+	<definition name="customer/*/*/*Popup*/*" extends=".onlybody">
+        <put-attribute name="body" value="/WEB-INF/views/customer/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="customer/*/*/*/opopup/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/views/customer/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+
+	<definition name="customer/*/*/*/ajax/*" extends=".onlybody">
+		<put-attribute name="body" value="/WEB-INF/views/customer/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+	
+	 <definition name="charge/*/*/*/*" extends=".default">
+		<put-attribute name="body" value="/WEB-INF/views/charge/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+
+	<definition name="charge/*/*/*/ajax/*" extends=".onlybody">
+		<put-attribute name="body" value="/WEB-INF/views/charge/{1}/{2}/{3}/{4}.jsp" />
+	</definition>
+    
+    <definition name="product/*/*/*/*" extends=".default">
+        <put-attribute name="body" value="/WEB-INF/views/product/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+	 <definition name="product/*/*/*/opopup/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/views/product/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    
+    <definition name="product/*/*/*/ajax/*" extends=".onlybody">
+        <put-attribute name="body" value="/WEB-INF/views/product/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="product/*/*/*/*PopUp" extends=".onlybody">
+        <put-attribute name="body" value="/WEB-INF/views/product/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+
+	
+    <definition name="system/*/*/*/*" extends=".default">
+        <put-attribute name="body" value="/WEB-INF/views/system/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    
+    <definition name="system/*/*/*/ajax/*" extends=".onlybody">
+        <put-attribute name="body" value="/WEB-INF/views/system/{1}/{2}/{3}/{4}.jsp" />
+    </definition>    
+    <definition name="system/*/*/*/mpopup/*" extends=".onlybody">
+        <put-attribute name="body" value="/WEB-INF/views/system/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="system/*/*/*/opopup/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/views/system/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    
+    
+    <definition name="distributor/*/*/*/*" extends=".default">
+        <put-attribute name="body" value="/WEB-INF/views/distributor/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="distributor/*/*/*/ajax/*" extends=".onlybody">
+        <put-attribute name="body" value="/WEB-INF/views/distributor/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="distributor/*/*/*/popup/*" extends=".onlybody">
+        <put-attribute name="body" value="/WEB-INF/views/distributor/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="distributor/*/*/*/opopup/*" extends=".popup">
+        <put-attribute name="body" value="/WEB-INF/views/distributor/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    <definition name="distributor/*/*/*/*PopUp" extends=".onlybody">
+        <put-attribute name="body" value="/WEB-INF/views/distributor/{1}/{2}/{3}/{4}.jsp" />
+    </definition>
+    
+    <!-- 나중에 삭제  Start-->    
+    <definition name="system/main/mainCustomer" extends=".main">
+		<put-attribute name="body" value="/WEB-INF/views/system/main/mainCustomer.jsp" />
+	</definition>
+	<definition name="system/main/mainBilling" extends=".main">
+		<put-attribute name="body" value="/WEB-INF/views/system/main/mainBilling.jsp" />
+	</definition>
+	<!-- 나중에 삭제 END -->
+</tiles-definitions>

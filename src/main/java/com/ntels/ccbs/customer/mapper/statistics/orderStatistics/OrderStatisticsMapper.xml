@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.statistics.orderStatistics.OrderStatisticsMapper">
+    <select id="orderStatisticsList" resultType="OrderStatisticsVO">
+        SELECT 
+            RESULT.*
+        FROM (
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+				SELECT 
+				  A.SO_ID,
+				  (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM,
+				  A.CTRT_ID,
+				  A.ORDER_ID,
+				  A.ORDER_STAT,
+				   (
+				      SELECT  NAME.CODE_NM AS COMMON_CD_NM
+				      FROM 	TSYCO_CODE_MAST MAST
+				      , TSYCO_CODE_MAST_NAME MNAME
+				      , TSYCO_CODE_DETAIL DETAIL
+				      , TSYCO_CODE_DETAIL_NAME NAME
+				      WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+				      AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+				      AND MNAME.LNG_TYP     ='ko'
+				      AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+				      AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+				      AND NAME.LNG_TYP      = 'ko'
+				      AND MAST.COMMON_GRP   ='CM00030'
+				      AND DETAIL.COMMON_CD = A.ORDER_STAT
+				  ) AS ORDER_STAT_NM ,           
+				  A.ORDER_DT,
+				  A.INACT_DTTM,
+				  A.ACT_DTTM,
+				  A.SVC_TEL_NO,
+				  A.ORDER_TP,
+				   (
+				      SELECT  NAME.CODE_NM AS COMMON_CD_NM
+				      FROM 	TSYCO_CODE_MAST MAST
+				      , TSYCO_CODE_MAST_NAME MNAME
+				      , TSYCO_CODE_DETAIL DETAIL
+				      , TSYCO_CODE_DETAIL_NAME NAME
+				      WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+				      AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+				      AND MNAME.LNG_TYP     ='ko'
+				      AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+				      AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+				      AND NAME.LNG_TYP      = 'ko'
+				      AND MAST.COMMON_GRP   ='CM00022'
+				      AND DETAIL.COMMON_CD = A.ORDER_TP
+				  ) AS ORDER_TP_NM ,    
+				  A.CTRT_NM,
+				  A.RATE_STRT_DT,
+				  A.RATE_END_DT,
+				  A.OPEN_DD,
+				  A.TERM_DT,
+				  A.CTRT_CL,
+				  A.RCPT_ID,
+				  A.CUST_ID,
+				  (SELECT CUST_NM FROM TCMCU_CUST_INFO WHERE CUST_ID = A.CUST_ID AND SO_ID = A.SO_ID) CUST_NM,
+				  A.CUST_REL,
+				  A.APPNT,
+				  A.PYM_ACNT_ID,
+				  A.ACNT_CUST_REL,
+				  A.CUST_CL_DC_APLY_YN,
+				  A.PROD_CMPS_ID,
+				  A.PROD_CD,
+				  (SELECT PROD_NM FROM IFNCRM_PROD_INFO WHERE SO_ID = A.SO_ID AND PROD_CD = A.PROD_CD) AS PROD_NM,
+				  A.PROD_GRP,
+				  A.INSTL_ZIP_CD,
+				  A.INSTL_BASE_ADDR,
+				  A.INSTL_ADDR_DTL,
+				  A.INSTL_AGNT,
+				  A.SALES_USR_ID,
+				  A.SALES_ORG_ID,
+				  A.CTRT_STAT,
+				  (
+				      SELECT  NAME.CODE_NM AS COMMON_CD_NM
+				      FROM 	TSYCO_CODE_MAST MAST
+				      , TSYCO_CODE_MAST_NAME MNAME
+				      , TSYCO_CODE_DETAIL DETAIL
+				      , TSYCO_CODE_DETAIL_NAME NAME
+				      WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+				      AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+				      AND MNAME.LNG_TYP     ='ko'
+				      AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+				      AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+				      AND NAME.LNG_TYP      = 'ko'
+				      AND MAST.COMMON_GRP   ='CM00023'
+				      AND DETAIL.COMMON_CD = A.CTRT_STAT
+				  ) AS CTRT_STAT_NM ,    
+				  
+				  A.CTRT_CHG_RESN_CD,
+				  A.SUS_HOPE_DD,
+				  A.MMT_SUS_HOPE_DD,
+				  A.MMT_SUS_CD,
+				  A.TERM_HOPE_DT,
+				  A.DEF_RESN_CD,
+				  A.SVC_STRT_DD,
+				  A.SVC_STRT_HOPE_DT,
+				  A.JOIN_ID,
+				  A.PROM_YN,
+				  A.PROM_ID,
+				  A.ORG_ID,
+				  CONCAT(CONCAT(CONCAT((SELECT ORG_NM FROM TSYCO_ORG_INFO WHERE SO_ID= A.SO_ID AND ORG_ID =  A.ORG_ID),'('), A.ORG_ID),')') AS ORG_NM,
+				  A.USR_ID,
+				  CONCAT(CONCAT(CONCAT((SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID =A.USR_ID),'('),A.USR_ID),')') AS USR_NM,
+				  A.SERVICE_ID,
+				  A.RCV_TRANS_CTRT_ID,
+				  A.SND_TRANS_CTRT_ID,
+				  A.TRANS_CTRT_YN,
+				  A.EXT_ID,
+				  A.NP_YN,
+				  A.BEF_NP,
+				  A.ORG_NP,
+				  A.FIRST_ORG_ID,
+				  A.FIRST_USR_ID,
+				  A.REMARK,
+				  A.IF_SUC_YN,
+				  A.REGR_ID,
+				  A.REG_DATE,
+				  A.CHGR_ID
+				FROM TCMCT_OCTRT_INFO A
+				WHERE 1=1
+				<if test="condCustId != null and condCustId != ''">
+		     		AND   A.CUST_ID = #{condCustId}
+				</if>
+				<if test="orderStat != null and orderStat != ''">
+				     AND   A.ORDER_STAT = #{orderStat}
+				</if>
+				<if test="searchSoId != null and searchSoId != ''">
+				     AND   A.SO_ID = #{searchSoId}
+				</if>
+				<if test="orderTp != null and orderTp != ''">
+				     AND   A.ORDER_TP = #{orderTp}
+				</if>	
+				<if test="searchStatDt != null and searchStatDt != ''">
+					<if test="searchEndDt != null and searchEndDt != ''">
+					 AND   A.OPEN_DD  BETWEEN  #{searchStatDt} AND #{searchEndDt} 
+					</if>   
+				</if>   											
+            <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+            ) RESULT
+    </select>
+    <select id="orderStatisticsListCnt" resultType="int">
+        SELECT 
+            COUNT(ORDER_ID)
+        FROM TCMCT_OCTRT_INFO A
+		WHERE 1=1
+		<if test="condCustId != null and condCustId != ''">
+     		AND   A.CUST_ID = #{condCustId}
+		</if>
+		<if test="orderStat != null and orderStat != ''">
+		     AND   A.ORDER_STAT = #{orderStat}
+		</if>
+		<if test="searchSoId != null and searchSoId != ''">
+		     AND   A.SO_ID = #{searchSoId}
+		</if>
+		<if test="orderTp != null and orderTp != ''">
+		     AND   A.ORDER_TP = #{orderTp}
+		</if>	
+		<if test="searchStatDt != null and searchStatDt != ''">
+			<if test="searchEndDt != null and searchEndDt != ''">
+			 AND   A.OPEN_DD  BETWEEN  #{searchStatDt} AND #{searchEndDt} 
+			</if>   
+		</if>  
+    </select>    
+		<select id="orderStatisticsChart" parameterType="OrderStatisticsVO" resultType="OrderStatisticsVO">
+			SELECT ST.ORDER_TP
+			     ,(SELECT
+			                 NAME.CODE_NM
+			              FROM TSYCO_CODE_MAST MAST
+			                   , TSYCO_CODE_MAST_NAME MNAME
+			                   , TSYCO_CODE_DETAIL DETAIL
+			                   , TSYCO_CODE_DETAIL_NAME NAME
+			               WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			                   AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+			                   AND MNAME.LNG_TYP     = #{orderStatisticsVO.lngTyp}
+			                   AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+			                   AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+			                   AND NAME.LNG_TYP      = #{orderStatisticsVO.lngTyp}
+			                   AND MAST.COMMON_GRP   ='CM00022'
+			                   AND DETAIL.USE_YN     ='Y'
+			                   AND MAST.USE_YN       ='Y'
+			                   AND DETAIL.COMMON_CD = ST.ORDER_TP) AS ORDER_TP_NM
+			      ,SUM(STAT_CNT_01) + SUM(STAT_CNT_02) + SUM(STAT_CNT_03) + SUM(STAT_CNT_04) AS STAT_CNT_TOTAL
+			      ,SUM(STAT_CNT_01) AS STAT_CNT_01
+			      ,SUM(STAT_CNT_02) AS STAT_CNT_02
+			      ,SUM(STAT_CNT_03) AS STAT_CNT_03
+			      ,SUM(STAT_CNT_04) AS STAT_CNT_04
+			FROM (
+			SELECT A.COMMON_CD AS ORDER_TP
+			      , 0 STAT_CNT_01
+			      , 0 STAT_CNT_02
+			      , 0 STAT_CNT_03
+			      , 0 STAT_CNT_04
+			FROM TSYCO_CODE_DETAIL  A
+			WHERE  A.COMMON_GRP = 'CM00022'
+			AND    A.USE_YN = 'Y'
+			UNION ALL
+			SELECT ORD.ORDER_TP
+			      ,1 AS STAT_CNT_01
+			      ,0 AS STAT_CNT_02
+			      ,0 AS STAT_CNT_03
+			      ,0 AS STAT_CNT_04
+			FROM TCMCT_OCTRT_INFO ORD
+			WHERE ORD.SO_ID = '14'
+			 AND  ORD.OPEN_DD  &lt;= #{orderStatisticsVO.searchEndDt}
+			 AND  ORD.OPEN_DD  &gt;= #{orderStatisticsVO.searchStatDt}
+			 AND  ORD.ORDER_STAT = '01'
+			UNION ALL
+			SELECT ORD.ORDER_TP
+			      ,0 AS STAT_CNT_01
+			      ,1 AS STAT_CNT_02
+			      ,0 AS STAT_CNT_03
+			      ,0 AS STAT_CNT_04
+			FROM TCMCT_OCTRT_INFO ORD
+			WHERE ORD.SO_ID = '14'
+			 AND  ORD.OPEN_DD  &lt;= #{orderStatisticsVO.searchEndDt}
+			 AND  ORD.OPEN_DD  &gt;= #{orderStatisticsVO.searchStatDt}
+			 AND  ORD.ORDER_STAT = '02'
+			UNION ALL
+			SELECT ORD.ORDER_TP
+			      ,0 AS STAT_CNT_01
+			      ,0 AS STAT_CNT_02
+			      ,1 AS STAT_CNT_03
+			      ,0 AS STAT_CNT_04
+			FROM TCMCT_OCTRT_INFO ORD
+			WHERE ORD.SO_ID = '14'
+			 AND  ORD.OPEN_DD  &lt;= #{orderStatisticsVO.searchEndDt}
+			 AND  ORD.OPEN_DD  &gt;= #{orderStatisticsVO.searchStatDt}
+			 AND  ORD.ORDER_STAT = '03'
+			UNION ALL
+			SELECT ORD.ORDER_TP
+			      ,0 AS STAT_CNT_01
+			      ,0 AS STAT_CNT_02
+			      ,0 AS STAT_CNT_03
+			      ,1 AS STAT_CNT_04
+			FROM TCMCT_OCTRT_INFO ORD
+			WHERE ORD.SO_ID = '14'
+			 AND  ORD.OPEN_DD  &lt;= #{orderStatisticsVO.searchEndDt}
+			 AND  ORD.OPEN_DD  &gt;= #{orderStatisticsVO.searchStatDt}
+			 AND  ORD.ORDER_STAT = '04') ST
+			GROUP BY ST.ORDER_TP
+			ORDER BY ST.ORDER_TP
+		</select>     
+</mapper>
+    

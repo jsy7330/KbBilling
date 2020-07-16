@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.service.HistoryInterceptorMapper">
+	<insert id="insert" parameterType="MenuAccessHistory">
+			INSERT INTO TSYCO_WORK_HIST
+	    		(WORK_DT
+                ,SEQ
+                ,USER_ID
+                ,WORK_TYPE
+                ,WORK_DATE
+                ,MENU_NO
+                ,SERVER_NAME
+                ,SERVER_PORT
+                ,ACCEPT
+                ,USER_AGENT
+                ,CONTENT_TYPE
+                ,REMOTE_ADDR
+                ,SESSION_ID
+                ,REQUEST_PATH
+                ,REQUEST_METHOD
+                ,PAYLOAD
+                )
+	    	VALUES(
+                   #{history.workDt}
+                 , #{history.seq}
+	    	     , #{history.userId}
+	    	     , #{history.workType}
+	    		 , #{history.workDate}
+	    		 , #{history.menuNo}
+	    		 , #{history.serverName}
+	    		 , #{history.serverPort}
+	    		 , #{history.accept}
+	    		 , #{history.userAgent}
+	    		 , #{history.contentType}
+	    		 , #{history.remoteAddr}
+	    		 , #{history.sessionId}
+	    		 , #{history.requestPath}
+	    		 , #{history.requestMethod}
+	    		 , #{history.payload}
+                 )
+	</insert>
+</mapper>

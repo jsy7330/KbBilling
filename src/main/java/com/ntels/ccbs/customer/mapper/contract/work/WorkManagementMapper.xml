@@ -1,0 +1,594 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.contract.work.WorkManagementMapper">
+                   
+    <select id="getWorkStatistics" resultType="java.util.HashMap">
+        SELECT  SUM((CASE A.WRK_STAT
+                     WHEN  '00' THEN 1
+                     ELSE 0
+                     END)) AS READY_CNT
+               ,SUM((CASE A.WRK_STAT
+                    WHEN  '01' THEN 1
+                    ELSE 0
+                    END)) AS RECEIPT_CNT
+               ,SUM((CASE A.WRK_STAT
+                    WHEN  '02' THEN 1
+                    ELSE 0
+                    END)) AS INPROGRESS_CNT
+               ,SUM((CASE A.WRK_STAT
+                    WHEN  '03' THEN 1
+                    ELSE 0
+                    END)) AS CANCEL_CNT
+               ,SUM((CASE A.WRK_STAT
+                    WHEN  '04' THEN 1
+                    ELSE 0
+                    END)) AS CMPL_CNT
+               ,SUM(1) AS TOTAL_CNT
+        FROM TCMCT_SVC_WRK A
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="soId != null and soId == 'SEL'">
+                AND A.SO_ID IN
+                <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                    #{item.so_id}
+                </foreach>
+            </if>
+            <if test="soId != null and soId != 'SEL'">
+                AND A.SO_ID = #{soId}
+            </if>
+        </trim>
+    </select>  
+    
+    
+    
+    <select id="getWorkListTotalCnt" resultType="Integer">
+        SELECT
+             COUNT(SVCWRK.WRK_ID)
+        FROM	TCMCT_SVC_WRK SVCWRK
+             ,TCMCT_OCTRT_INFO OCTRT
+             ,TCMCU_CUST_INFO CUST
+             ,TPMPD_WRK WRK
+        WHERE SVCWRK.SO_ID = OCTRT.SO_ID
+        AND   SVCWRK.ORDER_ID = OCTRT.ORDER_ID
+        AND   OCTRT.SO_ID = CUST.SO_ID
+        AND   OCTRT.CUST_ID = CUST.CUST_ID
+        AND   SVCWRK.WRK_DEF_ID = WRK.WRK_DEF_ID
+        <if test="soId != null and soId == 'SEL'">
+            AND SVCWRK.SO_ID IN
+            <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                #{item.so_id}
+            </foreach>
+        </if>
+        <if test="soId != null and soId != 'SEL'">
+            AND SVCWRK.SO_ID = #{soId}
+        </if>
+        <if test="workStartDate != null and workStartDate != ''">
+            AND SVCWRK.WRK_REQ_DT &gt;= #{workStartDate}
+        </if>
+        <if test="workEndDate != null and workEndDate != ''">
+            AND SVCWRK.WRK_REQ_DT &lt;= #{workEndDate}
+        </if>
+        <if test="orderTp != null and orderTp != '' and orderTp !='SEL'">
+            AND OCTRT.ORDER_TP = #{orderTp}
+        </if>
+        <if test="workStat != null and workStat != '' and workStat !='SEL'">
+            AND SVCWRK.WRK_STAT = #{workStat}
+        </if>
+        <if test="workUserId != null and workUserId != ''">
+            AND (SVCWRK.WRK_DFT_WRKER = #{workUserId} OR SVCWRK.WRK_REF_WRKER = #{workUserId}) 
+        </if>
+        <if test="custId != null and custId != ''">
+            AND CUST.CUST_ID = #{custId}
+        </if>
+     </select>
+     
+     <select id="getWorkList" resultType="java.util.HashMap">
+     SELECT 
+            RESULT.*
+        FROM (
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+            SELECT
+                 	   SVCWRK.SO_ID
+                      ,(SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID=SVCWRK.SO_ID) AS SO_NM
+                      ,CUST.CUST_ID
+                      ,CUST.CUST_NM
+                      ,OCTRT.CTRT_ID
+                      ,OCTRT.SVC_TEL_NO AS SVC_TEL_NO_AS_MASK
+                      ,OCTRT.ORDER_ID
+                      ,OCTRT.ORDER_STAT
+                      ,(SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+                            , TSYCO_CODE_DETAIL DETAIL
+                            , TSYCO_CODE_DETAIL_NAME NAME
+                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{lng} 
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lng}
+                            AND MAST.COMMON_GRP   ='CM00030'
+                            AND DETAIL.USE_YN     ='Y'
+                            AND MAST.USE_YN       ='Y'
+                            AND DETAIL.COMMON_CD = OCTRT.ORDER_STAT) AS ORDER_STAT_NM
+                      ,OCTRT.ORDER_TP
+                      ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00022'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = OCTRT.ORDER_TP) AS ORDER_TP_NM
+                      ,OCTRT.PROD_GRP AS BASIC_PROD_GRP
+                      ,(SELECT
+                          NAME.CODE_NM
+                        FROM TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+                            , TSYCO_CODE_DETAIL DETAIL
+                            , TSYCO_CODE_DETAIL_NAME NAME
+                        WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{lng} 
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lng}
+                            AND MAST.COMMON_GRP   ='PP00141'
+                            AND DETAIL.USE_YN     ='Y'
+                            AND MAST.USE_YN       ='Y'
+                            AND DETAIL.COMMON_CD = OCTRT.PROD_GRP) AS BASIC_PROD_GRP_NM
+                      ,OCTRT.PROD_CD AS BASIC_PROD_CD
+                      ,(SELECT PROD_NM
+                        FROM IFNCRM_PROD_INFO
+                        WHERE SO_ID        = OCTRT.SO_ID
+                        AND   PROD_CD      = OCTRT.PROD_CD
+                        AND   ACT_DT   &lt;= #{today}
+                        AND   INACT_DT &gt;= #{today}) AS BASIC_PROD_CD_NM
+                      ,OCTRT.RCPT_ID
+                      ,SVCWRK.WRK_ID AS WRK_ID
+                      ,WRK.WRK_TP AS WORK_TYPE
+                      ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00037'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = WRK.WRK_TP) AS WORK_TYPE_NM
+                      ,WRK.WRK_NAME AS WORK_NAME
+                      ,SVCWRK.WRK_STAT
+                      ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00039'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = SVCWRK.WRK_STAT) AS WRK_STAT_NM
+                      
+                      ,OCTRT.ORDER_DT
+                      ,(CASE OCTRT.ORDER_TP
+                        WHEN '204' THEN OCTRT.SUS_HOPE_DD
+                        WHEN '205' THEN OCTRT.MMT_SUS_HOPE_DD
+                        WHEN '301' THEN OCTRT.TERM_HOPE_DT
+                        WHEN '302' THEN OCTRT.TERM_HOPE_DT
+                        ELSE OCTRT.SVC_STRT_HOPE_DT
+                        END) AS WORK_HOPE_DT
+                      ,SVCWRK.WRK_REQ_DT AS WORK_REQ_DT
+                      ,SVCWRK.WRK_ACT_DT AS WORK_START_DT
+                      ,SVCWRK.WRK_CMT_DT AS WORK_END_DT
+                      ,SVCWRK.WRK_DFT_WRKER AS WORK_USR_ID
+                      ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = SVCWRK.WRK_DFT_WRKER) AS WORK_USR_NM
+                      ,SVCWRK.WRK_REQ_WRKER AS WRK_REQ_WRKER_ID
+                      ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = SVCWRK.WRK_REQ_WRKER) AS WRK_REQ_WRKER_NM    
+                      ,SVCWRK.CHGR_ID
+                      ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = SVCWRK.CHGR_ID) AS CHGR_NM
+                      ,SVCWRK.CHG_DATE
+                      ,SVCWRK.REGR_ID
+                      ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = SVCWRK.REGR_ID) AS REGR_NM
+                      ,SVCWRK.REG_DATE
+            FROM    TCMCT_SVC_WRK SVCWRK
+                 ,TCMCT_OCTRT_INFO OCTRT
+                 ,TCMCU_CUST_INFO CUST
+                 ,TPMPD_WRK WRK
+            WHERE SVCWRK.SO_ID = OCTRT.SO_ID
+            AND   SVCWRK.ORDER_ID = OCTRT.ORDER_ID
+            AND   OCTRT.SO_ID = CUST.SO_ID
+            AND   OCTRT.CUST_ID = CUST.CUST_ID
+            AND   SVCWRK.WRK_DEF_ID = WRK.WRK_DEF_ID
+            <if test="soId != null and soId == 'SEL'">
+                AND SVCWRK.SO_ID IN
+                <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                    #{item.so_id}
+                </foreach>
+            </if>
+            <if test="soId != null and soId != 'SEL'">
+                AND SVCWRK.SO_ID = #{soId}
+            </if>
+            <if test="workStartDate != null and workStartDate != ''">
+                AND SVCWRK.WRK_REQ_DT &gt;= #{workStartDate}
+            </if>
+            <if test="workEndDate != null and workEndDate != ''">
+                AND SVCWRK.WRK_REQ_DT &lt;= #{workEndDate}
+            </if>
+            <if test="orderTp != null and orderTp != '' and orderTp !='SEL'">
+                AND OCTRT.ORDER_TP = #{orderTp}
+            </if>
+            <if test="workStat != null and workStat != '' and workStat !='SEL'">
+                AND SVCWRK.WRK_STAT = #{workStat}
+            </if>
+            <if test="workUserId != null and workUserId != ''">
+                AND (SVCWRK.WRK_DFT_WRKER = #{workUserId} OR SVCWRK.WRK_REF_WRKER = #{workUserId}) 
+            </if>
+            <if test="custId != null and custId != ''">
+                AND CUST.CUST_ID = #{custId}
+            </if>
+            <if test="sidx != null and sidx == 'WRK_ID'">
+                ORDER BY SVCWRK.WRK_ID ${sord}
+            </if>
+            <if test="sidx == null or sidx == ''">
+                ORDER BY OCTRT.ORDER_DT DESC, SVCWRK.ORDER_ID DESC, SVCWRK.WRK_SEQ_NO ASC
+            </if>
+            
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+        ) RESULT
+     </select>
+     
+    <select id="getWorkInfo" resultType="java.util.HashMap">
+            SELECT
+                   SVCWRK.SO_ID
+                  ,(SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID=SVCWRK.SO_ID) AS SO_NM
+                  ,CUST.CUST_ID
+                  ,CUST.CUST_NM
+                  ,OCTRT.CTRT_ID
+                  ,OCTRT.SVC_TEL_NO AS SVC_TEL_NO_AS_MASK
+                  ,OCTRT.ORDER_ID
+                  ,OCTRT.ORDER_STAT
+                  ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00030'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = OCTRT.ORDER_STAT) AS ORDER_STAT_NM
+                  ,OCTRT.ORDER_TP
+                  ,(SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+                            , TSYCO_CODE_DETAIL DETAIL
+                            , TSYCO_CODE_DETAIL_NAME NAME
+                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{lng} 
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lng}
+                            AND MAST.COMMON_GRP   ='CM00022'
+                            AND DETAIL.USE_YN     ='Y'
+                            AND MAST.USE_YN       ='Y'
+                            AND DETAIL.COMMON_CD = OCTRT.ORDER_TP) AS ORDER_TP_NM
+                  ,OCTRT.PROD_GRP AS BASIC_PROD_GRP
+                  ,(SELECT
+                      NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='PP00141'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = OCTRT.PROD_GRP) AS BASIC_PROD_GRP_NM
+                  ,OCTRT.PROD_CD AS BASIC_PROD_CD
+                  ,(SELECT PROD_NM
+                    FROM IFNCRM_PROD_INFO
+                    WHERE SO_ID        = OCTRT.SO_ID
+                    AND   PROD_CD      = OCTRT.PROD_CD
+                    AND   ACT_DT   &lt;= #{today}
+                    AND   INACT_DT &gt;= #{today}) AS BASIC_PROD_CD_NM
+                  ,OCTRT.RCPT_ID
+                  ,SVCWRK.WRK_ID AS WRK_ID
+                  ,WRK.WRK_TP AS WORK_TYPE
+                  ,(SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+                            , TSYCO_CODE_DETAIL DETAIL
+                            , TSYCO_CODE_DETAIL_NAME NAME
+                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{lng} 
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lng}
+                            AND MAST.COMMON_GRP   ='CM00037'
+                            AND DETAIL.USE_YN     ='Y'
+                            AND MAST.USE_YN       ='Y'
+                            AND DETAIL.COMMON_CD = WRK.WRK_TP) AS WORK_TYPE_NM
+                  ,WRK.WRK_NAME AS WORK_NAME
+                  ,SVCWRK.WRK_STAT
+                  ,(SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+                            , TSYCO_CODE_DETAIL DETAIL
+                            , TSYCO_CODE_DETAIL_NAME NAME
+                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{lng} 
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lng}
+                            AND MAST.COMMON_GRP   ='CM00039'
+                            AND DETAIL.USE_YN     ='Y'
+                            AND MAST.USE_YN       ='Y'
+                            AND DETAIL.COMMON_CD = SVCWRK.WRK_STAT) AS WRK_STAT_NM
+                  ,OCTRT.ORDER_DT
+                  ,(CASE OCTRT.ORDER_TP
+                    WHEN '204' THEN OCTRT.SUS_HOPE_DD
+                    WHEN '205' THEN OCTRT.MMT_SUS_HOPE_DD
+                    WHEN '301' THEN OCTRT.TERM_HOPE_DT
+                    WHEN '302' THEN OCTRT.TERM_HOPE_DT
+                    ELSE OCTRT.SVC_STRT_HOPE_DT
+                    END) AS WORK_HOPE_DT
+                  ,SVCWRK.WRK_REQ_DT AS WORK_REQ_DT
+                  ,SVCWRK.WRK_ACT_DT AS WORK_START_DT
+                  ,SVCWRK.WRK_CMT_DT AS WORK_END_DT
+                  ,SVCWRK.WRK_DFT_WRKER AS WORK_USR_ID
+                  ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = SVCWRK.WRK_DFT_WRKER) AS WORK_USR_NM
+                  ,SVCWRK.WRK_REQ_WRKER AS WRK_REQ_WRKER_ID
+                  ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = SVCWRK.WRK_REQ_WRKER) AS WRK_REQ_WRKER_NM
+                  ,SVCWRK.CHGR_ID
+                  ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = SVCWRK.CHGR_ID) AS CHGR_NM
+                  ,SVCWRK.CHG_DATE
+                  ,SVCWRK.REGR_ID
+                  ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = SVCWRK.REGR_ID) AS REGR_NM
+                  ,SVCWRK.REG_DATE
+        FROM    TCMCT_SVC_WRK SVCWRK
+               ,TCMCT_OCTRT_INFO OCTRT
+               ,TCMCU_CUST_INFO CUST
+               ,TPMPD_WRK WRK
+        WHERE SVCWRK.SO_ID = OCTRT.SO_ID
+        AND   SVCWRK.ORDER_ID = OCTRT.ORDER_ID
+        AND   OCTRT.SO_ID = CUST.SO_ID
+        AND   OCTRT.CUST_ID = CUST.CUST_ID
+        AND   SVCWRK.WRK_DEF_ID = WRK.WRK_DEF_ID
+        AND   SVCWRK.WRK_ID = #{wrkId}
+        AND   SVCWRK.ORDER_ID = #{orderId}
+     </select>
+    
+    <select id="getWorkHistList" resultType="java.util.HashMap">
+            SELECT
+                   WRKHIST.SVC_WRK_HIST_SEQ_NO
+                  ,WRKHIST.ORDER_ID
+                  ,WRKHIST.WRK_ID
+                  ,WRKHIST.WRK_COMMENT
+                  ,WRKHIST.WRK_STAT
+                  ,(SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+                            , TSYCO_CODE_DETAIL DETAIL
+                            , TSYCO_CODE_DETAIL_NAME NAME
+                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{lng} 
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lng}
+                            AND MAST.COMMON_GRP   ='CM00039'
+                            AND DETAIL.USE_YN     ='Y'
+                            AND MAST.USE_YN       ='Y'
+                            AND DETAIL.COMMON_CD = WRKHIST.WRK_STAT) AS WRK_STAT_NM
+                  ,WRKHIST.WRK_WRKER AS WORK_USR_ID
+                  ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = WRKHIST.WRK_WRKER) AS WORK_USR_NM
+                  ,WRKHIST.REGR_ID
+                  ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = WRKHIST.REGR_ID) AS REGR_NM
+                  ,WRKHIST.REG_DATE
+                  ,WRKHIST.CHGR_ID
+                  ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = WRKHIST.CHGR_ID) AS CHGR_NM
+                  ,WRKHIST.CHG_DATE
+                  ,WRK.WRK_TP AS WORK_TYPE
+                  ,(SELECT NAME.CODE_NM
+                      FROM TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+                            , TSYCO_CODE_DETAIL DETAIL
+                            , TSYCO_CODE_DETAIL_NAME NAME
+                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{lng} 
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lng}
+                            AND MAST.COMMON_GRP   ='CM00037'
+                            AND DETAIL.USE_YN     ='Y'
+                            AND MAST.USE_YN       ='Y'
+                            AND DETAIL.COMMON_CD = WRK.WRK_TP) AS WORK_TYPE_NM
+                  ,WRK.WRK_NAME AS WORK_NAME
+        FROM    TCMCT_SVC_WRK SVCWRK
+               ,TPMPD_WRK WRK
+               ,TCMCT_SVC_WRK_HIST WRKHIST
+        WHERE SVCWRK.WRK_DEF_ID = WRK.WRK_DEF_ID
+        AND   SVCWRK.WRK_ID = WRKHIST.WRK_ID
+        AND   SVCWRK.ORDER_ID   = WRKHIST.ORDER_ID
+        AND   SVCWRK.ORDER_ID = #{orderId}
+        ORDER BY WRKHIST.SVC_WRK_HIST_SEQ_NO
+     </select>
+     
+     <select id="checkWorkAuthR" resultType="int">
+        SELECT COUNT(SVCWRK.WRK_ID)
+        FROM TCMCT_SVC_WRK SVCWRK
+        WHERE SVCWRK.ORDER_ID = #{orderId}
+        AND (SVCWRK.WRK_DFT_WRKER = #{userId} OR SVCWRK.WRK_REF_WRKER = #{userId})
+     </select>
+     
+     <select id="checkWorkDftUser" resultType="int">
+        SELECT COUNT(SVCWRK.WRK_ID)
+        FROM TCMCT_SVC_WRK SVCWRK
+        WHERE SVCWRK.WRK_ID = #{wrkId}
+        AND   SVCWRK.ORDER_ID = #{orderId}
+        AND   SVCWRK.WRK_DFT_WRKER = #{userId}
+     </select>
+     
+     <select id="getWorkResultList" resultType="java.util.HashMap">
+        SELECT SVCWRK.WRK_ID
+              ,SVCWRK.WRK_STAT
+        FROM TCMCT_SVC_WRK SVCWRK
+        WHERE SVCWRK.ORDER_ID = #{orderId}
+        AND   SVCWRK.WRK_ID &lt; #{wrkId}
+        ORDER BY SVCWRK.WRK_SEQ_NO
+     </select>
+     
+     <select id="checkHasMoreWork" resultType="int">
+        SELECT COUNT(SVCWRK.WRK_ID)
+        FROM TCMCT_SVC_WRK SVCWRK
+        WHERE SVCWRK.ORDER_ID = #{orderId}
+        AND   SVCWRK.WRK_ID &gt; #{wrkId}
+     </select>
+     
+     <select id="checkHasPreviousWork" resultType="int">
+        SELECT COUNT(SVCWRK.WRK_ID)
+        FROM TCMCT_SVC_WRK SVCWRK
+        WHERE SVCWRK.ORDER_ID = #{orderId}
+        AND   SVCWRK.WRK_ID &lt; #{wrkId}
+     </select>
+     
+     <select id="checkWorkCmpl" resultType="int">
+        SELECT COUNT(SVCWRK.WRK_ID)
+        FROM TCMCT_SVC_WRK SVCWRK
+        WHERE SVCWRK.ORDER_ID = #{orderId}
+        AND   SVCWRK.WRK_ID = #{wrkId}
+        AND   SVCWRK.WRK_STAT IN ('03', '04')
+     </select>
+     
+     <update id="updateWorkInfo">
+        UPDATE TCMCT_SVC_WRK
+        SET 
+             WRK_STAT    = #{wrkStat}
+            ,WRK_ACT_DT  = #{today}
+             <if test="wrkStat == '03'">
+                ,WRK_CMT_DT  = #{today}
+                ,WRK_DFT_WRKER = #{usrId}
+             </if>
+             <if test="wrkStat == '04'">
+                ,WRK_CMT_DT  = #{today}
+             </if>
+            ,CHGR_ID     = #{usrId}
+            ,CHG_DATE    = #{todayDateType}
+        WHERE WRK_ID     = #{wrkId}
+        AND   ORDER_ID   = #{orderId}
+     </update>
+     
+     <insert id="insertWrkHist">
+        INSERT INTO TCMCT_SVC_WRK_HIST
+         (
+             SVC_WRK_HIST_SEQ_NO
+            ,ORDER_ID
+            ,WRK_ID
+            ,WRK_COMMENT
+            ,WRK_STAT
+            ,WRK_WRKER
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+         ) VALUES
+         (
+            #{wrkHistSeq}
+           ,#{orderId}
+           ,#{wrkId}
+           ,#{comment}
+           ,#{stat}
+           ,#{usrId}
+           ,#{usrId}
+           ,#{today}
+           ,#{usrId}
+           ,#{today}   
+         )
+     </insert>
+     
+     <select id="getRemainWorkList" resultType="java.util.HashMap">
+        SELECT SVCWRK.WRK_ID
+              ,SVCWRK.WRK_AUTO_CMT_YN
+        FROM TCMCT_SVC_WRK SVCWRK
+        WHERE SVCWRK.ORDER_ID = #{orderId}
+        AND   SVCWRK.WRK_ID &gt; #{wrkId}
+        ORDER BY SVCWRK.WRK_ID
+     </select>
+     
+     <update id="updateWorkInfoReqUsr">
+        UPDATE TCMCT_SVC_WRK
+        SET 
+             WRK_REQ_DT     = #{wrkReqDt}
+            ,WRK_REQ_WRKER  = #{usrId}
+            ,CHGR_ID        = #{usrId}
+            ,CHG_DATE       = #{todayDateType}
+        WHERE WRK_ID        = #{wrkId}
+        AND   ORDER_ID      = #{orderId}
+     </update>
+     
+     <select id="getPreviousWorkList" resultType="java.util.HashMap">
+        SELECT SVCWRK.WRK_ID
+              ,SVCWRK.WRK_AUTO_CMT_YN
+        FROM TCMCT_SVC_WRK SVCWRK
+        WHERE SVCWRK.ORDER_ID = #{orderId}
+        AND   SVCWRK.WRK_ID &lt; #{wrkId}
+        AND   SVCWRK.WRK_STAT NOT IN ('03', '04')
+        ORDER BY SVCWRK.WRK_ID
+     </select>
+</mapper>
+    

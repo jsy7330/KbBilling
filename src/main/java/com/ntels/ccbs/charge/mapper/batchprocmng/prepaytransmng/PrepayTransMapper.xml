@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.prepaytransmng.PrepayTransMapper">
+	
+	<select id="getTransApplList" parameterType="String" resultType="TransCommApplVO">
+    SELECT /* PrepayTransMapper.xml.getTransApplList, gwhan, 2020.03.26 */
+           A.TRANS_APPL_NO
+         , A.PYM_ACNT_ID
+         , A.TRANS_APPL_CL
+         , A.TRANS_APPL_TGT_NO
+         , A.BILL_SEQ_NO
+         , A.BILL_YYMM
+         , A.USE_YYMM
+         , A.PROD_CMPS_ID
+         , A.SVC_CMPS_ID
+         , A.CHRG_ITM_CD
+         , A.APPL_DT
+         , A.APPNT_ID
+         , A.TRANS_APPL_AVLAMT
+         , A.TRANS_APPL_AMT
+         , A.APPNT_NM
+         , A.APPNT_CELL_PHN_NO
+         , A.APPL_RESN
+         , A.PROC_DT
+         , A.PROC_ID
+         , A.DCSN_PROC_STAT
+    FROM   TBLPY_TRANS_APPL A
+    WHERE  A.TRANS_APPL_NO = #{stransApplNo}
+    AND    A.TRANS_APPL_CL = #{stransApplCl}
+    AND    A.DCSN_PROC_STAT = '01'
+	</select>
+	
+	<select id="getPrepayTransBalList" parameterType="String" resultType="TransCommBalVO">
+    SELECT /* PrepayTransMapper.xml.getPrepayTransBalList, gwhan, 2020.03.26 */
+           A.PREPAY_OCC_SEQ_NO AS TRANS_TGT_OCC_SEQ_NO
+         , NVL(A.PREPAY_BAL, 0.0) AS TRANS_BAL
+         , A.PREPAY_OCC_TGT_SEQ_NO AS DPST_SEQ_NO
+    FROM   TBLPY_PREPAY_OCC A
+    WHERE  1=1
+    <if test="prepayApplTgtNo != null">
+    AND    A.PREPAY_OCC_SEQ_NO = #{prepayApplTgtNo}
+    </if>
+    AND    NVL(A.CNCL_YN, 'N') != 'Y'
+    AND    A.PREPAY_BAL > 0
+    AND    A.PREPAY_OCC_TP = '01'
+    UNION  ALL
+    SELECT A.PREPAY_OCC_SEQ_NO AS TRANS_TGT_OCC_SEQ_NO
+         , NVL(A.PREPAY_BAL, 0.0) AS TRANS_BAL
+         , B.DPST_SEQ_NO
+    FROM   TBLPY_PREPAY_OCC A
+          ,TBLPY_RCPT B
+    WHERE  1=1
+    <if test="prepayApplTgtNo != null">
+    AND    A.PREPAY_OCC_SEQ_NO = #{prepayApplTgtNo}
+    </if>
+    AND    NVL(A.CNCL_YN, 'N') != 'Y'
+    AND    A.PREPAY_BAL > 0
+    AND    A.PREPAY_OCC_TP = '03'
+    AND    B.PYM_SEQ_NO = A.PREPAY_OCC_TGT_SEQ_NO
+    UNION  ALL
+    SELECT A.PREPAY_OCC_SEQ_NO AS TRANS_TGT_OCC_SEQ_NO
+         , NVL(A.PREPAY_BAL, 0.0) AS TRANS_BAL
+         , B.DPST_TP_SEQ_NO AS DPST_SEQ_NO
+    FROM   TBLPY_PREPAY_OCC A
+         , TBLPY_AMBG_OCC B
+    WHERE  1=1
+    <if test="prepayApplTgtNo != null">
+    AND    A.PREPAY_OCC_SEQ_NO = #{prepayApplTgtNo}
+    </if>
+    AND    NVL(A.CNCL_YN, 'N') != 'Y'
+    AND    A.PREPAY_BAL > 0
+    AND    A.PREPAY_OCC_TP = '02'
+    AND    B.AMBG_OCC_SEQ_NO = A.PREPAY_OCC_TGT_SEQ_NO
+	</select>
+	
+	<select id="getUnRcptBillList" parameterType="String" resultType="BillListVO">
+    SELECT /* PrepayTransMapper.xml.getUnRcptBillList, gwhan, 2020.03.26 */
+           SO_ID
+         , BILL_SEQ_NO
+         , USE_YYMM
+         , SVC_CMPS_ID
+         , PROD_CMPS_ID
+         , CHRG_ITM_CD
+         , BILL_YYMM
+         , BILL_CYCL
+         , CTRT_ID
+         , CUST_ID
+         , PYM_ACNT_ID
+         , BILL_AMT
+         , RATE_ITM_TYP_CD
+    FROM  (SELECT A.SO_ID
+                , A.BILL_SEQ_NO
+                , A.USE_YYMM
+                , A.SVC_CMPS_ID
+                , A.PROD_CMPS_ID
+                , A.CHRG_ITM_CD
+                , A.BILL_YYMM
+                , A.BILL_CYCL
+                , A.CTRT_ID
+                , A.CUST_ID
+                , A.PYM_ACNT_ID
+                , A.BILL_AMT - A.RCPT_AMT AS BILL_AMT
+                , CASE WHEN SIGN(A.BILL_AMT - A.RCPT_AMT) = -1 THEN 1
+                       ELSE 2
+                  END                                  AS APLY_ORDER1      /* 마이너스 금액 먼저 입금반영  */
+                , CASE WHEN A.CHRG_ITM_CD = 'SR008' THEN 1
+                       ELSE 2
+                  END                                  AS APLY_ORDER2      /* 부가세 먼저 입금반영     */
+                , CASE WHEN B.RATE_ITM_TYP_CD = 'CT111' THEN 9999
+                       ELSE 1
+                  END                                  AS APLY_ORDER3      /* 보증금은 마지막에 반영 */
+                , B.PAY_PRI_NO
+                , B.RATE_ITM_TYP_CD
+           FROM   TBLIV_BILL A
+                , VIFNBRM_SVC_RATE_ITM_INFO B
+           WHERE  1=1
+           AND    A.PYM_ACNT_ID  = #{spymAcntId}
+           <if test="sbillSeqNo != null">
+           AND    A.BILL_SEQ_NO  = #{sbillSeqNo}
+           </if>
+           <if test="suseYymm != null">
+           AND    A.USE_YYMM     = #{suseYymm}
+           </if>
+           <if test="ssvcCmpsId != null">
+           AND    A.SVC_CMPS_ID  = #{ssvcCmpsId}
+           </if>
+           <if test="sprodCmpsId != null">
+           AND    A.PROD_CMPS_ID = #{sprodCmpsId}
+           </if>
+           <if test="schrgItmCd != null">
+           AND    A.CHRG_ITM_CD  = #{schrgItmCd}
+           </if>
+           AND    A.BILL_AMT - A.RCPT_AMT != 0
+           AND    A.USE_YYMM    != '999912'
+           AND    B.SO_ID        = A.SO_ID
+           AND    B.SVC_RATE_ITM_TYP_CD = A.CHRG_ITM_CD
+           <if test="sTransSubTp != '02'">
+           AND    B.RATE_ITM_TYP_CD != 'CT111'                      /* 선수금 일반대체일 경우 보증금은 수납대상에서 제외 */
+           </if>
+          ) Z
+    ORDER BY APLY_ORDER1, APLY_ORDER2, APLY_ORDER3, CTRT_ID, USE_YYMM, PAY_PRI_NO
+	</select>
+	
+	<insert id="insertPrepayTransHist" parameterType="PrepayTransHistVO">
+    INSERT INTO /* PrepayTransMapper.xml.insertPrepayTransHist, gwhan, 2020.03.26 */
+          TBLPY_PREPAY_TRANS_HIST
+    (
+        SO_ID
+      , PREPAY_TRANS_SEQ_NO
+      , PREPAY_OCC_SEQ_NO
+      , TRANS_PROC_DTTM
+      , PREPAY_REPL_TP
+      , TRANS_PROC_AMT
+      , PROC_MEMO
+      , APPR_REQR_ID
+      , APPR_REQ_DTTM
+      , DCSN_PROC_STAT
+      , APPRR_ID
+      , APPR_DTTM
+      , CNCL_YN
+      , CNCL_DTTM
+      , BAL_AMT
+      , ERP_SND_YN
+      , INPT_MENU_ID
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    VALUES
+    (
+        #{prepayTransHistVO.soId}
+      , #{prepayTransHistVO.prepayTransSeqNo}
+      , #{prepayTransHistVO.prepayOccSeqNo}
+      , #{prepayTransHistVO.transProcDttm}
+      , #{prepayTransHistVO.prepayReplTp}
+      , #{prepayTransHistVO.transProcAmt}
+      , #{prepayTransHistVO.procMemo}
+      , #{prepayTransHistVO.apprReqrId}
+      , #{prepayTransHistVO.apprReqDttm}
+      , #{prepayTransHistVO.dcsnProcStat}
+      , #{prepayTransHistVO.apprrId}
+      , #{prepayTransHistVO.apprDttm}
+      , #{prepayTransHistVO.cnclYn}
+      , #{prepayTransHistVO.cnclDttm}
+      , #{prepayTransHistVO.balAmt}
+      , #{prepayTransHistVO.erpSndYn}
+      , #{prepayTransHistVO.inptMenuId}
+      , #{prepayTransHistVO.regrId}
+      , #{prepayTransHistVO.regDate}
+      , #{prepayTransHistVO.regrId}
+      , #{prepayTransHistVO.regDate}
+    )
+	</insert>
+	
+	<update id="updatePrepayOccBalAmt" parameterType="PrepayOccVO">
+    UPDATE /* PrepayTransMapper.xml.updatePrepayOccBalAmt, gwhan, 2020.03.26 */
+           TBLPY_PREPAY_OCC
+    SET    PREPAY_PROC_STAT  = #{prepayOccVO.prepayProcStat}
+         , TRANS_CMPL_YN     = CASE WHEN SIGN(COALESCE(PREPAY_BAL, 0) - #{prepayOccVO.prepayTransAmt}) =  0 THEN 'Y'
+                                    ELSE  'N'
+                               END
+         , PREPAY_TRANS_AMT  = COALESCE(PREPAY_TRANS_AMT, 0) + #{prepayOccVO.prepayTransAmt}
+         , PREPAY_BAL        = COALESCE(PREPAY_BAL, 0) - #{prepayOccVO.prepayTransAmt}
+         , TRANS_DT          = #{prepayOccVO.transDt}
+         , CHGR_ID           = #{prepayOccVO.regrId}
+         , CHG_DATE          = #{prepayOccVO.regDate}
+    WHERE PREPAY_OCC_SEQ_NO  = #{prepayOccVO.prepayOccSeqNo}
+	</update>
+
+	<insert id="insertPrepayTransAssrOcc" parameterType="AssrOccVO">
+		INSERT INTO /* PrepayTransMapper.xml.insertPrepayTransAssrOcc, 양연희, 2018.02.09 */
+					TBLPY_ASSR_OCC
+		(
+			ASSR_OCC_SEQ_NO
+			,PYM_SEQ_NO
+			,PYM_ACNT_ID
+			,PROD_CMPS_ID
+			,SVC_CMPS_ID
+			,CHRG_ITM_CD
+			,SO_ID			
+			,CUST_ID
+			,CTRT_ID
+			,ASSR_OCC_DTTM
+			,DPST_TP_SEQ_NO
+			,DPST_DT
+			,DPST_CL
+			,ASSR_PROC_STAT
+			,ASSR_OCC_AMT
+			,ASSR_TRANS_AMT
+			,ASSR_BAL
+			,TRANS_CMPL_YN
+			,CNCL_YN
+			,CNCL_DTTM
+			,TRANS_DT
+			,MNG_CNTER_ORG_ID
+			,MNG_BR_ORG_ID
+			,ERP_SND_YN
+			,INPT_MENU_ID
+			,REGR_ID
+			,REG_DATE
+			,CHGR_ID
+			,CHG_DATE
+		)
+		SELECT	#{assrOccVO.assrOccSeqNo}
+				,PYM_SEQ_NO
+				,#{assrOccVO.pymAcntId}
+				,PROD_CMPS_ID
+                ,SVC_CMPS_ID
+                ,CHRG_ITM_CD
+                ,SO_ID
+                ,CUST_ID
+                ,CTRT_ID
+                ,#{assrOccVO.assrOccDttm}
+		     	,#{assrOccVO.dpstTpSeqNo}
+		     	,C.DPST_DT
+		     	,C.DPST_CL
+		     	,#{assrOccVO.assrProcStat}
+		     	,RCPT_AMT
+		     	,#{assrOccVO.assrTransAmt}
+		     	,RCPT_AMT
+		     	,#{assrOccVO.transCmplYn}
+		     	,#{assrOccVO.cnclYn}
+		     	,#{assrOccVO.cnclDttm}
+		     	,#{assrOccVO.transDt}
+		     	,B.MNG_CNTER_ORG_ID
+		     	,B.MNG_BR_ORG_ID
+		     	,#{assrOccVO.erpSndYn}
+		     	,#{assrOccVO.inptMenuId}
+		     	,#{assrOccVO.regrId}
+		     	,#{assrOccVO.regDate}
+		     	,#{assrOccVO.regrId}
+		     	,#{assrOccVO.regDate}
+		FROM	TBLPY_RCPT_DTL A,
+				(SELECT	MNG_CNTER_ORG_ID
+						,MNG_BR_ORG_ID
+				FROM	TBLPY_PREPAY_OCC
+				WHERE	PREPAY_OCC_SEQ_NO = #{assrOccVO.dpstTpSeqNo}) B,
+				(SELECT	DPST_DT
+						,DPST_CL
+				FROM	TBLPY_DPST
+				WHERE	DPST_SEQ_NO = #{assrOccVO.dpstSeqNo}) C
+		WHERE	PYM_SEQ_NO = #{assrOccVO.pymSeqNo}
+	</insert>
+	
+	<insert id="insertTransReceipt" parameterType="ReceiptVO">
+    INSERT /* PrepayTransMapper.xml.insertTransReceipt, 양연희, 2020.03.26 */
+        INTO TBLPY_RCPT
+    (
+        PYM_SEQ_NO
+      , DPST_SEQ_NO
+      , BILL_SEQ_NO
+      , BILL_YYMM
+      , BILL_CYCL
+      , BILL_DT
+      , SO_ID
+      , PYM_ACNT_ID
+      , PAY_PROC_DT
+      , DPST_DT
+      , TRANS_DT
+      , DPST_PROC_DT
+      , DPST_CL
+      , PAY_TP
+      , PAY_OBJ_AMT
+      , PAY_APLY_AMT
+      , PREPAY_APLY_AMT
+      , RCPT_AMT
+      , PREPAY_OCC_SEQ_NO
+      , PREPD_CTRT_ID
+      , CNCL_YN
+      , RCPT_OPETR_ID
+      , ERP_SND_YN
+      , INPT_MENU_ID
+      , REGR_ID
+      , REG_DATE
+      , CHGR_ID
+      , CHG_DATE
+    )
+    SELECT #{receiptVO.pymSeqNo}
+         , #{receiptVO.dpstSeqNo}
+         , #{receiptVO.billSeqNo}
+         , #{receiptVO.billYymm}
+         , #{receiptVO.billCycl}
+         , #{receiptVO.billDt}
+         , #{receiptVO.soId}
+         , #{receiptVO.pymAcntId}
+         , #{receiptVO.payProcDt}
+         , #{receiptVO.dpstDt}
+         , #{receiptVO.transDt}
+         , #{receiptVO.dpstProcDt}
+         , #{receiptVO.dpstCl}
+         , #{receiptVO.payTp}
+         , COALESCE(A.PAY_OBJ_AMT, 0)     AS PAY_OBJ_AMT
+         , COALESCE(A.PAY_APLY_AMT, 0)    AS PAY_APLY_AMT
+         , COALESCE(A.PREPAY_APLY_AMT, 0) AS PREPAY_APLY_AMT
+         , COALESCE(A.PAY_APLY_AMT, 0)    AS RCPT_AMT
+         , #{receiptVO.prepayOccSeqNo}
+         , #{receiptVO.prepdCtrtId}
+         , #{receiptVO.cnclYn}
+         , #{receiptVO.rcptOpetrId}
+         , #{receiptVO.erpSndYn}
+         , #{receiptVO.inptMenuId}
+         , #{receiptVO.regrId}
+         , #{receiptVO.regDate}
+         , #{receiptVO.regrId}
+         , #{receiptVO.regDate}
+    FROM  (SELECT SUM(BILL_AMT)     AS PAY_OBJ_AMT
+                , SUM(RCPT_AMT)     AS PAY_APLY_AMT
+                , SUM(PRE_RCPT_AMT) AS PREPAY_APLY_AMT
+           FROM   TBLPY_RCPT_DTL
+           WHERE  PYM_SEQ_NO = #{receiptVO.pymSeqNo}
+          ) A
+	</insert>
+	
+	<update id="updateTransAppl" parameterType="TransCommApplVO">
+    UPDATE /* PrepayTransMapper.xml.updateTransAppl, gwhan, 2020.03.26 */
+           TBLPY_TRANS_APPL
+    SET    PROC_DT        = #{transCommApplVO.procDt}
+         , PROC_ID        = #{transCommApplVO.procId}
+         , PROC_RESN      = #{transCommApplVO.procResn}
+         , DCSN_PROC_STAT = #{transCommApplVO.dcsnProcStat}
+         , CHGR_ID        = #{transCommApplVO.regrId}
+         , CHG_DATE       = #{transCommApplVO.regDate}
+    WHERE  TRANS_APPL_NO  = #{transCommApplVO.transApplNo}
+	</update>
+
+</mapper>

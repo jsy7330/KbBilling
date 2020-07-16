@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.log.logMng.ProcessLogHistMapper">
+	<select id="list" parameterType="com.ntels.ccbs.system.domain.log.logMng.ProcessLogHistVO" resultType="com.ntels.ccbs.system.domain.log.logMng.ProcessLogHistVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+				A.WORK_DT
+				,A.SEQ
+				,A.USER_ID
+				,(SELECT B.USER_NAME FROM TSYCO_USER B WHERE A.USER_ID=B.USER_ID)USER_NAME
+				,(SELECT NAME.CODE_NM
+		            FROM TSYCO_CODE_MAST MAST
+		                  , TSYCO_CODE_MAST_NAME MNAME
+		                  , TSYCO_CODE_DETAIL DETAIL
+		                  , TSYCO_CODE_DETAIL_NAME NAME
+		            WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+		                  AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+		                  AND MNAME.LNG_TYP     =#{lng,jdbcType=VARCHAR}
+		                  AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+		                  AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+		                  AND NAME.LNG_TYP      =#{lng,jdbcType=VARCHAR}
+		                  AND MAST.COMMON_GRP   ='SY00004'
+		                  AND DETAIL.USE_YN     ='Y'
+		                  AND MAST.USE_YN       ='Y'
+		                  AND DETAIL.COMMON_CD =WORK_TYPE) WORK_TYPE
+				,A.WORK_DATE
+				,A.MENU_NO
+                ,COALESCE(
+                    (SELECT MENU_NAME
+                    FROM    TSYCO_MENU_LANGUAGE B
+                    WHERE   B.MENU_NO = A.MENU_NO
+                    AND B.LANGUAGE_CODE = #{lng, jdbcType=VARCHAR}), (SELECT C.MENU_NAME FROM TSYCO_MENU C WHERE A.MENU_NO=C.MENU_NO)
+                    ) AS MENU_NAME
+				,A.SERVER_NAME
+				,A.SERVER_PORT
+				,A.ACCEPT
+				,A.USER_AGENT
+				,A.CONTENT_TYPE
+				,A.REMOTE_ADDR
+				,A.SESSION_ID
+				,A.REQUEST_PATH
+				,A.REQUEST_METHOD
+				,A.PAYLOAD
+		FROM TSYCO_WORK_HIST A
+		WHERE A.WORK_DT &lt;= #{process.edate}
+        AND A.WORK_DT &gt;= #{process.sdate} 
+		<if test="process.condUserId != null and process.condUserId != ''">
+			AND A.USER_ID like CONCAT(#{process.condUserId, jdbcType=VARCHAR},'%')
+		</if>
+		<if test="process.condWorkType != null and process.condWorkType != 'SEL'">
+			AND A.WORK_TYPE =#{process.condWorkType}
+		</if>
+		<if test="process.condSessionId != null and process.condSessionId != ''">
+			AND A.SESSION_ID like CONCAT(#{process.condSessionId, jdbcType=VARCHAR},'%')
+		</if>
+		<if test="sidx != null and sidx == 'workDt'">
+	        ORDER BY A.WORK_DT ${sord}
+	   	</if>
+	   	<if test="sidx != null and sidx == 'seq'">
+	        ORDER BY A.SEQ ${sord}
+	   	</if>
+	  	<if test="sidx == ''">
+	       ORDER BY A.WORK_DT DESC,A.SEQ ASC
+	 	</if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="count" parameterType="com.ntels.ccbs.system.domain.log.logMng.ProcessLogHistVO" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM TSYCO_WORK_HIST
+		WHERE WORK_DT &lt;= #{process.edate}
+        AND WORK_DT &gt;= #{process.sdate} 
+		<if test="process.condUserId != null and process.condUserId != ''">
+			AND USER_ID LIKE CONCAT(#{process.condUserId, jdbcType=VARCHAR},'%')
+		</if>
+		<if test="process.condWorkType != null and process.condWorkType !='SEL'">
+			AND WORK_TYPE =#{process.condWorkType}
+		</if>
+		<if test="process.condSessionId != null and process.condSessionId != ''">
+			AND SESSION_ID LIKE CONCAT(#{process.condSessionId, jdbcType=VARCHAR},'%')
+		</if>
+	</select>
+	
+	<select id="listExcel" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+	SELECT
+				A.WORK_DT
+				,A.SEQ
+				,A.USER_ID
+				,(SELECT B.USER_NAME FROM TSYCO_USER B WHERE A.USER_ID=B.USER_ID)USER_NAME
+				,(SELECT NAME.CODE_NM
+		            FROM TSYCO_CODE_MAST MAST
+		                  , TSYCO_CODE_MAST_NAME MNAME
+		                  , TSYCO_CODE_DETAIL DETAIL
+		                  , TSYCO_CODE_DETAIL_NAME NAME
+		            WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+		                  AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+		                  AND MNAME.LNG_TYP     =#{lng,jdbcType=VARCHAR}
+		                  AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+		                  AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+		                  AND NAME.LNG_TYP      =#{lng,jdbcType=VARCHAR}
+		                  AND MAST.COMMON_GRP   ='SY00004'
+		                  AND DETAIL.USE_YN     ='Y'
+		                  AND MAST.USE_YN       ='Y'
+		                  AND DETAIL.COMMON_CD =WORK_TYPE) WORK_TYPE
+				,A.WORK_DATE
+				,A.MENU_NO
+				,COALESCE(
+                    (SELECT MENU_NAME
+                    FROM    TSYCO_MENU_LANGUAGE B
+                    WHERE   B.MENU_NO = A.MENU_NO
+                    AND B.LANGUAGE_CODE = #{lng, jdbcType=VARCHAR}), (SELECT C.MENU_NAME FROM TSYCO_MENU C WHERE A.MENU_NO=C.MENU_NO)
+                    ) AS MENU_NAME
+				,A.SERVER_NAME
+				,A.SERVER_PORT
+				,A.ACCEPT
+				,A.USER_AGENT
+				,A.CONTENT_TYPE
+				,A.REMOTE_ADDR
+				,A.SESSION_ID
+				,A.REQUEST_PATH
+				,A.REQUEST_METHOD
+				,A.PAYLOAD
+		FROM TSYCO_WORK_HIST A
+		WHERE A.WORK_DT &lt;= #{edate}
+        AND A.WORK_DT &gt;= #{sdate} 
+		<if test="condUserId != null and condUserId != ''">
+			AND A.USER_ID like CONCAT(#{condUserId},'%')
+		</if>
+		<if test="condWorkType != null and condWorkType != 'SEL'">
+			AND A.WORK_TYPE =#{condWorkType}
+		</if>
+		<if test="condSessionId != null and condSessionId != ''">
+			AND A.SESSION_ID like CONCAT(#{condSessionId},'%')
+		</if>
+	     ORDER BY A.WORK_DT DESC,A.SEQ ASC
+	 	
+	</select>
+</mapper>

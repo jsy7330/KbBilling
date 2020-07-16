@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.usageProduct.usageProductMgt.ProductDtlMapper">
+
+	<select id="getProductDtlList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.ProductDtl"
+	 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.ProductDtl">
+        SELECT DISTINCT
+		       ( SELECT SO_NM
+		           FROM TSYCO_SO_MAST
+		          WHERE 1=1
+		            AND SO_ID = A.SO_ID ) AS SO_NM
+		     , A.PROD_CD
+		     , A.PROD_NM
+		     , A.PROD_GRP
+		     , A.PROD_DESC
+		     , A.ACT_DT
+		     , A.INACT_DT
+		  FROM TPMPD_PROD A
+		     , TOP_PROD B 
+		 WHERE 1=1
+		   		
+		<if test="productDtl.searchSoNm != ''">
+			AND SO_ID = #{productDtl.searchSoNm}
+		</if>
+		
+		<if test="productDtl.searchProdTyp != ''">
+			AND B.PROD_OFFER_TYP = #{productDtl.searchProdTyp}
+		</if>
+   
+        <if test="productDtl.searchTyp == 1">
+         	 AND A.PROD_CD LIKE ( '%' || #{productDtl.searchProd} || '%' ) 
+        </if>
+        
+        <if test="productDtl.searchTyp == 2">
+         	 AND A.PROD_NM LIKE ( '%' || #{productDtl.searchProd} || '%' ) 
+        </if>
+      
+      </select>
+    
+    <select id="productDtlListExcel" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+  	
+  		SELECT
+        	( select SO_NM 
+               from   TSYCO_SO_MAST
+               where  SO_ID = A.SO_ID
+               and    USE_YN = 'Y') AS SO_NM 
+            , A.PROD_CD
+            , A.PROD_NM
+            , A.PROD_GRP
+            , A.PROD_DESC
+            , A.BASIC_PROD_FL
+            , A.ACT_DT
+            , A.INACT_DT
+        FROM  TPMPD_PROD    A
+        WHERE 1=1
+	
+	</select>
+	
+	<select id="getSoNmList" resultType="commonCodeVO">
+	
+		SELECT 
+		       SO_ID AS COMMON_CD
+		     , SO_NM AS COMMON_CD_NM
+		  FROM TSYCO_SO_MAST
+		 WHERE 1=1
+	
+	</select>
+          
+         
+         <!-- 
+         
+          <select id="getProdList" resultClass="hashMap" parameterClass="map">
+        SELECT
+              A.PROD_ID
+            , A.PROD_NM
+            , A.PROD_FAMILY
+            , A.DESCRIPTION
+            , A.PROD_STATE
+            , A.EFF_DT
+            , A.EXP_DT
+            , A.RECURRING_CHRG
+            , A.PRORATE_FLAG
+            , A.PROD_OFFER_TYP
+            , A.LMT_CTRL_TYP
+            , A.PROD_PURCH_COND
+            , A.PROD_PRIORITY
+            , A.PRECOND_PROD_TYP
+            , A.PRECOND_PROD
+            , B.SO_ID
+            ,(select SO_NM 
+              from   TSYCO_SO_MAST
+              where  SO_ID = B.SO_ID
+              and    USE_YN = 'Y') AS SO_NM 
+        FROM ORNOCS.TOP_PROD A
+            ,TP_PROD         B
+        WHERE 1=1
+        <isNotEmpty property="PROD_OFFER_TYP" prepend="AND ">
+            A.PROD_OFFER_TYP = #PROD_OFFER_TYP# 
+        </isNotEmpty> 
+        <isNotEmpty property="SEARCH_FLAG" prepend="AND ">
+         <isEqual property="SEARCH_FLAG"  compareValue="1">
+          <![CDATA[
+           A.PROD_ID LIKE '%' || #SEARCH_STRING# || '%' 
+          ]]>
+         </isEqual>
+         <isEqual property="SEARCH_FLAG"  compareValue="2">
+          <![CDATA[
+           A.PROD_NM LIKE '%' || #SEARCH_STRING# || '%' 
+          ]]>
+         </isEqual>
+        </isNotEmpty>
+        AND A.PROD_ID = B.PROD_CD
+        <isNotEmpty property="SO_ID">
+            <isNotEqual property="SO_ID" compareValue="%">
+                AND B.SO_ID   = #SO_ID#
+            </isNotEqual>
+            <isEqual property="SO_ID" compareValue="%">
+                AND B.SO_ID IN $SO_ID_ALL$
+            </isEqual>
+         </isNotEmpty>
+        ORDER BY A.PROD_ID  
+    </select>
+          -->
+</mapper>

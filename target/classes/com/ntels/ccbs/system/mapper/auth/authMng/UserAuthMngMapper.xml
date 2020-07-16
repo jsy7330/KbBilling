@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.auth.authMng.UserAuthMngMapper">
+	<select id="list" resultType="com.ntels.ccbs.system.domain.auth.authMng.UserAuthMngVO">
+		SELECT
+			A.USER_ID
+			,A.USER_NAME
+			,A.ORG_ID
+			,B.ORG_NM
+		FROM TSYCO_USER A,TSYCO_ORG_INFO B 
+		WHERE 
+            B.SO_ID IN
+            <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                #{item.so_id}
+            </foreach>
+		AND B.APPY_STRT_DT &lt;= #{today}
+        AND B.APPY_END_DT &gt;= #{today}  
+        AND A.ORG_ID=B.ORG_ID
+        AND A.USE_YN='Y'
+		<if test="userAuth.condUserId != null and userAuth.condUserId != ''">
+			AND A.USER_ID LIKE CONCAT(#{userAuth.condUserId, jdbcType=VARCHAR},'%')
+		</if>
+		<if test="userAuth.condUserNm != null and userAuth.condUserNm != ''">
+			AND A.USER_NAME LIKE CONCAT(CONCAT('%',#{userAuth.condUserNm, jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="userAuth.condOrgId != null and userAuth.condOrgId != ''">
+			AND B.ORG_ID = #{userAuth.condOrgId, jdbcType=VARCHAR}
+		</if>
+		
+		<if test="sidx != null and sidx == 'userId'">
+	        ORDER BY A.USER_ID ${sord}
+	    </if>
+	    <if test="sidx != null and sidx == 'userName'">
+	    	ORDER BY A.USER_NAME ${sord}
+	    </if>
+	    <if test="sidx != null and sidx == 'orgId'">
+	        ORDER BY A.ORG_ID ${sord}
+	    </if>
+	    <if test="sidx != null and sidx == 'orgNm'">
+	        ORDER BY B.ORG_NM ${sord}
+	    </if>
+	    <if test="sidx == ''">
+	        ORDER BY A.USER_ID ${sord}
+	    </if>
+	</select>	
+	
+	<select id="count"  resultType="int">	
+		SELECT COUNT(*) 
+        FROM TSYCO_USER A,TSYCO_ORG_INFO B 
+		WHERE 
+           B.SO_ID IN
+            <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                #{item.so_id}
+            </foreach>
+		AND B.APPY_STRT_DT &lt;= #{today}
+        AND B.APPY_END_DT &gt;= #{today}  
+        AND A.ORG_ID=B.ORG_ID
+        AND A.USE_YN='Y'
+        <if test="userAuth.condUserId != null and userAuth.condUserId != ''">
+			AND A.USER_ID LIKE CONCAT(#{userAuth.condUserId, jdbcType=VARCHAR},'%')
+		</if>
+		<if test="userAuth.condUserNm != null and userAuth.condUserNm != ''">
+			AND A.USER_NAME LIKE CONCAT(CONCAT('%',#{userAuth.condUserNm, jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="userAuth.condOrgId != null and userAuth.condOrgId != ''">
+			AND B.ORG_ID = #{userAuth.condOrgId, jdbcType=VARCHAR}
+		</if>
+	</select>
+	
+	<select id="authCount"  parameterType="com.ntels.ccbs.system.domain.auth.authMng.UserAuthMngVO" resultType="int">	
+		SELECT COUNT(*) FROM TSYCO_USER_GROUP_ROLE A WHERE A.USER_ID=#{userAuth.userId, jdbcType=VARCHAR}
+	</select>
+	
+	<select id="userAuthList" parameterType="com.ntels.ccbs.system.domain.auth.authMng.UserAuthMngVO" 
+						resultType="com.ntels.ccbs.system.domain.auth.authMng.UserAuthMngVO">
+    	SELECT
+			USER_GROUP_ID
+			,(SELECT USER_GROUP_NAME FROM TSYCO_USER_GROUP B WHERE A.USER_GROUP_ID=B.USER_GROUP_ID)AS userGroupName
+			,USER_ID
+		FROM TSYCO_USER_GROUP_ROLE A WHERE A.USER_ID=#{userAuth.userId, jdbcType=VARCHAR}	
+	</select>	
+	
+	<insert id="insert" parameterType="com.ntels.ccbs.system.domain.auth.authMng.UserAuthMngVO">	
+		INSERT INTO 
+			TSYCO_USER_GROUP_ROLE(
+				USER_GROUP_ID
+				,USER_ID
+			)VALUES(
+				#{userAuth.userGroupId, jdbcType=VARCHAR}
+				,#{userAuth.userId, jdbcType=VARCHAR}
+			)
+	</insert>
+	
+	<delete id="deleteAll" parameterType="com.ntels.ccbs.system.domain.auth.authMng.UserAuthMngVO">	
+		DELETE FROM TSYCO_USER_GROUP_ROLE WHERE USER_ID=#{userAuth.userId, jdbcType=VARCHAR}
+	</delete>
+	
+	<delete id="delete" parameterType="com.ntels.ccbs.system.domain.auth.authMng.UserAuthMngVO">	
+		DELETE FROM TSYCO_USER_GROUP_ROLE WHERE USER_ID=#{userAuth.userId, jdbcType=VARCHAR} AND USER_GROUP_ID=#{userAuth.userGroupId,jdbcType=VARCHAR}
+	</delete>
+	
+	<select id="baseUserGroupId" parameterType="com.ntels.ccbs.system.domain.auth.authMng.UserAuthMngVO" 
+						resultType="string">
+		SELECT USER_GROUP_ID FROM TSYCO_USER WHERE USER_ID=#{userAuth.userId, jdbcType=VARCHAR}	
+	</select>						
+</mapper>

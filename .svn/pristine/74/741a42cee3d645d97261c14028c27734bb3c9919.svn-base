@@ -1,0 +1,1481 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.orderDeliveryMgt.DeliveryInspectionMapper">
+
+	<!-- 납품내역 리스트 조회 -->
+	<select id="inOutActncList" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.SO_ID					/*사업ID*/
+					, A.ACTNC_NO 			/*납품번호*/
+					, A.PO_NO				/*발주번호*/
+					, B.IDL_STAT_CD			/*물류처리상태*/
+					<!-- 
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00074'
+								AND DETAIL.COMMON_CD = B.IDL_STAT_CD
+		       		) AS IDL_STAT_NM
+		       		 -->
+		       		, CASE WHEN B.IDL_STAT_CD IS NULL THEN 'Approved' ELSE 'Waiting' END AS IDL_STAT_NM		/*물류처리상태명	*/			
+					, C.LGST_CENT_ID 		/*물류센터ID*/
+					, (SELECT AA.ORG_NM FROM TDNDI_ORG_INFO AA WHERE AA.ORG_ID = C.LGST_CENT_ID) AS LGST_CENT_NM	/*물류센터명*/
+					, D.MNCO_ID 			/*제조사ID*/
+					, D.MNCO_NM 			/*제조사명*/
+					, A.ITEM_TP_CD 			/*제품유형코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM			/*제품유형코드명*/
+					, E.ITEM_ID 			/*제품ID*/
+					, E.ITEM_NM 			/*제품명*/
+					, A.CLOR_CD 			/*색상코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00078'
+								AND DETAIL.COMMON_CD = A.CLOR_CD
+		       		) AS COLOR_NM			/*색상명*/
+					, A.ACTNC_DT 			/*납품일자*/
+					, A.ACTNC_PRGR_STAT_CD	/*납품진행상태코드*/
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00070'
+								AND DETAIL.COMMON_CD = A.ACTNC_PRGR_STAT_CD
+		       		) AS ACTNC_PRGR_STAT_NM			/*납품진행상태코드명*/
+					, A.ACTNC_QTY 					/*납품수량*/
+					, A.ACTNC_UT_PRC 				/*납품단가*/
+					, A.ACTNC_AMT 					/*납품금액*/
+					, A.ACTNC_ADD_TX 				/*납품부가세*/
+					, A.ACTNC_TOT_AMT 				/*납품총금액*/
+					, A.STAT_PROC_ID 				/*상태처리자ID*/
+					, A.STAT_PROC_DTTM 				/*상태처리일시*/
+					, A.ACTNC_ORG_ID 				/*납품조직ID*/
+					, (SELECT BB.ORG_NM FROM TDNDI_ORG_INFO BB WHERE BB.ORG_ID = A.ACTNC_ORG_ID) AS ACTNC_ORG_NM /*납품조직명*/
+					, A.ACTNC_INCHRG_ID 			/*납품담당자ID*/
+					, A.ACTNC_INCHRG_TEL_NO 		/*납품담당자연락처*/
+					, A.INOUT_RESN_CD 				/*입출고사유코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00069'
+								AND DETAIL.COMMON_CD = A.INOUT_RESN_CD
+		       		) AS INOUT_RESN_NM			/*입출고사유코드명*/
+					, A.INOUT_CL_CD 			/*입출고구분코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00071'
+								AND DETAIL.COMMON_CD = A.INOUT_CL_CD
+		       		) AS INOUT_CL_NM			/*입출고구분코드명*/
+					, A.NOTE 					/*비고*/
+			FROM	TDNDT_ACTNC A
+					LEFT OUTER JOIN TDNDT_ACTNC_IDL_DTL B ON A.SO_ID = B.SO_ID AND A.ACTNC_NO = B.ACTNC_NO
+					INNER JOIN TDNDT_PO C ON A.SO_ID = C.SO_ID AND A.PO_NO = C.PO_NO
+					INNER JOIN TDNDT_MNCO D ON C.SO_ID = D.SO_ID AND C.MNCO_ID = D.MNCO_ID
+					INNER JOIN TDNDT_ITEM E ON A.SO_ID = E.SO_ID AND A.ITEM_ID = E.ITEM_ID			
+			WHERE	1 = 1
+				AND A.SO_ID 			= #{deliveryInspectionVO.soId}
+				AND A.INOUT_RESN_CD 	= '00'
+				AND A.ACTNC_PRGR_STAT_CD = '40'
+				AND A.ACTNC_ORG_ID 	= #{deliveryInspectionVO.actncOrgId}	/*로그인한 조직 아이디*/
+				<if test="deliveryInspectionVO.searchStatDt != null and deliveryInspectionVO.searchStatDt != ''">
+					AND A.ACTNC_DT <![CDATA[ >= ]]> #{deliveryInspectionVO.searchStatDt}
+				</if>
+				<if test="deliveryInspectionVO.searchEndDt != null and deliveryInspectionVO.searchEndDt != ''">
+					AND A.ACTNC_DT <![CDATA[ <= ]]> #{deliveryInspectionVO.searchEndDt}
+				</if>
+				<if test="deliveryInspectionVO.mncoId != null and deliveryInspectionVO.mncoId != ''">
+					AND C.MNCO_ID =  #{deliveryInspectionVO.mncoId}
+				</if>	
+				<if test="deliveryInspectionVO.itemTpCd != null and deliveryInspectionVO.itemTpCd != ''">
+					AND A.ITEM_TP_CD =  #{deliveryInspectionVO.itemTpCd}
+				</if>	
+				<if test="deliveryInspectionVO.itemId != null and deliveryInspectionVO.itemId != ''">
+					AND A.ITEM_ID =  #{deliveryInspectionVO.itemId}
+				</if>
+		ORDER BY A.ACTNC_NO  DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<!-- 납품내역 리스트 카운트 -->
+	<select id="inOutActncCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_ACTNC A
+				LEFT OUTER JOIN TDNDT_ACTNC_IDL_DTL B ON A.SO_ID = B.SO_ID AND A.ACTNC_NO = B.ACTNC_NO
+				INNER JOIN TDNDT_PO C ON A.SO_ID = C.SO_ID AND A.PO_NO = C.PO_NO
+				INNER JOIN TDNDT_MNCO D ON C.SO_ID = D.SO_ID AND C.MNCO_ID = D.MNCO_ID
+				INNER JOIN TDNDT_ITEM E ON A.SO_ID = E.SO_ID AND A.ITEM_ID = E.ITEM_ID			
+		WHERE	1 = 1
+			AND A.SO_ID 			= #{deliveryInspectionVO.soId}
+			AND A.INOUT_RESN_CD 	= '00'
+			AND A.ACTNC_PRGR_STAT_CD = '40'
+			AND A.ACTNC_ORG_ID 	= #{deliveryInspectionVO.actncOrgId}	/*로그인한 조직 아이디*/
+			<if test="deliveryInspectionVO.searchStatDt != null and deliveryInspectionVO.searchStatDt != ''">
+				AND A.ACTNC_DT <![CDATA[ >= ]]> #{deliveryInspectionVO.searchStatDt}
+			</if>
+			<if test="deliveryInspectionVO.searchEndDt != null and deliveryInspectionVO.searchEndDt != ''">
+				AND A.ACTNC_DT <![CDATA[ <= ]]> #{deliveryInspectionVO.searchEndDt}
+			</if>
+			<if test="deliveryInspectionVO.mncoId != null and deliveryInspectionVO.mncoId != ''">
+				AND C.MNCO_ID =  #{deliveryInspectionVO.mncoId}
+			</if>	
+			<if test="deliveryInspectionVO.itemTpCd != null and deliveryInspectionVO.itemTpCd != ''">
+				AND A.ITEM_TP_CD =  #{deliveryInspectionVO.itemTpCd}
+			</if>	
+			<if test="deliveryInspectionVO.itemId != null and deliveryInspectionVO.itemId != ''">
+				AND A.ITEM_ID =  #{deliveryInspectionVO.itemId}
+			</if>
+			
+	</select>
+	
+	<!-- 입고내역 리스트 조회 -->
+	<select id="inActncList" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.SO_ID
+					, A.INOUT_ID 				/*입출고ID*/
+					, A.INOUT_CL_CD 			/*입출고구분코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00071'
+								AND DETAIL.COMMON_CD = A.INOUT_CL_CD
+		       		) AS INOUT_CL_NM			/*입출고구분코드명*/
+					, A.INOUT_PRGR_STAT_CD 		/*입출고진행상태코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00072'
+								AND DETAIL.COMMON_CD = A.INOUT_PRGR_STAT_CD
+		       		) AS INOUT_PRGR_STAT_NM			/*입출고진행상태명*/			
+					, A.INOUT_DT 					/*입고일자*/
+					, A.STAT_PROC_ID 				/*상태처리자ID*/
+					, A.STAT_PROC_DTTM 				/*상태처리일시*/
+					, A.OWN_ORG_ID 					/*보유조직ID*/
+					, (SELECT AA.ORG_NM FROM TDNDI_ORG_INFO AA WHERE AA.ORG_ID = A.OWN_ORG_ID) AS OWN_ORG_NM /*보유조직명*/
+					, A.INOUT_ORG_ID 				/*입출고조직ID*/
+					, (SELECT BB.ORG_NM FROM TDNDI_ORG_INFO BB WHERE BB.ORG_ID = A.INOUT_ORG_ID) AS INOUT_ORG_NM /*입출고조직명*/
+					, A.REL_INOUT_ID 				/*관련입출고ID*/
+					, C.ITEM_ID 					/*제품ID*/
+					, C.ITEM_NM 					/*제품명*/
+					, B.CLOR_CD 					/*색상코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00078'
+								AND DETAIL.COMMON_CD = B.CLOR_CD
+		       		) AS COLOR_NM			/*색상명*/
+					, B.INOUT_RESN_CD 		/*입출고사유코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00069'
+								AND DETAIL.COMMON_CD = B.INOUT_RESN_CD
+		       		) AS INOUT_RESN_NM			/*입출고사유코드명*/
+					, B.ITEM_TP_CD /*제품유형코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = B.ITEM_TP_CD
+		       		) AS ITEM_TP_NM			/*제품유형코드명*/
+					, B.EQT_USE_CD 			/*단말기용도코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00065'
+								AND DETAIL.COMMON_CD = B.EQT_USE_CD
+		       		) AS EQT_USE_NM			/*단말기용도코드명	*/				
+					, B.EQT_RSRC_CL_CD 		/*단말기자원구분코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00068'
+								AND DETAIL.COMMON_CD = B.EQT_RSRC_CL_CD
+		       		) AS EQT_RSRC_CL_NM		/*단말기자원구분코드명*/		       		
+					, B.INOUT_QTY 			/*입출고수량*/
+					, B.INOUT_UT_PRC 		/*입출고단가*/
+					, B.INOUT_AMT 			/*공급가*/
+					, B.INOUT_ADD_TX 		/*부가세*/
+					, B.INOUT_TOT_AMT 		/*총금액*/
+					, B.NOTE 				/*비고*/
+					, B.PO_NO 				/*발주번호*/
+					, B.ACTNC_NO 			/*납품번호*/
+					, B.ORD_NO 				/*주문번호*/
+					, ( SELECT 
+		       				MNCO_OTPT_UT_PRC 
+		       			FROM TDNDT_MNCO_UT_PRC_DTL 
+		       			WHERE SO_ID = B.SO_ID AND ITEM_ID = B.ITEM_ID 
+		       				AND EFT_END_DT = '99991231'
+		       		) AS PRCHS_UT_PRC 	/*매입단가*/
+					, ( SELECT 
+							DSTRB_UT_PRC 
+						FROM TDNDT_DSTRB_UT_PRC_DTL 
+						WHERE SO_ID = B.SO_ID AND ITEM_ID = B.ITEM_ID 
+							AND EFT_END_DT = '99991231'
+					) AS DSTRB_UT_PRC 	/*유통단가*/
+			FROM	TDNDT_INOUT A
+					, TDNDT_INOUT_DTL B
+					, TDNDT_ITEM C
+			WHERE 	1 = 1
+				AND A.SO_ID 			= #{deliveryInspectionVO.soId}
+				AND A.SO_ID 			= B.SO_ID
+				AND A.INOUT_ID 			= B.INOUT_ID
+				AND B.SO_ID 			= C.SO_ID
+				AND B.ITEM_ID 			= C.ITEM_ID
+				AND A.INOUT_CL_CD 		= #{deliveryInspectionVO.inoutClCd}
+				<!-- 
+				<if test="deliveryInspectionVO.inoutOrgId != null and deliveryInspectionVO.inoutOrgId != ''">
+					AND A.INOUT_ORG_ID 	= #{deliveryInspectionVO.inoutOrgId}
+				</if>
+				 -->
+				<if test="deliveryInspectionVO.ownOrgId != null and deliveryInspectionVO.ownOrgId != ''">
+					AND A.OWN_ORG_ID 	= #{deliveryInspectionVO.ownOrgId}
+				</if>
+				<if test="deliveryInspectionVO.actncNo != null and deliveryInspectionVO.actncNo != ''">
+					AND B.ACTNC_NO 		= #{deliveryInspectionVO.actncNo}
+				</if>
+				<if test="deliveryInspectionVO.relInoutId != null and deliveryInspectionVO.relInoutId != ''">
+					AND A.REL_INOUT_ID =  #{deliveryInspectionVO.relInoutId}
+				</if>
+				
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 입고내역 리스트 카운트 -->
+	<select id="inActncCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_INOUT A
+				, TDNDT_INOUT_DTL B
+				, TDNDT_ITEM C
+		WHERE 	1 = 1
+			AND A.SO_ID 			= #{deliveryInspectionVO.soId}
+			AND A.SO_ID 			= B.SO_ID
+			AND A.INOUT_ID 			= B.INOUT_ID
+			AND B.SO_ID 			= C.SO_ID
+			AND B.ITEM_ID 			= C.ITEM_ID
+			AND A.INOUT_CL_CD 		= #{deliveryInspectionVO.inoutClCd}
+			<!-- 
+			<if test="deliveryInspectionVO.inoutOrgId != null and deliveryInspectionVO.inoutOrgId != ''">
+				AND A.INOUT_ORG_ID 	= #{deliveryInspectionVO.inoutOrgId}
+			</if>
+			 -->
+			<if test="deliveryInspectionVO.ownOrgId != null and deliveryInspectionVO.ownOrgId != ''">
+				AND A.OWN_ORG_ID 	= #{deliveryInspectionVO.ownOrgId}
+			</if>
+			<if test="deliveryInspectionVO.actncNo != null and deliveryInspectionVO.actncNo != ''">
+				AND B.ACTNC_NO 		= #{deliveryInspectionVO.actncNo}
+			</if>
+			<if test="deliveryInspectionVO.relInoutId != null and deliveryInspectionVO.relInoutId != ''">
+				AND A.REL_INOUT_ID =  #{deliveryInspectionVO.relInoutId}
+			</if>
+	</select>
+	
+	<!-- 입고내역 등록 -->
+	<insert id="insertInout" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+	
+		INSERT INTO TDNDT_INOUT
+			( SO_ID					/*사업ID*/
+			, INOUT_ID				/*입출고ID*/
+			, INOUT_CL_CD			/*입출고구분코드*/
+			, INOUT_DT				/*입출고일자*/
+			, INOUT_PRGR_STAT_CD	/*입출고진행상태코드*/
+			, STAT_PROC_ID			/*상태처리자ID*/
+			, STAT_PROC_DTTM		/*상태처리일시*/
+			, OWN_ORG_ID			/*보유조직ID*/
+			, INOUT_ORG_ID			/*입출고조직ID*/
+			, REL_INOUT_ID			/*관련입출고ID*/
+			, DLV_ID				/*배송ID*/
+			, REGR_ID				/*등록자*/
+			, REG_DATE				/*등록일시*/
+			, CHGR_ID				/*수정자*/
+			, CHG_DATE				/*수정일시*/
+			)
+        VALUES
+			( #{deliveryInspectionVO.soId}			/*사업ID*/
+			, #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+			, #{deliveryInspectionVO.inoutClCd}		/*입출고구분코드*/
+			, #{deliveryInspectionVO.inoutDt}		/*입출고일자*/
+			, #{deliveryInspectionVO.inoutPrgrStatCd}	/*입출고진행상태코드*/
+			, #{deliveryInspectionVO.statProcId}	/*상태처리자ID*/
+			, #{deliveryInspectionVO.statProcDttm}	/*상태처리일시*/
+			, #{deliveryInspectionVO.ownOrgId}		/*보유조직ID*/
+			, #{deliveryInspectionVO.inoutOrgId}	/*입출고조직ID*/
+			, #{deliveryInspectionVO.relInoutId}	/*관련입출고ID*/
+			, #{deliveryInspectionVO.dlvId}			/*배송ID*/
+			, #{deliveryInspectionVO.regrId}		/*등록자*/
+			, #{deliveryInspectionVO.regDate}		/*등록일시*/
+			, #{deliveryInspectionVO.chgrId}		/*수정자*/
+			, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 입고내역 등록 -->
+	<insert id="insertInoutDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+	
+		INSERT INTO TDNDT_INOUT_DTL
+			( SO_ID				/*사업ID*/
+			, INOUT_ID			/*입출고ID*/
+			, ITEM_ID			/*제품ID*/
+			, INOUT_RESN_CD		/*입출고사유코드*/
+			, INOUT_CL_CD		/*입출고구분코드*/
+			, ITEM_TP_CD		/*제품유형코드*/
+			, EQT_USE_CD		/*단말기용도코드*/
+			, EQT_RSRC_CL_CD	/*단말자원구분코드*/
+			, CLOR_CD			/*색상코드*/
+			, INOUT_QTY			/*입출고수량*/
+			, INOUT_UT_PRC		/*입출고단가*/
+			, INOUT_AMT			/*입출고공급가액*/
+			, INOUT_ADD_TX		/*입출고부가세*/
+			, INOUT_TOT_AMT		/*입출고총금액*/
+			, NOTE				/*비고*/
+			, PO_NO				/*발주번호*/
+			, ACTNC_NO			/*납품번호*/
+			, ORD_NO			/*주문번호*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{deliveryInspectionVO.soId}			/*사업ID*/
+			, #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+			, #{deliveryInspectionVO.itemId}		/*제품ID*/
+			, #{deliveryInspectionVO.inoutResnCd}	/*입출고사유코드*/
+			, #{deliveryInspectionVO.inoutClCd}		/*입출고구분코드*/
+			, #{deliveryInspectionVO.itemTpCd}		/*제품유형코드*/
+			, #{deliveryInspectionVO.eqtUseCd}		/*단말기용도코드*/
+			, #{deliveryInspectionVO.eqtRsrcClCd}	/*단말자원구분코드*/
+			, #{deliveryInspectionVO.clorCd}		/*색상코드*/
+			, #{deliveryInspectionVO.inoutQty}		/*입출고수량*/
+			, #{deliveryInspectionVO.inoutUtPrc}	/*입출고단가*/
+			, #{deliveryInspectionVO.inoutAmt}		/*입출고공급가액*/
+			, #{deliveryInspectionVO.inoutAddTx}	/*입출고부가세*/
+			, #{deliveryInspectionVO.inoutTotAmt}	/*입출고총금액*/
+			, #{deliveryInspectionVO.note}			/*비고*/
+			, #{deliveryInspectionVO.poNo}			/*발주번호*/
+			, #{deliveryInspectionVO.actncNo}		/*납품번호*/
+			, #{deliveryInspectionVO.ordNo}			/*주문번호*/
+			, #{deliveryInspectionVO.regrId}		/*등록자*/
+			, #{deliveryInspectionVO.regDate}		/*등록일시*/
+			, #{deliveryInspectionVO.chgrId}		/*수정자*/
+			, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+			)			
+	</insert>
+	
+	
+	<!-- 입고상태처리이력 등록 -->
+	<insert id="insertInoutStatProcHist" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+	
+		INSERT INTO TDNDT_INOUT_STAT_PROC_HIST
+			( SO_ID					/*사업ID*/
+			, INOUT_ID				/*입출고ID*/
+			, INOUT_PRGR_STAT_CD	/*입출고진행상태코드*/
+			, STAT_PROC_ID			/*상태처리자ID*/
+			, STAT_PROC_DTTM		/*상태처리일시*/
+			, REGR_ID				/*등록자*/
+			, REG_DATE				/*등록일시*/
+			, CHGR_ID				/*수정자*/
+			, CHG_DATE				/*수정일시*/
+			)
+        VALUES
+			( #{deliveryInspectionVO.soId}			/*사업ID*/
+			, #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+			, #{deliveryInspectionVO.inoutPrgrStatCd}	/*입출고진행상태코드*/
+			, #{deliveryInspectionVO.statProcId}	/*상태처리자ID*/
+			, #{deliveryInspectionVO.statProcDttm}	/*상태처리일시*/
+			, #{deliveryInspectionVO.regrId}		/*등록자*/
+			, #{deliveryInspectionVO.regDate}		/*등록일시*/
+			, #{deliveryInspectionVO.chgrId}		/*수정자*/
+			, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+			)			
+	</insert>
+	
+	
+	<!-- 입고내역 수정 -->
+	<update id="updateInout" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_INOUT
+			SET	INOUT_DT			= #{deliveryInspectionVO.inoutDt}				/*입출고일자*/
+				, INOUT_CL_CD		= #{deliveryInspectionVO.inoutClCd}				/*입출고구분코드*/
+				, INOUT_PRGR_STAT_CD	= #{deliveryInspectionVO.inoutPrgrStatCd}	/*입출고진행상태코드*/
+				, STAT_PROC_ID 		= #{deliveryInspectionVO.statProcId}			/*상태처리자ID*/
+				, STAT_PROC_DTTM	= #{deliveryInspectionVO.statProcDttm}			/*상태처리일시*/
+				, OWN_ORG_ID		= #{deliveryInspectionVO.ownOrgId}				/*보유조직ID*/
+				, INOUT_ORG_ID		= #{deliveryInspectionVO.inoutOrgId}			/*입출고조직ID*/
+				, REL_INOUT_ID		= #{deliveryInspectionVO.relInoutId}			/*관련입출고ID*/
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}				/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}				/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND INOUT_ID			= #{deliveryInspectionVO.inoutId}				/*입출고ID*/
+	</update>
+	
+	<!-- 입고상세내역 수정 -->
+	<update id="updateInoutDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_INOUT_DTL
+			SET	INOUT_RESN_CD		= #{deliveryInspectionVO.inoutResnCd}	/*입출고사유코드*/
+				, INOUT_CL_CD		= #{deliveryInspectionVO.inoutClCd}		/*입출고구분코드*/
+				, EQT_USE_CD		= #{deliveryInspectionVO.eqtUseCd}		/*단말기용도코드*/
+				, EQT_RSRC_CL_CD 	= #{deliveryInspectionVO.eqtRsrcClCd}	/*단말자원구분코드*/
+				, INOUT_QTY			= #{deliveryInspectionVO.inoutQty}		/*입출고수량*/
+				, INOUT_UT_PRC		= #{deliveryInspectionVO.inoutUtPrc}	/*입출고단가*/
+				, INOUT_AMT			= #{deliveryInspectionVO.inoutAmt}		/*입출고공급가액*/
+				, INOUT_ADD_TX		= #{deliveryInspectionVO.inoutAddTx}	/*입출고부가세*/
+				, INOUT_TOT_AMT		= #{deliveryInspectionVO.inoutTotAmt}	/*입출고총금액*/
+				, NOTE				= #{deliveryInspectionVO.note}			/*비고*/
+				, PO_NO				= #{deliveryInspectionVO.poNo}			/*발주번호*/
+				, ACTNC_NO			= #{deliveryInspectionVO.actncNo}		/*납품번호*/
+				, ORD_NO			= #{deliveryInspectionVO.ordNo}			/*주문번호*/
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}		/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}			/*사업ID*/
+			AND INOUT_ID			= #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+			AND ITEM_ID				= #{deliveryInspectionVO.itemId}		/*제품ID*/
+	</update>
+	
+	<!-- 입고내역 삭제 -->
+	<delete id="deleteInout" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		DELETE
+		FROM	TDNDT_INOUT
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}			/*사업ID*/
+			AND INOUT_ID			= #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+    </delete>
+    
+    <!-- 입고상세내역 삭제 -->
+	<delete id="deleteInoutDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		DELETE
+		FROM	TDNDT_INOUT_DTL
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}			/*사업ID*/
+			AND INOUT_ID			= #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+			AND ITEM_ID				= #{deliveryInspectionVO.itemId}		/*제품ID*/
+    </delete>
+    
+    
+    <!-- 입고 단말기내역  리스트 조회 -->
+	<select id="selectInOutEqtList" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">	
+		SELECT
+				A.SO_ID
+				, A.INOUT_ID 				/*입출고ID*/
+				, D.ITEM_ID 				/*제품ID*/
+				, D.ITEM_NM 				/*제품명*/
+				, A.EQT_SEQ 				/*일련번호*/
+				, A.EQT_BAR_CD 				/*바코드*/
+				, A.APPR_YN 				/*검수여부*/
+				, B.CLOR_CD 				/*색상코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00078'
+							AND DETAIL.COMMON_CD = B.CLOR_CD
+	       		) AS COLOR_NM				/*색상명*/
+	       		, B.EQT_RSRC_CL_CD 			/*단말기자원구분코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00068'
+							AND DETAIL.COMMON_CD = B.EQT_RSRC_CL_CD
+	       		) AS EQT_RSRC_CL_NM			/*단말기자원구분코드명*/
+	       		, B.EQT_USE_CD				/*단말기용도코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00065'
+							AND DETAIL.COMMON_CD = B.EQT_USE_CD
+	       		) AS EQT_USE_NM				/*단말기용도코드명*/
+	       		, B.EQT_STAT_CD 			/*단말기상태코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00066'
+							AND DETAIL.COMMON_CD = B.EQT_STAT_CD
+	       		) AS EQT_STAT_NM				/*단말기상태코드명*/
+	       		, B.LGST_PROC_STAT_CD 			/*물류처리상태코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = B.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 			/*물류처리상태코드명*/
+	       		, B.PRCHS_UT_PRC				/*매입단가*/
+	       		, B.DSTRB_UT_PRC				/*유통단가*/
+	       		, C.IMEI_NO						/*IMEI번호*/
+	       		, C.MAC_ADDR_VAL				/*MAC주소*/
+	       		, C.MNCO_DT						/*제조일*/
+		FROM 	TDNDT_INOUT_EQT A
+				, TDNDT_EQT B
+				, TDNDT_EQT_OTHS_ATTR C
+				, TDNDT_ITEM D
+		WHERE 	1=1
+			AND A.SO_ID 		= #{deliveryInspectionVO.soId}			/*사업ID*/
+			AND A.SO_ID 		= B.SO_ID
+			AND A.ITEM_ID 		= B.ITEM_ID
+			AND A.EQT_SEQ 		= B.EQT_SEQ
+			AND A.SO_ID 		= C.SO_ID
+			AND A.ITEM_ID	 	= C.ITEM_ID
+			AND A.EQT_SEQ 		= C.EQT_SEQ
+			AND A.SO_ID 		= D.SO_ID
+			AND A.ITEM_ID 		= D.ITEM_ID
+			AND A.INOUT_ID 		= #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+	</select>
+	
+	
+	<!-- 입고USIM내역  리스트 조회 -->
+	<select id="selectInOutUsimList" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		SELECT
+				A.SO_ID
+				, A.INOUT_ID 				/*입출고ID*/
+				, D.ITEM_ID 				/*제품ID*/
+				, D.ITEM_NM 				/*제품명*/
+				, A.EQT_SEQ 				/*일련번호*/
+				, A.EQT_BAR_CD 				/*바코드*/
+				, A.APPR_YN 				/*검수여부*/
+				, B.LGST_PROC_STAT_CD 		/*물류처리상태코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = B.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 		/*물류처리상태코드명*/
+	       		, B.PRCHS_UT_PRC			/*매입단가*/
+				, B.DSTRB_UT_PRC			/*유통단가*/
+				, B.IMSI_NO					/*IMSI번호*/
+				, C.PIN1					/*PIN1*/
+				, C.PUK1					/*PUK1*/
+				, C.PIN2					/*PIN2*/
+				, C.PUK2					/*PUK2*/
+				, C.ADM						/*ADM*/
+				, C.KI						/*KI(encKey)*/
+				, C.ACC						/*ACC*/
+				, C.ALGOID					/*ALGOID*/
+				, C.KDBID					/*KDBID*/
+				, C.ACSUB					/*ACSUB*/
+		FROM 	TDNDT_INOUT_EQT A
+				INNER JOIN TDNDT_USIM B ON A.SO_ID 	= B.SO_ID AND A.ITEM_ID 	= B.ITEM_ID AND A.EQT_SEQ 	= B.USIM_SEQ
+				LEFT OUTER JOIN TDNDT_USIM_OTHS_ATTR C ON A.EQT_SEQ = C.USIM_SEQ
+				INNER JOIN TDNDT_ITEM D	ON A.SO_ID 	= D.SO_ID AND A.ITEM_ID 	= D.ITEM_ID				
+		WHERE 	1=1
+			AND A.SO_ID 	= #{deliveryInspectionVO.soId}			/*사업ID*/
+			AND A.INOUT_ID 	= #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+	       		
+	       		
+	</select>
+	
+	
+	<!-- 입고바우쳐내역  리스트 조회 -->
+	<select id="selectInOutVEqtList" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		SELECT
+				A.SO_ID
+				, A.INOUT_ID 				/*입출고ID*/
+				, D.ITEM_ID 				/*제품ID*/
+				, D.ITEM_NM 				/*제품명*/
+				, A.EQT_SEQ 				/*일련번호*/
+				, A.EQT_BAR_CD 				/*바코드*/
+				, A.APPR_YN 				/*검수여부*/
+				, B.LGST_PROC_STAT_CD 		/*물류처리상태코드*/
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{deliveryInspectionVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{deliveryInspectionVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = B.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 		/*물류처리상태코드명*/
+	       		, ( SELECT 
+	       				MNCO_OTPT_UT_PRC 
+	       			FROM TDNDT_MNCO_UT_PRC_DTL 
+	       			WHERE SO_ID = A.SO_ID AND ITEM_ID = A.ITEM_ID 
+	       				AND EFT_END_DT = '99991231'
+	       		) AS PRCHS_UT_PRC 	/*매입단가*/
+				, ( SELECT 
+						DSTRB_UT_PRC 
+					FROM TDNDT_DSTRB_UT_PRC_DTL 
+					WHERE SO_ID = A.SO_ID AND ITEM_ID = A.ITEM_ID 
+						AND EFT_END_DT = '99991231'
+				) AS DSTRB_UT_PRC /*유통단가*/
+		FROM 	TDNDT_INOUT_EQT A
+				, (	SELECT
+						AA.SO_ID
+						, AA.ITEM_ID
+						, BB.VISSUE_SEQ_NO
+						, BB.VO_ISSUE_AMT
+						, CC.VO_SEQ_NO
+						, CC.LGST_PROC_STAT_CD
+					FROM TDNDT_VISSUE AA
+						INNER JOIN TDNDT_VISSUE_DTL BB ON AA.SO_ID = BB.SO_ID AND AA.VISSUE_SEQ_NO = BB.VISSUE_SEQ_NO
+						INNER JOIN TDNDT_VEQT CC ON BB.SO_ID = CC.SO_ID AND BB.VO_SEQ_NO = CC.VO_SEQ_NO
+				) B
+				, TDNDT_ITEM D
+		WHERE 	1=1
+			AND A.SO_ID 		= #{deliveryInspectionVO.soId}			/*사업ID*/
+			AND A.SO_ID 		= B.SO_ID
+			AND A.ITEM_ID 		= B.ITEM_ID
+			AND A.EQT_SEQ 		= B.VO_SEQ_NO
+			AND A.SO_ID 		= D.SO_ID
+			AND A.ITEM_ID 		= D.ITEM_ID
+			AND A.INOUT_ID 		= #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+	</select>
+	
+	<!-- 단말기의 일련번호별 현재 상태 등록 -->
+	<insert id="insertEqt" parameterType="java.util.List">
+		INSERT	INTO TDNDT_EQT
+				( EQT_SEQ			/*단말기일련번호*/
+				, SO_ID				/*사업ID*/
+				, ITEM_ID			/*제품ID*/
+				, EQT_BAR_CD		/*바코드*/
+				, EQT_RSRC_CL_CD	/*단말자원구분코드*/
+				, EQT_USE_CD		/*단말기용도코드*/
+				, EQT_STAT_CD		/*단말기상태코드*/
+				, CLOR_CD			/*색상코드*/
+				, LGST_PROC_STAT_CD	/*물류처리상태코드*/
+				, LGST_PROC_DTTM	/*물류처리일시*/
+				, OWN_LOC_CD		/*소유위치코드*/
+				, FRST_IN_DT		/*최초물류센터입고일자*/
+				, AGC_IN_DT			/*대리점입고일자*/
+				, PRCHS_UT_PRC		/*매입단가*/
+				, DSTRB_UT_PRC		/*유통단가*/
+				, CT_ORG_ID			/*접점조직*/
+				, CT_CHG_ID			/*접점변경자*/
+				, CT_CHG_DT			/*접점변경일*/
+				, REGR_ID			/*등록자*/
+				, REG_DATE			/*등록일시*/
+				, CHGR_ID			/*수정자*/
+				, CHG_DATE			/*수정일시*/
+				)
+			
+	        VALUES
+		<foreach collection="deliveryInspectionVOs" item="deliveryInspectionVO" index="index" separator="," open="" close="">		        	
+				( #{deliveryInspectionVO.eqtSeq}		/*단말기일련번호*/
+				, #{deliveryInspectionVO.soId}			/*사업ID*/
+				, #{deliveryInspectionVO.itemId}		/*제품ID*/
+				, #{deliveryInspectionVO.eqtBarCd}		
+				, #{deliveryInspectionVO.eqtRsrcClCd}	/*단말자원구분코드*/
+				, #{deliveryInspectionVO.eqtUseCd}		/*단말기용도코드*/
+				, #{deliveryInspectionVO.eqtStatCd}		/*단말기상태코드*/
+				, #{deliveryInspectionVO.clorCd}		/*색상코드*/
+				, #{deliveryInspectionVO.lgstProcStatCd}	/*물류처리상태코드*/
+				, #{deliveryInspectionVO.lgstProcDttm}		/*물류처리일시*/
+				, #{deliveryInspectionVO.ownLocCd}		/*소유위치코드*/
+				, #{deliveryInspectionVO.frstInDt}		/*최초물류센터입고일자*/
+				, #{deliveryInspectionVO.agcInDt}		/*대리점입고일자*/
+				, #{deliveryInspectionVO.prchsUtPrc}	/*매입단가*/
+				, #{deliveryInspectionVO.dstrbUtPrc}	/*유통단가*/
+				, #{deliveryInspectionVO.ctOrgId}		/*접점조직*/
+				, #{deliveryInspectionVO.ctChgId}		/*접점변경자*/				
+				<if test="deliveryInspectionVO.ctChgDt != null and deliveryInspectionVO.ctChgDt != ''">
+					, #{deliveryInspectionVO.ctChgDt}		/*접점변경일*/
+				</if>
+				<if test="deliveryInspectionVO.ctChgDt == null or deliveryInspectionVO.ctChgDt == ''">
+					, null		/*접점변경일*/
+				</if>						
+				, #{deliveryInspectionVO.regrId}		/*등록자*/
+				, #{deliveryInspectionVO.regDate}		/*등록일시*/
+				, #{deliveryInspectionVO.chgrId}		/*수정자*/
+				, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+				)
+		</foreach>
+	</insert>
+	
+	
+	<!-- 단말기 일련번호별 기타 속성 등록 -->
+	<insert id="insertEqtOthsAttr" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+			
+		INSERT	INTO TDNDT_EQT_OTHS_ATTR
+				( EQT_SEQ			/*단말기일련번호*/
+				, SO_ID				/*사업ID*/
+				, ITEM_ID			/*제품ID*/
+				, VER_NO			/*버전번호*/
+				, EQT_MGMT_STAT_CD	/*단말기관리상태코드*/
+				, NM_CL_CD			/*네이밍구분코드*/
+				, IMEI_NO			/*IMEI번호*/
+				, PSC_MIN_NO		/*물리MIN번호*/
+				, PSC_IMSI_NO		/*물리IMSI번호*/
+				, V_IMSI_NO			/*가변IMSI번호*/
+				, MAC_ADDR_VAL		/*MAC주소*/
+				, MNCO_DT			/*제조일*/
+				, RESULT_CD			/*처리결과코드*/
+				, REGR_ID			/*등록자*/
+				, REG_DATE			/*등록일시*/
+				, CHGR_ID			/*수정자*/
+				, CHG_DATE			/*수정일시*/
+				)
+	        VALUES
+		<foreach collection="deliveryInspectionVOs" item="deliveryInspectionVO" index="index" separator="," open="" close="">	        
+				( #{deliveryInspectionVO.eqtSeq}		/*단말기일련번호*/
+				, #{deliveryInspectionVO.soId}			/*사업ID*/
+				, #{deliveryInspectionVO.itemId}		/*제품ID*/
+				
+				<if test="deliveryInspectionVO.verNo != null and deliveryInspectionVO.verNo != ''">
+					, #{deliveryInspectionVO.verNo}			
+				</if>
+				<if test="deliveryInspectionVO.verNo == null or deliveryInspectionVO.verNo == ''">
+					, null		/*버전번호*/
+				</if>	
+								
+				, #{deliveryInspectionVO.eqtMgmtStatCd}		/*단말기관리상태코드*/
+				, #{deliveryInspectionVO.nmClCd}		/*네이밍구분코드*/
+				, #{deliveryInspectionVO.imeiNo}		/*IMEI번호*/
+				, #{deliveryInspectionVO.pscMinNo}		/*물리MIN번호*/
+				, #{deliveryInspectionVO.pscImsiNo}		/*물리IMSI번호*/
+				, #{deliveryInspectionVO.vImsiNo}		/*가변IMSI번호*/
+				, #{deliveryInspectionVO.macAddrVal}	/*MAC주소*/
+				, #{deliveryInspectionVO.mncoDt}		/*제조일*/
+				, #{deliveryInspectionVO.resultCd}		/*처리결과코드*/
+				, #{deliveryInspectionVO.regrId}		/*등록자*/
+				, #{deliveryInspectionVO.regDate}		/*등록일시*/
+				, #{deliveryInspectionVO.chgrId}		/*수정자*/
+				, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+				)	
+		</foreach>
+
+	</insert>
+	
+	
+	<!-- 입출고 단말기 일련번호별로 관리 등록 -->
+	<insert id="insertInoutEqt" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+	
+		INSERT	INTO TDNDT_INOUT_EQT
+				( SO_ID			/*사업ID*/
+				, INOUT_ID		/*입출고ID*/
+				, ITEM_ID		/*제품ID*/
+				, EQT_SEQ		/*단말기일련번호*/
+				, EQT_BAR_CD	/*단말기바코드*/
+				, APPR_YN		/*검수여부*/
+				, REGR_ID		/*등록자*/
+				, REG_DATE		/*등록일시*/
+				, CHGR_ID		/*수정자*/
+				, CHG_DATE		/*수정일시*/
+				)
+	        VALUES
+		<foreach collection="deliveryInspectionVOs" item="deliveryInspectionVO" index="index" separator="," open="" close="">	        
+				( #{deliveryInspectionVO.soId}			/*사업ID*/
+				, #{deliveryInspectionVO.inoutId}		/*입출고ID*/
+				, #{deliveryInspectionVO.itemId}		/*제품ID*/
+				, #{deliveryInspectionVO.eqtSeq}		/*단말기일련번호*/
+				, #{deliveryInspectionVO.eqtBarCd}		/*단말기바코드*/
+				, #{deliveryInspectionVO.apprYn}		/*검수여부*/
+				, #{deliveryInspectionVO.regrId}		/*등록자*/
+				, #{deliveryInspectionVO.regDate}		/*등록일시*/
+				, #{deliveryInspectionVO.chgrId}		/*수정자*/
+				, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+				)
+		</foreach>
+	</insert>
+	
+	
+	<!-- 입고내역 수정 -->
+	<update id="updateInoutPrgrStatCd" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_INOUT
+			SET	INOUT_PRGR_STAT_CD	= #{deliveryInspectionVO.inoutPrgrStatCd}	/*입출고진행상태코드*/
+				, STAT_PROC_ID 		= #{deliveryInspectionVO.statProcId}		/*상태처리자ID*/
+				, STAT_PROC_DTTM	= #{deliveryInspectionVO.statProcDttm}		/*상태처리일시*/
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}			/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}			/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}				/*사업ID*/
+			AND INOUT_ID			= #{deliveryInspectionVO.inoutId}			/*입출고ID*/
+	</update>
+	
+	
+	
+	<!-- USIM 개개의 정보 등록 -->
+	<insert id="insertUsim" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		INSERT	ALL 		
+		<foreach collection="deliveryInspectionVOs" item="deliveryInspectionVO" index="index" separator="" open="" close="">
+		
+			INTO TDNDT_USIM
+				( USIM_SEQ			/*USIM일련번호*/
+				, SO_ID				/*사업ID*/
+				, ITEM_ID			/*제품ID*/
+				, USIM_BAR_CD		/*USIM바코드*/
+				, USIM_STAT_CD		/*USIM상태코드*/
+				, PRCHS_UT_PRC		/*매입단가*/
+				, IMSI_NO			/*IMSI번호*/
+				, REGR_ID			/*등록자*/
+				, REG_DATE			/*등록일시*/
+				, CHGR_ID			/*수정자*/
+				, CHG_DATE			/*수정일시*/
+				)
+	        VALUES
+				( #{deliveryInspectionVO.usimSeq}		/*USIM일련번호*/
+				, #{deliveryInspectionVO.soId}			/*사업ID*/
+				, #{deliveryInspectionVO.itemId}		/*제품ID*/
+				, #{deliveryInspectionVO.usimBarCd}		/*USIM바코드*/
+				, #{deliveryInspectionVO.usimStatCd}	/*USIM상태코드*/
+				, #{deliveryInspectionVO.prchsUtPrc}	/*매입단가*/
+				, #{deliveryInspectionVO.imsiNo}		/*IMSI번호*/
+				, #{deliveryInspectionVO.regrId}		/*등록자*/
+				, #{deliveryInspectionVO.regDate}		/*등록일시*/
+				, #{deliveryInspectionVO.chgrId}		/*수정자*/
+				, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+				)	
+		</foreach>
+		SELECT * FROM DUAL		
+	</insert>
+	
+	
+	<!-- USIM 개개의 정보 등록 -->
+	<insert id="insertUsimOthsAttr" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		INSERT	ALL 		
+		<foreach collection="deliveryInspectionVOs" item="deliveryInspectionVO" index="index" separator="" open="" close="">
+		
+			INTO TDNDT_USIM_OTHS_ATTR
+				( USIM_SEQ		/*유심일련번호*/
+				, SO_ID			/*사업ID*/
+				, ITEM_ID		/*제품ID*/
+				, PIN1			/*PIN1*/
+				, PUK1			/*PUK1*/
+				, PIN2			/*PIN2*/
+				, PUK2			/*PUK2*/
+				, ADM			/*ADM*/
+				, KI			/*KI(encKey)*/
+				, ACC			/*ACC*/
+				, ALGOID		/*ALGOID*/
+				, KDBID			/*KDBID*/
+				, ACSUB			/*ACSUB*/
+				, REGR_ID		/*등록자*/
+				, REG_DATE		/*등록일시*/
+				, CHGR_ID		/*수정자*/
+				, CHG_DATE		/*수정일시*/
+				)
+	        VALUES
+				( #{deliveryInspectionVO.usimSeq}	/*유심일련번호*/
+				, #{deliveryInspectionVO.soId}		/*사업ID*/
+				, #{deliveryInspectionVO.itemId}	/*제품ID*/
+				, #{deliveryInspectionVO.pin1}		/*PIN1*/
+				, #{deliveryInspectionVO.puk1}		/*PUK1*/
+				, #{deliveryInspectionVO.pin2}		/*PIN2*/
+				, #{deliveryInspectionVO.puk2}		/*PUK2*/
+				, #{deliveryInspectionVO.adm}		/*ADM*/
+				, #{deliveryInspectionVO.ki}		/*KI(encKey)*/
+				, #{deliveryInspectionVO.acc}		/*ACC*/
+				, #{deliveryInspectionVO.algoid}	/*ALGOID*/
+				, #{deliveryInspectionVO.kdbid}		/*KDBID*/
+				, #{deliveryInspectionVO.acsub}		/*ACSUB*/
+				, #{deliveryInspectionVO.regrId}	/*등록자*/
+				, #{deliveryInspectionVO.regDate}	/*등록일시*/
+				, #{deliveryInspectionVO.chgrId}	/*수정자*/
+				, #{deliveryInspectionVO.chgDate}	/*수정일시*/
+				)	
+		</foreach>
+		SELECT * FROM DUAL		
+	</insert>
+	
+	
+	<!-- 입고단말기, USIM내역 수정 -->
+	<update id="updateInoutEqtApprYn" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_INOUT_EQT
+			SET	APPR_YN				= #{deliveryInspectionVO.apprYn}					
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}				/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}				/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND INOUT_ID			= #{deliveryInspectionVO.inoutId}				/*입출고ID*/
+			AND ITEM_ID				= #{deliveryInspectionVO.itemId}				/*제품ID*/
+			<if test="deliveryInspectionVO.eqtSeqList != null and deliveryInspectionVO.eqtSeqList.size() != 0">
+			AND EQT_SEQ IN
+			<foreach collection="deliveryInspectionVO.eqtSeqList" item="item" index="index" separator="," open="(" close=")">
+	            #{item.eqtSeq}
+	        </foreach>
+        </if>
+	</update>
+	
+	
+	<!-- 단말기 내역 수정 -->
+	<update id="updateEqt" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_EQT
+			SET	LGST_PROC_STAT_CD	= #{deliveryInspectionVO.lgstProcStatCd}		/*물류처리상태코드*/
+				, OWN_LOC_CD		= #{deliveryInspectionVO.ownLocCd}				/*소유위치코드*/
+				, FRST_IN_DT		= #{deliveryInspectionVO.frstInDt}				/*대리점입고일자*/
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}				/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}				/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND ITEM_ID				= #{deliveryInspectionVO.itemId}				/*제품ID*/
+			<if test="deliveryInspectionVO.eqtSeqList != null and deliveryInspectionVO.eqtSeqList.size() != 0">
+			AND EQT_SEQ IN
+			<foreach collection="deliveryInspectionVO.eqtSeqList" item="item" index="index" separator="," open="(" close=")">
+	            #{item.eqtSeq}
+	        </foreach>
+        </if>
+	</update>
+	
+	<!-- TDNDT_INOUT_EQT  inoutId select-->
+	<select id="selectInoutEqt" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		
+		SELECT	SO_ID
+				, ITEM_ID
+				, EQT_SEQ
+				, EQT_SEQ
+		FROM TDNDT_INOUT_EQT
+		WHERE 1=1
+			AND SO_ID 		= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND INOUT_ID 	= #{deliveryInspectionVO.inoutId}				/*입출고ID*/
+				
+	</select>
+	
+	
+	<!-- 변경처리이력 등록(입고검수승인 Bulk) -->
+	<insert id="insertUpdProcHist" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+
+		INSERT	INTO TDNDT_UPD_PROC_HIST
+				( HIST_SEQ			/*이력일련번호*/
+				, UPD_PROC_CL_CD	/*변경처리구분코드*/
+				, SO_ID				/*사업ID*/
+				, ITEM_ID			/*제품ID*/
+				, EQT_SEQ			/*단말기일련번호*/
+				, USIM_SEQ			/*USIM일련번호*/
+				, UPD_BFR_CD		/*변경전코드*/
+				, AFTR_UPD_CD		/*변경후코드*/
+				, UPD_PROC_ID		/*변경처리자ID*/
+				, UPD_PROC_DTTM		/*변경처리일시*/
+				, REGR_ID			/*등록자*/
+				, REG_DATE			/*등록일시*/
+				, CHGR_ID			/*수정자*/
+				, CHG_DATE			/*수정일시*/
+				)
+	        VALUES
+		<foreach collection="deliveryInspectionVOs" item="deliveryInspectionVO" index="index" separator="," open="" close="">	        
+				( #{deliveryInspectionVO.histSeq}		/*이력일련번호*/
+				, #{deliveryInspectionVO.updProcClCd}	/*변경처리구분코드*/
+				, #{deliveryInspectionVO.soId}			/*사업ID*/
+				, #{deliveryInspectionVO.itemId}		/*제품ID*/
+				, #{deliveryInspectionVO.eqtSeq}		/*단말기일련번호*/
+				, #{deliveryInspectionVO.eqtSeq}		/*USIM일련번호*/
+				, ''									/*변경전코드*/
+				, #{deliveryInspectionVO.aftrUpdCd}		/*변경후코드*/
+				, #{deliveryInspectionVO.updProcId}		/*변경처리자ID*/
+				, #{deliveryInspectionVO.updProcDttm}	/*변경처리일시*/
+				, #{deliveryInspectionVO.regrId}		/*등록자*/
+				, #{deliveryInspectionVO.regDate}		/*등록일시*/
+				, #{deliveryInspectionVO.chgrId}		/*수정자*/
+				, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+				)	
+		</foreach>
+		
+	</insert>
+	
+	<!-- 입고내역2 수정 -->
+	<update id="updateInout2" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_INOUT
+			SET	INOUT_DT			= #{deliveryInspectionVO.inoutDt}				/*입출고일자		*/		
+				, INOUT_PRGR_STAT_CD	= #{deliveryInspectionVO.inoutPrgrStatCd}	/*입출고진행상태코드*/
+				, STAT_PROC_ID 		= #{deliveryInspectionVO.statProcId}			/*상태처리자ID*/
+				, STAT_PROC_DTTM	= #{deliveryInspectionVO.statProcDttm}			/*상태처리일시*/
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}				/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}				/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND INOUT_ID			= #{deliveryInspectionVO.inoutId}				/*입출고ID*/
+	</update>
+	
+	
+	<!-- USIM 내역 수정 -->
+	<update id="updateUsim" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_USIM
+			SET	LGST_PROC_STAT_CD	= #{deliveryInspectionVO.lgstProcStatCd}		/*물류처리상태코드*/
+				, OWN_LOC_CD		= #{deliveryInspectionVO.ownLocCd}				/*소유위치코드*/
+				, FRST_IN_DT		= #{deliveryInspectionVO.frstInDt}				/*대리점입고일자*/
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}				/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}				/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND ITEM_ID				= #{deliveryInspectionVO.itemId}				/*제품ID*/
+			<if test="deliveryInspectionVO.eqtSeqList != null and deliveryInspectionVO.eqtSeqList.size() != 0">
+			AND USIM_SEQ IN
+			<foreach collection="deliveryInspectionVO.eqtSeqList" item="item" index="index" separator="," open="(" close=")">
+	            #{item.eqtSeq}
+	        </foreach>
+        </if>
+	</update>
+	
+	
+	<!-- 납품수량에서 입고수량합계를 뺀 수량 조회 -->
+    <select id="getActncMinusInOutQty" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="int">
+    	SELECT
+			ACTNC_QTY -(
+				CASE WHEN (
+					SELECT SUM(TID.INOUT_QTY)
+					FROM TDNDT_INOUT TI
+						, TDNDT_INOUT_DTL TID
+					WHERE 1=1
+						AND TA.SO_ID = TID.SO_ID
+						AND TA.ACTNC_NO = TID.ACTNC_NO
+						AND TI.SO_ID = TID.SO_ID
+						AND TI.INOUT_ID = TID.INOUT_ID
+						AND TID.INOUT_CL_CD = '1'
+						AND TID.INOUT_RESN_CD = '00'
+						AND TI.INOUT_PRGR_STAT_CD <![CDATA[<>]]> '10'
+						AND TI.INOUT_PRGR_STAT_CD = '20'
+				) IS NULL THEN 0
+				ELSE (SELECT SUM(TID.INOUT_QTY)
+						FROM TDNDT_INOUT TI
+							, TDNDT_INOUT_DTL TID
+						WHERE 1=1
+							AND TA.SO_ID = TID.SO_ID
+							AND TA.ACTNC_NO = TID.ACTNC_NO
+							AND TI.SO_ID = TID.SO_ID
+							AND TI.INOUT_ID = TID.INOUT_ID
+							AND TID.INOUT_CL_CD = '1'
+							AND TID.INOUT_RESN_CD = '00'
+							AND TI.INOUT_PRGR_STAT_CD <![CDATA[<>]]> '10'
+							AND TI.INOUT_PRGR_STAT_CD = '20')
+				END     		
+			) AS QTY
+		FROM TDNDT_ACTNC TA
+		WHERE 1=1
+           AND TA.SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+           AND TA.ACTNC_NO 			= #{deliveryInspectionVO.actncNo}				/*납품번호*/
+    </select>
+	
+	
+	<!-- 입고내역 삭제 -->
+	<delete id="deleteActncIdlDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		DELETE
+		FROM	TDNDT_ACTNC_IDL_DTL
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}			/*사업ID*/
+			AND ACTNC_NO 			= #{deliveryInspectionVO.actncNo}		/*납품번호*/
+			AND IDL_STAT_CD 		= '10'
+    </delete>
+    
+    
+    <!-- TDNDT_INOUT_EQT  inoutId select-->
+	<select id="selectInoutDtlActncNoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		
+		SELECT	A.SO_ID
+				, '' AS ASGN_NO 		/*할당번호 SEQ*/
+				, '' AS ASGN_ORG_ID 	/* 할당하고자 하는 SALES TEAM ORG_ID*/
+				, A.ITEM_TP_CD
+				, A.ITEM_ID
+				, A.EQT_USE_CD
+				, A.CLOR_CD
+				, '' AS ASGN_DT
+				, A.INOUT_QTY AS STCK_OWN_QTY
+				, A.INOUT_QTY AS ASGN_QTY
+				, 0 AS NOASGN_QTY
+				, '' AS NOTE
+				, '' AS ASGN_MNG_ORG_ID 		/* 할당을 진행하는 USER ID의 조직ID (SALES ADMIN)*/
+				, '' AS ASGN_MNG_INCHRG_ID 		/* 할당을 진행하는 USER ID (SALES ADMIN 계정의)*/
+				, ( SELECT OWN_ORG_ID FROM TDNDT_INOUT WHERE INOUT_ID = A.INOUT_ID ) AS LGST_CENT_ID
+				, '' AS UPP_LV_ASGN_NO 			/* 상위 할당번호(직전 SEQ번호)*/
+				, '' AS UPP_LV_ASGN_ORG_ID 		/* 상위 할당번호의 ASGN_ORG_ID (SALES DIVISION ORG_ID)*/
+				, 'N' ASGN_END_YN
+		FROM TDNDT_INOUT_DTL A
+		WHERE 1=1
+			AND A.SO_ID 		= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND A.ACTNC_NO 	= #{deliveryInspectionVO.actncNo}				/*납품번호*/
+				
+	</select>
+    
+    
+    <!-- 할당 -->
+	<insert id="insertAsgn" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+ 		
+		INSERT	INTO TDNDT_ASGN
+				( SO_ID				/*사업ID*/
+				, ASGN_NO			/*할당번호*/
+				, ASGN_ORG_ID		/*할당조직ID*/
+				, ITEM_TP_CD		/*제품유형코드*/
+				, ITEM_ID			/*제품ID*/
+				, EQT_USE_CD		/*단말기용도코드*/
+				, CLOR_CD			/*색상코드*/
+				, ASGN_DT			/*할당일자*/
+				, STCK_OWN_QTY		/*재고보유량*/
+				, ASGN_QTY			/*할당수량*/
+				, NOASGN_QTY		/*미주문수량*/
+				
+				, ASGN_MNG_ORG_ID	/*할당관리조직ID*/
+				, ASGN_MNG_INCHRG_ID	/*할당관리담당자ID*/
+				, LGST_CENT_ID		/*물류센터ID*/
+				, UPP_LV_ASGN_NO	/*상위할당번호*/
+				, UPP_LV_ASGN_ORG_ID/*상위할당조직ID*/
+				, ASGN_END_YN		/*할당종료여부*/
+				, REGR_ID			/*등록자*/
+				, REG_DATE			/*등록일시*/
+				, CHGR_ID			/*수정자*/
+				, CHG_DATE			/*수정일시*/
+				)
+	        VALUES
+		<foreach collection="deliveryInspectionVOs" item="deliveryInspectionVO" index="index" separator="," open="" close="">	        
+				( #{deliveryInspectionVO.soId}			/*사업ID*/
+				, #{deliveryInspectionVO.asgnNo}		/*할당번호*/
+				, #{deliveryInspectionVO.asgnOrgId}		/*할당조직ID*/
+				, #{deliveryInspectionVO.itemTpCd}		/*제품유형코드*/
+				, #{deliveryInspectionVO.itemId}		/*제품ID*/
+				, #{deliveryInspectionVO.eqtUseCd}		/*단말기용도코드*/
+				, #{deliveryInspectionVO.clorCd}		/*색상코드*/
+				, #{deliveryInspectionVO.asgnDt}		/*할당일자*/
+				, #{deliveryInspectionVO.stckOwnQty}	/*재고보유량*/
+				, #{deliveryInspectionVO.asgnQty}		/*할당수량*/
+				, #{deliveryInspectionVO.noasgnQty}		/*미주문수량*/
+				
+				, #{deliveryInspectionVO.asgnMngOrgId}	/*할당관리조직ID*/
+				, #{deliveryInspectionVO.asgnMngInchrgId}	/*할당관리담당자ID*/
+				, #{deliveryInspectionVO.lgstCentId}	/*물류센터ID*/
+				, #{deliveryInspectionVO.uppLvAsgnNo}	/*상위할당번호*/
+				, #{deliveryInspectionVO.uppLvAsgnOrgId}	/*상위할당조직ID*/
+				, #{deliveryInspectionVO.asgnEndYn}		/*할당종료여부*/
+				, #{deliveryInspectionVO.regrId}		/*등록자*/
+				, #{deliveryInspectionVO.regDate}		/*등록일시*/
+				, #{deliveryInspectionVO.chgrId}		/*수정자*/
+				, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+				)	
+		</foreach>
+	</insert>
+    
+    
+    <!-- TDNDT_VISSUE  inoutId select-->
+	<select id="selectVissue" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		
+		SELECT	VI.VISSUE_SEQ_NO
+		FROM 	TDNDT_VISSUE VI
+		WHERE 1=1
+			AND VI.SO_ID 	= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND VI.PO_NO = 	( SELECT PO_NO FROM TDNDT_ACTNC WHERE SO_ID = VI.SO_ID AND ACTNC_NO = #{deliveryInspectionVO.actncNo} )
+				
+	</select>
+	
+	
+	<insert id="insertInoutEqt2" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		INSERT INTO TDNDT_INOUT_EQT
+			SELECT 	/*+INDEX(VOL PK_TDNDT_VISSUE_DTL)*/
+					VOL.SO_ID
+					, #{deliveryInspectionVO.inoutId}
+					, VI.ITEM_ID
+					, VOL.VO_SEQ_NO AS EQT_SEQ
+					, VOL.VO_BAR_CD AS EQT_BAR_CD
+					, #{deliveryInspectionVO.apprYn}
+             		, #{deliveryInspectionVO.regrId}		/*등록자*/
+					, #{deliveryInspectionVO.regDate}		/*등록일시*/
+					, #{deliveryInspectionVO.chgrId}		/*수정자*/
+					, #{deliveryInspectionVO.chgDate}		/*수정일시*/
+			FROM 	TDNDT_VISSUE_DTL VOL
+					JOIN TDNDT_VISSUE VI ON VI.SO_ID = VOL.SO_ID AND VI.VISSUE_SEQ_NO = VOL.VISSUE_SEQ_NO
+			WHERE 	VOL.SO_ID 			= #{deliveryInspectionVO.soId}					/*사업ID*/
+				AND VOL.VISSUE_SEQ_NO 	= #{deliveryInspectionVO.vissueSeqNo}
+	
+	</insert>
+	
+	<!-- 바우쳐마스터 내역 수정 -->
+	<update id="updateVeqt" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_VEQT
+			SET VO_STAT_CD 			= #{deliveryInspectionVO.voStatCd}				/*바우쳐상태*/
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}				/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}				/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND VO_SEQ_NO IN ( SELECT VO_SEQ_NO FROM TDNDT_VISSUE_DTL WHERE VISSUE_SEQ_NO = #{deliveryInspectionVO.vissueSeqNo} ) /*발행일련번호*/
+			
+	</update>
+	
+	
+	<insert id="insertVeqtTrans" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+	
+		INSERT INTO TDNDT_VEQT_TRANS
+        	( CRT_SEQ_NO
+        	, SO_ID
+        	, VO_SEQ_NO
+        	, VO_BAR_CD
+        	, ITEM_ID
+        	, VO_STAT_CD
+        	, VO_ISSUE_DT
+        	, VO_EXPIRED_DT
+        	, VO_ISSUE_AMT
+        	, VO_PROD_CD
+        	, LGST_PROC_STAT_CD
+        	, LGST_PROC_DTTM
+			, OWN_LOC_CD
+			, FRST_IN_DT
+			, AGC_IN_DT
+			, PRCHS_UT_PRC
+			, DSTRB_UT_PRC
+			, CT_ORG_ID
+			, CT_CHG_ID
+			, CT_CHG_DT
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+			, REMARK 
+			)
+			SELECT 	#{deliveryInspectionVO.crtSeqNo} AS CRT_SEQ_NO /* 이력생성일련번호*/
+					, VE.SO_ID
+					, VE.VO_SEQ_NO
+					, VE.VO_BAR_CD
+					, VE.ITEM_ID
+					, VE.VO_STAT_CD
+					, VE.VO_ISSUE_DT
+					, VE.VO_EXPIRED_DT
+					, VE.VO_ISSUE_AMT
+					, VE.VO_PROD_CD
+					, VE.LGST_PROC_STAT_CD
+					, VE.LGST_PROC_DTTM
+					, VE.OWN_LOC_CD
+					, VE.FRST_IN_DT
+					, VE.AGC_IN_DT
+					, VE.PRCHS_UT_PRC
+					, VE.DSTRB_UT_PRC
+					, VE.CT_ORG_ID
+					, VE.CT_CHG_ID
+					, VE.CT_CHG_DT
+					, VE.REGR_ID
+					, VE.REG_DATE
+					, VE.CHGR_ID
+					, VE.CHG_DATE
+					, VE.REMARK
+			FROM 	TDNDT_VEQT VE
+					JOIN TDNDT_VISSUE_DTL VD ON VD.SO_ID = VE.SO_ID AND VD.VO_SEQ_NO = VE.VO_SEQ_NO
+			WHERE 	VE.SO_ID 			= #{deliveryInspectionVO.soId}					/*사업ID*/
+				AND VD.VISSUE_SEQ_NO 	= #{deliveryInspectionVO.vissueSeqNo}
+	
+	</insert>
+	
+	
+	<!-- 입고 바우처 수정 -->
+	<update id="updateInoutEqtApprYn2" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_INOUT_EQT
+			SET	APPR_YN				= #{deliveryInspectionVO.apprYn}					
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}				/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}				/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND INOUT_ID			= #{deliveryInspectionVO.inoutId}				/*입출고ID*/
+			AND ITEM_ID				= #{deliveryInspectionVO.itemId}				/*제품ID*/
+	</update>
+	
+	
+	<!-- 미입고건수 조회 -->
+	<select id="selectEqtCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="int" >
+		
+		SELECT		COUNT(INOUT_ID) AS CNT
+			FROM 	TDNDT_INOUT_EQT TIE
+			WHERE 	1 = 1
+				AND TIE.SO_ID = #{deliveryInspectionVO.soId}					/*사업ID*/
+				AND TIE.APPR_YN = 'N'
+				AND TIE.INOUT_ID = #{deliveryInspectionVO.inoutId}				/*입출고ID*/
+				
+	</select>
+	
+	
+	<!-- 바우쳐마스터 내역 수정 -->
+	<update id="updateVeqt2" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO">
+		UPDATE TDNDT_VEQT
+			SET VO_STAT_CD 			= #{deliveryInspectionVO.voStatCd}				/*바우쳐상태*/
+				, OWN_LOC_CD		= #{deliveryInspectionVO.ownLocCd}				/*소유위치코드*/
+				, FRST_IN_DT		= #{deliveryInspectionVO.frstInDt}				/*대리점입고일자*/
+				, CHGR_ID 			= #{deliveryInspectionVO.chgrId}				/*수정자*/
+				, CHG_DATE 			= #{deliveryInspectionVO.chgDate}				/*수정일시*/
+		WHERE	SO_ID				= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND VO_SEQ_NO IN ( SELECT VO_SEQ_NO FROM TDNDT_VISSUE_DTL WHERE VISSUE_SEQ_NO = #{deliveryInspectionVO.vissueSeqNo} ) /*발행일련번호*/
+			
+	</update>
+	
+	
+	
+	<select id="selectSalesDivision" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" >
+		
+		SELECT	A.SO_ID                	/* 사업ID*/
+	       		, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+	       		, A.ORG_ID               /* 조직ID*/
+	       		, A.ORG_NM               /* 조직명*/
+		       		
+		FROM    TSYCO_ORG_INFO  A      /* 조직정보*/
+		WHERE	1=1
+			AND A.SO_ID 		= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND A.TP_CD 		=  '1000'		 
+			AND A.TP_DTL_CD 	=  '1003'
+				
+	</select>
+	
+	<select id="selectSalesTeam" parameterType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" resultType="com.ntels.ccbs.distribute.domain.logistics.orderDeliveryMgt.DeliveryInspectionVO" >
+		
+		SELECT	A.SO_ID                	/* 사업ID*/
+	       		, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM   /* 사업명*/
+	       		, A.ORG_ID               /* 조직ID*/
+	       		, A.ORG_NM               /* 조직명*/
+		       		
+		FROM    TSYCO_ORG_INFO  A      /* 조직정보*/
+		WHERE	1=1
+			AND A.SO_ID 		= #{deliveryInspectionVO.soId}					/*사업ID*/
+			AND A.UPP_ORG_ID 	= #{deliveryInspectionVO.orgId}
+				
+	</select>
+	
+	
+</mapper>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.auth.authMng.AuthMngMapper">
+	<select id="getUserGroupList" parameterType="AuthMngVO" resultType="AuthMngVO">
+			SELECT
+				 USER_GROUP_ID
+				,USER_GROUP_NAME
+				,USER_GROUP_LEVEL
+				,MAIN_VIEW
+				,DESCRIPTION
+				,DISPLAY_ORDER
+			FROM TSYCO_USER_GROUP
+			<trim prefix="WHERE" prefixOverrides="AND|OR">
+			<if test="auth.condGroupId != null and auth.condGroupId != ''">
+				AND USER_GROUP_ID like CONCAT(CONCAT('%',#{auth.condGroupId, jdbcType=VARCHAR}),'%')
+			</if>
+			<if test="auth.condGroupNm != null and auth.condGroupNm != ''">
+				AND USER_GROUP_NAME like CONCAT(CONCAT('%',#{auth.condGroupNm, jdbcType=VARCHAR}),'%')
+			</if>
+			</trim>
+			<if test="sidx != null and sidx == 'userGroupId'">
+	            ORDER BY USER_GROUP_ID ${sord}
+	         </if>
+	         <if test="sidx != null and sidx == 'userGroupName'">
+	             ORDER BY USER_GROUP_NAME ${sord}
+	         </if>
+	         <if test="sidx == ''">
+	             ORDER BY DISPLAY_ORDER ${sord}
+	         </if>
+	</select>
+    
+
+	<select id="getAuthList" resultType="AuthMngVO">
+         SELECT
+             #{userGroupId} AS USER_GROUP_ID
+            ,MENU.MENU_NO
+            ,CASE WHEN
+                   CONCAT(CONCAT(CONCAT(CONCAT(AUTH.AUTH_R_YN , AUTH.AUTH_C_YN) , AUTH.AUTH_P_YN) , AUTH.AUTH_U_YN) , AUTH.AUTH_D_YN) = 'YYYYY'
+                  THEN 'Y'
+                 ELSE 'N'
+                END AS CHECK_ALL
+            ,CASE WHEN AUTH.AUTH_R_YN IS NULL
+                  THEN 'N'
+                  ELSE AUTH.AUTH_R_YN
+             END AS AUTH_R_YN
+            ,CASE WHEN AUTH.AUTH_C_YN IS NULL
+                  THEN 'N'
+                  ELSE AUTH.AUTH_C_YN
+             END AS AUTH_C_YN
+            ,CASE WHEN AUTH.AUTH_P_YN IS NULL
+                  THEN 'N'
+                  ELSE AUTH.AUTH_P_YN
+             END AS AUTH_P_YN
+            ,CASE WHEN AUTH.AUTH_U_YN IS NULL
+                  THEN 'N'
+                  ELSE AUTH.AUTH_U_YN
+             END AS AUTH_U_YN
+            ,CASE WHEN AUTH.AUTH_D_YN IS NULL
+                  THEN 'N'
+                  ELSE AUTH.AUTH_D_YN
+             END AS AUTH_D_YN
+             ,COALESCE(
+                      (SELECT MENU_NAME
+                                FROM    TSYCO_MENU_LANGUAGE
+                                WHERE   MENU_NO = MENU.MENU_NO
+                                AND LANGUAGE_CODE = #{lng}), MENU.MENU_NAME
+                             ) AS MENU_NAME
+            ,MENU.UP_MENU_NO
+            ,MENU.STEP_NO
+            ,MENU.DISPLAY_ORDER
+            ,MENU.DESCRIPTION
+        <if test='onlyAssignMenuYn == "Y"'>
+            FROM  TSYCO_USER_GROUP_AUTH AUTH ,TSYCO_MENU MENU
+            WHERE AUTH.MENU_NO  = MENU.MENU_NO
+            AND MENU.STEP_NO    = #{stepNo}
+            AND MENU.UP_MENU_NO = #{upMenuNo}    
+        </if>
+        <if test='onlyAssignMenuYn != "Y"'>
+            FROM  TSYCO_USER_GROUP_AUTH AUTH
+            RIGHT OUTER JOIN (
+              SELECT
+                     MENU.MENU_NO
+                    ,MENU.MENU_NAME
+                    ,MENU.UP_MENU_NO
+                    ,MENU.STEP_NO
+                    ,MENU.DISPLAY_ORDER
+                    ,MENU.DESCRIPTION
+                    FROM  TSYCO_MENU MENU
+                    WHERE STEP_NO    = #{stepNo}
+                    AND   UP_MENU_NO = #{upMenuNo}  
+            ) MENU
+            ON AUTH.MENU_NO=MENU.MENU_NO
+        </if>
+            AND AUTH.USER_GROUP_ID =#{userGroupId}
+            ORDER BY MENU.STEP_NO,MENU.MENU_NO
+	</select>
+	
+    <update id="updateAuth">
+        UPDATE TSYCO_USER_GROUP_AUTH
+            SET AUTH_R_YN = #{authRYn}
+               ,AUTH_C_YN = #{authCYn}
+               ,AUTH_U_YN = #{authUYn}
+               ,AUTH_D_YN = #{authDYn}
+               ,AUTH_P_YN = #{authPYn}
+        WHERE USER_GROUP_ID = #{userGroupId}
+        AND   MENU_NO       = #{menuNo}
+    </update>
+    
+    
+    <delete id="deleteAuth">
+        DELETE FROM TSYCO_USER_GROUP_AUTH
+        WHERE USER_GROUP_ID = #{userGroupId}
+        AND   MENU_NO       = #{menuNo}
+    </delete>
+    
+    <select id="getMenuList" resultType="String">
+         SELECT
+            MENU.MENU_NO
+         FROM TSYCO_MENU MENU
+         WHERE UP_MENU_NO = #{menuNo}
+         AND   STEP_NO    = #{stepNo}
+    </select>
+    
+    <select id="getUpMenuNo" resultType="String">
+         SELECT
+            MENU.UP_MENU_NO
+         FROM TSYCO_MENU MENU
+         WHERE MENU_NO    = #{menuNo}
+    </select>
+    
+    <insert id="insertAuth">
+        INSERT INTO
+            TSYCO_USER_GROUP_AUTH(
+                 USER_GROUP_ID
+                ,MENU_NO
+                ,AUTH_R_YN
+                ,AUTH_C_YN
+                ,AUTH_U_YN
+                ,AUTH_D_YN
+                ,AUTH_P_YN
+            )VALUES(
+                 #{userGroupId, jdbcType=VARCHAR}
+                ,#{menuNo, jdbcType=VARCHAR}
+                ,#{authRYn, jdbcType=VARCHAR}
+                ,#{authCYn, jdbcType=VARCHAR}
+                ,#{authUYn, jdbcType=VARCHAR}
+                ,#{authDYn, jdbcType=VARCHAR}
+                ,#{authPYn, jdbcType=VARCHAR}
+            )
+    </insert>
+    
+    
+    <select id="getMenuAuthCnt" resultType="int">
+         SELECT
+             COUNT(MENU.MENU_NO) AS CNT
+         FROM TSYCO_USER_GROUP_AUTH MENU
+         WHERE USER_GROUP_ID = #{userGroupId} 
+         AND MENU_NO    = #{menuNo}
+    </select>
+</mapper>

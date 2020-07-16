@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:p="http://www.springframework.org/schema/p" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+			http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+
+	<!-- **************************************************************** -->
+	<!-- interceptors -->
+	<!-- **************************************************************** -->
+	<mvc:interceptors>
+		<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor" />
+		<bean class="com.ntels.ccbs.common.interceptor.LoginInterceptor">
+			<property name="listNoSession">
+				<list>
+					<value>/</value>
+					<value>/system/login/login</value>
+					<value>/system/login/loginAction</value>
+					<value>/system/login/findPasswordPopup.ajax</value>
+					<value>/system/login/getUserInfoConfirm.json</value>
+				</list>
+			</property>
+			<property name="redirectPage">
+				<value>/system/login/login</value>
+			</property>
+			<property name="listAppUrl">
+                <value>/appIf</value>
+            </property>
+		</bean>
+		
+		<bean class="com.ntels.ccbs.common.interceptor.LocaleInterceptor"  >
+			<property name="listAppUrl">
+                <value>/appIf</value>
+            </property>
+		</bean>
+		
+		<bean class="com.ntels.ccbs.common.interceptor.MenuNavigationInterceptor" >
+			<property name="listAppUrl">
+                <value>/appIf</value>
+            </property>
+		</bean>
+		
+		<bean class="com.ntels.ccbs.common.interceptor.HistoryInterceptor" >
+			<property name="listAppUrl">
+                <value>/appIf</value>
+            </property>
+		</bean>
+		
+		<bean class="com.ntels.ccbs.common.interceptor.AppIfInterceptor" >
+			<property name="listAppUrl">
+                <value>/appIf</value>
+            </property>
+		</bean>
+		
+		
+		<bean class="com.ntels.ccbs.common.interceptor.MaskInterceptor" />
+
+	</mvc:interceptors>
+</beans>

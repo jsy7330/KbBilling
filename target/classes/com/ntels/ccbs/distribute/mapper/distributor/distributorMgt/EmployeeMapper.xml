@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.distributor.distributorMgt.EmployeeMapper">
+
+	
+	<!-- 직원 리스트 조회 -->
+	<select id="employeeList" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+			SELECT 
+					B.SO_ID					-- 사업ID
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = B.SO_ID) AS SO_NM		-- 사업명
+					, B.ORG_ID						-- 조직ID
+					, B.ORG_NM						-- 조직명
+					, B.TP_CD						-- 조직유형코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{employeeVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{employeeVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00038'
+								AND DETAIL.COMMON_CD = B.TP_CD
+		       		) AS TP_NM            -- 유형코드명
+					, B.TP_DTL_CD				-- 유형상세코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{employeeVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{employeeVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00039'
+								AND DETAIL.COMMON_CD = B.TP_DTL_CD
+		       		) AS TP_DTL_NM            -- 유형상세코드명
+					, A.USER_ID						-- 사용자ID
+					, A.PASSWORD					-- 비밀번호
+					, A.USER_NAME					-- 사용자명
+					, A.USER_GROUP_ID				-- 기본사용자그룹
+					,( SELECT USER_GROUP_NAME FROM TSYCO_USER_GROUP BB WHERE A.USER_GROUP_ID=BB.USER_GROUP_ID )AS USER_GROUP_NM -- 기본사용자그룹명
+					, A.CRR_TP						-- 조직구분(A:내부직원, B:유통망)
+					, A.EMP_NO						-- 사원번호(내부직원만)
+					, A.MTEL_NO						-- 핸드폰번호
+					, A.TEL_NO						-- 전화번호
+					, A.E_MAIL						-- 이메일
+					, A.IP_BANDWIDTH				-- 허용 IP대역
+					, A.LOGIN_FAIL_COUNT			-- 로그인실패횟수
+					, A.PASSWORD_DUE_DATE			-- 비밀번호만료일
+					, A.PASSWORD_CHANGE_PERIOD		-- 비밀번호교환주기
+					, A.LAST_LOGIN_DATE				-- 최종로그인일자
+					, A.LAST_LOGIN_TIME				-- 최종로그인일시
+					, A.ACCOUNT_LOCK				-- 계정잠금여부
+					, A.PASSWORD1					-- 이전비밀번호1
+					, A.PASSWORD2					-- 이전비밀번호2
+					, A.USE_YN						-- 사용여부
+			FROM	TSYCO_USER A
+					INNER JOIN	(
+									SELECT	SO_ID
+											, ORG_ID
+											, ORG_NM
+											, TP_CD
+											, TP_DTL_CD
+									FROM 	TSYCO_ORG_INFO
+									WHERE 1=1
+									<if test="employeeVO.orgIdList != null and employeeVO.orgIdList.size() != 0">
+										AND ORG_ID IN
+										<foreach collection="employeeVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+								            #{item}
+								        </foreach>
+							        </if>
+								) B	ON A.ORG_ID		= B.ORG_ID
+			WHERE	1=1
+			<!-- ORDER BY A.ORG_ID, B.TP_CD, B.TP_DTL_CD -->
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 직원 리스트 카운트 -->
+	<select id="employeeCount" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TSYCO_USER A
+					INNER JOIN	(
+									SELECT	SO_ID
+											, ORG_ID
+											, ORG_NM
+											, TP_CD
+											, TP_DTL_CD
+									FROM 	TSYCO_ORG_INFO
+									WHERE 1=1
+									<if test="employeeVO.orgIdList != null and employeeVO.orgIdList.size() != 0">
+										AND ORG_ID IN
+										<foreach collection="employeeVO.orgIdList" item="item" index="index" separator="," open="(" close=")">
+								            #{item}
+								        </foreach>
+							        </if>
+								) B	ON A.ORG_ID		= B.ORG_ID
+			WHERE	1=1
+	</select>
+	
+	<!-- ID중복체크 -->
+	<select id="checkUserId" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO" resultType="int">
+		SELECT 
+				COUNT(USER_ID) 
+		FROM 	TSYCO_USER 
+		WHERE 	USER_ID 	= #{employeeVO.userId}
+	</select>
+	
+	
+	<insert id="insertEmployee" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO">
+		INSERT INTO	TSYCO_USER
+			( USER_ID
+			, PASSWORD
+			, USER_NAME
+			, USER_GROUP_ID
+			, ORG_ID
+			, CRR_TP
+			, EMP_NO
+			, TEL_NO
+			, MTEL_NO
+			, E_MAIL
+			, IP_BANDWIDTH
+			, LOGIN_FAIL_COUNT
+			, PASSWORD_DUE_DATE
+			, PASSWORD_CHANGE_PERIOD
+			, ACCOUNT_LOCK
+			, USE_YN
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)VALUES(
+			#{employeeVO.userId}
+			, #{employeeVO.password}
+			, #{employeeVO.userName}
+			, #{employeeVO.userGroupId}
+			, #{employeeVO.orgId}
+			, #{employeeVO.crrTp}
+			, #{employeeVO.empNo}
+			, #{employeeVO.telNo}
+			, #{employeeVO.mtelNo}
+			, #{employeeVO.eMail}
+			, #{employeeVO.ipBandwidth}
+			, 0
+			, #{employeeVO.passwordDueDate}
+			, #{employeeVO.passwordChangePeriod}
+			, #{employeeVO.accountLock}
+			, #{employeeVO.useYn}
+			, #{employeeVO.regrId}
+			, #{employeeVO.regDate}
+			, #{employeeVO.chgrId}
+			, #{employeeVO.chgDate}
+		)
+	</insert>
+	
+	<!-- TSYCO_SO_AUTH_INFO -->
+	<insert id="insertSoAuthInfo" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO">
+		INSERT INTO	TSYCO_SO_AUTH_INFO
+			( SO_ID
+			, USER_ID
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)VALUES(
+			(SELECT AA.SO_ID FROM TSYCO_ORG_INFO AA WHERE AA.ORG_ID = #{employeeVO.orgId} )
+			, #{employeeVO.userId}
+			, #{employeeVO.regrId}
+			, #{employeeVO.regDate}
+			, #{employeeVO.chgrId}
+			, #{employeeVO.chgDate}
+		)
+	</insert>
+	
+	<!-- update TSYCO_USER -->
+	<update id="updateEmployee" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO">
+		UPDATE TSYCO_USER
+			SET	USER_NAME			= #{employeeVO.userName}			-- 사용자명
+				, USER_GROUP_ID		= #{employeeVO.userGroupId}			-- 기본사용자그룹
+				, ORG_ID			= #{employeeVO.orgId}				-- 조직ID
+				, CRR_TP			= #{employeeVO.crrTp}				-- 조직구분(A:내부직원, B:유통망)
+				, EMP_NO			= #{employeeVO.empNo}				-- 사원번호(내부직원만)
+				, TEL_NO			= #{employeeVO.telNo}				-- 전화번호
+				, MTEL_NO			= #{employeeVO.mtelNo}				-- 휴대전화
+				, E_MAIL			= #{employeeVO.eMail}				-- EMAIL
+				, IP_BANDWIDTH		= #{employeeVO.ipBandwidth}			-- 허용 IP대역
+				, PASSWORD_DUE_DATE	= #{employeeVO.passwordDueDate}		-- 비밀번호만료일
+				, PASSWORD_CHANGE_PERIOD	= #{employeeVO.passwordChangePeriod}	-- 비밀번호교환주기
+				, ACCOUNT_LOCK		= #{employeeVO.accountLock}			-- 계정잠금여부
+				, USE_YN			= #{employeeVO.useYn}				-- 사용여부
+				, CHGR_ID			= #{employeeVO.chgrId}				-- 수정자     
+				, CHG_DATE			= #{employeeVO.chgDate}				-- 수정일시
+		WHERE	USER_ID             = #{employeeVO.userId}				-- 사용자ID
+				
+	</update>
+
+	<!-- 직원 리스트 조회 -->
+	<select id="userGroupList" parameterType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO" resultType="com.ntels.ccbs.distribute.domain.distributor.distributorMgt.EmployeeVO">
+		SELECT
+				USER_GROUP_ID
+				, USER_GROUP_NAME
+				, DISPLAY_ORDER
+		FROM 	TSYCO_USER_GROUP
+		ORDER BY DISPLAY_ORDER
+	
+	</select>
+</mapper>

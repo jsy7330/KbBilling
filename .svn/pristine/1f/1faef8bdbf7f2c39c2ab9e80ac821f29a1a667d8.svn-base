@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.appIf.mapper.mso.customer.CustomerMsoMapper">
+
+	<!-- 실장비 정보 조회 -->
+    <select id="getEquipmentReception" parameterType="java.util.Map" resultType="java.util.LinkedHashMap">
+    
+    	SELECT 
+			(SELECT NAME.CODE_NM
+	              FROM TSYCO_CODE_MAST MAST
+	                    , TSYCO_CODE_MAST_NAME MNAME
+	                    , TSYCO_CODE_DETAIL DETAIL
+	                    , TSYCO_CODE_DETAIL_NAME NAME
+	              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                    AND MNAME.LNG_TYP     =#{param.lng} 
+	                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                    AND NAME.LNG_TYP      = #{param.lng}
+	                    AND MAST.COMMON_GRP   ='DN00064'
+	                    AND DETAIL.USE_YN     ='Y'
+	                    AND MAST.USE_YN       ='Y'
+	                    AND DETAIL.COMMON_CD = A.ITEM_KND_CD) AS ITEM_KND_NM	/* 장비유형명 */
+			,A.ITEM_NM AS EQT_CL_NM		/* 장비유형명 */
+			,B.MNCO_NM					/* 신규 대상 제조사명 */			
+			,C.SERIAL_NO				/* Serial NO */
+			
+		FROM TDNDT_ITEM A
+			,TDNDT_MNCO B
+			,TCMCT_DEVICE_HIST C
+		
+		WHERE 	A.MNCO_ID 		= B.MNCO_ID
+			AND C.ITEM_ID		= A.ITEM_ID
+			AND C.SO_ID			= #{param.SO_ID}			/* 사업ID */
+			AND C.CTRT_ID		= #{param.CTRT_ID}			/* 계약ID */
+    
+    </select>
+
+
+
+</mapper>

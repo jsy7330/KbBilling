@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.contract.receipt.ReceiptInfoMapper">
+	<select id="getReceiptInfoList" resultType="ReceiptInfoVO">
+	    SELECT 
+	             OCTRT.SO_ID
+	            ,(	SELECT 
+	            		SO.SO_NM 
+	            	FROM TSYCO_SO_MAST SO
+	            	WHERE SO.SO_ID=OCTRT.SO_ID) AS SO_NM
+	            ,OCTRT.CTRT_ID
+	            ,OCTRT.CUST_ID
+	            ,CUST.CUST_NM
+	            ,OCTRT.SVC_TEL_NO
+	            ,OCTRT.SVC_TEL_NO AS SVC_TEL_NO_AS_MASK
+	            ,OCTRT.ORDER_ID
+	            ,OCTRT.ORDER_STAT
+	            ,(SELECT NAME.CODE_NM
+	                      FROM TSYCO_CODE_MAST MAST
+	                            , TSYCO_CODE_MAST_NAME MNAME
+	                            , TSYCO_CODE_DETAIL DETAIL
+	                            , TSYCO_CODE_DETAIL_NAME NAME
+	                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                            AND MNAME.LNG_TYP     =#{lng} 
+	                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                            AND NAME.LNG_TYP      = #{lng}
+	                            AND MAST.COMMON_GRP   ='CM00030'
+	                            AND DETAIL.USE_YN     ='Y'
+	                            AND MAST.USE_YN       ='Y'
+	                            AND DETAIL.COMMON_CD = OCTRT.ORDER_STAT) AS ORDER_STAT_NM
+	            ,OCTRT.ORDER_DT
+	            ,OCTRT.ORDER_TP
+	            ,(SELECT NAME.CODE_NM
+	                      FROM TSYCO_CODE_MAST MAST
+	                            , TSYCO_CODE_MAST_NAME MNAME
+	                            , TSYCO_CODE_DETAIL DETAIL
+	                            , TSYCO_CODE_DETAIL_NAME NAME
+	                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                            AND MNAME.LNG_TYP     =#{lng} 
+	                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                            AND NAME.LNG_TYP      = #{lng}
+	                            AND MAST.COMMON_GRP   ='CM00022'
+	                            AND DETAIL.USE_YN     ='Y'
+	                            AND MAST.USE_YN       ='Y'
+	                            AND DETAIL.COMMON_CD = OCTRT.ORDER_TP) AS ORDER_TP_NM
+	            ,OCTRT.RATE_STRT_DT
+	            ,CASE 
+	                  WHEN OCTRT.TERM_DT = '99991231' THEN ''
+	                  ELSE OCTRT.TERM_DT
+	             END TERM_DT
+	            ,OCTRT.OPEN_DD
+	            ,PYM.PYM_ACNT_ID
+	            ,PYM.ACNT_NM AS PYM_ACNT_NM
+	            ,(SELECT CUST_NM
+	              FROM TCMCU_CUST_INFO
+	              WHERE SO_ID = PYM.SO_ID
+	              AND   CUST_ID = PYM.CUST_ID) AS PYM_CUST_NM
+	            ,PYM.PYM_MTHD
+	            ,(SELECT NAME.CODE_NM
+	                      FROM TSYCO_CODE_MAST MAST
+	                            , TSYCO_CODE_MAST_NAME MNAME
+	                            , TSYCO_CODE_DETAIL DETAIL
+	                            , TSYCO_CODE_DETAIL_NAME NAME
+	                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                            AND MNAME.LNG_TYP     =#{lng} 
+	                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                            AND NAME.LNG_TYP      = #{lng}
+	                            AND MAST.COMMON_GRP   ='CM00001'
+	                            AND DETAIL.USE_YN     ='Y'
+	                            AND MAST.USE_YN       ='Y'
+	                            AND DETAIL.COMMON_CD = PYM.PYM_MTHD) AS PYM_MTHD_NM
+	            ,OCTRT.ACNT_CUST_REL
+	            ,(SELECT NAME.CODE_NM
+	                      FROM TSYCO_CODE_MAST MAST
+	                            , TSYCO_CODE_MAST_NAME MNAME
+	                            , TSYCO_CODE_DETAIL DETAIL
+	                            , TSYCO_CODE_DETAIL_NAME NAME
+	                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                            AND MNAME.LNG_TYP     =#{lng} 
+	                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                            AND NAME.LNG_TYP      = #{lng}
+	                            AND MAST.COMMON_GRP   ='CM00021'
+	                            AND DETAIL.USE_YN     ='Y'
+	                            AND MAST.USE_YN       ='Y'
+	                            AND DETAIL.COMMON_CD = OCTRT.ACNT_CUST_REL) AS ACNT_CUST_REL_NM
+	              ,PYM.BILL_MDM_GIRO_YN
+	              ,(SELECT NAME.CODE_NM
+	                      FROM TSYCO_CODE_MAST MAST
+	                            , TSYCO_CODE_MAST_NAME MNAME
+	                            , TSYCO_CODE_DETAIL DETAIL
+	                            , TSYCO_CODE_DETAIL_NAME NAME
+	                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                            AND MNAME.LNG_TYP     =#{lng} 
+	                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                            AND NAME.LNG_TYP      = #{lng}
+	                            AND MAST.COMMON_GRP   ='CM00003'
+	                            AND DETAIL.USE_YN     ='Y'
+	                            AND MAST.USE_YN       ='Y'
+	                            AND DETAIL.COMMON_CD = PYM.BILL_MDM_GIRO_YN) AS BILL_MDM_GIRO_YN_NM
+	              ,PYM.BILL_MDM_EML_YN
+	              ,(SELECT NAME.CODE_NM
+	                      FROM TSYCO_CODE_MAST MAST
+	                            , TSYCO_CODE_MAST_NAME MNAME
+	                            , TSYCO_CODE_DETAIL DETAIL
+	                            , TSYCO_CODE_DETAIL_NAME NAME
+	                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                            AND MNAME.LNG_TYP     =#{lng} 
+	                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                            AND NAME.LNG_TYP      = #{lng}
+	                            AND MAST.COMMON_GRP   ='CM00004'
+	                            AND DETAIL.USE_YN     ='Y'
+	                            AND MAST.USE_YN       ='Y'
+	                            AND DETAIL.COMMON_CD = PYM.BILL_MDM_EML_YN) AS BILL_MDM_EML_YN_NM
+	              ,PYM.BILL_MDM_SMS_YN
+	              ,(SELECT NAME.CODE_NM
+	                      FROM TSYCO_CODE_MAST MAST
+	                            , TSYCO_CODE_MAST_NAME MNAME
+	                            , TSYCO_CODE_DETAIL DETAIL
+	                            , TSYCO_CODE_DETAIL_NAME NAME
+	                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                            AND MNAME.LNG_TYP     =#{lng} 
+	                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                            AND NAME.LNG_TYP      = #{lng}
+	                            AND MAST.COMMON_GRP   ='CM00005'
+	                            AND DETAIL.USE_YN     ='Y'
+	                            AND MAST.USE_YN       ='Y'
+	                            AND DETAIL.COMMON_CD = PYM.BILL_MDM_SMS_YN) AS BILL_MDM_SMS_YN_NM
+	              ,OCTRT.PROD_GRP AS BASIC_PROD_GRP
+	              ,(SELECT
+	                  NAME.CODE_NM
+	               FROM TSYCO_CODE_MAST MAST
+	                    , TSYCO_CODE_MAST_NAME MNAME
+	                    , TSYCO_CODE_DETAIL DETAIL
+	                    , TSYCO_CODE_DETAIL_NAME NAME
+	                WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                    AND MNAME.LNG_TYP     =#{lng} 
+	                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                    AND NAME.LNG_TYP      = #{lng}
+	                    AND MAST.COMMON_GRP   ='PP00141'
+	                    AND DETAIL.USE_YN     ='Y'
+	                    AND MAST.USE_YN       ='Y'
+	                    AND DETAIL.COMMON_CD = OCTRT.PROD_GRP) AS BASIC_PROD_GRP_NM     
+	              ,OCTRT.PROD_CD AS BASIC_PROD_CD
+	              ,(SELECT PROD_NM
+	                FROM IFNCRM_PROD_INFO
+	                WHERE SO_ID        = OCTRT.SO_ID
+	                AND   PROD_CD      = OCTRT.PROD_CD
+	                AND   ACT_DT   &lt;= OCTRT.RATE_STRT_DT
+	                AND   INACT_DT &gt;= OCTRT.RATE_STRT_DT) AS BASIC_PROD_CD_NM     
+	               ,OCTRT.CTRT_STAT
+	               ,(SELECT NAME.CODE_NM
+	                      FROM TSYCO_CODE_MAST MAST
+	                            , TSYCO_CODE_MAST_NAME MNAME
+	                            , TSYCO_CODE_DETAIL DETAIL
+	                            , TSYCO_CODE_DETAIL_NAME NAME
+	                      WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                            AND MNAME.LNG_TYP     =#{lng} 
+	                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	                            AND NAME.LNG_TYP      = #{lng}
+	                            AND MAST.COMMON_GRP   ='CM00023'
+	                            AND DETAIL.USE_YN     ='Y'
+	                            AND MAST.USE_YN       ='Y'
+	                            AND DETAIL.COMMON_CD = OCTRT.CTRT_STAT) AS CTRT_STAT_NM
+	               ,OCTRT.SERVICE_ID
+	               ,OCTRT.FIRST_USR_ID
+	               ,(SELECT USER_NAME
+	                        FROM TSYCO_USER
+	                        WHERE USER_ID = OCTRT.FIRST_USR_ID) AS FIRST_USR_NM
+	               ,OCTRT.FIRST_ORG_ID
+	               ,(SELECT ORG_NM
+	                        FROM TSYCO_ORG_INFO
+	                        WHERE SO_ID = OCTRT.SO_ID
+	                        AND  ORG_ID = OCTRT.FIRST_ORG_ID
+	                        AND APPY_STRT_DT &lt;= #{today}
+	                        AND APPY_END_DT &gt;= #{today}) AS FIRST_ORG_NM
+	               ,OCTRT.REG_DATE
+	               ,OCTRT.SALES_USR_ID
+	               ,(SELECT USER_NAME
+	                        FROM TSYCO_USER
+	                        WHERE USER_ID = OCTRT.SALES_USR_ID) AS SALES_USR_NM
+	               ,OCTRT.SALES_ORG_ID
+	               ,(SELECT ORG_NM
+	                        FROM TSYCO_ORG_INFO
+	                        WHERE SO_ID = OCTRT.SO_ID
+	                        AND  ORG_ID = OCTRT.SALES_ORG_ID
+	                        AND APPY_STRT_DT &lt;= #{today}
+	                        AND APPY_END_DT &gt;= #{today}) AS SALES_ORG_NM
+	               ,OCTRT.USR_ID
+	               ,(SELECT USER_NAME
+	                        FROM TSYCO_USER
+	                        WHERE USER_ID = OCTRT.USR_ID) AS USR_NM
+	               ,OCTRT.ORG_ID
+	               ,(SELECT ORG_NM
+	                        FROM TSYCO_ORG_INFO
+	                        WHERE SO_ID = OCTRT.SO_ID
+	                        AND ORG_ID = OCTRT.ORG_ID
+	                        AND APPY_STRT_DT &lt;= #{today}
+	                        AND APPY_END_DT &gt;= #{today}) AS ORG_NM
+	               ,OCTRT.CHG_DATE
+	               ,CONCAT(RCPT.RCPT_DT, RCPT.RCPT_DM) AS RCPT_DTTM
+	               ,RCPT.RCPT_USR_ID
+	               ,(SELECT USER_NAME
+	                        FROM TSYCO_USER
+	                        WHERE USER_ID = RCPT.RCPT_USR_ID) AS RCPT_USR_NM
+	               ,RCPT.RCPT_ORG_ID
+	               ,(SELECT ORG_NM
+	                        FROM TSYCO_ORG_INFO
+	                        WHERE SO_ID = RCPT.SO_ID
+	                        AND  ORG_ID = RCPT.RCPT_ORG_ID
+	                        AND APPY_STRT_DT &lt;= #{today}
+	                        AND APPY_END_DT &gt;= #{today}) AS RCPT_ORG_NM
+				   ,RCPT.CMPL_USR_ID
+	               ,(SELECT USER_NAME
+	                        FROM TSYCO_USER
+	                        WHERE USER_ID = RCPT.CMPL_USR_ID) AS CMPL_USR_NM
+	               ,RCPT.CMPL_ORG_ID
+	               ,(SELECT ORG_NM
+	                        FROM TSYCO_ORG_INFO
+	                        WHERE SO_ID = RCPT.SO_ID
+	                        AND  ORG_ID = RCPT.CMPL_ORG_ID
+	                        AND APPY_STRT_DT &lt;= #{today}
+	                        AND APPY_END_DT &gt;= #{today}) AS CMPL_ORG_NM         
+	               ,CONCAT(RCPT.CMPL_DT, RCPT.CMPL_DM) AS CMPL_DTTM
+	               ,RCPT.REQ_DESC AS RCPT_DESC
+	               ,RCPT.RCPT_ID
+	        FROM TCMCU_CUST_INFO CUST
+	            ,TCMCT_OCTRT_INFO OCTRT
+	            ,TCMCU_PYM_ACNT_INFO PYM
+	            ,TCMRC_CNSL_RCPT_INFO RCPT
+	        WHERE CUST.SO_ID   = OCTRT.SO_ID
+	        AND   CUST.CUST_ID = OCTRT.CUST_ID
+	        AND   OCTRT.SO_ID   = RCPT.SO_ID
+	        AND   OCTRT.CUST_ID = RCPT.CUST_ID
+	        AND   OCTRT.CTRT_ID = RCPT.CTRT_ID
+	        AND   OCTRT.RCPT_ID = RCPT.RCPT_ID
+	        AND   OCTRT.SO_ID   = PYM.SO_ID
+	        AND   OCTRT.PYM_ACNT_ID = PYM.PYM_ACNT_ID
+	        AND   RCPT.RCPT_DT BETWEEN #{rcptInfo.condSdate} AND #{rcptInfo.condEdate}
+	        AND   CUST.SO_ID IN
+            <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                #{item.so_id}
+            </foreach>
+	        <if test="rcptInfo.condCustId != null and rcptInfo.condCustId != ''">
+				AND   OCTRT.CUST_ID = #{rcptInfo.condCustId}
+			</if>
+			<if test="rcptInfo.condRcptUsrNm != null and rcptInfo.condRcptUsrNm != ''">
+				AND   (SELECT USER_NAME
+	                        FROM TSYCO_USER
+	                        WHERE USER_ID = RCPT.RCPT_USR_ID) = #{rcptInfo.condRcptUsrNm}
+			</if>
+			<if test="rcptInfo.condOrderTpSel != null and rcptInfo.condOrderTpSel != 'SEL'">
+				AND   OCTRT.ORDER_TP = #{rcptInfo.condOrderTpSel}
+			</if>
+			<if test="rcptInfo.condOrderStatusSel != null and rcptInfo.condOrderStatusSel != 'SEL'">
+				AND   OCTRT.ORDER_STAT = #{rcptInfo.condOrderStatusSel}
+			</if>
+			<if test="rcptInfo.condCtrtId != null and rcptInfo.condCtrtId != ''">
+				AND   OCTRT.CTRT_ID = #{rcptInfo.condCtrtId}
+			</if>
+	        ORDER BY OCTRT.SO_ID, OCTRT.CUST_ID, OCTRT.ORDER_ID DESC
+    </select>
+    
+    <select id="getMenuNo" resultType="ReceiptInfoVO">
+    	SELECT   
+            MENU3.UP_MENU_NO AS MENU_NO1
+            ,(SELECT MENU_NAME FROM TSYCO_MENU MENU4 WHERE MENU3.UP_MENU_NO=MENU4.MENU_NO)AS MENU_NM1   
+            ,MENU3.MENU_NO  AS MENU_NO2         
+            ,MENU2.MENU_NO AS MENU_NO3                                        
+            ,MENU1.MENU_NO AS MENU_NO4
+            ,MENU1.MENU_NAME AS MENU_NM4                  
+       	FROM TSYCO_MENU MENU1,TSYCO_MENU MENU2,TSYCO_MENU MENU3 
+        WHERE MENU1.UP_MENU_NO=MENU2.MENU_NO
+        AND MENU2.UP_MENU_NO=MENU3.MENU_NO
+        AND MENU1.MENU_NO=#{menuNo,jdbcType=VARCHAR}
+    </select>
+</mapper>

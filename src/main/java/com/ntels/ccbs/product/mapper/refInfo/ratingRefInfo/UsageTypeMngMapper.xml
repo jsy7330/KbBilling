@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.UsageTypeMngMapper">
+
+	<select id="getUsageTypeMngList" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng"
+		resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		  SELECT 
+              USG_TYP,
+              EFF_DT,
+              EXP_DT,
+              USG_TYP_NM,
+              USG_OFFER_TYP,
+              (SELECT B.COMMON_CD_NM 
+               FROM   TSYCO_CODE_DETAIL  B
+                    , TSYCO_CODE_DETAIL_NAME C
+               WHERE  B.COMMON_GRP = 'PP00262' 
+               AND    B.COMMON_CD = USG_OFFER_TYP
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS USG_OFFER_TYP_NM, 
+              CDR_INDICATOR,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C  
+               WHERE  B.COMMON_GRP = 'PP00265' 
+               AND    B.COMMON_CD = CDR_INDICATOR
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS CDR_INDICATOR_NM,
+              MULTIPLE_DISC_METHOD,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C
+               WHERE  B.COMMON_GRP = 'PP00249' 
+               AND    B.COMMON_CD = MULTIPLE_DISC_METHOD
+               AND    C.LNG_TYP(+)    =#{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS MULTIPLE_DISC_METHOD_NM,
+              PERIOD_APPL_METHOD,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C
+               WHERE  B.COMMON_GRP = 'PP00216' 
+               AND    B.COMMON_CD = PERIOD_APPL_METHOD
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS PERIOD_APPL_METHOD_NM,
+              DEFAULT_NO_OF_UNITS,
+              DEFAULT_USG_ROUNDING,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C
+               WHERE  B.COMMON_GRP = 'PP00232' 
+               AND    B.COMMON_CD = DEFAULT_USG_ROUNDING
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS DEFAULT_USG_ROUNDING_NM,
+              DEFAULT_USG_ROUNDING_OFFSET,
+              DEFAULT_USG_FEE_ROUNDING,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C 
+               WHERE  B.COMMON_GRP = 'PP00232' 
+               AND    B.COMMON_CD = DEFAULT_USG_FEE_ROUNDING
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS DEFAULT_USG_FEE_ROUNDING_NM,
+              PARENT_USG_TYP,
+              CALL_AUTH_THRESHOLD AS CALL_AUTH_THRESHOLD
+        FROM  TOP_USG_TYP
+        WHERE 1=1
+          AND USG_TYP_NM LIKE '%' || #{usageTypeMng.searchUsgTypNm} || '%'
+        ORDER BY USG_TYP ASC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getUsageTypeMngRepCheckCount" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng"
+		resultType="int">
+		SELECT COUNT(*)
+		  FROM 
+		  (
+		  	 SELECT * 
+		  	   FROM TOP_USG_TYP
+		  	  WHERE 1=1
+		  	    AND USG_TYP = #{usageTypeMng.searchUsgTyp}
+		  )
+	
+	</select>
+	
+	<select id="getUsageTypeMngListCount" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng"
+		resultType="int">
+		SELECT COUNT(*)
+		  FROM 
+		  (
+		  	 SELECT * 
+		  	   FROM TOP_USG_TYP
+		  	  WHERE 1=1
+		  	    AND USG_TYP_NM LIKE ('%' || #{usageTypeMng.searchUsgTypNm} || '%')
+		  )
+	
+	</select>
+
+	<insert id="addUsageTypeMng" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng">
+    	
+    	INSERT INTO TOP_USG_TYP
+    	 (
+    	 	   USG_TYP	
+    		 , USG_TYP_NM
+    	     , USG_OFFER_TYP
+    	     , CDR_INDICATOR 
+    	     , MULTIPLE_DISC_METHOD
+    	     , PERIOD_APPL_METHOD
+    	     , DEFAULT_NO_OF_UNITS
+    	     , DEFAULT_USG_ROUNDING
+    	     , DEFAULT_USG_ROUNDING_OFFSET
+    	     , DEFAULT_USG_FEE_ROUNDING
+    	     , PARENT_USG_TYP
+    	     , CALL_AUTH_THRESHOLD
+    	     , EFF_DT 
+    	     , EXP_DT 
+    	     , LAST_MOD_BY
+    	     , LAST_MOD_DT 
+    	)
+    	  VALUES (
+    	       #{usageTypeMng.insertUsgTyp}
+    	     , #{usageTypeMng.insertUsgTypNm}
+    	     , #{usageTypeMng.insertUsgOfferTyp}
+    	     , #{usageTypeMng.insertCdrIndicator}
+    	     , #{usageTypeMng.insertMultipleDiscMethod}
+    	     , #{usageTypeMng.insertPeriodApplMethod}
+    	     , #{usageTypeMng.insertDefaultNoOfUnits}
+    	     , #{usageTypeMng.insertDefaultUsgRounding}
+    	     , #{usageTypeMng.insertDefaultUsgRoundingOffset}
+    	     , #{usageTypeMng.insertDefaultUsgFeeRounding}
+    	     , #{usageTypeMng.insertParentUsgTyp}
+    	     , #{usageTypeMng.insertCallAuthThreshold}
+    	     , #{usageTypeMng.insertEffDt}
+    	     , #{usageTypeMng.insertExpDt}
+    	     , #{usageTypeMng.userId}
+    	     , #{usageTypeMng.sysToDate}
+    	 )
+
+    </insert>
+    
+	<update id="modUsageTypeMng" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng">
+    	
+    	UPDATE TOP_USG_TYP
+    	  SET 
+			   USG_TYP = #{usageTypeMng.modUsgTyp}
+			 , USG_TYP_NM = #{usageTypeMng.modUsgTypNm}
+    	     , USG_OFFER_TYP = #{usageTypeMng.modUsgOfferTyp}
+    	     , CDR_INDICATOR = #{usageTypeMng.modCdrIndicator}
+    	     , MULTIPLE_DISC_METHOD = #{usageTypeMng.modMultipleDiscMethod}
+    	     , PERIOD_APPL_METHOD = #{usageTypeMng.modPeriodApplMethod}
+    	     , DEFAULT_NO_OF_UNITS = #{usageTypeMng.modDefaultNoOfUnits}
+    	     , DEFAULT_USG_ROUNDING = #{usageTypeMng.modDefaultUsgRounding}
+    	     , DEFAULT_USG_ROUNDING_OFFSET = #{usageTypeMng.modDefaultUsgRoundingOffset}
+    	     , DEFAULT_USG_FEE_ROUNDING = #{usageTypeMng.modDefaultUsgFeeRounding}
+    	     , PARENT_USG_TYP = #{usageTypeMng.modParentUsgTyp}
+    	     , CALL_AUTH_THRESHOLD = #{usageTypeMng.modCallAuthThreshold}
+    	     , EFF_DT = #{usageTypeMng.modEffDt}
+    	     , EXP_DT = #{usageTypeMng.modExpDt}
+    	     , LAST_MOD_BY = #{usageTypeMng.userId}
+    	     , LAST_MOD_DT = #{usageTypeMng.sysToDate}
+    	  WHERE 1=1
+    	    AND USG_TYP = #{usageTypeMng.usgTyp}
+    	    AND EFF_DT = #{usageTypeMng.effDt}
+	</update>
+	
+	<delete id="delUsageTypeMng" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng">
+    	
+    	DELETE FROM TOP_USG_TYP
+    	WHERE 1=1
+    	  AND USG_TYP = #{usageTypeMng.delUsgTyp}
+    	  AND EFF_DT = #{usageTypeMng.delEffDt}
+	
+	</delete>
+	
+	 <select id="usageTypeMngListExcel" 
+	 	resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+  		
+  		SELECT 
+              USG_TYP,
+              EFF_DT,
+              EXP_DT,
+              USG_TYP_NM,
+              USG_OFFER_TYP,
+              (SELECT B.COMMON_CD_NM 
+               FROM   TSYCO_CODE_DETAIL  B
+                    , TSYCO_CODE_DETAIL_NAME C
+               WHERE  B.COMMON_GRP = 'PP00262' 
+               AND    B.COMMON_CD = USG_OFFER_TYP
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS USG_OFFER_TYP_NM, 
+              CDR_INDICATOR,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C  
+               WHERE  B.COMMON_GRP = 'PP00265' 
+               AND    B.COMMON_CD = CDR_INDICATOR
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS CDR_INDICATOR_NM,
+              MULTIPLE_DISC_METHOD,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C
+               WHERE  B.COMMON_GRP = 'PP00249' 
+               AND    B.COMMON_CD = MULTIPLE_DISC_METHOD
+               AND    C.LNG_TYP(+)    =#{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS MULTIPLE_DISC_METHOD_NM,
+              PERIOD_APPL_METHOD,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C
+               WHERE  B.COMMON_GRP = 'PP00216' 
+               AND    B.COMMON_CD = PERIOD_APPL_METHOD
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS PERIOD_APPL_METHOD_NM,
+              DEFAULT_NO_OF_UNITS,
+              DEFAULT_USG_ROUNDING,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C
+               WHERE  B.COMMON_GRP = 'PP00232' 
+               AND    B.COMMON_CD = DEFAULT_USG_ROUNDING
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS DEFAULT_USG_ROUNDING_NM,
+              DEFAULT_USG_ROUNDING_OFFSET,
+              DEFAULT_USG_FEE_ROUNDING,
+              (SELECT B.COMMON_CD_NM
+               FROM   TSYCO_CODE_DETAIL B
+                    , TSYCO_CODE_DETAIL_NAME C 
+               WHERE  B.COMMON_GRP = 'PP00232' 
+               AND    B.COMMON_CD = DEFAULT_USG_FEE_ROUNDING
+               AND    C.LNG_TYP(+)    = #{usageTypeMng.lngTyp}
+               AND    C.COMMON_GRP(+) = B.COMMON_GRP
+               AND    C.COMMON_CD(+)  = B.COMMON_CD) AS DEFAULT_USG_FEE_ROUNDING_NM,
+              PARENT_USG_TYP,
+              CALL_AUTH_THRESHOLD AS CALL_AUTH_THRESHOLD
+        FROM  TOP_USG_TYP
+        WHERE 1=1
+          AND USG_TYP_NM LIKE '%' || #{usageTypeMng.usgTypNm} || '%'
+        ORDER BY USG_TYP ASC
+	</select>
+
+</mapper>
+
+
+<!-- 
+
+
+ <insert id="addCodeDetailName" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng">
+    	
+    	    
+          INSERT INTO TSYCO_CODE_DETAIL_NAME
+          VALUES
+            ( 
+            	'en'
+              , 'PP00303'
+              , #{usageTypeMng.insertUsgTyp}
+              , '[EN]' || #{usageTypeMng.insertUsgTypNm}
+              , #{usageTypeMng.userId}
+              , #{usageTypeMng.sysToDate}
+              , #{usageTypeMng.userId}
+              , #{usageTypeMng.sysToDate} 
+           	)
+           ,( 
+           		'ko'
+              , 'PP00303'
+              , #{usageTypeMng.insertUsgTyp}
+              , #{usageTypeMng.insertUsgTypNm}
+              , #{usageTypeMng.userId}
+              , #{usageTypeMng.sysToDate}
+              , #{usageTypeMng.userId}
+              , #{usageTypeMng.sysToDate} 
+           	)
+    	 )
+
+    </insert>
+    
+    <insert id="addCodeDetail" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMng">
+    	
+    	INSERT INTO TSYCO_CODE_DETAIL
+          (
+              COMMON_GRP
+            , COMMON_CD
+            , COMMON_CD_NM
+            , DEFAULT_YN
+            , SORT_NO
+            , USE_YN
+            , SYS_FLG
+            , REGR_ID
+            , REG_DATE
+            , CHRG_ID
+            , CHRG_DATE
+           )
+           VALUES 
+           (
+               'PP00303'
+             , #{usageTypeMng.insertUsgTyp}
+             , #{usageTypeMng.insertUsgTypNm}
+             , 'N'
+             , ( SELECT COUNT(*) FROM TSYCO_CODE_DETAIL WHERE COMMON_GRP='PP00303' ) + 1
+             , 'Y'
+             , 'Y'
+             , '00000'
+             , '00000'
+             , #{usageTypeMng.sysToDate}
+             , #{usageTypeMng.userId}
+             , #{usageTypeMng.sysToDate}
+            )
+
+    </insert>
+   
+     -->

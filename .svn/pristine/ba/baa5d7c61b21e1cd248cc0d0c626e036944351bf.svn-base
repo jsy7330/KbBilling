@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.service.serviceMgt.WorkDefMngMapper">
+
+<!-- 작업정의관리 -->
+	<select id="workDefMngListAction" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.WorkDefMngVO" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.WorkDefMngVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT 
+		        WRK_DEF_ID AS WRK_ID
+               ,WRK_TP 	   AS WRK_TYP
+               , (SELECT   NAME.CODE_NM AS COMMON_CD_NM
+			        FROM   TSYCO_CODE_MAST MAST ,
+			               TSYCO_CODE_MAST_NAME MNAME ,
+			               TSYCO_CODE_DETAIL DETAIL ,
+			               TSYCO_CODE_DETAIL_NAME NAME
+			        WHERE  MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			        AND    MAST.COMMON_GRP =MNAME.COMMON_GRP
+			        AND    MNAME.LNG_TYP = #{workDefMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    DETAIL.COMMON_GRP =NAME.COMMON_GRP
+			        AND    DETAIL.COMMON_CD =NAME.COMMON_CD
+			        AND    NAME.LNG_TYP =  #{workDefMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    MAST.COMMON_GRP ='CM00037'
+			        AND    DETAIL.COMMON_CD = A.WRK_TP ) AS WRK_TYP_NM
+               ,WRK_NAME   AS WRK_NM
+               ,WRK_DESC   AS WRK_DESC
+               ,CHGR_ID    AS CHG_ID
+               ,CHG_DATE   AS CHG_DATE
+               ,USE_YN     AS USE_YN
+               , (SELECT   NAME.CODE_NM AS COMMON_CD_NM
+			        FROM   TSYCO_CODE_MAST MAST ,
+			               TSYCO_CODE_MAST_NAME MNAME ,
+			               TSYCO_CODE_DETAIL DETAIL ,
+			               TSYCO_CODE_DETAIL_NAME NAME
+			        WHERE  MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			        AND    MAST.COMMON_GRP =MNAME.COMMON_GRP
+			        AND    MNAME.LNG_TYP = #{workDefMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    DETAIL.COMMON_GRP =NAME.COMMON_GRP
+			        AND    DETAIL.COMMON_CD =NAME.COMMON_CD
+			        AND    NAME.LNG_TYP =  #{workDefMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    MAST.COMMON_GRP ='PP00184'
+			        AND    DETAIL.COMMON_CD = A.USE_YN ) AS USE_YN_NM
+               ,REGR_ID    AS REG_ID
+		FROM TPMPD_WRK A
+		WHERE 1=1
+        ORDER BY CHG_DATE
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<!-- 빌링 설정정보 카운트 -->
+	<select id="workDefMngListCount" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.WorkDefMngVO" resultType="int">
+	SELECT COUNT(0)
+	  FROM
+	  (
+		SELECT  WRK_DEF_ID
+               ,WRK_TP 
+               , (SELECT   NAME.CODE_NM AS COMMON_CD_NM
+			        FROM   TSYCO_CODE_MAST MAST ,
+			               TSYCO_CODE_MAST_NAME MNAME ,
+			               TSYCO_CODE_DETAIL DETAIL ,
+			               TSYCO_CODE_DETAIL_NAME NAME
+			        WHERE  MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			        AND    MAST.COMMON_GRP =MNAME.COMMON_GRP
+			        AND    MNAME.LNG_TYP = #{workDefMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    DETAIL.COMMON_GRP =NAME.COMMON_GRP
+			        AND    DETAIL.COMMON_CD =NAME.COMMON_CD
+			        AND    NAME.LNG_TYP =  #{workDefMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    MAST.COMMON_GRP ='CM00037'
+			        AND    DETAIL.COMMON_CD = A.WRK_TP ) AS WRK_TP_NM
+               ,WRK_NAME 
+               ,WRK_DESC 
+               ,CHGR_ID 
+               ,CHG_DATE
+               ,USE_YN
+               , (SELECT   NAME.CODE_NM AS COMMON_CD_NM
+			        FROM   TSYCO_CODE_MAST MAST ,
+			               TSYCO_CODE_MAST_NAME MNAME ,
+			               TSYCO_CODE_DETAIL DETAIL ,
+			               TSYCO_CODE_DETAIL_NAME NAME
+			        WHERE  MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			        AND    MAST.COMMON_GRP =MNAME.COMMON_GRP
+			        AND    MNAME.LNG_TYP = #{workDefMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    DETAIL.COMMON_GRP =NAME.COMMON_GRP
+			        AND    DETAIL.COMMON_CD =NAME.COMMON_CD
+			        AND    NAME.LNG_TYP =  #{workDefMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    MAST.COMMON_GRP ='PP00184'
+			        AND    DETAIL.COMMON_CD = A.USE_YN ) AS USE_YN_NM
+               ,REGR_ID
+		FROM TPMPD_WRK A
+		WHERE 1=1
+      )
+	</select>
+	
+	<insert id="insertWorkDefMngInfo" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.WorkDefMngVO" >
+		INSERT INTO TPMPD_WRK 
+        (
+            WRK_DEF_ID, 
+            WRK_TP, 
+            WRK_DESC,
+            WRK_NAME,
+            REGR_ID, 
+            REG_DATE, 
+            CHGR_ID, 
+            CHG_DATE,
+            USE_YN 
+        )
+        VALUES
+        (
+            #{workDefMngVO.wrkId},
+            #{workDefMngVO.wrkTyp},
+            #{workDefMngVO.wrkDesc},
+            #{workDefMngVO.wrkNm},
+            #{workDefMngVO.regId},
+            #{workDefMngVO.regDate},
+            #{workDefMngVO.regId},
+            #{workDefMngVO.chgDate},
+            #{workDefMngVO.useYn}
+        )
+	</insert>
+	
+	<update id="updateWorkDefMngInfo" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.WorkDefMngVO" >
+        UPDATE TPMPD_WRK
+           SET  
+	        WRK_TP    = #{workDefMngVO.wrkTyp},  
+			WRK_DESC  = #{workDefMngVO.wrkDesc},  
+			WRK_NAME  = #{workDefMngVO.wrkNm},
+			CHGR_ID   = #{workDefMngVO.chgId}, 
+			CHG_DATE  = #{workDefMngVO.chgDate},
+			USE_YN    = #{workDefMngVO.useYn}
+        WHERE WRK_DEF_ID= #{workDefMngVO.wrkId}      
+	</update>
+	
+	<delete id="deleteWorkDefMngInfo" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.WorkDefMngVO">
+		DELETE 
+		  FROM TPMPD_WRK
+         WHERE WRK_DEF_ID= #{workDefMngVO.wrkId}
+	</delete>
+</mapper>

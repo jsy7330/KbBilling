@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d{yyyy.dd.MM HH:mm:ss} *%-5p* %c{1} - %m%n" />
+		</layout>
+	</appender>
+
+
+	<appender name="logfile" class="org.apache.log4j.DailyRollingFileAppender">
+		<!-- <param name="append" value="false" /> -->
+		<param name="File" value="/ccbs/log/was/was.log" />
+		<param name="DatePatern" value="'-'yyyyMMdd'.log'" />
+		<param name="maxFileSize" value="10MB" />
+		<param name="maxBackupIndex" value="10" />
+		<layout class="org.apache.log4j.PatternLayout">
+			<param name="ConversionPattern" value="%d %-4r %-5p [%t] [%c.%M] (%x) - %m\n" />
+			<!-- <param name="ConversionPattern" value="%d{yy-MM-dd HH:mm:ss.SSS} %5p %C [%M :%L] %m%n" /> -->
+		</layout>
+	</appender>
+
+    <logger name="net.sf.log4jdbc" additivity="false">
+        <level value="info" />
+    </logger>
+
+    <logger name="com.ntels.nisf.filter">
+        <level value="error" />
+    </logger>   
+    
+    <logger name="com.ntels.ccbs">
+        <level value="debug" />
+    </logger>
+    
+    <logger name="com.ntels.ccbs.common.filter">
+        <level value="info" />
+    </logger>
+    <logger name="com.ntels.ccbs.common.listener">
+        <level value="info" />
+    </logger>
+    
+    
+    <logger name="jdbc.sqlonly">
+        <level value="info" />
+    </logger>
+
+    <logger name="jdbc.sqltiming">
+        <level value="info" />
+    </logger>
+    
+    <logger name="jdbc.audit">
+        <level value="warn" />
+    </logger>
+
+    <logger name="jdbc.resultset">
+        <level value="warn" />
+    </logger>
+
+    <logger name="jdbc.resultsettable">
+        <level value="info" />
+    </logger>
+    
+    <logger name="jdbc.connection">
+        <level value="warn" />
+    </logger>
+    
+    <logger name="org.mybatis">
+        <level value="debug" />
+    </logger>
+    
+    <logger name="org.apache.tiles">
+        <level value="warn" />
+    </logger>
+
+	<root>
+		<priority value="info" />
+		<appender-ref ref="console" />
+		<appender-ref ref="logfile" />
+	</root>
+
+</log4j:configuration>

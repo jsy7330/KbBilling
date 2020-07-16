@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.contract.receipt.ReceiptCounselMapper">
+
+    <select id="getRcptLvlCodeList" resultType="com.ntels.ccbs.customer.domain.contract.receipt.ReceiptCounselVO">
+        SELECT 
+                 MAST.COMMON_GRP
+                ,DETAIL.COMMON_CD
+                ,COALESCE((SELECT CODE_NM 
+                  FROM TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+                  AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+                  AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+                ,DETAIL.REF_CODE
+                ,DETAIL.REF_CODE2
+                ,DETAIL.REF_CODE3
+                ,DETAIL.REF_CODE4
+                ,DETAIL.DEFAULT_YN
+                ,DETAIL.RMRK
+                ,DETAIL.SORT_NO
+                ,DETAIL.USE_YN
+        FROM TSYCO_CODE_MAST MAST
+            , TSYCO_CODE_DETAIL DETAIL
+        WHERE   MAST.COMMON_GRP   =DETAIL.COMMON_GRP
+            AND MAST.COMMON_GRP   =#{commonGrp}
+		<if test="refCode != null and refCode != ''">            
+		    AND DETAIL.REF_CODE   =#{refCode}
+		</if>
+            AND DETAIL.USE_YN     ='Y'
+            AND MAST.USE_YN       ='Y'
+        ORDER BY DETAIL.SORT_NO
+    </select>
+   
+    <select id="getRcptTabListTotalCnt" resultType="int">
+        SELECT 
+            COUNT(RCPT.RCPT_ID)
+        FROM TCMRC_CNSL_RCPT_INFO RCPT
+        WHERE 1=1
+		<if test="condCustId != null and condCustId != ''">
+		     AND   CUST_ID = #{condCustId}
+		</if>
+		<if test="cnslStat != null and cnslStat != ''">
+		     AND   CNSL_STAT = #{cnslStat}
+		</if>
+		 <if test="selRcptLvl1 != null and selRcptLvl1 != ''">
+		     AND   CNSL_MST_CL = #{selRcptLvl1}
+		</if>   
+		<if test="selRcptLvl2 != null and selRcptLvl2 != ''">
+		     AND   CNSL_MID_CL = #{selRcptLvl2}
+		</if>
+		<if test="selRcptLvl3 != null and selRcptLvl3 != ''">
+		     AND   CNSL_SLV_CL = #{selRcptLvl3}
+		</if>
+		<if test='rcptYn == "R"'>
+		     AND   RCPT_ORG_ID = #{orgId}
+		</if>   		
+		<if test='rcptYn == "T"'>
+		     AND  ( PROC_ORG_ID = #{orgId} OR  CMPL_ORG_ID = #{orgId})
+		</if> 		
+		<if test="searchStatDt != null and searchStatDt != ''">
+			<if test="searchEndDt != null and searchEndDt != ''">
+			 AND   RCPT_DT  BETWEEN  #{searchStatDt} AND #{searchEndDt} 
+			</if>   
+		</if>   
+		<if test='elapse != "TL"'>
+		     AND CONCAT(RCPT_DT,RCPT_DM) &gt; #{elapseDate} 
+		</if> 		
+    </select>
+
+	<select id="getRcptTabList" resultType="ReceiptCounselVO">
+        SELECT 
+            RESULT.*
+        FROM (
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+            SELECT RCPTINFO.*
+            FROM (
+                    SELECT
+                         RCPT_ID
+                        ,SO_ID
+                        ,CUST_ID
+                        ,CTRT_ID
+                        ,RCPT_DT
+                        ,RCPT_DM
+                        ,PROC_DT
+                        ,PROC_DM
+                        ,CMPL_DT
+                        ,CMPL_DM
+                        ,MST_RCPT_ID
+                        ,PRESS_RCPT_YN
+                        ,CLAIM_YN
+                        ,RCPT_TP
+                        ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00019'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = RCPT.RCPT_TP) AS RCPT_TP_NM
+                        ,REQ_TEL_NO
+                        ,REQ_MTEL_NO
+                        ,REQ_EML
+                        ,REQ_NM
+                        ,CUST_REL
+                        ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00021'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = RCPT.CUST_REL) AS CUST_REL_NM
+                        ,CNSL_MST_CL
+                        ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00016'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = RCPT.CNSL_MST_CL) AS CNSL_MST_CL_NM
+                        ,CNSL_MID_CL
+                        ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00017'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = RCPT.CNSL_MID_CL) AS CNSL_MID_CL_NM
+                        ,CNSL_SLV_CL
+                        ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00018'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = RCPT.CNSL_SLV_CL) AS CNSL_SLV_CL_NM
+                        ,CNSL_RESN_CD
+                        ,'' AS CNSL_RESN_CD_NM
+                        ,REQ_DESC
+                        ,PROC_DESC
+                        ,RCPT_ORG_ID
+                        ,(SELECT ORG_NM
+                            FROM TSYCO_ORG_INFO
+                            WHERE SO_ID = RCPT.SO_ID
+                            AND ORG_ID  = RCPT.RCPT_ORG_ID
+                            AND APPY_STRT_DT &lt;= #{today}
+                            AND APPY_END_DT &gt;= #{today}) AS RCPT_ORG_ID_NM
+                        ,RCPT_USR_ID
+                        ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = RCPT.RCPT_USR_ID) AS RCPT_USR_ID_NM
+                        ,PROC_ORG_ID
+                        ,(SELECT ORG_NM
+                            FROM TSYCO_ORG_INFO
+                            WHERE SO_ID = RCPT.SO_ID
+                            AND ORG_ID  = RCPT.PROC_ORG_ID
+                            AND APPY_STRT_DT &lt;= #{today}
+                            AND APPY_END_DT &gt;= #{today}) AS PROC_ORG_ID_NM
+                        ,PROC_USR_ID
+                        ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = RCPT.PROC_USR_ID) AS PROC_USR_ID_NM
+                        ,CMPL_ORG_ID
+                        ,(SELECT ORG_NM
+                            FROM TSYCO_ORG_INFO
+                            WHERE SO_ID = RCPT.SO_ID
+                            AND ORG_ID  = RCPT.CMPL_ORG_ID
+                            AND APPY_STRT_DT &lt;= #{today}
+                            AND APPY_END_DT &gt;= #{today}) AS CMPL_ORG_ID_NM
+                        ,CMPL_USR_ID
+                        ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = RCPT.CMPL_USR_ID) AS CMPL_USR_ID_NM
+                        ,CNSL_STAT
+                        ,(SELECT NAME.CODE_NM
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='CM00020'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y'
+                                AND DETAIL.COMMON_CD = RCPT.CNSL_STAT) AS CNSL_STAT_NM
+                        ,EXT_ID
+                        ,REGR_ID
+                        ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = RCPT.REGR_ID) AS REGR_ID_NM
+                        ,REG_DATE
+                        ,CHGR_ID
+                        ,(SELECT USER_NAME
+                          FROM TSYCO_USER
+                          WHERE USER_ID = RCPT.CHGR_ID) AS CHGR_ID_NM
+                        ,CHG_DATE
+                   FROM TCMRC_CNSL_RCPT_INFO RCPT
+                   WHERE 1=1
+					<if test="condCustId != null and condCustId != ''">
+					     AND   CUST_ID = #{condCustId}
+					</if>
+					<if test="cnslStat != null and cnslStat != ''">
+					     AND   CNSL_STAT = #{cnslStat}
+					</if>
+					 <if test="selRcptLvl1 != null and selRcptLvl1 != ''">
+					     AND   CNSL_MST_CL = #{selRcptLvl1}
+					</if>   
+					  <if test="selRcptLvl2 != null and selRcptLvl2 != ''">
+					     AND   CNSL_MID_CL = #{selRcptLvl2}
+					</if>   
+					<if test="selRcptLvl3 != null and selRcptLvl3 != ''">
+					     AND   CNSL_SLV_CL = #{selRcptLvl3}
+					</if>
+					<if test='rcptYn == "R"'>
+					     AND   RCPT_ORG_ID = #{orgId}
+					</if>   		
+					<if test='rcptYn == "T"'>
+					     AND  ( PROC_ORG_ID = #{orgId} OR  CMPL_ORG_ID = #{orgId})
+					</if> 		
+					<if test="searchStatDt != null and searchStatDt != ''">
+						<if test="searchEndDt != null and searchEndDt != ''">
+						 AND   RCPT_DT  BETWEEN  #{searchStatDt} AND #{searchEndDt} 
+						</if>   
+					</if>  
+					<if test='elapse != "TL"'>
+					     AND CONCAT(RCPT_DT,RCPT_DM) &gt; #{elapseDate} 
+					</if> 					
+                 ) RCPTINFO
+                ORDER BY RCPTINFO.RCPT_ID DESC					
+            <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+            ) RESULT
+    </select>    
+	<select id="getRcptInfo" resultType="ReceiptCounselVO">
+        SELECT
+             RCPT_ID
+            ,SO_ID
+            ,CUST_ID
+            ,CTRT_ID
+            ,RCPT_DT
+            ,RCPT_DM
+            ,PROC_DT
+            ,PROC_DM
+            ,CMPL_DT
+            ,CMPL_DM
+            ,MST_RCPT_ID
+            ,PRESS_RCPT_YN
+            ,CLAIM_YN
+            ,RCPT_TP
+            ,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng}
+                    AND MAST.COMMON_GRP   ='CM00019'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = RCPT.RCPT_TP) AS RCPT_TP_NM
+            ,REQ_TEL_NO
+            ,REQ_MTEL_NO
+            ,REQ_EML
+            ,REQ_NM
+            ,CUST_REL
+            ,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng}
+                    AND MAST.COMMON_GRP   ='CM00021'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = RCPT.CUST_REL) AS CUST_REL_NM
+            ,CNSL_MST_CL
+            ,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng}
+                    AND MAST.COMMON_GRP   ='CM00016'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = RCPT.CNSL_MST_CL) AS CNSL_MST_CL_NM
+            ,CNSL_MID_CL
+            ,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng}
+                    AND MAST.COMMON_GRP   ='CM00017'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = RCPT.CNSL_MID_CL) AS CNSL_MID_CL_NM
+            ,CNSL_SLV_CL
+            ,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng}
+                    AND MAST.COMMON_GRP   ='CM00018'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = RCPT.CNSL_SLV_CL) AS CNSL_SLV_CL_NM
+            ,CNSL_RESN_CD
+            ,'' AS CNSL_RESN_CD_NM
+            ,REQ_DESC
+            ,PROC_DESC
+            ,RCPT_ORG_ID
+            ,(SELECT ORG_NM
+                FROM TSYCO_ORG_INFO
+                WHERE SO_ID = RCPT.SO_ID
+                AND ORG_ID  = RCPT.RCPT_ORG_ID
+                AND APPY_STRT_DT &lt;= #{today}
+                AND APPY_END_DT &gt;= #{today}) AS RCPT_ORG_ID_NM
+            ,RCPT_USR_ID
+            ,(SELECT USER_NAME
+              FROM TSYCO_USER
+              WHERE USER_ID = RCPT.RCPT_USR_ID) AS RCPT_USR_ID_NM
+            ,PROC_ORG_ID
+            ,(SELECT ORG_NM
+                FROM TSYCO_ORG_INFO
+                WHERE SO_ID = RCPT.SO_ID
+                AND ORG_ID  = RCPT.PROC_ORG_ID
+                AND APPY_STRT_DT &lt;= #{today}
+                AND APPY_END_DT &gt;= #{today}) AS PROC_ORG_ID_NM
+            ,PROC_USR_ID
+            ,(SELECT USER_NAME
+              FROM TSYCO_USER
+              WHERE USER_ID = RCPT.PROC_USR_ID) AS PROC_USR_ID_NM
+            ,CMPL_ORG_ID
+            ,(SELECT ORG_NM
+                FROM TSYCO_ORG_INFO
+                WHERE SO_ID = RCPT.SO_ID
+                AND ORG_ID  = RCPT.CMPL_ORG_ID
+                AND APPY_STRT_DT &lt;= #{today}
+                AND APPY_END_DT &gt;= #{today}) AS CMPL_ORG_ID_NM
+            ,CMPL_USR_ID
+            ,(SELECT USER_NAME
+              FROM TSYCO_USER
+              WHERE USER_ID = RCPT.CMPL_USR_ID) AS CMPL_USR_ID_NM
+            ,CNSL_STAT
+            ,(SELECT NAME.CODE_NM
+              FROM TSYCO_CODE_MAST MAST
+                    , TSYCO_CODE_MAST_NAME MNAME
+                    , TSYCO_CODE_DETAIL DETAIL
+                    , TSYCO_CODE_DETAIL_NAME NAME
+              WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                    AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                    AND MNAME.LNG_TYP     =#{lng} 
+                    AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                    AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                    AND NAME.LNG_TYP      = #{lng}
+                    AND MAST.COMMON_GRP   ='CM00020'
+                    AND DETAIL.USE_YN     ='Y'
+                    AND MAST.USE_YN       ='Y'
+                    AND DETAIL.COMMON_CD = RCPT.CNSL_STAT) AS CNSL_STAT_NM
+            ,EXT_ID
+            ,REGR_ID
+            ,(SELECT USER_NAME
+              FROM TSYCO_USER
+              WHERE USER_ID = RCPT.REGR_ID) AS REGR_ID_NM
+            ,REG_DATE
+            ,CHGR_ID
+            ,(SELECT USER_NAME
+              FROM TSYCO_USER
+              WHERE USER_ID = RCPT.CHGR_ID) AS CHGR_ID_NM
+            ,CHG_DATE
+       FROM TCMRC_CNSL_RCPT_INFO RCPT
+       WHERE RCPT_ID = #{rcptId}                         
+     </select>    
+</mapper>
+    

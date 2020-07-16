@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.charge.batch.BatchWorkMapMapper">
+
+	<sql id="whereBatWrkMap">
+		<where>
+			AND BAT_GRP_ID = #{batGrpId}
+		</where>
+	</sql>
+
+	<select id="getBatchWorkMapCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TBLIV_BAT_WRK_MAP
+		<include refid="whereBatWrkMap"/>
+	</select>
+	
+	<select id="getBatchWorkMapList" resultType="com.ntels.ccbs.charge.domain.charge.batch.BatchWorkMapVO">
+		SELECT
+			MAP.BAT_GRP_ID
+			, MAP.BAT_PGM_ID
+			, MAP.WRK_PROC_ORD
+			, MAP.REGR_ID
+			, MAP.REG_DATE
+			, MAP.CHGR_ID
+			, MAP.CHG_DATE
+			, MAP.SO_ID
+			, PGM.PGM_NM
+		FROM TBLIV_BAT_WRK_MAP MAP
+		LEFT OUTER JOIN TBLIV_BAT_PGM PGM ON
+			PGM.BAT_PGM_ID = MAP.BAT_PGM_ID 
+		<include refid="whereBatWrkMap"/>
+		ORDER BY MAP.WRK_PROC_ORD ASC
+	</select>
+	
+	<delete id="deleteByBatGrpId">
+		DELETE FROM TBLIV_BAT_WRK_MAP
+		WHERE BAT_GRP_ID = #{batGrpId}
+	</delete>
+	
+	<insert id="insertBatchWorkMap">
+		INSERT INTO TBLIV_BAT_WRK_MAP
+		(
+			BAT_GRP_ID
+			, BAT_PGM_ID
+			, WRK_PROC_ORD
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+			, SO_ID
+		)
+		VALUES
+		(
+			#{batGrpId}
+			, #{batPgmId}
+			, #{wrkProcOrd}
+			, #{regrId}
+			, #{regDate}
+			, #{chgrId}
+			, #{chgDate}
+			, #{soId}
+		)
+	</insert>
+	
+</mapper>

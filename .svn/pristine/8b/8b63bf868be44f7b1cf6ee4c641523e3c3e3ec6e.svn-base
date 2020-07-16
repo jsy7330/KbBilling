@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.service.MaskInterceptorMapper">
+
+
+    <select id="getSoList" resultType="String">
+        SELECT
+            DISTINCT SO_ID
+        FROM 
+            TSYCO_MASK_RULE
+    </select>
+
+    <select id="getMaskRule" resultType="MaskRule" parameterType="String">
+        SELECT
+             SO_ID
+            ,FIELD_NAME
+            ,START_MASK_INDEX
+            ,END_MASK_INDEX
+            ,MASK_CHAR
+        FROM 
+            TSYCO_MASK_RULE
+        WHERE
+            SO_ID = #{soId, jdbcType=VARCHAR} 
+    </select>
+</mapper>

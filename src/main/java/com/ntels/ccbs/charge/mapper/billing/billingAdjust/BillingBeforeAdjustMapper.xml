@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.billing.billingAdjust.BillingBeforeAdjustMapper">
+
+<!-- 수납 조회 -->
+    <!-- 수납 통계조회 -->
+    <select id="getPymList" parameterType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO" resultType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO">
+        SELECT SO_ID
+              ,PYM_ACNT_ID ||'  '|| ACNT_NM AS PYM_ACNT
+              ,PYM_ACNT_ID
+		      ,CUST_NM
+		      ,CUST_TP
+		      ,(SELECT  NAME.CODE_NM AS COMMON_CD_NM
+		                        FROM    TSYCO_CODE_MAST MAST
+		                                , TSYCO_CODE_MAST_NAME MNAME
+		                                , TSYCO_CODE_DETAIL DETAIL
+		                                , TSYCO_CODE_DETAIL_NAME NAME
+		                        WHERE   MAST.COMMON_GRP=DETAIL.COMMON_GRP
+		                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+		                                AND MNAME.LNG_TYP     =#{billingBeforeAdjust.lngTyp}
+		                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+		                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+		                                AND NAME.LNG_TYP      =#{billingBeforeAdjust.lngTyp}
+		                                AND MAST.COMMON_GRP   ='CM00009'
+		                                AND DETAIL.COMMON_CD = CUST_TP
+		                    ) AS CUST_TP_NM
+		      ,PAY_ZIP_CD||' '||PAY_BASE_ADDR||' '||PAY_ADDR_DTL AS ADDR
+		  FROM IFNBRM_CUST_INFO
+		 WHERE SO_ID = #{billingBeforeAdjust.soId}
+		   AND CUST_NM = #{billingBeforeAdjust.custNm}
+    </select>
+    
+    <select id="getPymBillList" parameterType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO" resultType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO">
+		SELECT A.PYM_ACNT_ID
+		      ,A.ACNT_NM
+		      ,A.CUST_NM
+		      ,A.CTRT_ID_CNT
+		      ,A.PROD_CD_CNT
+		      ,A.SVC_CD_CNT
+		      ,B.ADJ_NO
+		      ,B.BILL_SEQ_NO
+		      ,NVL(B.ADJ_PT,#{billingBeforeAdjust.adjPt}) AS ADJ_PT
+		      ,B.ADJ_PT_NM
+		      ,B.HOPE_APLY_YYMM
+		      ,B.DCSN_PROC_STAT
+		      ,B.DCSN_PROC_STAT_NM
+		      ,NVL(B.ADJ_APPL_AMT,0)  AS ADJ_APPL_AMT
+		      ,B.APPL_DTTM
+		      ,B.RCPT_PSN_NM
+		      ,B.APPL_SO_NM
+		      ,A.SO_ID
+		      ,(SELECT Z.SO_NM
+		                  FROM TSYCO_SO_MAST Z
+		         WHERE Z.SO_ID = A.SO_ID)     AS SO_NM
+		      ,B.APPRR_ID
+		      ,B.ADJ_RESN_CD
+		      ,B.ADJ_APPL_CONTS
+		  FROM (
+                SELECT PYM_ACNT_ID
+                      ,ACNT_NM
+                      ,CUST_NM
+                      ,COUNT(CTRT_ID)     AS CTRT_ID_CNT
+                      ,SUM(PROD_CD_CNT)   AS PROD_CD_CNT
+                      ,SUM(SVC_CD_CNT)    AS SVC_CD_CNT
+                      ,SO_ID
+                  FROM (
+                                SELECT A.PYM_ACNT_ID
+                                      ,B.ACNT_NM
+                                      ,B.CUST_NM
+                                      ,A.CTRT_ID
+                                      ,A.SO_ID
+                                      ,COUNT(A.PROD_CMPS_ID) AS PROD_CD_CNT
+                                      ,COUNT(A.SVC_CMPS_ID) AS SVC_CD_CNT
+                                  FROM IFNBRM_CTRT_INFO A
+                                      ,IFNBRM_CUST_INFO B
+                                 WHERE 1=1
+                                   AND A.SO_ID = #{billingBeforeAdjust.soId}
+                                   AND A.SO_ID = B.SO_ID
+                                   AND A.PYM_ACNT_ID = #{billingBeforeAdjust.pymAcntId}
+                                   AND A.PYM_ACNT_ID = B.PYM_ACNT_ID
+                                   AND A.CUST_ID	 = B.CUST_ID
+                                   AND A.INACT_DTTM = '99991231235959'
+                                   AND A.CTRT_STAT NOT IN ('10','90','50','90')
+                          GROUP BY A.PYM_ACNT_ID, B.ACNT_NM, B.CUST_NM, A.CTRT_ID, A.SO_ID
+                           ) A
+                GROUP BY A.PYM_ACNT_ID, ACNT_NM, A.CUST_NM, A.SO_ID
+                ) A
+		      ,(
+                SELECT ADJ_NO
+                      ,BILL_SEQ_NO
+                      ,ADJ_PT
+                      ,(SELECT NAME.CODE_NM AS COMMON_CD_NM
+                          FROM TSYCO_CODE_MAST MAST
+                              ,TSYCO_CODE_MAST_NAME MNAME
+                              ,TSYCO_CODE_DETAIL DETAIL
+                              ,TSYCO_CODE_DETAIL_NAME NAME
+                         WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                           AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                           AND MNAME.LNG_TYP     = #{billingBeforeAdjust.lngTyp}
+                           AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                           AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                           AND NAME.LNG_TYP      = #{billingBeforeAdjust.lngTyp}
+                           AND MAST.COMMON_GRP   ='BL00027'
+                           AND DETAIL.COMMON_CD = ADJ_PT
+                       ) AS ADJ_PT_NM
+                      ,PYM_ACNT_ID
+                      ,HOPE_APLY_YYMM
+                      ,DCSN_PROC_STAT
+                      ,(SELECT NAME.CODE_NM AS COMMON_CD_NM
+                          FROM TSYCO_CODE_MAST MAST
+                              ,TSYCO_CODE_MAST_NAME MNAME
+                              ,TSYCO_CODE_DETAIL DETAIL
+                              ,TSYCO_CODE_DETAIL_NAME NAME
+                         WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                           AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                           AND MNAME.LNG_TYP     = #{billingBeforeAdjust.lngTyp}
+                           AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                           AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                           AND NAME.LNG_TYP      = #{billingBeforeAdjust.lngTyp}
+                           AND MAST.COMMON_GRP   ='BL00025'
+                           AND DETAIL.COMMON_CD = DCSN_PROC_STAT
+                       ) AS DCSN_PROC_STAT_NM
+                      ,APPL_DTTM
+                      ,(SELECT USER_NAME
+                          FROM TSYCO_USER X                                 /* 사용자*/
+                         WHERE X.USER_ID = RCPT_PSN_ID)  AS RCPT_PSN_NM     /* 접수자명 */
+                      ,(SELECT SUM(ADJ_APPL_AMT)
+                          FROM TBLIV_CHRG_ADJ_APLY_DTL Y                    /* 요금조정신청상세 */
+                         WHERE Y.ADJ_NO = ADJ_NO)        AS ADJ_APPL_AMT    /* 신청금액 */
+                      ,(SELECT Z.SO_NM
+                          FROM TSYCO_SO_MAST Z                              /* SO 마스타*/
+                         WHERE Z.SO_ID = APPL_SO_ID)     AS APPL_SO_NM      /* 접수자소속 */
+                      ,APPRR_ID
+                      ,ADJ_RESN_CD
+                      ,ADJ_APPL_CONTS
+                  FROM TBLIV_CHRG_ADJ_APLY
+                 WHERE APPL_SO_ID  = #{billingBeforeAdjust.soId}
+                   AND PYM_ACNT_ID = #{billingBeforeAdjust.pymAcntId}
+                   AND ADJ_PT      = #{billingBeforeAdjust.adjPt}           /* 조정시점(BLIV015, 1:청구전,2:청구후) */
+                   AND ADJ_RESN_CD NOT IN ('01', '02')
+          UNION ALL
+                SELECT
+                       NULL AS ADJ_NO
+                     , NULL AS BILL_SEQ_NO
+                     , '1'  AS ADJ_PT
+                     , NULL AS ADJ_PT_NM
+                     , #{billingBeforeAdjust.pymAcntId} AS PYM_ACNT_ID
+                     , NULL AS HOPE_APLY_YYMM
+                     , NULL AS DCSN_PROC_STAT
+                     , NULL AS DCSN_PROC_STAT_NM
+                     , NULL AS APPL_DTTM
+                     , NULL AS RCPT_PSN_NM
+                     , NULL AS ADJ_APPL_AMT
+                     , NULL AS APPL_SO_NM
+                     , NULL AS APPRR_ID
+                     , NULL AS ADJ_RESN_CD
+                     , NULL AS ADJ_APPL_CONTS
+                  FROM DUAL
+		       ) B
+		 WHERE A.PYM_ACNT_ID = B.PYM_ACNT_ID(+)
+		ORDER BY HOPE_APLY_YYMM
+    </select>
+</mapper>

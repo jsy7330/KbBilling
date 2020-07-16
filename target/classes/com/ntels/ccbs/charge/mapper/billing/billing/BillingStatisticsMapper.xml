@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.billing.billing.BillingStatisticsMapper">
+
+<!-- 수납 조회 -->
+	<!-- 수납 통계조회 -->
+	<select id="billDtlList" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO" resultType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO">
+        SELECT/*+ ORDERED USE_NL(B A) INDEX(B IX_TBLIV_BILL_TGT_CUST_04) INDEX(A PK_TBLIV_BILL) */
+               '0'                                          AS CHK_JOB
+             , A.PYM_ACNT_ID
+             , A.BILL_YYMM
+             , A.BILL_DT
+             , SUM(A.USG_CNT)                               AS USG_CNT
+             , SUM(A.USG_AMT)                               AS USG_AMT
+             , SUM(A.ADJ_PRV_BILL_AMT)                      AS ADJ_PRV_BILL_AMT
+             , SUM(A.ADJ_AMT)                               AS ADJ_AMT
+             , SUM(A.BILL_AMT)                              AS BILL_AMT
+             , SUM(A.RCPT_AMT)                              AS RCPT_AMT
+             , SUM( A.BILL_AMT - A.RCPT_AMT)                AS UNPAY_AMT                /* 미납금액 */
+             , A.PAY_DUE_DT
+             , (CASE COUNT(CASE WHEN A.FULL_PAY_YN = 'Y' THEN 'Y' END)
+             
+                      WHEN COUNT(*) THEN 'Y'
+                      ELSE NULL
+                 END)                                       AS FULL_PAY_YN
+             , CASE WHEN B.SML_AMT_YN = 'Y' THEN 'Y' END              AS SML_AMT_YN
+             
+             , ( SELECT /*+ INDEX(X IX_TBLIV_CHRG_ADJ_APLY_03) */
+                        ADJ_APPL_CONTS
+                  FROM TBLIV_CHRG_ADJ_APLY Z
+                                    WHERE BILL_SEQ_NO     = B.BILL_SEQ_NO
+                                       AND (SELECT A.RN FROM (SELECT @RN := @RN+1 AS RN from  TBLIV_CHRG_ADJ_APLY WHERE (@RN := 0)=0 ) A WHERE A.RN=1) <![CDATA[ <= ]]> 1
+                    
+               )                                            AS ADJ_APPL_CONTS           /* 조정내역 */
+             , B.PAY_MTHD                                                               /* 납부방법 */
+             , B.BILL_SEQ_NO
+             , CASE WHEN A.BILL_CYCL = '00' THEN 'Bill' ELSE 'R-Bill' END AS  BILL_TP_NM             
+             , B.BILL_EXPT_YN
+              , ( SELECT X.USER_NAME
+                 FROM TSYCO_USER X
+                 WHERE X.USER_ID = ( SELECT CHGR_ID
+                                       FROM  TBLIV_CHRG_ADJ_APLY
+                                      WHERE ADJ_NO = ( SELECT MAX(ADJ_NO)
+                                                         FROM   TBLIV_CHRG_ADJ_APLY
+                                                        WHERE BILL_SEQ_NO   = B.BILL_SEQ_NO ))
+              )                                            AS CHGR_NM
+             ,( SELECT MAX(date_format(CHG_DATE,'%y%m%d')) FROM   TBLIV_CHRG_ADJ_APLY WHERE BILL_SEQ_NO   = B.BILL_SEQ_NO ) AS CHG_DT
+             ,CASE WHEN B.BILL_EXPT_YN = 'Y' THEN B.SMRY ELSE NULL END AS SMRY
+             
+             ,B.SO_ID
+             ,(SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = B.SO_ID) AS SO_NM
+          FROM TBLIV_BILL_TGT_CUST  B                      /* 청구대상자 */
+             , TBLIV_BILL           A                      /* 청구내역 */
+         WHERE B.BILL_SEQ_NO   = A.BILL_SEQ_NO
+           AND B.PYM_ACNT_ID   = #{billingStatistics.pymAcntId}
+           <if test="billingStatistics.billYymm != null and billingStatistics.billYymm != ''">
+               AND B.BILL_YYMM     = #{billingStatistics.billYymm}
+           </if>
+           <if test="billingStatistics.searchStartMonth != null and billingStatistics.searchEndMonth != ''">
+               AND B.BILL_YYMM     BETWEEN  #{billingStatistics.searchStartMonth} AND #{billingStatistics.searchEndMonth} 
+           </if>
+           AND A.SO_ID         = #{billingStatistics.soId}
+         GROUP BY B.SMRY,A.BILL_YYMM, A.PYM_ACNT_ID, A.BILL_DT, A.PAY_DUE_DT, B.SML_AMT_YN, B.BILL_SEQ_NO, B.PAY_MTHD
+                , A.BILL_CYCL, B.BILL_EXPT_YN, B.CHGR_ID, B.CHG_DATE, b.so_id
+         ORDER BY B.SO_ID, A.BILL_YYMM DESC, A.BILL_DT
+    </select>
+    
+    <!-- 수납 조회 -->
+    <select id="ctrtDtlList" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO" resultType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO">
+        SELECT
+               A.BILL_SEQ_NO
+             , A.BILL_YYMM
+             , A.BILL_DT
+             , A.PYM_ACNT_ID
+             , A.CUST_ID
+             , A.CTRT_ID
+             , A.PROD_CD
+             , A.PROD_GRP
+             , A.SO_ID
+             , SUM(A.ADJ_PRV_BILL_AMT)                      AS ADJ_PRV_BILL_AMT
+             , SUM(A.ADJ_AMT)                               AS ADJ_AMT
+             , SUM(A.BILL_AMT)                              AS BILL_AMT
+             , SUM(A.RCPT_AMT)                              AS RCPT_AMT                 /* 수납금액 */
+             , SUM( A.BILL_AMT - A.RCPT_AMT)                AS UNPAY_AMT                /* 미납금액 */
+             , (SELECT PROD_NM
+                  FROM IFNBRM_PROD_INFO              X                                           /* 상품정보 */
+                 WHERE X.PROD_CD            = A.PROD_CD
+               )                                            AS PROD_NM
+             , (SELECT DISTINCT X.CUST_NM
+                  FROM IFNBRM_CUST_INFO      X                                           /* 고객정보 */
+                 WHERE X.CUST_ID            = A.CUST_ID
+                 and X.SO_ID = A.SO_ID
+               )                                            AS CUST_NM
+             , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM
+             , (SELECT SVC_TEL_NO
+                  FROM IFNBRM_CTRT_INFO
+                 WHERE SO_ID = A.SO_ID
+                   AND CTRT_ID = A.CTRT_ID
+                   AND INACT_DTTM = '99991231235959') AS SVC_TEL_NO
+          FROM TBLIV_BILL           A
+         WHERE A.BILL_SEQ_NO       = #{billingStatistics.billSeqNo}
+           AND A.PYM_ACNT_ID       = #{billingStatistics.pymAcntId}
+           AND A.BILL_YYMM         = #{billingStatistics.billYymm}
+           AND A.BILL_DT           = #{billingStatistics.billDt}
+         GROUP BY A.CUST_ID, A.CTRT_ID, A.PROD_CD, A.SO_ID, A.BILL_YYMM, A.BILL_DT, A.PYM_ACNT_ID, A.PROD_GRP, A.BILL_SEQ_NO
+         ORDER BY A.CUST_ID, A.PROD_GRP, SO_NM, A.CTRT_ID, A.PROD_CD
+    </select>
+    
+    <!-- 수납 상세 조회 -->
+    <select id="chrgItmDtlList" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO" resultType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO">
+        SELECT
+               A.USE_YYMM
+             , A.SVC_CD
+             , A.CHRG_ITM_CD
+             , SUM(A.USG_CNT)                                     AS USG_CNT
+             , SUM(A.USG_AMT)                                     AS USG_AMT
+             , SUM(A.ADJ_PRV_BILL_AMT)                            AS ADJ_PRV_BILL_AMT
+             , SUM(A.ADJ_AMT)                                     AS ADJ_AMT
+             , SUM(A.BILL_AMT)                                    AS BILL_AMT
+             , SUM(A.RCPT_AMT)                                    AS RCPT_AMT           /* 수납금액 */
+             , SUM( A.BILL_AMT - A.RCPT_AMT)                      AS UNPAY_AMT          /* 미납금액 */
+             , (SELECT SVC_NM
+                  FROM TPMSV_SVC               X                                           /* 서비스정보 */
+                 WHERE X.SVC_CD             = A.SVC_CD
+                   AND X.MSTR_FL            = '1'
+               )                                                  AS SVC_NM
+             , B.SVC_RATE_ITM_TYP_NM                              AS CHRG_ITM_NM
+             , TO_CHAR(TO_DATE((CASE
+                                      WHEN C.USE_STRT_DT = NULL                        THEN NULL
+                                      WHEN A.USE_YYMM    = SUBSTR(C.USE_STRT_DT, 1, 6)  THEN C.USE_STRT_DT
+                                      WHEN A.USE_YYMM    > SUBSTR(C.USE_STRT_DT, 1, 6)  THEN
+                                           (CASE  WHEN A.USE_YYMM > SUBSTR(C.USE_END_DT,1,6) THEN NULL
+                                                  WHEN A.USE_YYMM = SUBSTR(C.USE_END_DT,1,6) THEN SUBSTR(C.USE_END_DT,1,6) || '01'
+                                                  ELSE SUBSTR(TO_CHAR(ADD_MONTHS(TO_DATE(C.USE_END_DT,'YYYYMMDD'),-1),'YYYYMMDD'),1,6) || '01'
+                                            END)
+                                      ELSE TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(C.USE_STRT_DT,'YYYYMMDD'),-1)),'YYYYMMDD')
+                                END),'YYYY.MM.DD'),'YYYY.MM.DD')  || '~' ||
+               TO_CHAR(TO_DATE((CASE
+                                      WHEN C.USE_END_DT = NULL                        THEN NULL
+                                      WHEN A.USE_YYMM   = SUBSTR(C.USE_END_DT, 1, 6)  THEN C.USE_END_DT
+                                      WHEN A.USE_YYMM   > SUBSTR(C.USE_END_DT, 1, 6)  THEN NULL
+                                      ELSE TO_CHAR(LAST_DAY(ADD_MONTHS(TO_DATE(C.USE_END_DT,'YYYYMMDD'),-1)),'YYYYMMDD')
+                                 END),'YYYY.MM.DD'),'YYYY.MM.DD')              AS USE_DT             /* 이용일 */
+          FROM (
+                 SELECT
+                         A.PYM_ACNT_ID
+                       , A.BILL_YYMM
+                       , A.USE_YYMM
+                       , A.SVC_CD
+                       , A.CHRG_ITM_CD
+                       , A.PROD_CMPS_ID
+                       , A.SVC_CMPS_ID
+                       , A.BILL_SEQ_NO
+                       , A.PAY_DUE_DT
+                       , SUM(A.USG_CNT)              AS USG_CNT
+                       , SUM(A.USG_AMT)              AS USG_AMT
+                       , SUM(A.ADJ_PRV_BILL_AMT)     AS ADJ_PRV_BILL_AMT
+                       , SUM(A.ADJ_AMT)              AS ADJ_AMT
+                       , SUM(A.BILL_AMT)             AS BILL_AMT
+                       , SUM(A.RCPT_AMT)             AS RCPT_AMT
+                    FROM TBLIV_BILL          A                           /* 청구내역 */
+                   WHERE A.BILL_SEQ_NO       = #{billingStatistics.billSeqNo}
+                     AND A.BILL_YYMM         = #{billingStatistics.billYymm}
+                     AND A.BILL_DT           = #{billingStatistics.billDt}
+                     AND A.PYM_ACNT_ID       = #{billingStatistics.pymAcntId}
+                     AND A.CUST_ID           = #{billingStatistics.custId}
+                     AND A.CTRT_ID           = #{billingStatistics.ctrtId}
+                     AND A.PROD_CD           = #{billingStatistics.prodCd}
+                   GROUP BY A.PYM_ACNT_ID, A.BILL_YYMM, A.USE_YYMM, A.SVC_CD, A.PAY_DUE_DT
+                          , A.CHRG_ITM_CD, A.PROD_CMPS_ID, A.SVC_CMPS_ID, A.BILL_SEQ_NO
+                ) A
+              , VIFNBRM_SVC_RATE_ITM_INFO     B                               /* 서비스과금항목유형 */
+              , TBLIV_BILL_TGT_SVC_CMPS C                               /* 청구대상서비스구성현황 */
+         WHERE A.CHRG_ITM_CD       = B.SVC_RATE_ITM_TYP_CD
+           AND A.BILL_SEQ_NO       = C.BILL_SEQ_NO
+           AND A.PROD_CMPS_ID      = C.PROD_CMPS_ID
+           AND A.SVC_CMPS_ID       = C.SVC_CMPS_ID
+         GROUP BY A.PYM_ACNT_ID, A.USE_YYMM, A.BILL_YYMM, A.SVC_CD, A.CHRG_ITM_CD, B.SVC_RATE_ITM_TYP_NM
+                , C.USE_STRT_DT,C.USE_END_DT,B.DISP_PRI_NO
+         ORDER BY A.USE_YYMM, SVC_NM, B.DISP_PRI_NO
+    </select>
+    
+    
+    
+    
+    
+    <!-- 서비스별청구내역조회 - 청구내역 카운트  -->
+	<select id="getBillInvoiceCount" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO" resultType="int">
+        SELECT COUNT(1)
+        FROM  (
+               SELECT A.SO_ID
+                    ,(SELECT C.SO_NM
+                      FROM   TSYCO_SO_MAST C /* SO 마스타*/
+                      WHERE  C.SO_ID = A.SO_ID )            AS SO_NM
+                    , A.BILL_SEQ_NO
+                    , A.BILL_YYMM
+                    , A.BILL_CYCL
+                    , A.BILL_DT
+                    , A.PYM_ACNT_ID
+                    , SUM(A.USG_CNT)                        AS USG_CNT
+                    , SUM(A.USG_AMT)                        AS USG_AMT
+                    , SUM(A.ADJ_PRV_BILL_AMT)               AS ADJ_PRV_BILL_AMT
+                    , SUM(A.ADJ_AMT)                        AS ADJ_AMT
+                    , SUM(A.BILL_AMT)                       AS BILL_AMT
+                    , SUM(A.RCPT_AMT)                       AS RCPT_AMT
+                    , SUM(A.BILL_AMT - A.RCPT_AMT)          AS UNPAY_AMT       /* 미납금액 */
+                    , A.PAY_DUE_DT
+                    , B.BILL_EXPT_YN
+                    , B.SMRY
+                    , B.SML_AMT_YN
+                    , B.PAY_MTHD                                               /* 납부방법 */
+                    ,(SELECT D.FULL_PAY_YN
+                      FROM   TBLIV_BILL_MAST D
+                      WHERE  D.SO_ID = A.SO_ID
+                      AND    D.BILL_SEQ_NO = A.BILL_SEQ_NO ) AS FULL_PAY_YN
+                    ,(SELECT E.ADJ_APPL_CONTS
+                      FROM   TBLIV_CHRG_ADJ_APLY E
+                      WHERE  E.BILL_SEQ_NO = B.BILL_SEQ_NO
+                      ORDER  BY E.ADJ_NO DESC
+                      LIMIT  1)                              AS ADJ_APPL_CONTS /* 조정내역 */
+                    ,(SELECT MAX(DATE_FORMAT(CHG_DATE, '%Y%m%d'))
+                      FROM   TBLIV_CHRG_ADJ_APLY
+                      WHERE  BILL_SEQ_NO = B.BILL_SEQ_NO )   AS CHG_DT
+               FROM   TBLIV_BILL          A /* 청구내역 */
+                    , TBLIV_BILL_TGT_CUST B /* 청구대상자 */
+               WHERE  1=1
+               <if test="billingStatisticsVO.soId != null and billingStatisticsVO.soId != ''">
+               AND    A.SO_ID       = #{billingStatisticsVO.soId}
+               </if>
+               <if test="billingStatisticsVO.billYymm != null and billingStatisticsVO.billYymm != ''">
+               AND    A.BILL_YYMM   = #{billingStatisticsVO.billYymm}
+               </if>
+               <if test="billingStatisticsVO.pymAcntId != null and billingStatisticsVO.pymAcntId != ''">
+               AND    A.PYM_ACNT_ID = #{billingStatisticsVO.pymAcntId}
+               </if>
+               AND    B.SO_ID       = A.SO_ID
+               AND    B.BILL_SEQ_NO = A.BILL_SEQ_NO
+               GROUP  BY A.SO_ID, A.BILL_SEQ_NO, A.BILL_YYMM, A.BILL_CYCL, A.BILL_DT, A.PYM_ACNT_ID, A.PAY_DUE_DT, B.BILL_EXPT_YN, B.SMRY, B.SML_AMT_YN, B.PAY_MTHD
+               ORDER  BY A.SO_ID, A.BILL_YYMM DESC, A.BILL_DT
+              ) F
+	</select>
+    
+    
+    <!-- 서비스별청구내역조회 - 청구내역 리스트-->
+	<select id="getBillInvoiceList" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO" resultType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+
+        SELECT A.SO_ID
+             ,(SELECT C.SO_NM
+               FROM   TSYCO_SO_MAST C /* SO 마스타*/
+               WHERE  C.SO_ID = A.SO_ID )            AS SO_NM
+             , A.BILL_SEQ_NO
+             , A.BILL_YYMM
+             , A.BILL_CYCL
+             , A.BILL_DT
+             , A.PYM_ACNT_ID
+             , SUM(A.USG_CNT)                        AS USG_CNT
+             , SUM(A.USG_AMT)                        AS USG_AMT
+             , SUM(A.ADJ_PRV_BILL_AMT)               AS ADJ_PRV_BILL_AMT
+             , SUM(A.ADJ_AMT)                        AS ADJ_AMT
+             , SUM(A.BILL_AMT)                       AS BILL_AMT
+             , SUM(A.RCPT_AMT)                       AS RCPT_AMT
+             , SUM(A.BILL_AMT - A.RCPT_AMT)          AS UNPAY_AMT       /* 미납금액 */
+             , A.PAY_DUE_DT
+             , B.BILL_EXPT_YN
+             , B.SMRY
+             , B.SML_AMT_YN
+             , B.PAY_MTHD                                               /* 납부방법 */
+             ,(SELECT D.FULL_PAY_YN
+               FROM   TBLIV_BILL_MAST D
+               WHERE  D.SO_ID = A.SO_ID
+               AND    D.BILL_SEQ_NO = A.BILL_SEQ_NO ) AS FULL_PAY_YN
+             ,(SELECT E.ADJ_APPL_CONTS
+               FROM   TBLIV_CHRG_ADJ_APLY E
+               WHERE  E.BILL_SEQ_NO = B.BILL_SEQ_NO
+               ORDER  BY E.ADJ_NO DESC
+               LIMIT  1)                              AS ADJ_APPL_CONTS /* 조정내역 */
+             ,(SELECT MAX(DATE_FORMAT(CHG_DATE, '%Y%m%d'))
+               FROM   TBLIV_CHRG_ADJ_APLY
+               WHERE  BILL_SEQ_NO = B.BILL_SEQ_NO )   AS CHG_DT
+        FROM   TBLIV_BILL          A /* 청구내역 */
+             , TBLIV_BILL_TGT_CUST B /* 청구대상자 */
+        WHERE  1=1
+        <if test="billingStatisticsVO.soId != null and billingStatisticsVO.soId != ''">
+        AND    A.SO_ID       = #{billingStatisticsVO.soId}
+        </if>        
+        <if test="billingStatisticsVO.billYymm != null and billingStatisticsVO.billYymm != ''">
+        AND    A.BILL_YYMM   = #{billingStatisticsVO.billYymm}
+        </if>
+        <if test="billingStatisticsVO.pymAcntId != null and billingStatisticsVO.pymAcntId != ''">
+        AND    A.PYM_ACNT_ID = #{billingStatisticsVO.pymAcntId}
+        </if>
+        AND    B.SO_ID       = A.SO_ID
+        AND    B.BILL_SEQ_NO = A.BILL_SEQ_NO
+        GROUP  BY A.SO_ID, A.BILL_SEQ_NO, A.BILL_YYMM, A.BILL_CYCL, A.BILL_DT, A.PYM_ACNT_ID, A.PAY_DUE_DT, B.BILL_EXPT_YN, B.SMRY, B.SML_AMT_YN, B.PAY_MTHD
+        ORDER  BY A.SO_ID, A.BILL_YYMM DESC, A.BILL_DT
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 서비스별청구내역조회 - 청구내역 상세 리스트-->
+	<select id="getBillDtlList" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO" resultType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO">	
+        SELECT A.BILL_SEQ_NO
+             , A.USE_YYMM
+             , A.PROD_CD
+             ,(SELECT B.PROD_NM FROM TPMPD_PROD B WHERE B.PROD_CD = A.PROD_CD) AS PROD_NM
+             , A.PROD_CMPS_ID 
+             , A.SVC_CMPS_ID 
+             , A.CHRG_ITM_CD 
+             ,(SELECT C.SVC_RATE_ITM_TYP_NM FROM VIFNBRM_SVC_RATE_ITM_INFO C WHERE C.SVC_RATE_ITM_TYP_CD = A.CHRG_ITM_CD AND C.SO_ID = #{billingStatisticsVO.soId}) AS CHRG_ITM_NM 
+             , A.CUST_ID
+             , A.CTRT_ID
+             , A.USG_CNT
+             , A.USG_AMT
+             , A.ADJ_PRV_BILL_AMT
+             , A.ADJ_AMT
+             , A.BILL_AMT
+             , A.RCPT_AMT
+             , A.FULL_PAY_YN
+        FROM   TBLIV_BILL A
+        WHERE  1=1
+        <if test="billingStatisticsVO.soId != null and billingStatisticsVO.soId != ''">
+        AND    A.SO_ID       = #{billingStatisticsVO.soId}
+        </if>
+        <if test="billingStatisticsVO.billYymm != null and billingStatisticsVO.billYymm != ''">
+        AND    A.BILL_YYMM   = #{billingStatisticsVO.billYymm}
+        </if>
+        <if test="billingStatisticsVO.billCycl != null and billingStatisticsVO.billCycl != ''">
+        AND    A.BILL_CYCL   = #{billingStatisticsVO.billCycl}
+        </if>
+        <if test="billingStatisticsVO.pymAcntId != null and billingStatisticsVO.pymAcntId != ''">
+        AND    A.PYM_ACNT_ID = #{billingStatisticsVO.pymAcntId}
+        </if>
+        <if test="billingStatisticsVO.billSeqNo != null and billingStatisticsVO.billSeqNo != ''">
+        AND    A.BILL_SEQ_NO = #{billingStatisticsVO.billSeqNo}
+        </if>
+    </select>
+	
+</mapper>

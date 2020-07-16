@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.service.serviceMgt.ProductWorkMngMapper">
+	<select id="getProdListAction" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ProductWorkMngVO">		
+		SELECT Z.*
+  		FROM (
+  			SELECT 
+  				PROD.PROD_CD
+             	, PROD.PROD_NM
+          	FROM TPMPD_PROD PROD
+         	WHERE PROD.PROD_CD &gt; '1'
+           	AND PROD.ACT_DT &lt; TO_CHAR(SYSDATE, 'YYYYMMDD')
+            <if test="prodGrp != null and prodGrp != 'SEL'">
+                AND PROD.PROD_GRP = #{prodGrp}
+            </if>                           
+            AND PROD.MSTR_FL = '1'
+            AND PROD.BASIC_PROD_FL    = 'B'
+            <if test="soId != null and soId != 'SEL'">
+                AND PROD.SO_ID = #{soId}
+            </if>
+           ORDER BY PROD.PROD_GRP, PROD.PROD_CD
+           ) Z           
+	</select>
+	<select id="prodWorkListAction" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.WorkDefMngVO" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ProductWorkMngVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT a.PROD_CD,
+               a.SVC_CD,
+               a.SO_ID,
+               a.ORDER_TP,
+               (SELECT   NAME.CODE_NM AS COMMON_CD_NM
+			        FROM   TSYCO_CODE_MAST MAST ,
+			               TSYCO_CODE_MAST_NAME MNAME ,
+			               TSYCO_CODE_DETAIL DETAIL ,
+			               TSYCO_CODE_DETAIL_NAME NAME
+			        WHERE  MAST.COMMON_GRP=DETAIL.COMMON_GRP
+			        AND    MAST.COMMON_GRP =MNAME.COMMON_GRP
+			        AND    MNAME.LNG_TYP = #{productWorkMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    DETAIL.COMMON_GRP =NAME.COMMON_GRP
+			        AND    DETAIL.COMMON_CD =NAME.COMMON_CD
+			        AND    NAME.LNG_TYP =  #{productWorkMngVO.lngTyp, jdbcType=VARCHAR}
+			        AND    MAST.COMMON_GRP ='CM00022'
+			        AND    DETAIL.COMMON_CD = a.ORDER_TP ) AS ORDER_TP_NM         ,      
+               a.WRK_SEQ_NO,
+               a.WRK_DEF_ID,
+               a.WRK_DFT_WRKER,
+               (SELECT SVC_WRK_GRP_NM FROM TCMCT_SVC_WRK_GRP WHERE SVC_WRK_GRP_ID=a.WRK_DFT_WRKER) AS WRK_DFT_WRKER_NM,
+               a.WRK_REF_WRKER,
+               (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID=a.WRK_REF_WRKER) AS WRK_REF_WRKER_NM,
+               a.WRK_AUTO_CMT_YN,
+               a.ATRT_YN,
+               a.REGR_ID,
+               b.WRK_TP,
+               b.WRK_NAME
+		FROM TPMPD_PROD_WRK A, TPMPD_WRK B 
+		WHERE 1=1
+		  AND B.WRK_DEF_ID = A.WRK_DEF_ID    
+          <if test="productWorkMngVO.prodCd != null and productWorkMngVO.prodCd != ''">
+                AND A.PROD_CD = #{productWorkMngVO.prodCd, jdbcType=VARCHAR}
+          </if>
+           <if test="productWorkMngVO.soId != null and productWorkMngVO.soId != ''">
+               AND A.SO_ID   = #{productWorkMngVO.soId, jdbcType=VARCHAR}
+          </if>
+          <if test="productWorkMngVO.orderTp != null and productWorkMngVO.orderTp != ''">
+                AND A.ORDER_TP= #{productWorkMngVO.orderTp, jdbcType=VARCHAR}
+          </if>
+		ORDER BY A.WRK_SEQ_NO
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="prodWorkListCount" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ProductWorkMngVO" resultType="int">
+	SELECT COUNT(0)
+	  FROM
+	  (
+        SELECT a.PROD_CD,
+               a.SVC_CD,
+               a.SO_ID,
+               a.ORDER_TP,
+               a.WRK_SEQ_NO,
+               a.WRK_DEF_ID,
+               a.WRK_DFT_WRKER,
+               (SELECT SVC_WRK_GRP_NM FROM TCMCT_SVC_WRK_GRP WHERE SVC_WRK_GRP_ID=a.WRK_DFT_WRKER) AS WRK_DFT_WRKER_NM,
+               a.WRK_REF_WRKER,
+               (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID=a.WRK_REF_WRKER) AS WRK_REF_WRKER_NM,
+               a.WRK_AUTO_CMT_YN,
+               a.ATRT_YN,
+               a.REGR_ID,
+               b.WRK_TP,
+               b.WRK_NAME
+		FROM TPMPD_PROD_WRK A, TPMPD_WRK B 
+		WHERE 1=1
+		  AND B.WRK_DEF_ID = A.WRK_DEF_ID    
+          <if test="productWorkMngVO.prodCd != null and productWorkMngVO.prodCd != 'SEL'">
+                AND A.PROD_CD = #{productWorkMngVO.prodCd, jdbcType=VARCHAR}
+          </if>
+           <if test="productWorkMngVO.soId != null and productWorkMngVO.soId != 'SEL'">
+               AND A.SO_ID   = #{productWorkMngVO.soId, jdbcType=VARCHAR}
+          </if>
+          <if test="productWorkMngVO.orderTp != null and productWorkMngVO.orderTp != 'SEL'">
+                AND A.ORDER_TP= #{productWorkMngVO.orderTp, jdbcType=VARCHAR}
+          </if>
+      )
+	</select>	
+	
+	<select id="getWrkDefList" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ProductWorkMngVO">		
+        SELECT WRK_DEF_ID, 
+               WRK_TP, 
+               WRK_VAL,
+               WRK_NAME, 
+               WRK_DESC, 
+               USE_YN
+		FROM TPMPD_WRK   
+		WHERE 1=1
+         <if test="wrkTp != null and wrkTp != 'SEL'">
+         AND    WRK_TP = #{wrkTp}
+         </if>
+        ORDER BY CHG_DATE
+	</select>	
+	
+	<select id="openWrkDefSearchActionCnt" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.ProductWorkMngVO" resultType="int">
+		SELECT COUNT(0)
+		  FROM
+		  (
+	         SELECT SVC_WRK_GRP_ID,
+	               SVC_WRK_GRP_NM
+	        FROM TCMCT_SVC_WRK_GRP
+	        WHERE 1=1
+             <if test="productWorkMngVO.soId != null and productWorkMngVO.soId != ''">
+	          AND SO_ID   = #{productWorkMngVO.soId, jdbcType=VARCHAR}
+	         </if>	        
+		     AND USE_YN = 'Y'	         
+	      )
+	</select>
+	<select id="openWrkDefSearchAction" parameterType="com.ntels.ccbs.product.domain.service.serviceMgt.WorkDefMngVO" resultType="com.ntels.ccbs.product.domain.service.serviceMgt.ProductWorkMngVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT SVC_WRK_GRP_ID,
+               SVC_WRK_GRP_NM
+        FROM TCMCT_SVC_WRK_GRP
+        WHERE 1=1
+          <if test="productWorkMngVO.soId != null and productWorkMngVO.soId != ''">  
+          AND SO_ID   = #{productWorkMngVO.soId, jdbcType=VARCHAR}
+	        AND USE_YN = 'Y'
+         </if>	        
+        ORDER BY SVC_WRK_GRP_ID 
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>	
+	
+	<insert id="insertProdWrk" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+	        INSERT INTO TPMPD_PROD_WRK
+        (
+            PROD_CD,        
+			SVC_CD,         
+			SO_ID,          
+			ORDER_TP,       
+			WRK_SEQ_NO,     
+			WRK_DEF_ID,     
+			WRK_DFT_WRKER,  
+			WRK_REF_WRKER,  
+			WRK_AUTO_CMT_YN,
+			ATRT_YN,        
+            REGR_ID, 
+            REG_DATE, 
+            CHGR_ID, 
+            CHG_DATE 
+        )
+        VALUES
+        (
+            #{productWorkMngVO.prodCd}             ,
+			(SELECT SVC_CD FROM TPMPD_PROD_SVC WHERE PROD_CD = #{productWorkMngVO.prodCd})           ,
+			#{productWorkMngVO.soId}               ,
+			#{productWorkMngVO.orderTp}            ,
+			#{productWorkMngVO.wrkSeqNo}          ,
+			#{productWorkMngVO.wrkDefId}          ,
+			#{productWorkMngVO.wrkDftWrker}      ,
+			#{productWorkMngVO.wrkRefWrker}       ,
+			#{productWorkMngVO.wrkAutoCmtYn}    ,
+			#{productWorkMngVO.atrtYn}            ,
+			#{productWorkMngVO.regrId}            ,
+			#{productWorkMngVO.regDate}              ,
+			#{productWorkMngVO.chgrId}             ,
+			#{productWorkMngVO.chgDate}               
+        )
+	</insert>	
+	
+	<select id="getWrkSeqNo" resultType="String"> 
+         SELECT CASE WHEN MAX(WRK_SEQ_NO) IS NULL THEN 1 ELSE MAX(WRK_SEQ_NO)+1 END AS WRK_SEQ_NO FROM TPMPD_PROD_WRK WHERE PROD_CD = #{productWorkMngVO.prodCd} AND SO_ID= #{productWorkMngVO.soId}  
+	</select> 
+	
+	<update id="updateProdWrk" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+        UPDATE TPMPD_PROD_WRK
+        SET  
+            WRK_DEF_ID        =#{productWorkMngVO.wrkDefId},
+            WRK_DFT_WRKER     =#{productWorkMngVO.wrkDftWrker},
+            WRK_REF_WRKER     =#{productWorkMngVO.wrkRefWrker},
+            WRK_AUTO_CMT_YN   =#{productWorkMngVO.wrkAutoCmtYn},
+            ATRT_YN           =#{productWorkMngVO.atrtYn} ,
+            CHGR_ID   = #{productWorkMngVO.chgrId} , 
+            CHG_DATE  = #{productWorkMngVO.chgDate}  
+        WHERE PROD_CD = #{productWorkMngVO.oldProdCd} 
+          AND SO_ID   = #{productWorkMngVO.oldSoId} 
+          AND ORDER_TP= #{productWorkMngVO.oldOrderTp} 
+          AND WRK_SEQ_NO = #{productWorkMngVO.oldWrkSeqNo} 
+	</update>			
+	<delete id="deleteProdWrk" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+        DELETE FROM TPMPD_PROD_WRK
+        WHERE PROD_CD = #{productWorkMngVO.oldProdCd} 
+          AND SO_ID   = #{productWorkMngVO.oldSoId} 
+          AND ORDER_TP= #{productWorkMngVO.oldOrderTp} 
+          AND WRK_SEQ_NO = #{productWorkMngVO.oldWrkSeqNo} 
+	</delete>	
+</mapper>

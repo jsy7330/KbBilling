@@ -1,0 +1,154 @@
+<%@page contentType="text/html;charset=UTF-8"%>
+<%@page pageEncoding="UTF-8"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
+<%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
+
+<link rel="stylesheet" type="text/css" media="screen" href="/styles/jqgrid/jquery-ui-1.8.2.custom.css" />
+<link rel="stylesheet" type="text/css" media="screen" href="/styles/jqgrid/ui.jqgrid.css" />
+<script src="/scripts/jqgrid/i18n/grid.locale-en.js" type="text/javascript"></script>
+<script src="/scripts/jqgrid/jquery.jqGrid.min.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+<!--
+$(document).ready(function() {
+//	document.onselectstart = function () { return false; };	
+	initGrid();	//jqgrid ȣ��
+	
+	//��ư Ŭ����
+	$("#btn_search").click(function() {
+		$("#page").val("1");
+		goSearch();
+	});
+
+	var resultMsg = "${resultMsg}";
+	if(resultMsg != null && resultMsg != "") {
+		alert("${resultMsg}");
+	} else {
+		//goPostPage('#userTable', 'listAction.ajax', 1);
+	}
+});
+
+function goSearch() {
+	var param = new Object();
+	param.page =  $("#page").val();
+	param.perPage =  $("#perPage").val();
+	param.commonGrpNm =  $("#commonGrpNm").val();		
+	openPop( $("#commonGrpNm").val());
+	$("#popup_dialog").remove();
+}
+
+function getParam(){
+	var param = new Object();	
+	param.commonGrpNm =  $("#commonGrpNm").val();
+	return param;
+}
+
+function goInsertValue(commonGrp,commonGrpNm){
+	$("#refCd", parent.document.body).val(commonGrp);
+	$("#refCdNm", parent.document.body).val(commonGrpNm);
+	$("#popup_dialog").remove();
+}
+
+
+/* Modal */
+function closeModal() {
+	$("#popup_dialog").remove();
+}
+
+
+function initGrid() {
+
+	var param = new Object();
+//	param.attrNm =  $("#attrNm").val();
+	
+	$("#attributeTable").jqGrid({
+
+	   	url:'commListActionPopUp.json?'+ $.param(getParam()),
+	    mtype:"POST",
+	   	datatype: "json",
+
+
+	   	jsonReader : {repeatitems : false, id : "commonGrp"},
+	   	colNames:[
+			'<spring:message code="LAB.M01.LAB00109" />',
+			'<spring:message code="LAB.M01.LAB00106" />'
+		],
+	   	colModel:[
+	   		{name:'commonGrp',index:'commonGrp', width:60},
+	   		{name:'commonGrpNm',index:'commonGrpNm', width:50,}
+	   	],
+	   	rowNum:10,		//�ѹ��� ����Ǵ� row ��
+	   	height:300,		//grid ����
+	   	rowList:[5,10,20,30,50],	//���ý� ����Ǵ� row ��
+	   	pager: '#pager2',
+		autowidth:false,
+		sortable : true,				//�巡�׷� �÷����� ��ġ ���� ���� ����
+	   	sortname: 'commonGrp',		//sorting ��� �÷���
+	    viewrecords: true,	
+	    sortorder: 'desc',			//���� loading �� sorting 
+		viewsortcols:true,
+//		rownumbers:true,
+// 		loadonce: true,
+	    width:500,
+	    hidegrid: true,
+	    caption:'<spring:message code="LAB.M01.LAB00110" />',
+	    ondblClickRow : function(id){ //ROW Ŭ���� �̺�Ʈ
+	    //	alert("�Ӽ� ID :"+$("#attributeTable").getRowData(id).attrCd);
+	    	goInsertValue($("#attributeTable").getRowData(id).commonGrp,$("#attributeTable").getRowData(id).commonGrpNm);
+	    }
+	});
+	$("#attributeTable").jqGrid('navGrid','#pager2',{edit:false,add:false,del:false});
+}
+
+
+//-->
+</Script>
+
+ <div id="mask"></div> 
+<!-- title -->
+<div class="layer_top">
+   <div class="title"><spring:message code="LAB.M01.LAB00110" /></div>
+   <a href="javascript:closeModal();" class="close">Close</a>
+</div>
+<!--// title -->   
+
+<form id="frmCommList" name="frmCommList" method="post">			
+	<input type="hidden" id="system_id" name="system_id" value="${resconfig.system_id}"/>
+	<input type="hidden" id="resource_type" name="resource_type" value="${resconfig.resource_type}"/>
+ 
+	 <div class="layer_box">
+		<h4 class="sub_title"><spring:message code="LAB.M01.LAB00110" /></h4>
+		<table class="writeview">
+			<colgroup>
+				<col style="width:40%;">
+				<col style="width:60%;">
+			</colgroup>
+			 <thead> 
+				   <tr>
+						<th><spring:message code="LAB.M01.LAB00109"/> </th>
+						<td>
+							 <input type="text" id="commonGrpNm" name="commonGrpNm" value = "${param.commonGrpNm}" class="w100p" >
+						</td>
+					</tr>
+			</thead>
+		</table> 
+								 
+		<div class="main_btn_box">
+			<a href="#" class="sea-btn" id="btn_search"><span class="search_icon"><spring:message code="LAB.M01.LAB00025"/></span></a> 
+		</div>
+		<h4 class="sub_title"><spring:message code="LAB.M01.LAB00110" /></h4>
+			<table id="attributeTable" style="width: 100%"></table> <!-- �����ʹ� �ٸ� ȭ�鿡�� �̸� ����� ajax�� ȣ���� -->
+			<table class="writelist" id="attributeTable">
+				<div id="pager2"></div>
+			</table>
+	 </div>
+
+
+	<div class="btn_box">
+		<a class="grey-btn" href="javascript:closeModal();" id="btn_cancel" title="<spring:message code="LAB.M03.LAB00027"/>">
+			<span class="cancel_icon"><spring:message code="LAB.M03.LAB00027" /></span>
+		</a>
+	</div>
+</form>

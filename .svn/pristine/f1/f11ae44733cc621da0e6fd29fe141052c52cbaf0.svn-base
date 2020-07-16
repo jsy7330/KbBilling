@@ -1,0 +1,1263 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.usageProduct.usageProductMgt.NewProductDtlMapper">
+   <!--  TAB1  -->
+     <select id="getNewProductDtlList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+		  <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+           
+            SELECT 
+			    0 AS SEL_CHECK
+			  , B.PROD_CD AS PROD_ID
+			  , B.PROD_NM AS PROD_NM
+			  , A.PROD_FAMILY
+			  , A.DESCRIPTION
+			  , A.PROD_STATE
+			  , A.EFF_DT
+			  , A.EXP_DT
+			  , A.RECURRING_CHRG
+			  , A.PRORATE_FLAG
+			  , A.PROD_OFFER_TYP
+			  , A.LMT_CTRL_TYP
+			  , A.PROD_PURCH_COND
+			  , A.PROD_PRIORITY
+			  , A.PRECOND_PROD_TYP
+			  , A.PRECOND_PROD
+			  , 'normal' AS ROW_TYPE
+			  , B.SO_ID
+			  , ( SELECT SO_NM 
+			        FROM TSYCO_SO_MAST
+			       WHERE 1=1
+			         AND SO_ID = B.SO_ID ) AS SO_NM
+			  , ( SELECT A.ATTR_VAL 
+			        FROM TPMPD_PROD_ATTR A
+			           , TSYCO_CODE_DETAIL BB
+			       WHERE 1=1
+			         AND A.PROD_CD = B.PROD_CD
+			         AND A.ATTR_CD = 'DF014'
+			         AND A.ATTR_VAL = BB.COMMON_CD
+			         AND BB.COMMON_GRP = 'PP00072' ) AS ATTR_VAL
+			  , ( SELECT BB.COMMON_CD_NM
+			        FROM TPMPD_PROD_ATTR A
+			           , TSYCO_CODE_DETAIL BB
+			           , TSYCO_CODE_DETAIL_NAME CC
+			       WHERE 1=1
+			         AND A.PROD_CD = B.PROD_CD
+			         AND A.ATTR_CD = 'DF014'
+			         AND A.ATTR_VAL = BB.COMMON_CD
+			         AND BB.COMMON_GRP = 'PP00072'
+			         AND CC.LNG_TYP = #{newProductDtl.lngTyp }
+			         AND CC.COMMON_GRP = BB.COMMON_GRP
+			         AND CC.COMMON_CD = BB.COMMON_CD ) AS ATTR_NM
+			  , B.PROD_TYP
+			  , ( SELECT A.ATTR_VAL
+			        FROM TPMPD_PROD_ATTR A
+			       WHERE 1=1 
+			         AND A.PROD_CD = B.PROD_CD
+			         AND A.ATTR_CD = 'DF014'
+			         AND A.MSTR_FL = '1' ) AS BUNDLE_ATTR_VAL
+			  , B.BASIC_PROD_FL
+			  FROM TOP_PROD A
+			     , TPMPD_PROD B
+			 WHERE 1=1
+			   AND A.PROD_ID = B.PROD_CD
+			   AND B.PROD_CD LIKE ( '%' || #{newProductDtl.prodId} || '%' )
+			   AND B.PROD_NM LIKE ( '%' || #{newProductDtl.prodNm} || '%' )
+			 <if test="newProductDtl.soId != null and newProductDtl.soId != '' ">
+			   AND B.SO_ID = #{newProductDtl.soId}
+			 </if>
+			 ORDER BY PROD_ID
+			 
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+    
+    <update id="modNewProductDtl" 
+    	parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	
+    	UPDATE TOP_PROD
+    	   SET 
+    	       PROD_PRIORITY = #{newProductDtl.prodPriority}
+    	     , EFF_DT = #{newProductDtl.effDt}
+    	     , EXP_DT = #{newProductDtl.expDt}
+    	     , PROD_FAMILY = #{newProductDtl.prodFamily}
+    	     , DESCRIPTION = #{newProductDtl.description}
+    	     , PROD_OFFER_TYP = #{newProductDtl.prodOfferTyp}
+    	 WHERE 1=1
+    	   AND PROD_ID = #{newProductDtl.prodId}
+    	
+	</update>
+    	
+    <select id="getAllUsgTypList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	 
+		 
+		 SELECT 
+		 		USG_TYP
+		 	  , USG_TYP_NM
+		   FROM TOP_USG_TYP
+		  WHERE 1=1
+		MINUS
+		   SELECT 
+		        A.USG_TYP
+		      , A.USG_TYP_NM
+		  FROM TOP_USG_TYP A
+		     , TOP_PROD_USG_TYP B
+		 WHERE 1=1
+		   AND A.USG_TYP = B.USG_TYP
+		   AND B.PROD_ID = #{newProductDtl.prodId}
+		   
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/> 
+	</select>
+    
+	<select id="getUsgTypList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	
+    	
+        SELECT 
+		        A.USG_TYP
+		      , A.USG_TYP_NM
+		      , DECODE(B.USG_TYP, NULL, 'N', 'Y') AS REG_YN
+		  FROM TOP_USG_TYP A
+		     , TOP_PROD_USG_TYP B
+		 WHERE 1=1
+		   AND A.USG_TYP = B.USG_TYP
+		   AND B.PROD_ID = #{newProductDtl.prodId}
+		   
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>	   
+    </select>  
+    
+    <select id="getProdUsgTypList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	
+        SELECT 
+		        #{newProductDtl.prodId} AS PROD_ID
+		      , B.USG_TYP
+		      , B.USG_TYP_NM
+		      , DECODE(A.PROD_ID, NULL, 'N', 'Y') AS REG_YN
+		      , A.CHRG_CD
+		      , ( SELECT DESCRIPTION
+		            FROM TOP_CHRG_CD
+		           WHERE 1=1 
+		             AND CHRG_CD = A.CHRG_CD ) AS CHRG_CD_NM
+		      , SUBSTR(A.EFF_DT, 1, 8) AS EFF_DT
+		      , SUBSTR(A.EXP_DT, 1, 8) AS EXP_DT
+		      , DECODE(A.PROD_ID, NULL, '1', A.CALENDAR_DEF_ID) AS CALENDAR_DEF_ID
+		      , DECODE(A.PROD_ID, NULL, '0', A.MULTIPLE_RATE_IND) AS MULTIPLE_RATE_IND
+		      , DECODE(A.PROD_ID, NULL, '0000000000', A.TIER_SET_ID) AS TIER_SET_ID
+		      , A.TIER_STEP_FLAG
+		      , A.USG_MEASURE_UNIT
+		      , DECODE(A.PROD_ID, NULL, '110', A.CURRENCY_CD) AS CURRENCY_CD
+		      , DECODE(A.PROD_ID, NULL, '0', A.TM_DIVISION_FLAG) AS TM_DIVISION_FLAG  
+		      , A.PERIOD_APPL_METHOD            
+		      , DECODE(A.PROD_ID, NULL, '1', A.USG_ROUNDING_METHOD) AS USG_ROUNDING_METHOD
+		      , DECODE(A.PROD_ID, NULL, '1', A.COMM_RATE_FLAG) AS COMM_RATE_FLAG
+		      , A.PROD_PRIORITY
+		      , DECODE(A.PROD_ID, NULL, '3', A.USG_FEE_ROUNDING_METHOD) AS USG_FEE_ROUNDING_METHOD
+		      , DECODE(A.PROD_ID, NULL, '0', A.DISC_FLAG) AS DISC_FLAG
+		      , DECODE(A.PROD_ID, NULL, '0', A.MULTIPLE_DISC_FLAG) AS MULTIPLE_DISC_FLAG
+		      , A.MULTIPLE_DISC_CRITERIA
+		      , DECODE(A.PROD_ID, NULL, -1, A.USG_FEE_ROUNDING_OFFSET) AS USG_FEE_ROUNDING_OFFSET
+		      , DECODE(A.PROD_ID, NULL, '0', A.DEDT_FLAG) AS DEDT_FLAG
+		      , A.PRORATE_APPL_GRP
+		      , A.DEDT_RATE_ID
+		      , A.LMT_FLAG
+		      , DECODE(A.PROD_ID, NULL, '0', A.CROSS_DISC_FLAG) AS CROSS_DISC_FLAG
+		      , DECODE(A.PROD_ID, NULL, '1', A.REAL_TM_ACC_FLAG) AS REAL_TM_ACC_FLAG
+		      , A.MAX_RESERVE_AMT
+		      , A.UNIT_SVC_CD
+		      , A.VAT_RATE
+		  FROM TOP_PROD_USG_TYP A
+		     , TOP_USG_TYP      B
+		 WHERE 1=1
+		   AND A.PROD_ID = #{newProductDtl.prodId}
+		   AND A.USG_TYP = B.USG_TYP
+		   
+    </select> 
+    
+    <select id="getRatingCdList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+     
+        SELECT 
+               RATE_ITM_CD
+     		 , RATE_ITM_NM
+  		  FROM TMPTP_RATE_ITM
+ 	     WHERE 1=1
+           AND RATE_ITM_CD = #{newProductDtl.unitSvcCd}
+	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>		   
+    </select> 
+    
+    <insert id="addProdUsgTyp" 
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+		
+		INSERT INTO TOP_PROD_USG_TYP (
+			PROD_ID
+		  , USG_TYP
+		  , CHRG_CD
+		  , EFF_DT
+		  , EXP_DT
+		  , CALENDAR_DEF_ID
+		  , MULTIPLE_RATE_IND
+		  , TIER_SET_ID
+		  , TIER_STEP_FLAG
+		  , USG_MEASURE_UNIT
+		  , CURRENCY_CD
+		  , TM_DIVISION_FLAG
+		  , PERIOD_APPL_METHOD
+		  , USG_ROUNDING_METHOD
+		  , COMM_RATE_FLAG
+		  , PROD_PRIORITY
+		  , USG_FEE_ROUNDING_METHOD
+		  , DISC_FLAG
+		  , MULTIPLE_DISC_FLAG
+		  , MULTIPLE_DISC_CRITERIA
+		  , USG_FEE_ROUNDING_OFFSET
+		  , DEDT_FLAG
+		  , PRORATE_APPL_GRP
+		  , DEDT_RATE_ID
+		  , LMT_FLAG
+		  , CROSS_DISC_FLAG
+		  , REAL_TM_ACC_FLAG
+		  , MAX_RESERVE_AMT
+		  , UNIT_SVC_CD
+		  , VAT_RATE
+		  , LAST_MOD_BY
+		  , LAST_MOD_DT
+		) VALUES (
+			#{newProductDtl.prodId}
+		  , #{newProductDtl.usgTyp}
+		  , #{newProductDtl.chrgCd}
+		  , #{newProductDtl.effDt}
+		  , #{newProductDtl.expDt}
+		  , #{newProductDtl.calendarDefId}
+		  , #{newProductDtl.multipleRateInd}
+		  , #{newProductDtl.tierSetId}
+		  , #{newProductDtl.tierStepFlag}
+		  , #{newProductDtl.usgMeasureUnit}
+		  , #{newProductDtl.currencyCd}
+		  , #{newProductDtl.tmDivisionFlag}
+		  , #{newProductDtl.periodApplMethod}
+		  , #{newProductDtl.usgRoundingMethod}
+		  , #{newProductDtl.commRateFlag}
+		  , '999'
+		  , #{newProductDtl.usgFeeRoundingMethod}
+		  , #{newProductDtl.discFlag}
+		  , #{newProductDtl.multipleDiscFlag}
+		  , '0'
+		  , #{newProductDtl.usgFeeRoundingOffset}
+		  , #{newProductDtl.dedtFlag} 
+		  , ''
+		  , ''
+		  , #{newProductDtl.lmtFlag}
+		  , #{newProductDtl.crossDiscFlag}
+		  , #{newProductDtl.realTmAccFlag}
+		  , #{newProductDtl.maxReserveAmt}
+		  , #{newProductDtl.unitSvcCd}
+		  , '0'
+		  , #{newProductDtl.userId}
+		  , #{newProductDtl.sysToDate}	
+		)
+
+	</insert>
+    
+    <update id="modProdUsgTyp" 
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+		
+		UPDATE TOP_PROD_USG_TYP
+		   SET 
+		   	   CALENDAR_DEF_ID = #{newProductDtl.calendarDefId}
+		   	 , PERIOD_APPL_METHOD = #{newProductDtl.periodApplMethod}
+		   	 , TIER_SET_ID = #{newProductDtl.tierSetId}
+		   	 , TIER_STEP_FLAG = #{newProductDtl.tierStepFlag}
+		   	 , COMM_RATE_FLAG = #{newProductDtl.commRateFlag}
+		   	 , CHRG_CD = #{newProductDtl.chrgCd}
+		   	 , USG_MEASURE_UNIT = #{newProductDtl.usgMeasureUnit}
+		   	 , CURRENCY_CD = #{newProductDtl.currencyCd}
+		   	 , USG_FEE_ROUNDING_METHOD = #{newProductDtl.usgFeeRoundingMethod}
+		   	 , USG_FEE_ROUNDING_OFFSET = #{newProductDtl.usgFeeRoundingOffset}
+		   	 , USG_ROUNDING_METHOD = #{newProductDtl.usgRoundingMethod}
+		   	 , DISC_FLAG = #{newProductDtl.discFlag}
+		   	 , DEDT_FLAG = #{newProductDtl.dedtFlag}
+		   	 , TM_DIVISION_FLAG = #{newProductDtl.tmDivisionFlag}
+		   	 , LMT_FLAG = #{newProductDtl.lmtFlag}
+		   	 , MAX_RESERVE_AMT = #{newProductDtl.maxReserveAmt}
+		   	 , EFF_DT = #{newProductDtl.effDt}
+		   	 , EXP_DT = #{newProductDtl.expDt}
+		   	 , LAST_MOD_BY = #{newProductDtl.userId}
+		   	 , LAST_MOD_DT = #{newProductDtl.sysToDate}
+		 WHERE 1=1
+		   AND PROD_ID = #{newProductDtl.prodId}
+		   AND USG_TYP = #{newProductDtl.usgTyp}
+	
+	</update>
+  
+  	<delete id="delProdUsgTyp" 
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+		
+		DELETE 
+		  FROM TOP_PROD_USG_TYP
+		 WHERE 1=1
+		   AND PROD_ID = #{newProductDtl.prodId}
+		   AND USG_TYP = #{newProductDtl.usgTyp}
+		   AND CHRG_CD = #{newProductDtl.chrgCd}
+	
+	</delete>	
+    
+    <select id="getProdUsgRatingFacList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    	
+    	 SELECT DISTINCT    	 		
+                 A.USG_TYP
+               , ( SELECT COMMON_CD_NM
+               		 FROM TSYCO_CODE_DETAIL
+               		WHERE 1=1
+               		  AND COMMON_GRP = 'PP00303'
+               		  AND COMMON_CD = A.USG_TYP ) AS USG_TYP_NM  
+               , ( SELECT COUNT(PROD_ID)
+                     FROM TOP_RATE_FAC B
+                    WHERE 1=1
+                      AND B.USG_TYP = A.USG_TYP) AS COUNT
+           FROM  TOP_RATE_FAC A
+          WHERE  A.PROD_ID = #{newProductDtl.prodId}
+    	
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+    
+    <select id="getProdRatingFacList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    	
+    	 SELECT  	 		
+                 A.PROD_ID
+               , A.USG_TYP
+               , ( SELECT COMMON_CD_NM
+               		 FROM TSYCO_CODE_DETAIL
+               		WHERE 1=1
+               		  AND COMMON_GRP = 'PP00303'
+               		  AND COMMON_CD = A.USG_TYP ) AS USG_TYP_NM  
+               , A.RATE_FAC
+               , ( SELECT COMMON_CD_NM
+               		 FROM TSYCO_CODE_DETAIL
+               		WHERE 1=1
+               		  AND COMMON_GRP = 'PP00212'
+               		  AND COMMON_CD = RATE_FAC ) AS RATE_FAC_NM 
+               , A.EFF_DT
+               , A.EXP_DT
+               , A.RATE_FAC_FLAG
+               , ( SELECT COMMON_CD_NM
+               		 FROM TSYCO_CODE_DETAIL
+               		WHERE 1=1
+               		  AND COMMON_GRP = 'PP00267'
+               		  AND COMMON_CD = RATE_FAC_FLAG ) AS RATE_FAC_FLAG_NM
+           FROM  TOP_RATE_FAC A
+          WHERE  A.PROD_ID = #{newProductDtl.prodId}
+	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>             
+    </select>
+   
+	<select id="getProdRatingFacCnt" resultType="int"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+
+    	     SELECT COUNT(*)
+	      	  FROM TOP_RATE_FAC
+			 WHERE 1=1
+			   AND PROD_ID = #{newProductDtl.prodId}
+			   AND USG_TYP = #{newProductDtl.usgTyp}
+			   AND RATE_FAC = #{newProductDtl.rateFac}
+	
+    </select>
+    
+    <insert id="addProdUsgRatingFac"  
+    	parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    
+    	INSERT INTO TOP_RATE_FAC (
+	    		PROD_ID
+	    	  , USG_TYP
+	    	  , RATE_FAC
+	    	  , EFF_DT
+	    	  , EXP_DT
+	    	  , RATE_FAC_FLAG
+	    	  , LAST_MOD_BY
+	    	  , LAST_MOD_DT
+	    ) VALUES (
+         	    #{newProductDtl.prodId}
+         	  , #{newProductDtl.usgTyp}
+         	  , #{newProductDtl.rateFac}
+         	  , #{newProductDtl.effDt}
+         	  , #{newProductDtl.expDt}
+         	  , #{newProductDtl.rateFacFlag}
+         	  , #{newProductDtl.userId}
+         	  , #{newProductDtl.sysToDate}
+         )
+    
+    </insert>
+    
+    <update id="modProdUsgRatingFac"
+	parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+	
+		UPDATE TOP_RATE_FAC
+		   SET 
+			   RATE_FAC_FLAG = #{newProductDtl.rateFacFlag}
+		 WHERE 1=1
+		   AND PROD_ID = #{newProductDtl.prodId}
+		   AND USG_TYP = #{newProductDtl.usgTyp}
+		   AND RATE_FAC = #{newProductDtl.rateFac}
+		
+	</update>
+    
+    <delete id="delProdUsgRatingFac"
+	parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+	
+		DELETE FROM TOP_RATE_FAC
+		 WHERE 1=1
+		   AND PROD_ID = #{newProductDtl.prodId}
+		   AND USG_TYP = #{newProductDtl.usgTyp}
+		   AND RATE_FAC = #{newProductDtl.rateFac}
+				
+	</delete>
+    
+    <select id="getProdUsgTypPeriodList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    	
+    	 SELECT
+    	 		A.PROD_ID
+    	 	  , A.USG_TYP
+    	 	  , ( SELECT COMMON_CD_NM
+    	 	        FROM TSYCO_CODE_DETAIL
+    	 	       WHERE 1=1 
+    	 	         AND COMMON_GRP = 'PP00303'
+    	 	         AND COMMON_CD = A.USG_TYP ) AS USG_TYP_NM
+    	 	  , A.EFF_DT
+    	 	  , A.EXP_DT
+    	 	  , SUBSTR(ACT_DAY, 1, 2) || '-' || SUBSTR(ACT_DAY, 3, 2) AS ACT_DAY
+    	 	  , SUBSTR(DEACT_DAY, 1, 2) || '-' || SUBSTR(DEACT_DAY, 3, 2) AS DEACT_DAY
+    	 	  , A.PERIOD_DEF_ID
+    	 	  , ( SELECT COUNT(PROD_ID)
+    	 	        FROM TOP_PERIOD_MAP B 
+    	 	       WHERE 1=1
+    	 	         AND A.USG_TYP = B.USG_TYP ) AS COUNT
+    	   FROM TOP_PERIOD_MAP A
+    	  WHERE 1=1
+    	    AND PROD_ID = #{newProductDtl.prodId}
+	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>             
+    </select>
+    
+    <select id="getPeriodUsgTypList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    		
+    	 SELECT DISTINCT    	 		
+    	 	    A.USG_TYP
+    	 	  , ( SELECT COMMON_CD_NM
+    	 	        FROM TSYCO_CODE_DETAIL
+    	 	       WHERE 1=1 
+    	 	         AND COMMON_GRP = 'PP00303'
+    	 	         AND COMMON_CD = A.USG_TYP ) AS USG_TYP_NM
+    	      , ( SELECT COUNT(PROD_ID)
+    	 	        FROM TOP_PERIOD_MAP B 
+    	 	       WHERE 1=1
+    	 	         AND A.USG_TYP = B.USG_TYP ) AS COUNT
+    	   FROM TOP_PERIOD_MAP A
+    	  WHERE 1=1
+    	    AND PROD_ID = #{newProductDtl.prodId}
+	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>         
+    </select>
+    
+    <select id="getProdUsgTypPeriodCnt" resultType="int"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	
+    	     SELECT COUNT(*)
+    	       FROM TOP_PERIOD_MAP
+    	      WHERE 1=1
+    	        AND PROD_ID = #{newProductDtl.prodId} 
+    	        AND USG_TYP = #{newProductDtl.usgTyp}
+    	        AND ACT_DAY = #{newProductDtl.actDay}
+	
+    </select>
+    
+    <insert id="addProdUsgTypPeriod"
+	parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+		
+		INSERT INTO TOP_PERIOD_MAP (
+		       PROD_ID
+			 , USG_TYP
+			 , EFF_DT
+			 , EXP_DT
+			 , ACT_DAY
+			 , DEACT_DAY
+			 , PERIOD_DEF_ID
+			 , LAST_MOD_BY
+			 , LAST_MOD_DT
+		) VALUES(
+			 #{newProductDtl.prodId}
+		   , #{newProductDtl.usgTyp}
+		   , #{newProductDtl.effDt}
+		   , #{newProductDtl.expDt}
+		   , #{newProductDtl.actDay}
+		   , #{newProductDtl.deactDay}
+		   , #{newProductDtl.periodDefId}
+		   , #{newProductDtl.userId}
+		   , #{newProductDtl.sysToDate}
+		)
+		      
+	</insert>
+    
+    <update id="modProdUsgTypPeriod"
+	parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+	
+		UPDATE TOP_PERIOD_MAP
+		   SET 
+		       PERIOD_DEF_ID = #{newProductDtl.periodDefId}
+	     WHERE 1=1
+		   AND PROD_ID = #{newProductDtl.prodId} 
+		   AND USG_TYP = #{newProductDtl.usgTyp}
+		   AND ACT_DAY = #{newProductDtl.actDay}
+		
+	</update>
+	
+	<delete id="delProdUsgTypPeriod"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+	
+		DELETE FROM TOP_PERIOD_MAP  
+		 WHERE 1=1
+		   AND PROD_ID = #{newProductDtl.prodId} 
+		   AND USG_TYP = #{newProductDtl.usgTyp}
+		   AND ACT_DAY = #{newProductDtl.actDay} 
+		
+	</delete>
+    
+    <select id="getRateInfoList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    		
+    	  SELECT
+              A.PROD_ID
+            , A.USG_TYP
+            , ( SELECT COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1 
+                   AND COMMON_GRP = 'PP00303'
+                   AND COMMON_CD = A.USG_TYP ) AS USG_TYP_NM  
+            , A.PERIOD_CD
+            , A.TIER_SEGMENT_ID
+            , A.CORR_ID
+            , A.CALLING_ZONE
+            , A.CALLED_ZONE
+            , A.CHRG_CD
+            ,(SELECT DESCRIPTION
+                FROM TOP_CHRG_CD
+               WHERE CHRG_CD = A.CHRG_CD) AS CHRG_CD_NM
+            , A.SAME_GRP
+            , A.EXTRA_RATE_FAC
+            , SUBSTR(A.EFF_DT, 1, 4) || '-' || SUBSTR(A.EFF_DT, 5, 2) || '-' || SUBSTR(A.EFF_DT, 7, 2) || ' ' || SUBSTR(A.EFF_DT, 9, 2) || ':' || SUBSTR(A.EFF_DT, 11, 2) || ':' || SUBSTR(A.EFF_DT, 13, 2) AS EFF_DT
+            , SUBSTR(A.EXP_DT, 1, 4) || '-' || SUBSTR(A.EXP_DT, 5, 2) || '-' || SUBSTR(A.EXP_DT, 7, 2) || ' ' || SUBSTR(A.EXP_DT, 9, 2) || ':' || SUBSTR(A.EXP_DT, 11, 2) || ':' || SUBSTR(A.EXP_DT, 13, 2) AS EXP_DT
+            , A.RATE_ID
+            , A.RATE_PER_UNIT
+            , A.USG_BILLING_INCREMENT
+            , A.INTERNAL_RATE
+            , A.FIRST_UNIT
+            , A.FIRST_RATE
+            , A.MIN_CHRG
+        FROM TOP_RATE A
+        WHERE 1=1
+          AND PROD_ID = #{newProductDtl.prodId}
+    
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>         
+    </select>
+    
+    <select id="getRateInfoUsgTypList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    		
+    	  SELECT DISTINCT
+              A.USG_TYP
+            , ( SELECT COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1 
+                   AND COMMON_GRP = 'PP00303'
+                   AND COMMON_CD = A.USG_TYP ) AS USG_TYP_NM  
+             , ( SELECT COUNT(PROD_ID) 
+                  FROM TOP_RATE B
+                 WHERE  B.USG_TYP = A.USG_TYP ) AS COUNT
+        FROM TOP_RATE A
+        WHERE 1=1
+          AND PROD_ID = #{newProductDtl.prodId}
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>         
+    </select>
+    
+    
+    <select id="getRateInfoCnt" resultType="int"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+			 
+		 SELECT COUNT(*)
+		   FROM TOP_RATE
+		  WHERE 1=1
+		    AND PROD_ID = #{newProductDtl.prodId}
+		    AND USG_TYP = #{newProductDtl.usgTyp}
+		    AND PERIOD_CD = #{newProductDtl.periodCd}
+		    AND TIER_SEGMENT_ID = #{newProductDtl.tierSegmentId}
+		    AND CORR_ID = #{newProductDtl.corrId}
+		    AND CHRG_CD = #{newProductDtl.chrgCd}
+		
+	</select>
+    
+    <insert id="addRateInfo"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"> 
+	
+		INSERT INTO TOP_RATE (
+			   PROD_ID
+			 , USG_TYP
+			 , PERIOD_CD
+			 , TIER_SEGMENT_ID
+			 , CORR_ID
+			 , CALLING_ZONE
+			 , CALLED_ZONE
+			 , CHRG_CD
+			 , SAME_GRP
+			 , EXTRA_RATE_FAC
+			 , EFF_DT
+			 , EXP_DT
+			 , RATE_ID
+			 , RATE_PER_UNIT
+			 , USG_BILLING_INCREMENT
+			 , INTERNAL_RATE
+			 , FIRST_UNIT
+			 , FIRST_RATE
+			 , MIN_CHRG
+			 , LAST_MOD_BY
+			 , LAST_MOD_DT
+		) VALUES ( 
+			   #{newProductDtl.prodId}
+			 , #{newProductDtl.usgTyp}
+			 , #{newProductDtl.periodCd}
+			 , #{newProductDtl.tierSegmentId}
+			 , #{newProductDtl.corrId}
+			 , '0000000000'
+			 , '0000000000'
+			 , #{newProductDtl.chrgCd}
+			 , '0'
+			 , '0000000000'
+			 , #{newProductDtl.effDt}
+			 , #{newProductDtl.expDt}
+			 , SEQ_PROD_ID.NEXTVAL
+			 , #{newProductDtl.ratePerUnit}
+			 , #{newProductDtl.usgBillingIncrement}
+			 , #{newProductDtl.usgBillingIncrement}
+			 , '0'
+			 , '0'
+			 , '0'
+			 , #{newProductDtl.userId}
+			 , #{newProductDtl.sysToDate}
+		)
+		
+	</insert>
+	
+	<update id="modRateInfo"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"> 
+		
+		UPDATE TOP_RATE
+		   SET
+		       EXP_DT = #{newProductDtl.expDt}
+			 , USG_BILLING_INCREMENT = #{newProductDtl.usgBillingIncrement}
+			 , RATE_PER_UNIT = #{newProductDtl.ratePerUnit}
+	     WHERE 1=1
+		   AND PROD_ID = #{newProductDtl.prodId}
+		   AND USG_TYP = #{newProductDtl.usgTyp}
+		   AND PERIOD_CD = #{newProductDtl.periodCd}
+		   AND TIER_SEGMENT_ID = #{newProductDtl.tierSegmentId}
+		   AND CORR_ID = #{newProductDtl.corrId}
+		   AND CHRG_CD = #{newProductDtl.chrgCd}
+		  
+	</update>
+	
+	<delete id="delRateInfo"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"> 
+		
+		DELETE 
+		  FROM TOP_RATE
+	     WHERE 1=1
+		   AND PROD_ID = #{newProductDtl.prodId}
+		   AND USG_TYP = #{newProductDtl.usgTyp}
+		   AND PERIOD_CD = #{newProductDtl.periodCd}
+		   AND TIER_SEGMENT_ID = #{newProductDtl.tierSegmentId}
+		   AND CORR_ID = #{newProductDtl.corrId}
+		   AND CHRG_CD = #{newProductDtl.chrgCd}
+		
+	</delete>
+    
+    <select id="getDiscDedtDefList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    		
+    	  SELECT 
+			  B.DISC_DEDT_PROD_MAP_CD	 AS MAP_CD
+            , DECODE(B.EFF_DT, NULL, TO_CHAR(SYSDATE, 'YYYY-MM-DD') || ' 00:00:00', SUBSTR(B.EFF_DT, 1, 4) || '-' || SUBSTR(B.EFF_DT, 5, 2) || '-' || SUBSTR(B.EFF_DT, 7, 2) || ' ' || SUBSTR(B.EFF_DT, 9, 2) || ':' || SUBSTR(B.EFF_DT, 11, 2) || ':' || SUBSTR(B.EFF_DT, 13, 2) ) AS MAP_EFF_DT
+            , DECODE(B.EXP_DT, NULL, '9999-12-31 23:59:59', SUBSTR(B.EXP_DT, 1, 4) || '-' || SUBSTR(B.EXP_DT, 5, 2) || '-' || SUBSTR(B.EXP_DT, 7, 2) || ' ' || SUBSTR(B.EXP_DT, 9, 2) || ':' || SUBSTR(B.EXP_DT, 11, 2) || ':' || SUBSTR(B.EXP_DT, 13, 2) ) AS MAP_EXP_DT 
+            , B.DISC_DEDT_PRTY        AS MAP_DISC_DEDT_PRTY
+            , A.DISC_DEDT_CD          AS MAP_DISC_DEDT_CD
+            , B.SHARE_FLAG            AS MAP_SHARE_FLAG
+            , B.HOT_OPERATOR          AS MAP_HOT_OPERATOR
+            , B.PROD_ID               AS MAP_PROD_ID
+            , B.DISC_DEDT_CD
+            , A.EFF_DT
+            , A.EXP_DT
+            , A.DISC_DEDT_NM
+            , A.USG_TYP_LVL
+            , ( SELECT
+                       COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1
+                   AND COMMON_GRP = 'PP00254'
+                   AND COMMON_CD = A.USG_TYP_LVL ) AS USG_TYP_LVL_NM  
+            , A.USG_TYP_GRP_CD
+            , CASE 
+                  WHEN USG_TYP_LVL = 0 THEN '0000000000'
+                  WHEN USG_TYP_LVL = 1 THEN ( SELECT COMMON_CD_NM
+                                                FROM TSYCO_CODE_DETAIL
+                                               WHERE 1=1
+                                                 AND COMMON_GRP = 'PP00303'
+                                                 AND COMMON_CD = A.USG_TYP_GRP_CD )
+                  WHEN USG_TYP_LVL = 2 THEN ( SELECT COMMON_CD_NM
+                                                FROM TSYCO_CODE_DETAIL
+                                               WHERE 1=1
+                                                 AND COMMON_GRP = 'PP00281'
+                                                 AND COMMON_CD = A.USG_TYP_GRP_CD )
+              END AS USG_TYP_GRP_CD_NM
+            , A.USG_ITM_TYP
+            , ( SELECT
+                       COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1
+                   AND COMMON_GRP = 'PP00238'
+                   AND COMMON_CD = A.USG_ITM_TYP ) AS USG_ITM_TYP_NM
+            , A.USG_ITM_CD
+            , CASE WHEN USG_ITM_TYP = '6'
+                   THEN (SELECT DESCRIPTION
+                           FROM TOP_CHRG_CD
+                          WHERE CHRG_CD = A.USG_ITM_CD)
+                   WHEN USG_ITM_TYP = '7'
+                   THEN (SELECT  COMMON_CD_NM
+                           FROM  TSYCO_CODE_DETAIL
+                          WHERE  SYS_FLG = 'Y'
+                            AND  USE_YN  = 'Y'
+                            AND  COMMON_GRP = 'PMRT1085'
+                            AND  COMMON_CD  = A.USG_ITM_CD)
+                   WHEN USG_ITM_TYP = '0'
+                   THEN '0000000000'
+                   ELSE NULL
+               END AS USG_ITM_CD_NM
+            , A.DEDT_DISC_FLAG
+            , A.FREE_TYP
+            , A.COND_RATE_FAC1
+            , NVL( ( SELECT COMMON_CD_NM 
+            	  	   FROM TSYCO_CODE_DETAIL
+            	 	  WHERE 1=1
+            	   	    AND COMMON_GRP = 'PP00212'
+            	   		AND COMMON_CD = A.COND_RATE_FAC1 ), 'Not Selected' )AS COND_RATE_FAC_NM1
+            , A.COND_OPERATOR1
+            , ( SELECT COMMON_CD_NM 
+            	  FROM TSYCO_CODE_DETAIL
+            	 WHERE 1=1
+            	   AND COMMON_GRP = 'PP00248'
+            	   AND COMMON_CD = A.COND_OPERATOR1 ) AS COND_OPERATOR_NM1
+            , A.COND_VAL1
+            , A.LOGICAL_OPERATOR1_2
+            , NVL( ( SELECT COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1
+                   AND COMMON_GRP = 'PP00247'
+                   AND COMMON_CD = A.LOGICAL_OPERATOR1_2 ), 'Not Selected' ) AS LOGICAL_OPERATOR_NM_1_2
+            , A.COND_RATE_FAC2
+            , NVL( ( SELECT COMMON_CD_NM 
+            	  	   FROM TSYCO_CODE_DETAIL
+            	 	  WHERE 1=1
+            	   	    AND COMMON_GRP = 'PP00212'
+            	   		AND COMMON_CD = A.COND_RATE_FAC2 ), 'Not Selected' )AS COND_RATE_FAC_NM2
+            , A.COND_OPERATOR2
+            , ( SELECT COMMON_CD_NM 
+            	  FROM TSYCO_CODE_DETAIL
+            	 WHERE 1=1
+            	   AND COMMON_GRP = 'PP00248'
+            	   AND COMMON_CD = A.COND_OPERATOR2 ) AS COND_OPERATOR_NM2
+            , A.COND_VAL2
+            , A.QUANTITY
+            , A.SEGMENT_FLAG
+            , A.APPL_LVL
+            , A.FREE_OF_CHRG_FLAG
+            , A.REPLENISH_CYCL
+            , ( SELECT
+            			COMMON_CD_NM
+            	  FROM  TSYCO_CODE_DETAIL
+            	 WHERE  1=1
+            	   AND  COMMON_GRP = 'PP00225'
+            	   AND  COMMON_CD = A.REPLENISH_CYCL ) AS REPLENISH_CYCL_NM
+            , A.AMT_FLAG
+            , ( SELECT 
+                       COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1 
+                   AND COMMON_GRP = 'PP00224'
+                   AND COMMON_CD = A.AMT_FLAG ) AS AMT_FLAG_NM
+            , A.AMT_UNIT
+            , CASE
+                WHEN AMT_FLAG = 1 THEN ( SELECT COMMON_CD_NM
+									       FROM (SELECT 
+									                   TO_CHAR(RATE_FAC_UNIT) AS COMMON_CD
+									                 , TO_CHAR(RATE_FAC_UNIT_NM) AS COMMON_CD_NM 
+									              FROM TOP_RATE_FAC_UNIT
+									    )
+									    WHERE 1=1
+									      AND COMMON_CD = A.AMT_UNIT)
+                WHEN AMT_FLAG = 2 THEN ( SELECT  COMMON_CD_NM
+                                           FROM  TSYCO_CODE_DETAIL 
+                                          WHERE  1=1
+                                            AND  COMMON_GRP = 'PP00223' 
+                                            AND  COMMON_CD = A.AMT_UNIT
+                                        )
+             END AS AMT_UNIT_NM
+            , A.VOICE_CALL_DEDT_FLAG
+            , A.APPL_DISC_FLAG
+            , A.BAL_CR_OVR_METHOD
+            , A.BAL_CR_OVR_PERIOD
+            , A.MAX_ACCUM_BAL
+            , A.TM_DIVISION_FLAG
+            , A.SUBSC_PRORATE_FLAG
+            , A.TERM_PRORATE_FLAG
+            , A.DEDT_TYP
+            , A.SMS_NOTI_CD
+            , A.SMS_NOTI_FLAG
+            , A.CURR_OR_NEXT_CYCL
+            , A.DURATION
+            , A.DURATION_UNIT
+            , ( SELECT 
+                       COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1
+                   AND COMMON_GRP = 'PP00285'
+                   AND COMMON_CD = A.DURATION_UNIT ) AS DURATION_UNIT_NM
+            , CASE WHEN A.REPLENISH_CYCL = 'R'
+                   THEN A.DURATION_UNIT
+                   ELSE NULL
+               END AS DURATION_UNIT_NM
+            , CASE WHEN A.REPLENISH_CYCL = 'R'
+                   THEN A.DURATION
+                   ELSE NULL
+               END AS DURATION        
+            , A.MULTIPLE_DISC_METHOD
+         FROM TOP_DISC_DEDT_DEF       A
+            , TOP_DISC_DEDT_PROD_MAP  B
+        WHERE A.DISC_DEDT_CD = B.DISC_DEDT_CD(+)
+        	  AND B.PROD_ID(+) LIKE '%' || #{newProductDtl.prodId} || '%'
+          	<if test="newProductDtl.mappedInfo == 1 ">
+          	  AND DISC_DEDT_PROD_MAP_CD IS NOT NULL  
+            </if>
+            <if test="newProductDtl.searchDiscDedtCd != null and newProductDtl.searchDiscDedtCd != '' ">
+           	  AND A.DISC_DEDT_CD LIKE '%' || #{newProductDtl.searchDiscDedtCd} ||'%'
+            </if>
+            <if test="newProductDtl.searchDiscDedtCdNm != null and newProductDtl.searchDiscDedtCdNm != '' " >
+              AND A.DISC_DEDT_NM LIKE '%' || #{newProductDtl.searchDiscDedtCdNm} || '%'
+            </if>
+    
+    </select>
+    
+    <insert id="addDedtDef"
+    	parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	
+    	INSERT INTO TOP_DISC_DEDT_PROD_MAP (
+    		   DISC_DEDT_PROD_MAP_CD
+    		 , EFF_DT
+    		 , EXP_DT
+    		 , DISC_DEDT_CD
+    		 , DISC_DEDT_PRTY
+    		 , SHARE_FLAG
+    		 , HOT_OPERATOR
+    		 , PROD_ID
+    		 , LAST_MOD_BY
+    		 , LAST_MOD_DT
+    	) VALUES ( 
+    		   SEQ_PROD_ID.NEXTVAL
+    		 , #{newProductDtl.mapEffDt}
+    		 , #{newProductDtl.mapExpDt}
+    		 , #{newProductDtl.mapDiscDedtCd}
+    		 , #{newProductDtl.mapDiscDedtPrty}
+    		 , '0'
+    		 , ''
+    		 , #{newProductDtl.mapProdId}
+    		 , #{newProductDtl.userId}
+    		 , #{newProductDtl.sysToDate}
+    	)
+    	
+    </insert>
+    
+    <update id="modDedtDef"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"> 
+	
+		UPDATE TOP_DISC_DEDT_DEF
+		   SET 
+		       EXP_DT = #{newProductDtl.mapExpDt}
+			 , USG_TYP_LVL = #{newProductDtl.usgTypLvl}
+			 , USG_TYP_GRP_CD = #{newProductDtl.usgTypGrpCd}
+			 , USG_ITM_TYP = #{newProductDtl.usgItmTyp}
+			 , USG_ITM_CD = #{newProductDtl.usgItmCd}
+			 , COND_RATE_FAC1 = #{newProductDtl.condRateFac1}
+			 , COND_OPERATOR1 = #{newProductDtl.condOperator1}
+			 , COND_VAL1 = #{newProductDtl.condVal1}
+			 , LOGICAL_OPERATOR1_2 = #{newProductDtl.logicalOperator12}
+			 , COND_RATE_FAC2 = #{newProductDtl.condRateFac2}
+			 , COND_OPERATOR2 = #{newProductDtl.condOperator2}
+			 , COND_VAL2 = #{newProductDtl.condVal2}
+			 , SUBSC_PRORATE_FLAG = #{newProductDtl.subscProrateFlag}
+			 , TERM_PRORATE_FLAG = #{newProductDtl.termProrateFlag}
+			 , AMT_FLAG = #{newProductDtl.amtFlag}
+			 , AMT_UNIT = #{newProductDtl.amtUnit}
+			 , QUANTITY = #{newProductDtl.quantity}
+			 , REPLENISH_CYCL = #{newProductDtl.replenishCycl}
+		 WHERE 1=1
+		   AND DISC_DEDT_CD = #{newProductDtl.mapDiscDedtCd}
+		   
+	</update>
+	
+	<update id="modProdDedtDef"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"> 
+	
+		UPDATE TOP_DISC_DEDT_PROD_MAP
+		   SET 
+		       DISC_DEDT_PRTY = #{newProductDtl.mapDiscDedtPrty}
+		     , LAST_MOD_BY = #{newProductDtl.userId}
+			 , LAST_MOD_DT = #{newProductDtl.sysToDate}
+		 WHERE 1=1
+		   AND DISC_DEDT_PROD_MAP_CD = #{newProductDtl.mapCd}
+		   
+	</update>
+	
+	<update id="modDiscDef"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"> 
+	
+		UPDATE TOP_DISC_DEDT_DEF
+		   SET 
+		       MULTIPLE_DISC_METHOD = #{newProductDtl.multipleDiscMethod}
+			 , EXP_DT = #{newProductDtl.mapExpDt}
+			 , USG_TYP_LVL = #{newProductDtl.usgTypLvl}
+			 , USG_TYP_GRP_CD = #{newProductDtl.usgTypGrpCd}
+			 , USG_ITM_TYP = #{newProductDtl.usgItmTyp}
+			 , USG_ITM_CD = #{newProductDtl.usgItmCd}
+			 , COND_RATE_FAC1 = #{newProductDtl.condRateFac1}
+			 , COND_OPERATOR1 = #{newProductDtl.condOperator1}
+			 , COND_VAL1 = #{newProductDtl.condVal1} 
+			 , LOGICAL_OPERATOR1_2 = #{newProductDtl.logicalOperator12}
+			 , COND_RATE_FAC2 = #{newProductDtl.condRateFac2}
+			 , COND_OPERATOR2 = #{newProductDtl.condOperator2}
+			 , COND_VAL2 = #{newProductDtl.condVal2}
+			 , TM_DIVISION_FLAG = #{newProductDtl.tmDivisionFlag}
+			 , SEGMENT_FLAG = #{newProductDtl.segmentFlag}
+			 , QUANTITY =#{newProductDtl.quantity}
+			 , LAST_MOD_BY = #{newProductDtl.userId}
+			 , LAST_MOD_DT = #{newProductDtl.sysToDate}
+		 WHERE 1=1
+		   AND DISC_DEDT_CD = #{newProductDtl.mapDiscDedtCd}
+		
+	</update>
+	
+	<update id="modProdDiscDef"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"> 
+	
+		UPDATE TOP_DISC_DEDT_PROD_MAP
+		   SET 
+		       DISC_DEDT_PRTY = #{newProductDtl.mapDiscDedtPrty}
+		     , LAST_MOD_BY = #{newProductDtl.userId}
+			 , LAST_MOD_DT = #{newProductDtl.sysToDate}
+		 WHERE 1=1
+		   AND DISC_DEDT_PROD_MAP_CD = #{newProductDtl.mapCd}
+		   
+	</update>
+	
+	<delete id="delProdDiscDedtDef"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+		
+		DELETE 
+		  FROM TOP_DISC_DEDT_PROD_MAP
+		 WHERE 1=1
+		   AND DISC_DEDT_PROD_MAP_CD = #{newProductDtl.mapCd}
+		
+	</delete>
+    
+    <select id="getAmtUnitList" resultType="CommonCodeVO">
+    	
+   		SELECT 
+   				RATE_FAC_UNIT AS COMMON_CD
+   			  , RATE_FAC_UNIT_NM AS COMMON_CD_NM
+   		  FROM TOP_RATE_FAC_UNIT
+		 WHERE 1=1
+		       	
+    </select>
+    
+    <select id="getLimitDefCnt" resultType="int"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	
+    	     SELECT COUNT(*)
+    	       FROM TOP_LMT
+    	      WHERE 1=1
+    	        AND PROD_ID = #{newProductDtl.prodId}
+    	        AND LMT_CD = #{newProductDtl.lmtCd}
+             
+    </select>
+    
+    <select id="getLimitDefList" resultType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"
+		 parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    	
+    	 SELECT
+              PROD_ID
+            , LMT_CD
+            , SUBSTR(EFF_DT, 1, 4) || '-' || SUBSTR(EFF_DT, 5, 2) || '-' || SUBSTR(EFF_DT, 7, 2) || ' ' || SUBSTR(EFF_DT, 9, 2) || ':' || SUBSTR(EFF_DT, 11, 2) || ':' || SUBSTR(EFF_DT, 13, 2) AS EFF_DT  
+            , SUBSTR(EXP_DT, 1, 4) || '-' || SUBSTR(EXP_DT, 5, 2) || '-' || SUBSTR(EXP_DT, 7, 2) || ' ' || SUBSTR(EXP_DT, 9, 2) || ':' || SUBSTR(EXP_DT, 11, 2) || ':' || SUBSTR(EXP_DT, 13, 2) AS EXP_DT
+            , USG_TYP_LVL
+            , ( SELECT
+                       COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1
+                   AND COMMON_GRP = 'PP00254'
+                   AND COMMON_CD = USG_TYP_LVL ) AS USG_TYP_LVL_NM  
+            , USG_TYP_GRP_CD
+            , CASE WHEN USG_TYP_LVL = '0'
+              	   THEN '0000000000'
+              	   WHEN USG_TYP_LVL = '1'
+              	   THEN ( SELECT COMMON_CD_NM
+              	            FROM TSYCO_CODE_DETAIL
+              	           WHERE 1=1
+              	             AND COMMON_GRP = 'PP00303'
+              	             AND COMMON_CD = USG_TYP_GRP_CD )
+              	   WHEN USG_TYP_LVL = '2'
+              	   THEN ( SELECT COMMON_CD_NM
+              	   			FROM TSYCO_CODE_DETAIL
+              	   		   WHERE 1=1
+              	   		     AND COMMON_GRP = 'PP00281' 
+              	   		     AND COMMON_CD = USG_TYP_GRP_CD )
+              END AS USG_TYP_GRP_CD_NM
+            , USG_ITM_TYP
+            , ( SELECT
+                       COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1
+                   AND COMMON_GRP = 'PP00238'
+                   AND COMMON_CD = USG_ITM_TYP ) AS USG_ITM_TYP_NM
+            , USG_ITM_CD
+            , CASE WHEN USG_ITM_TYP = '6'
+                   THEN ( SELECT DESCRIPTION
+                           FROM TOP_CHRG_CD
+                          WHERE 1=1
+                            AND CHRG_CD = USG_ITM_CD )
+                   WHEN USG_ITM_TYP = '1'
+                   THEN (SELECT COMMON_CD_NM
+                           FROM  TSYCO_CODE_DETAIL
+                          WHERE  SYS_FLG = 'Y'
+                            AND  USE_YN  = 'Y'
+                            AND  COMMON_GRP = 'PP00281'
+                            AND  COMMON_CD  = USG_ITM_CD)
+                   WHEN USG_ITM_TYP = '0'
+                   THEN '0000000000'
+                   ELSE NULL
+               END AS USG_ITM_CD_NM
+            , USG_TYP_CTRL_LVL
+            , ( SELECT COMMON_CD_NM 
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1
+                   AND COMMON_GRP = 'PP00237'
+                   AND COMMON_CD = USG_TYP_CTRL_LVL ) AS USG_TYP_CTRL_LVL_NM
+            , CTRL_USG_TYP_GRP_CD
+            , CASE WHEN USG_TYP_CTRL_LVL = '0'
+            	   THEN NULL
+            	   WHEN USG_TYP_CTRL_LVL = '1'
+            	   THEN ( SELECT COMMON_CD_NM 
+            	   			FROM TSYCO_CODE_DETAIL
+            	   		   WHERE 1=1
+            	   		     AND COMMON_GRP = 'PP00303'
+            	   		     AND COMMON_CD = CTRL_USG_TYP_GRP_CD )
+            	   WHEN USG_TYP_CTRL_LVL = '2'
+            	   THEN ( SELECT COMMON_CD_NM 
+            	   			FROM TSYCO_CODE_DETAIL
+            	   		   WHERE 1=1 
+            	   		     AND COMMON_GRP = 'PP00281' 
+            	   		     AND COMMON_CD = CTRL_USG_TYP_GRP_CD )
+            	   WHEN USG_TYP_CTRL_LVL = '3'
+            	   THEN '0000000000'
+              END AS CTRL_USG_TYP_GRP_CD_NM
+            , REPLENISH_CYCL
+            , AMT_FLAG
+            , ( SELECT 
+                       COMMON_CD_NM
+                  FROM TSYCO_CODE_DETAIL
+                 WHERE 1=1 
+                   AND COMMON_GRP = 'PP00224'
+                   AND COMMON_CD = AMT_FLAG ) AS AMT_FLAG_NM
+            , AMT_UNIT
+            , QUANTITY
+            , SVC_CTRL_METHOD
+            , WARNING_THRESHOLD1
+            , WARNING_THRESHOLD2
+            , WARNING_THRESHOLD_UNIT
+            , WARNING_FREQ
+            , WARNING_FREQ_UNIT
+            , EFF_DAYS
+            , RECHRG_LMT_TYP_CD
+            , RECHRG_LMT_AMT
+            , LMT_TYP
+        FROM TOP_LMT
+       WHERE 1 = 1
+         AND PROD_ID = #{newProductDtl.prodId} 
+    
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+     
+    <insert id="addLimitDef" 
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl"> 
+		
+		INSERT INTO TOP_LMT (
+			   PROD_ID
+		     , LMT_CD
+		     , EFF_DT
+		     , EXP_DT 
+		     , USG_TYP_LVL
+			 , USG_TYP_GRP_CD
+			 , USG_ITM_TYP
+			 , USG_ITM_CD
+			 , USG_TYP_CTRL_LVL
+			 , CTRL_USG_TYP_GRP_CD
+			 , REPLENISH_CYCL
+			 , AMT_FLAG
+			 , AMT_UNIT
+			 , QUANTITY
+			 , SVC_CTRL_METHOD
+			 , WARNING_THRESHOLD1
+			 , WARNING_THRESHOLD2
+			 , WARNING_THRESHOLD_UNIT
+			 , WARNING_FREQ
+			 , WARNING_FREQ_UNIT
+			 , EFF_DAYS
+			 , RECHRG_LMT_TYP_CD
+			 , RECHRG_LMT_AMT
+			 , LMT_TYP
+			 , LAST_MOD_BY
+			 , LAST_MOD_DT
+		) VALUES (
+		       #{newProductDtl.prodId}
+		     , SEQ_PROD_ID.NEXTVAL
+		     , #{newProductDtl.effDt}
+		     , #{newProductDtl.expDt}
+		     , #{newProductDtl.usgTypLvl}
+		     , #{newProductDtl.usgTypGrpCd}
+		     , #{newProductDtl.usgItmTyp}
+		     , #{newProductDtl.usgItmCd}
+		     , #{newProductDtl.usgTypCtrlLvl}
+		     , #{newProductDtl.ctrlUsgTypGrpCd}
+		     , 'D'
+		     , #{newProductDtl.amtFlag}
+		     , '2'
+		     , #{newProductDtl.quantity}
+		     , '0'
+		     , '0'
+		     , '0'
+		     , ''
+		     , '0'
+		     , ''
+		     , '0'
+		     , #{newProductDtl.rechrgLmtTypCd}
+		     , '0'
+		     , '0'
+		     , #{newProductDtl.userId}
+		     , #{newProductDtl.sysToDate}
+		)
+		
+	</insert>
+	
+	<update id="modLimitDef"
+	    parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+	
+		UPDATE TOP_LMT
+		   SET 
+		       EXP_DT = #{newProductDtl.expDt}
+		     , USG_TYP_LVL = #{newProductDtl.usgTypLvl}
+		     , USG_TYP_GRP_CD = #{newProductDtl.usgTypGrpCd}
+			 , USG_ITM_TYP = #{newProductDtl.usgItmTyp}
+			 , USG_ITM_CD = #{newProductDtl.usgItmCd}
+			 , USG_TYP_CTRL_LVL = #{newProductDtl.usgTypCtrlLvl}
+			 , CTRL_USG_TYP_GRP_CD = #{newProductDtl.ctrlUsgTypGrpCd}
+			 , AMT_FLAG = #{newProductDtl.amtFlag}
+			 , QUANTITY = #{newProductDtl.quantity}
+			 , RECHRG_LMT_TYP_CD = #{newProductDtl.rechrgLmtTypCd}
+	     WHERE 1=1
+	       AND PROD_ID = #{newProductDtl.prodId} 
+	       AND LMT_CD = #{newProductDtl.lmtCd}
+	    
+	</update>
+	
+	<delete id="delLimitDef"
+		parameterType="com.ntels.ccbs.product.domain.usageProduct.usageProductMgt.NewProductDtl">
+		
+		DELETE
+		  FROM TOP_LMT
+		 WHERE 1=1
+		   AND LMT_CD = #{newProductDtl.lmtCd}
+		   AND PROD_ID = #{newProductDtl.prodId}
+		
+	</delete>
+       
+   	<select id="getCtrlUsgTypGrpCdList" resultType="CommonCodeVO">
+   	
+		SELECT COMMON_CD, COMMON_CD_NM
+		  FROM TSYCO_CODE_DETAIL
+		 WHERE 1=1 
+		   AND COMMON_GRP = 'PP00303'
+		UNION
+		SELECT COMMON_CD, COMMON_CD_NM
+		  FROM TSYCO_CODE_DETAIL
+		 WHERE 1=1 
+		   AND COMMON_GRP = 'PP00281'
+   	
+   	</select>
+   
+    <select id="getChrgCdList" resultType="CommonCodeVO">
+    	
+    	SELECT CHRG_CD AS COMMON_CD
+    	     , DESCRIPTION AS COMMON_CD_NM
+    	  FROM TOP_CHRG_CD
+    	 WHERE 1=1
+    
+    </select>
+    
+    <select id="getBillingChrgCdList" resultType="CommonCodeVO">
+    	
+    	SELECT CHRG_CD AS COMMON_CD
+    	     , DESCRIPTION AS COMMON_CD_NM
+    	  FROM TOP_CHRG_CD
+    	 WHERE 1=1
+    
+    </select>
+    
+    <select id="getUsgMeasureUnitList" resultType="CommonCodeVO">
+    	
+    	 SELECT 
+               RATE_FAC_UNIT    AS COMMON_CD
+             , RATE_FAC_UNIT_NM AS COMMON_CD_NM 
+             , '0'              AS FLAG  
+      	   FROM  TOP_RATE_FAC_UNIT
+    
+    </select>
+    
+    <select id="getSoInfoList" resultType="CommonCodeVO">
+    	
+    	 SELECT A.SO_ID AS COMMON_CD
+             , ( SELECT SO_NM
+                   FROM TSYCO_SO_MAST B
+                  WHERE 1=1
+                    AND B.SO_ID = A.SO_ID ) AS COMMON_CD_NM
+           FROM TPMPD_PROD A
+    
+    </select>
+    
+</mapper>

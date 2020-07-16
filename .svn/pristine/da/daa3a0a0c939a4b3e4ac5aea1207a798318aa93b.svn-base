@@ -1,0 +1,842 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.payment.payment.NewSinglePaymentMapper">
+
+<!--건별입금 등록 -->
+<!--건별입금,미확인수납처리,선수금수납처리 : 청구내역 조회 -->
+	<select id="getAnonyReceiptSubList" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO">
+    /* bl.py.anony.getAnonyReceiptSubList : 건별입금, 미확인수납처리, 선수금수납처리 : 청구내역 조회 */
+		SELECT SRC.*
+        FROM   ( SELECT   '0' CHK
+                        , TBL.*
+                 FROM   ( SELECT   A.SO_ID                                AS SO_ID
+                                 , B.PYM_ACNT_ID					      AS PYM_ACNT_ID
+                                 , B.BILL_YYMM							  AS BILL_YYMM
+                                 , B.BILL_DT							  AS BILL_DATE
+                                 , SUM( A.ADJ_PRV_BILL_AMT )              AS BILL_AMT_BFR_ADJ
+                                 , SUM( A.ADJ_AMT )                       AS ADJ_AMT
+                                 , SUM( A.BILL_AMT )                      AS BILL_AMT
+                                 , B.PAY_DUE_DT							  AS PAYMENT_DT
+                                 , SUM( A.RCPT_AMT )                      AS RECEIPT_AMT
+                                 , ( CASE COUNT( * ) WHEN COUNT( CASE WHEN A.FULL_PAY_YN = 'Y' THEN 'Y' END) THEN 'Y'
+                                                     WHEN COUNT( CASE WHEN A.FULL_PAY_YN = 'C' THEN 'C' END) THEN 'C'
+                                                     ELSE 'N'
+                                     END 
+                                   )                                      AS FULL_PAY_YN
+                                 , CASE B.SML_AMT_YN WHEN 'Y' THEN 'Y' ELSE 'N' END 	AS SMALL_AMT_YN
+                                 , ( SELECT ADJ_APPL_CONTS
+                                     FROM   TBLIV_CHRG_ADJ_APLY Z
+                                     WHERE  BILL_SEQ_NO  = B.BILL_SEQ_NO
+                                     AND    ADJ_NO       = ( SELECT MAX( ADJ_NO )
+                                                             FROM   TBLIV_CHRG_ADJ_APLY
+                                                             WHERE  BILL_SEQ_NO = B.BILL_SEQ_NO 
+                                                           )
+                                   )                                     		   AS ADJ_APPL_CONTS  /* 조정내역 */
+                                 , B.PAY_MTHD                                     			          /* 납부방법 */
+                                 , B.BILL_SEQ_NO                                   AS BILL_SEQ_NO
+                                 , CASE A.BILL_CYCL WHEN '00' THEN 'O-BILL' ELSE 'R-BILL' END 	AS BILLING_CATEGORY
+                                 , SUM( A.BILL_AMT ) - SUM( A.RCPT_AMT )           AS UNPAID_AMT
+                                 , C.PAY_PROC_DT								   AS RECEIPT_PROCESSING_DT
+                                 , C.PAY_TP 									   AS RECEIPT_TYP
+                                 , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                      FROM 	TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                      WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                              AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                              AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                                              AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                              AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                              AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                                              AND MAST.COMMON_GRP   ='BL00079'
+                                              AND DETAIL.COMMON_CD = C.PAY_TP
+                                     ) AS RECEIPT_TYP_NM
+                                 , C.PREPAY_APLY_AMT	 						   AS OVER_PAYMENT_APLY
+                                 , B.BILL_CYCL			 						   AS BILL_CYCL
+                                 , REPLACE( D.ACNT_NO, '-', '' )                   AS ACNT_CARD_NO /* 계좌-신용카드번호 */
+                                 , CASE WHEN D.CDTCD_EXP_DT IS NULL THEN '' ELSE D.CDTCD_EXP_DT END  	AS CDTCD_EXP_DT /* 신용카드유효기간 */
+                                 , D.BIZ_REG_NO
+                                 , D.CUST_ID
+                          FROM     TBLIV_BILL_TGT_CUST  B /* 청구대상자 */
+                                 INNER JOIN  TBLIV_BILL A ON B.BILL_SEQ_NO = A.BILL_SEQ_NO AND A.PYM_ACNT_ID = B.PYM_ACNT_ID AND A.PYM_ACNT_ID = #{newSinglePaymentVO.pymAcntId}/* 청구내역 */
+                                 LEFT OUTER JOIN ( SELECT   MAX( X.PAY_PROC_DT ) AS PAY_PROC_DT
+                                            , MAX( X.PAY_TP ) 	   AS PAY_TP
+                                            , MAX( X.PAY_OBJ_AMT ) AS PREPAY_APLY_AMT
+                                            , X.BILL_SEQ_NO
+                                     FROM   TBLPY_RCPT X
+                                     WHERE  1=1
+                                <if test="newSinglePaymentVO.billStrtYymm != null and newSinglePaymentVO.billStrtYymm != ''">
+                                	<if test="newSinglePaymentVO.billEndYymm != null and newSinglePaymentVO.billEndYymm != ''">
+                                     AND    X.BILL_YYMM BETWEEN #{newSinglePaymentVO.billStrtYymm} AND #{newSinglePaymentVO.billEndYymm}
+                                	</if>
+                                     AND    X.PAY_OBJ_AMT <![CDATA[ <> ]]> 0
+                                </if>
+                                     AND    X.PYM_ACNT_ID = #{newSinglePaymentVO.pymAcntId}
+                                     AND    X.BILL_CYCL IN ( '00', '01' )
+                                     AND    X.DPST_CL     = '16' /* 선수금대체 */
+                                     GROUP BY X.BILL_SEQ_NO
+                                   ) C ON A.BILL_SEQ_NO = C.BILL_SEQ_NO
+                                 INNER JOIN IFNBRM_CUST_INFO D ON A.CUST_ID = D.CUST_ID AND A.PYM_ACNT_ID = D.PYM_ACNT_ID
+                          WHERE  1 = 1
+                          AND    CASE WHEN B.BILL_EXPT_YN IS NULL THEN 'N' ELSE B.BILL_EXPT_YN END = 'N'
+                          <if test="newSinglePaymentVO.billStrtYymm != null and newSinglePaymentVO.billEndYymm != null">
+                          AND    A.BILL_YYMM BETWEEN #{newSinglePaymentVO.billStrtYymm} AND #{newSinglePaymentVO.billEndYymm}
+                          </if>
+                          <if test="newSinglePaymentVO.soId != null and newSinglePaymentVO.soId != ''">
+                          AND    A.SO_ID = #{newSinglePaymentVO.soId}
+                          </if>
+                          GROUP BY   A.SO_ID
+                                   , B.BILL_YYMM
+                                   , B.PYM_ACNT_ID
+                                   , B.BILL_DT
+                                   , B.PAY_DUE_DT
+                                   , B.SML_AMT_YN
+                                   , B.BILL_SEQ_NO
+                                   , B.PAY_MTHD
+                                   , A.BILL_CYCL
+                                   , C.PAY_PROC_DT
+                                   , C.PAY_TP
+                                   , C.PREPAY_APLY_AMT
+                                   , B.BILL_CYCL
+                                   /* , D.BNK_CARD_CD */
+                                   , D.ACNT_NO
+                                   , D.CDTCD_EXP_DT
+                                   , D.BIZ_REG_NO
+                                   , D.CUST_ID
+                          ORDER BY   B.BILL_YYMM DESC
+                                   , B.BILL_DT
+                        ) TBL
+                ) SRC
+        WHERE 1=1
+        AND   UNPAID_AMT != 0
+    </select>
+    
+    <select id="getAnonyReceiptSubListCount" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="int">
+    /* bl.py.anony.getAnonyReceiptSubList : 건별입금, 미확인수납처리, 선수금수납처리 : 청구내역 조회 */
+    SELECT COUNT(0)
+      FROM
+      (
+        SELECT SRC.*
+        FROM   ( SELECT   '0' CHK
+                        , TBL.*
+                 FROM   ( SELECT   A.SO_ID                                AS SO_ID
+                                 , B.PYM_ACNT_ID					      AS PYM_ACNT_ID
+                                 , B.BILL_YYMM							  AS BILL_YYMM
+                                 , B.BILL_DT							  AS BILL_DATE
+                                 , SUM( A.ADJ_PRV_BILL_AMT )              AS BILL_AMT_BFR_ADJ
+                                 , SUM( A.ADJ_AMT )                       AS ADJ_AMT
+                                 , SUM( A.BILL_AMT )                      AS BILL_AMT
+                                 , B.PAY_DUE_DT							  AS PAYMENT_DT
+                                 , SUM( A.RCPT_AMT )                      AS RECEIPT_AMT
+                                 , ( CASE COUNT( * ) WHEN COUNT( CASE WHEN A.FULL_PAY_YN = 'Y' THEN 'Y' END) THEN 'Y'
+                                                     WHEN COUNT( CASE WHEN A.FULL_PAY_YN = 'C' THEN 'C' END) THEN 'C'
+                                                     ELSE 'N'
+                                     END 
+                                   )                                      AS FULL_PAY_YN
+                                 , CASE B.SML_AMT_YN WHEN 'Y' THEN 'Y' ELSE 'N' END 	AS SMALL_AMT_YN
+                                 , ( SELECT ADJ_APPL_CONTS
+                                     FROM   TBLIV_CHRG_ADJ_APLY Z
+                                     WHERE  BILL_SEQ_NO  = B.BILL_SEQ_NO
+                                     AND    ADJ_NO       = ( SELECT MAX( ADJ_NO )
+                                                             FROM   TBLIV_CHRG_ADJ_APLY
+                                                             WHERE  BILL_SEQ_NO = B.BILL_SEQ_NO 
+                                                           )
+                                   )                                     		   AS ADJ_APPL_CONTS  /* 조정내역 */
+                                 , B.PAY_MTHD                                     			          /* 납부방법 */
+                                 , B.BILL_SEQ_NO                                   AS BILL_SEQ_NO
+                                 , CASE A.BILL_CYCL WHEN '00' THEN 'O-BILL' ELSE 'R-BILL' END 	AS BILLING_CATEGORY
+                                 , SUM( A.BILL_AMT ) - SUM( A.RCPT_AMT )           AS UNPAID_AMT
+                                 , C.PAY_PROC_DT								   AS RECEIPT_PROCESSING_DT
+                                 , C.PAY_TP 									   AS RECEIPT_TYP
+                                 , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                      FROM 	TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                      WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                              AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                              AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                                              AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                              AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                              AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                                              AND MAST.COMMON_GRP   ='BL00079'
+                                              AND DETAIL.COMMON_CD = C.PAY_TP
+                                     ) AS RECEIPT_TYP_NM
+                                 , C.PREPAY_APLY_AMT	 						   AS OVER_PAYMENT_APLY
+                                 , B.BILL_CYCL			 						   AS BILL_CYCL
+                                 , REPLACE( D.ACNT_NO, '-', '' )                   AS ACNT_CARD_NO /* 계좌-신용카드번호 */
+                                 , CASE WHEN D.CDTCD_EXP_DT IS NULL THEN '' ELSE D.CDTCD_EXP_DT END  	AS CDTCD_EXP_DT /* 신용카드유효기간 */
+                                 , D.BIZ_REG_NO
+                                 , D.CUST_ID
+                          FROM     TBLIV_BILL_TGT_CUST  B /* 청구대상자 */
+                                 INNER JOIN  TBLIV_BILL A ON B.BILL_SEQ_NO = A.BILL_SEQ_NO AND A.PYM_ACNT_ID = B.PYM_ACNT_ID AND A.PYM_ACNT_ID = #{newSinglePaymentVO.pymAcntId}/* 청구내역 */
+                                 LEFT OUTER JOIN ( SELECT   MAX( X.PAY_PROC_DT ) AS PAY_PROC_DT
+                                            , MAX( X.PAY_TP ) 	   AS PAY_TP
+                                            , MAX( X.PAY_OBJ_AMT ) AS PREPAY_APLY_AMT
+                                            , X.BILL_SEQ_NO
+                                     FROM   TBLPY_RCPT X
+                                     WHERE  1=1
+                                <if test="newSinglePaymentVO.billStrtYymm != null and newSinglePaymentVO.billStrtYymm != ''">
+                                	<if test="newSinglePaymentVO.billEndYymm != null and newSinglePaymentVO.billEndYymm != ''">
+                                     AND    X.BILL_YYMM BETWEEN #{newSinglePaymentVO.billStrtYymm} AND #{newSinglePaymentVO.billEndYymm}
+                                	</if>
+                                     AND    X.PAY_OBJ_AMT <![CDATA[ <> ]]> 0
+                                </if>
+                                     AND    X.PYM_ACNT_ID = #{newSinglePaymentVO.pymAcntId}
+                                     AND    X.BILL_CYCL IN ( '00', '01' )
+                                     AND    X.DPST_CL     = '16' /* 선수금대체 */
+                                     GROUP BY X.BILL_SEQ_NO
+                                   ) C ON A.BILL_SEQ_NO = C.BILL_SEQ_NO
+                                 INNER JOIN IFNBRM_CUST_INFO D ON A.CUST_ID = D.CUST_ID AND A.PYM_ACNT_ID = D.PYM_ACNT_ID
+                          WHERE  1 = 1
+                          AND    CASE WHEN B.BILL_EXPT_YN IS NULL THEN 'N' ELSE B.BILL_EXPT_YN END = 'N'
+                          <if test="newSinglePaymentVO.billStrtYymm != null and newSinglePaymentVO.billEndYymm != null">
+                          AND    A.BILL_YYMM BETWEEN #{newSinglePaymentVO.billStrtYymm} AND #{newSinglePaymentVO.billEndYymm}
+                          </if>
+                          <if test="newSinglePaymentVO.soId != null and newSinglePaymentVO.soId != ''">
+                          AND    A.SO_ID = #{newSinglePaymentVO.soId}
+                          </if>
+                          GROUP BY   A.SO_ID
+                                   , B.BILL_YYMM
+                                   , B.PYM_ACNT_ID
+                                   , B.BILL_DT
+                                   , B.PAY_DUE_DT
+                                   , B.SML_AMT_YN
+                                   , B.BILL_SEQ_NO
+                                   , B.PAY_MTHD
+                                   , A.BILL_CYCL
+                                   , C.PAY_PROC_DT
+                                   , C.PAY_TP
+                                   , C.PREPAY_APLY_AMT
+                                   , B.BILL_CYCL
+                                   /* , D.BNK_CARD_CD */
+                                   , D.ACNT_NO
+                                   , D.CDTCD_EXP_DT
+                                   , D.BIZ_REG_NO
+                                   , D.CUST_ID
+                          ORDER BY   B.BILL_YYMM DESC
+                                   , B.BILL_DT
+                        ) TBL
+                ) SRC
+        WHERE 1=1
+        AND   UNPAID_AMT != 0
+    )
+    </select>
+    
+    <!-- 건별입금 : 나의 입금내역 조회 -->
+    <select id="getMyReceiptList" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO">
+        SELECT /*+LEADING(F) */
+                 '0' CHK
+               , A.SO_ID	    AS SO_ID
+               , A.DPST_SEQ_NO	AS DEPOSIT_SEQ_NO
+               , A.BILL_SEQ_NO	AS BILL_SEQ_NO
+               , A.TRANS_DT		AS TRANSFER_DT
+               , A.DPST_PROC_DT
+               , A.PYM_ACNT_ID	AS PYM_ACNT_ID
+               , A.DPST_DT 	    AS DEPOSIT_DT
+               , A.DPST_TP	 	AS DEPOSIT_TYP
+               , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                    FROM 	TSYCO_CODE_MAST MAST
+                          , TSYCO_CODE_MAST_NAME MNAME
+                          , TSYCO_CODE_DETAIL DETAIL
+                          , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                            AND MAST.COMMON_GRP   ='BL00069'
+                            AND DETAIL.COMMON_CD = A.DPST_TP
+                   ) AS DEPOSIT_TYP_NM
+               , A.DPST_CL		AS DEPOSIT_OPTION
+               , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                    FROM 	TSYCO_CODE_MAST MAST
+                          , TSYCO_CODE_MAST_NAME MNAME
+                          , TSYCO_CODE_DETAIL DETAIL
+                          , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                            AND MAST.COMMON_GRP   ='BL00067'
+                            AND DETAIL.COMMON_CD = A.DPST_CL
+                   ) AS DEPOSIT_OPTION_NM
+               , ( CASE A.PAY_CORP_TP WHEN '01' THEN  (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00081'
+                                                                AND DETAIL.COMMON_CD = A.PAY_CORP_CD
+                                                       )
+                                                      
+                                      WHEN '02' THEN  (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     =#{newSinglePaymentVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00082' /* BLPY016 이 없음 */ 
+                                                                AND DETAIL.COMMON_CD = A.PAY_CORP_CD
+                                                       )
+                   END ) 		AS FINANCIAL_INSTITUTION
+               , A.DPST_AMT		AS DEPOSIT_AMT
+               , A.FEE_AMT		AS COMMISSION
+               , A.PAY_PROC_YN  AS RECEIVED
+               , A.PAY_PROC_DT  AS RECEIPT_PROCESSING_DT
+               , ( SELECT   
+                            D.CUST_NM
+                   FROM     TCMCU_PYM_ACNT_INFO C
+                          , TCMCU_CUST_INFO     D
+                   WHERE  D.CUST_ID     = C.CUST_ID
+                   AND    C.PYM_ACNT_ID = A.PYM_ACNT_ID
+                 ) PYM_ACNT_NM
+               , ( SELECT B.SO_NM
+                   FROM   TSYCO_SO_MAST B
+                   WHERE  B.SO_ID = A.SO_ID
+                 ) SO_NM
+               , ( SELECT  
+                          E.PYM_SEQ_NO
+                   FROM   TBLPY_RCPT E
+                   WHERE  E.DPST_SEQ_NO = A.DPST_SEQ_NO
+                   AND    ROWNUM        = 1
+                 ) PYM_SEQ_NO
+               , A.AMBG_TGT_YN AS UNKNOWN_PAYMENT
+               , F.SMRY		   AS REMARK
+               , A.CNCL_YN	
+               , A.DPST_TP_SEQ_NO
+        FROM     TBLPY_DPST      A
+               , TBLPY_EACH_DPST F
+        WHERE  A.DPST_SEQ_NO  = F.DPST_SEQ_NO
+        AND    F.DPST_PROC_DT = #{newSinglePaymentVO.procDt}
+        AND    A.CNCL_YN      = 'N'
+        AND    A.DPST_TP      IN ('3', '8')
+        AND    F.REGR_ID      = #{newSinglePaymentVO.usrId}
+        <if test="newSinglePaymentVO.soId != null and newSinglePaymentVO.soId != ''">
+        AND    A.SO_ID        = #{newSinglePaymentVO.soId}
+        </if>
+    </select>
+    
+    <select id="getMyReceiptListCount" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="int">
+    SELECT COUNT(0)
+      FROM
+      (
+        SELECT /*+LEADING(F) */
+                 '0' CHK
+               , A.SO_ID	    AS SO_ID
+               , A.DPST_SEQ_NO	AS DPST_SEQ_NO
+               , A.BILL_SEQ_NO	AS BILL_SEQ_NO
+               , A.TRANS_DT		AS TRANSFER_DT
+               , A.DPST_PROC_DT
+               , A.PYM_ACNT_ID	AS PYM_ACNT_ID
+               , A.DPST_DT 	    AS DEPOSIT_DT
+               , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                    FROM 	TSYCO_CODE_MAST MAST
+                          , TSYCO_CODE_MAST_NAME MNAME
+                          , TSYCO_CODE_DETAIL DETAIL
+                          , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                            AND MAST.COMMON_GRP   ='BL00069'
+                            AND DETAIL.COMMON_CD = A.DPST_DT
+                   ) AS DEPOSIT_TYP_NM
+               , A.DPST_CL		AS DEPOSIT_OPTION
+               , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                    FROM 	TSYCO_CODE_MAST MAST
+                          , TSYCO_CODE_MAST_NAME MNAME
+                          , TSYCO_CODE_DETAIL DETAIL
+                          , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                            AND MAST.COMMON_GRP   ='BL00067'
+                            AND DETAIL.COMMON_CD = A.DPST_CL
+                   ) AS DEPOSIT_OPTION_NM
+               , ( CASE A.PAY_CORP_TP WHEN '01' THEN  (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00081' --BLPY016 이 없음 
+                                                                AND DETAIL.COMMON_CD = A.PAY_CORP_CD
+                                                       )
+                                                      
+                                      WHEN '02' THEN  (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     =#{newSinglePaymentVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00082' --BLPY016 이 없음 
+                                                                AND DETAIL.COMMON_CD = A.PAY_CORP_CD
+                                                       )
+                   END ) 		AS FINANCIAL_INSTITUTION
+               , A.DPST_AMT		AS DEPOSIT_AMT
+               , A.FEE_AMT		AS COMMISSION
+               , A.PAY_PROC_YN  AS RECEIVED
+               , A.PAY_PROC_DT  AS RECEIPT_PROCESSING_DT
+               , ( SELECT   --/*+INDEX(D PK_TCMCU_CUST_INFO)*/
+                            D.CUST_NM
+                   FROM     TCMCU_PYM_ACNT_INFO C
+                          , TCMCU_CUST_INFO     D
+                   WHERE  D.CUST_ID     = C.CUST_ID
+                   AND    C.PYM_ACNT_ID = A.PYM_ACNT_ID
+                 ) PYM_ACNT_NM
+               , ( SELECT B.SO_NM
+                   FROM   TSYCO_SO_MAST B
+                   WHERE  B.SO_ID = A.SO_ID
+                 ) SO_NM
+               , ( SELECT --/*+INDEX(E IX_TBLPY_RCPT_03)*/ 
+                          E.PYM_SEQ_NO
+                   FROM   TBLPY_RCPT E
+                   WHERE  E.DPST_SEQ_NO = A.DPST_SEQ_NO
+                   AND    ROWNUM        = 1
+                 ) PYM_SEQ_NO
+               , A.AMBG_TGT_YN AS UNKNOWN_PAYMENT
+               , F.SMRY		   AS REMARK
+               , A.CNCL_YN	
+               , A.DPST_TP_SEQ_NO
+        FROM     TBLPY_DPST      A
+               , TBLPY_EACH_DPST F
+        WHERE  A.DPST_SEQ_NO  = F.DPST_SEQ_NO
+        AND    F.DPST_PROC_DT = #{newSinglePaymentVO.procDt}
+        AND    A.CNCL_YN      = 'N'
+        AND    A.DPST_TP      IN ('3', '8')
+        AND    F.REGR_ID      = #{newSinglePaymentVO.usrId}
+        <if test="newSinglePaymentVO.soId != null and newSinglePaymentVO.soId != ''">
+        AND    A.SO_ID        = #{newSinglePaymentVO.soId}
+        </if>
+    )
+    </select>
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <select id="getBillInfo" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO">
+   	 SELECT   
+       	      BILL_SEQ_NO AS BILL_SEQ_NO
+             ,BILL_YYMM   AS BILL_YYMM
+       FROM   TBLIV_BILL A
+       <if test="newSinglePaymentVO.billSeqNo != null and newSinglePaymentVO.billSeqNo != ''">
+       WHERE  BILL_SEQ_NO IN ( #{newSinglePaymentVO.billSeqNo} )
+       </if>
+       AND    BILL_YYMM = ( SELECT SET_VAL
+                            FROM   TBLIV_BILL_STP
+                            WHERE  SET_ITM_ID = '10001'
+                            AND    #{newSinglePaymentVO.procDt} BETWEEN EFT_BGN_YYMM AND EFT_END_YYMM
+                            AND    ROWNUM = 1
+                          )
+       AND    ROWNUM = 1
+       UNION
+       SELECT DISTINCT
+              BILL_SEQ_NO
+             ,BILL_YYMM
+       FROM   TBLIV_BILL B
+       <if test="newSinglePaymentVO.billSeqNo != null and newSinglePaymentVO.billSeqNo != ''">
+       WHERE  BILL_SEQ_NO IN ( #{newSinglePaymentVO.billSeqNo} )
+       </if>
+    </select>
+    
+    <select id="getBillInfoCount" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="int">
+    SELECT COUNT(0)
+      FROM
+      (
+        SELECT   
+        	   BILL_SEQ_NO
+              ,BILL_YYMM
+        FROM   TBLIV_BILL A
+        <if test="newSinglePaymentVO.billSeqNo != null and newSinglePaymentVO.billSeqNo != ''">
+       WHERE  BILL_SEQ_NO IN ( #{newSinglePaymentVO.billSeqNo} )
+       </if>
+        AND    BILL_YYMM = ( SELECT SET_VAL
+                             FROM   TBLIV_BILL_STP
+                             WHERE  SET_ITM_ID = '10001'
+                             AND    #{newSinglePaymentVO.procDt} BETWEEN EFT_BGN_YYMM AND EFT_END_YYMM
+                             AND    ROWNUM = 1
+                           )
+        AND    ROWNUM = 1
+        UNION
+        SELECT DISTINCT
+               BILL_SEQ_NO
+              ,BILL_YYMM
+        FROM   TBLIV_BILL B
+        <if test="newSinglePaymentVO.billSeqNo != null and newSinglePaymentVO.billSeqNo != ''">
+       WHERE  BILL_SEQ_NO IN ( #{newSinglePaymentVO.billSeqNo} )
+       </if>
+    )
+    </select>
+    
+    <select id="getPermitOrg" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO">
+   	 SELECT CASE
+         	  WHEN B.TP_CD = '6000'
+         	  THEN C.PART_ORG_ID
+         	ELSE B.ORG_ID
+            END AS DEPT_CD
+	  FROM TSYCO_USER A
+	     , TDNDI_ORG_INFO B
+	     , TDNDI_ORG_REL_HIST C
+	 WHERE A.ORG_ID = B.ORG_ID
+	   AND B.ORG_ID = C.ORG_ID
+	   AND C.REL_TP_CD = '101'
+	   AND C.APPY_END_DT = '99991231'
+       <if test="newSinglePaymentVO.usrId != null and newSinglePaymentVO.usrId != ''">
+       AND A.USER_ID = #{newSinglePaymentVO.usrId}
+       </if>
+    </select>
+    
+    <select id="getPermitOrgCount" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="int">
+    SELECT COUNT(0)
+      FROM
+      (
+      SELECT CASE
+         	  WHEN B.TP_CD = '6000'
+         	  THEN C.PART_ORG_ID
+         	ELSE B.ORG_ID
+            END AS DEPT_CD
+	  FROM TSYCO_USER A
+	     , TDNDI_ORG_INFO B
+	     , TDNDI_ORG_REL_HIST C
+	 WHERE A.ORG_ID = B.ORG_ID
+	   AND B.ORG_ID = C.ORG_ID
+	   AND C.REL_TP_CD = '101'
+	   AND C.APPY_END_DT = '99991231'
+       <if test="newSinglePaymentVO.usrId != null and newSinglePaymentVO.usrId != ''">
+       AND A.USER_ID = #{newSinglePaymentVO.usrId}
+       </if>
+        )
+    </select>
+    
+    <select id="getLoanAvlAmt" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO">
+   	 SELECT CASE
+	         WHEN B.LOAN_GV_FLG = '0'
+	         THEN 999999999999 
+	         ELSE 
+	            CASE WHEN A.LOAN_AVL_AMT IS NULL
+	                 THEN 0
+	                 ELSE A.LOAN_AVL_AMT
+	             END
+	         END LOAN_AVL_AMT
+	       , B.LOAN_GV_FLG
+	   FROM  TDNDI_LOAN_INFO A RIGHT OUTER JOIN TDNDI_ORG_INFO B
+		 ON  A.ORG_ID = B.ORG_ID
+	    AND  A.LOAN_KND_CD = '20'
+	  WHERE  B.ORG_ID = (SELECT CASE
+			         	  		  WHEN B.TP_CD = '6000'
+			         	  		  THEN C.PART_ORG_ID
+			         			  ELSE B.ORG_ID
+			            		  END AS DEPT_CD
+						  FROM TSYCO_USER A
+						     , TDNDI_ORG_INFO B
+						     , TDNDI_ORG_REL_HIST C
+						 WHERE A.ORG_ID = B.ORG_ID
+						   AND B.ORG_ID = C.ORG_ID
+						   AND C.REL_TP_CD = '101'
+						   AND C.APPY_END_DT = '99991231'
+					     <if test="newSinglePaymentVO.usrId != null and newSinglePaymentVO.usrId != ''">
+					       AND A.USER_ID = #{newSinglePaymentVO.usrId}
+					     </if>
+					       )
+    </select>
+    
+    <select id="getLoanAvlAmtCount" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="int">
+    SELECT COUNT(0)
+      FROM
+      (
+      	SELECT CASE
+	         WHEN B.LOAN_GV_FLG = '0'
+	         THEN 999999999999 
+	         ELSE 
+	            CASE WHEN A.LOAN_AVL_AMT IS NULL
+	                 THEN 0
+	                 ELSE A.LOAN_AVL_AMT
+	             END
+	         END LOAN_AVL_AMT
+	       , B.LOAN_GV_FLG
+	   FROM  TDNDI_LOAN_INFO A RIGHT OUTER JOIN TDNDI_ORG_INFO B
+		 ON  A.ORG_ID = B.ORG_ID
+	    AND  A.LOAN_KND_CD = '20'
+	  WHERE  B.ORG_ID = (SELECT CASE
+			         	  		  WHEN B.TP_CD = '6000'
+			         	  		  THEN C.PART_ORG_ID
+			         			  ELSE B.ORG_ID
+			            		  END AS DEPT_CD
+						  FROM TSYCO_USER A
+						     , TDNDI_ORG_INFO B
+						     , TDNDI_ORG_REL_HIST C
+						 WHERE A.ORG_ID = B.ORG_ID
+						   AND B.ORG_ID = C.ORG_ID
+						   AND C.REL_TP_CD = '101'
+						   AND C.APPY_END_DT = '99991231'
+					     <if test="newSinglePaymentVO.usrId != null and newSinglePaymentVO.usrId != ''">
+					       AND A.USER_ID = #{newSinglePaymentVO.usrId}
+					     </if>
+					       )
+      )
+    </select>
+    
+    <select id="listAnonyReceiptSubExcel" parameterType="com.ntels.ccbs.charge.domain.payment.payment.NewSinglePaymentVO" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+    /* bl.py.anony.getAnonyReceiptSubList : 건별입금, 미확인수납처리, 선수금수납처리 : 청구내역 조회 */
+        SELECT SRC.*
+        FROM   ( SELECT   '0' CHK
+                        , TBL.*
+                 FROM   ( SELECT   A.SO_ID                                AS SO_ID
+                                 , B.PYM_ACNT_ID					      AS PYM_ACNT_ID
+                                 , B.BILL_YYMM							  AS BILL_YYMM
+                                 , B.BILL_DT							  AS BILL_DATE
+                                 , SUM( A.ADJ_PRV_BILL_AMT )              AS BILL_AMT_BFR_ADJ
+                                 , SUM( A.ADJ_AMT )                       AS ADJ_AMT
+                                 , SUM( A.BILL_AMT )                      AS BILL_AMT
+                                 , B.PAY_DUE_DT							  AS PAYMENT_DT
+                                 , SUM( A.RCPT_AMT )                      AS RECEIPT_AMT
+                                 , ( CASE COUNT( * ) WHEN COUNT( CASE WHEN A.FULL_PAY_YN = 'Y' THEN 'Y' END) THEN 'Y'
+                                                     WHEN COUNT( CASE WHEN A.FULL_PAY_YN = 'C' THEN 'C' END) THEN 'C'
+                                                     ELSE 'N'
+                                     END 
+                                   )                                      AS FULL_PAY_YN
+                                 , CASE B.SML_AMT_YN WHEN 'Y' THEN 'Y' ELSE 'N' END 	AS SMALL_AMT_YN
+                                 , ( SELECT ADJ_APPL_CONTS
+                                     FROM   TBLIV_CHRG_ADJ_APLY Z
+                                     WHERE  BILL_SEQ_NO  = B.BILL_SEQ_NO
+                                     AND    ADJ_NO       = ( SELECT MAX( ADJ_NO )
+                                                             FROM   TBLIV_CHRG_ADJ_APLY
+                                                             WHERE  BILL_SEQ_NO = B.BILL_SEQ_NO 
+                                                           )
+                                   )                                     		   AS ADJ_APPL_CONTS  /* 조정내역 */
+                                 , B.PAY_MTHD                                     			          /* 납부방법 */
+                                 , B.BILL_SEQ_NO                                   AS BILL_SEQ_NO
+                                 , CASE A.BILL_CYCL WHEN '00' THEN 'O-BILL' ELSE 'R-BILL' END 	AS BILLING_CATEGORY
+                                 , SUM( A.BILL_AMT ) - SUM( A.RCPT_AMT )           AS UNPAID_AMT
+                                 , C.PAY_PROC_DT								   AS RECEIPT_PROCESSING_DT
+                                 , C.PAY_TP 									   AS RECEIPT_TYP
+                                 , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                      FROM 	TSYCO_CODE_MAST MAST
+                                            , TSYCO_CODE_MAST_NAME MNAME
+                                            , TSYCO_CODE_DETAIL DETAIL
+                                            , TSYCO_CODE_DETAIL_NAME NAME
+                                      WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                              AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                              AND MNAME.LNG_TYP     = #{newSinglePaymentVO.lngTyp}
+                                              AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                              AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                              AND NAME.LNG_TYP      = #{newSinglePaymentVO.lngTyp}
+                                              AND MAST.COMMON_GRP   ='BL00079'
+                                              AND DETAIL.COMMON_CD = C.PAY_TP
+                                     ) AS RECEIPT_TYP_NM
+                                 , C.PREPAY_APLY_AMT	 						   AS OVER_PAYMENT_APLY
+                                 , B.BILL_CYCL			 						   AS BILL_CYCL
+                                 , REPLACE( D.ACNT_NO, '-', '' )                   AS ACNT_CARD_NO /* 계좌-신용카드번호 */
+                                 , CASE WHEN D.CDTCD_EXP_DT IS NULL THEN '' ELSE D.CDTCD_EXP_DT END  	AS CDTCD_EXP_DT /* 신용카드유효기간 */
+                                 , D.BIZ_REG_NO
+                                 , D.CUST_ID
+                          FROM     TBLIV_BILL_TGT_CUST  B /* 청구대상자 */
+                                 INNER JOIN  TBLIV_BILL A ON B.BILL_SEQ_NO = A.BILL_SEQ_NO AND A.PYM_ACNT_ID = B.PYM_ACNT_ID AND A.PYM_ACNT_ID = #{newSinglePaymentVO.pymAcntId}/* 청구내역 */
+                                 LEFT OUTER JOIN ( SELECT   MAX( X.PAY_PROC_DT ) AS PAY_PROC_DT
+                                            , MAX( X.PAY_TP ) 	   AS PAY_TP
+                                            , MAX( X.PAY_OBJ_AMT ) AS PREPAY_APLY_AMT
+                                            , X.BILL_SEQ_NO
+                                     FROM   TBLPY_RCPT X
+                                     WHERE  1=1
+                                <if test="newSinglePaymentVO.billStrtYymm != null and newSinglePaymentVO.billStrtYymm != ''">
+                                	<if test="newSinglePaymentVO.billEndYymm != null and newSinglePaymentVO.billEndYymm != ''">
+                                     AND    X.BILL_YYMM BETWEEN #{newSinglePaymentVO.billStrtYymm} AND #{newSinglePaymentVO.billEndYymm}
+                                	</if>
+                                     AND    X.PAY_OBJ_AMT <![CDATA[ <> ]]> 0
+                                </if>
+                                     AND    X.PYM_ACNT_ID = #{newSinglePaymentVO.pymAcntId}
+                                     AND    X.BILL_CYCL IN ( '00', '01' )
+                                     AND    X.DPST_CL     = '16' /* 선수금대체 */
+                                     GROUP BY X.BILL_SEQ_NO
+                                   ) C ON A.BILL_SEQ_NO = C.BILL_SEQ_NO
+                                 INNER JOIN IFNBRM_CUST_INFO D ON A.CUST_ID = D.CUST_ID AND A.PYM_ACNT_ID = D.PYM_ACNT_ID
+                          WHERE  1 = 1
+                          AND    CASE WHEN B.BILL_EXPT_YN IS NULL THEN 'N' ELSE B.BILL_EXPT_YN END = 'N'
+                          <if test="newSinglePaymentVO.billStrtYymm != null and newSinglePaymentVO.billEndYymm != null">
+                          AND    A.BILL_YYMM BETWEEN #{newSinglePaymentVO.billStrtYymm} AND #{newSinglePaymentVO.billEndYymm}
+                          </if>
+                          <if test="newSinglePaymentVO.soId != null and newSinglePaymentVO.soId != ''">
+                          AND    A.SO_ID = #{newSinglePaymentVO.soId}
+                          </if>
+                          GROUP BY   A.SO_ID
+                                   , B.BILL_YYMM
+                                   , B.PYM_ACNT_ID
+                                   , B.BILL_DT
+                                   , B.PAY_DUE_DT
+                                   , B.SML_AMT_YN
+                                   , B.BILL_SEQ_NO
+                                   , B.PAY_MTHD
+                                   , A.BILL_CYCL
+                                   , C.PAY_PROC_DT
+                                   , C.PAY_TP
+                                   , C.PREPAY_APLY_AMT
+                                   , B.BILL_CYCL
+                                   /* , D.BNK_CARD_CD */
+                                   , D.ACNT_NO
+                                   , D.CDTCD_EXP_DT
+                                   , D.BIZ_REG_NO
+                                   , D.CUST_ID
+                          ORDER BY   B.BILL_YYMM DESC
+                                   , B.BILL_DT
+                        ) TBL
+                ) SRC
+        WHERE 1=1
+        AND   UNPAID_AMT != 0
+    </select>
+    
+    <select id="listMyReceiptExcel" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+    SELECT /*+LEADING(F) */
+                 '0' CHK
+               , A.SO_ID	    AS SO_ID
+               , A.DPST_SEQ_NO	AS DPST_SEQ_NO
+               , A.BILL_SEQ_NO	AS BILL_SEQ_NO
+               , A.TRANS_DT		AS TRANSFER_DT
+               , A.DPST_PROC_DT
+               , A.PYM_ACNT_ID	AS PYM_ACNT_ID
+               , A.DPST_DT 	    AS DEPOSIT_DT
+               , A.DPST_TP	 	AS DEPOSIT_TYP
+               , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                    FROM 	TSYCO_CODE_MAST MAST
+                          , TSYCO_CODE_MAST_NAME MNAME
+                          , TSYCO_CODE_DETAIL DETAIL
+                          , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{lngTyp, jdbcType=VARCHAR}
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lngTyp, jdbcType=VARCHAR}
+                            AND MAST.COMMON_GRP   ='BL00069'
+                            AND DETAIL.COMMON_CD = A.DPST_TP
+                   ) AS DEPOSIT_TYP_NM
+               , A.DPST_CL		AS DEPOSIT_OPTION
+               , (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                    FROM 	TSYCO_CODE_MAST MAST
+                          , TSYCO_CODE_MAST_NAME MNAME
+                          , TSYCO_CODE_DETAIL DETAIL
+                          , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     = #{lngTyp, jdbcType=VARCHAR}
+                            AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                            AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                            AND NAME.LNG_TYP      = #{lngTyp, jdbcType=VARCHAR}
+                            AND MAST.COMMON_GRP   ='BL00067'
+                            AND DETAIL.COMMON_CD = A.DPST_CL
+                   ) AS DEPOSIT_OPTION_NM
+               , ( CASE A.PAY_CORP_TP WHEN '01' THEN  (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{lngTyp, jdbcType=VARCHAR}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{lngTyp, jdbcType=VARCHAR}
+                                                                AND MAST.COMMON_GRP   ='BL00081'
+                                                                AND DETAIL.COMMON_CD = A.PAY_CORP_CD
+                                                       )
+                                                      
+                                      WHEN '02' THEN  (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     =#{lngTyp, jdbcType=VARCHAR}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{lngTyp, jdbcType=VARCHAR}
+                                                                AND MAST.COMMON_GRP   ='BL00082' --BLPY016 이 없음 
+                                                                AND DETAIL.COMMON_CD = A.PAY_CORP_CD
+                                                       )
+                   END ) 		AS FINANCIAL_INSTITUTION
+               , A.DPST_AMT		AS DEPOSIT_AMT
+               , A.FEE_AMT		AS COMMISSION
+               , A.PAY_PROC_YN  AS RECEIVED
+               , A.PAY_PROC_DT  AS RECEIPT_PROCESSING_DATE
+               , ( SELECT   --/*+INDEX(D PK_TCMCU_CUST_INFO)*/
+                            D.CUST_NM
+                   FROM     TCMCU_PYM_ACNT_INFO C
+                          , TCMCU_CUST_INFO     D
+                   WHERE  D.CUST_ID     = C.CUST_ID
+                   AND    C.PYM_ACNT_ID = A.PYM_ACNT_ID
+                 ) PYM_ACNT_NM
+               , ( SELECT B.SO_NM
+                   FROM   TSYCO_SO_MAST B
+                   WHERE  B.SO_ID = A.SO_ID
+                 ) SO_NM
+               , ( SELECT --/*+INDEX(E IX_TBLPY_RCPT_03)*/ 
+                          E.PYM_SEQ_NO
+                   FROM   TBLPY_RCPT E
+                   WHERE  E.DPST_SEQ_NO = A.DPST_SEQ_NO
+                   AND    ROWNUM        = 1
+                 ) PYM_SEQ_NO
+               , A.AMBG_TGT_YN AS UNKNOWN_PAYMENT
+               , F.SMRY		   AS REMARK
+               , A.CNCL_YN	
+               , A.DPST_TP_SEQ_NO
+        FROM     TBLPY_DPST      A
+               , TBLPY_EACH_DPST F
+        WHERE  A.DPST_SEQ_NO  = F.DPST_SEQ_NO
+        AND    F.DPST_PROC_DT = #{procDt}
+        AND    A.CNCL_YN      = 'N'
+        AND    A.DPST_TP      IN ('3', '8')
+        AND    F.REGR_ID      = #{usrId}
+        <if test="soId != null and soId != ''">
+        AND    A.SO_ID        = #{soId}
+        </if>
+    </select>
+	
+</mapper>

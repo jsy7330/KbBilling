@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.service.serviceMgt.WorkGrpMngMapper">
+    
+    <select id="getWorkGrpListTotalCnt" resultType="Integer">
+        SELECT
+             COUNT(WRK.SVC_WRK_GRP_ID)
+        FROM TCMCT_SVC_WRK_GRP WRK
+        <trim prefix="WHERE" prefixOverrides="AND|OR">
+            <if test="soId != null and soId == 'SEL'">
+                AND WRK.SO_ID IN
+                <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                    #{item.so_id}
+                </foreach>
+            </if>
+            <if test="soId != null and soId != 'SEL'">
+                AND WRK.SO_ID = #{soId}
+            </if>
+            <if test="workGrpNm != null and workGrpNm != ''">
+                AND WRK.SVC_WRK_GRP_NM LIKE CONCAT(CONCAT('%' , #{workGrpNm}),'%')
+            </if>
+        </trim>
+     </select>
+    
+    
+    <select id="getWorkGrpList" resultType="java.util.HashMap">
+        SELECT 
+            RESULT.*
+        FROM (
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+            SELECT
+                 WRK.SO_ID
+                ,(SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID=WRK.SO_ID) AS SO_NM
+                ,WRK.SVC_WRK_GRP_ID
+                ,WRK.SVC_WRK_GRP_NM
+                ,WRK.USE_YN
+                ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='PP00184'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = WRK.USE_YN) AS USE_YN_NM
+                ,WRK.CHGR_ID
+                ,(SELECT USER_NAME
+                  FROM TSYCO_USER
+                  WHERE USER_ID = WRK.CHGR_ID) AS CHGR_NM
+                ,(SELECT ORG_ID
+                    FROM TSYCO_USER
+                    WHERE USER_ID = WRK.CHGR_ID) AS CHGR_ORG_ID
+                ,(SELECT ORG_NM
+                    FROM TSYCO_ORG_INFO A
+                        ,TSYCO_USER B
+                    WHERE B.USER_ID = WRK.CHGR_ID 
+                    AND A.ORG_ID = B.ORG_ID
+                    AND A.APPY_STRT_DT &lt;= #{today}
+                    AND A.APPY_END_DT &gt;= #{today}) AS CHGR_ORG_NM
+                ,WRK.CHG_DATE
+                ,WRK.REGR_ID
+                ,(SELECT USER_NAME
+                  FROM TSYCO_USER
+                  WHERE USER_ID = WRK.REGR_ID) AS REGR_NM
+                ,(SELECT ORG_ID
+                    FROM TSYCO_USER
+                    WHERE USER_ID = WRK.REGR_ID) AS REGR_ORG_ID
+                ,(SELECT ORG_NM
+                    FROM TSYCO_ORG_INFO A
+                        ,TSYCO_USER B
+                    WHERE B.USER_ID = WRK.REGR_ID 
+                    AND A.ORG_ID = B.ORG_ID
+                    AND A.APPY_STRT_DT &lt;= #{today}
+                    AND A.APPY_END_DT &gt;= #{today}) AS REGR_ORG_NM
+                ,WRK.REG_DATE
+            FROM TCMCT_SVC_WRK_GRP WRK
+            <trim prefix="WHERE" prefixOverrides="AND|OR">
+                <if test="soId != null and soId == 'SEL'">
+                    AND WRK.SO_ID IN
+                    <foreach collection="soAuthList" item="item" index="index" open="(" separator="," close=")">
+                        #{item.so_id}
+                    </foreach>
+                </if>
+                <if test="soId != null and soId != 'SEL'">
+                    AND WRK.SO_ID = #{soId}
+                </if>
+                <if test="workGrpNm != null and workGrpNm != ''">
+                    AND WRK.SVC_WRK_GRP_NM LIKE CONCAT(CONCAT('%' , #{workGrpNm}),'%')
+                </if>
+            </trim>
+            ORDER BY WRK.SVC_WRK_GRP_ID
+            <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+            ) RESULT
+    </select>
+    
+    <select id="getUserList" resultType="java.util.HashMap">
+        SELECT
+            USR.USER_ID
+           ,USR.USER_NAME
+           ,USR.ORG_ID
+           ,(SELECT ORG_NM
+                    FROM TSYCO_ORG_INFO A
+                    WHERE A.ORG_ID = USR.ORG_ID 
+                    AND A.APPY_STRT_DT &lt;= #{today}
+                    AND A.APPY_END_DT &gt;= #{today}) AS ORG_NM
+       FROM
+            TSYCO_USER USR
+           ,TSYCO_ORG_INFO ORG
+       WHERE USR.ORG_ID = ORG.ORG_ID
+       AND   ORG.SO_ID = (SELECT SO_ID FROM TCMCT_SVC_WRK_GRP WHERE SVC_WRK_GRP_ID = #{svcWrkGrpId} )
+       AND   USR.USE_YN = 'Y'
+       AND   USR.USER_ID NOT IN (
+            SELECT USER_ID FROM TCMCT_SVC_WRK_GRP_DTL WHERE SVC_WRK_GRP_ID = #{svcWrkGrpId}
+       )
+       ORDER BY USR.ORG_ID, USR.USER_ID             
+    </select>
+    
+    <select id="getWorkGrpUserList" resultType="java.util.HashMap">
+        SELECT
+             DTL.SVC_WRK_GRP_ID
+            ,DTL.USER_ID
+            ,USR.USER_NAME
+            ,DTL.SMS_YN
+            ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='PP00025'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = DTL.SMS_YN) AS SMS_YN_NM
+            ,DTL.USE_YN
+            ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='PP00025'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = DTL.USE_YN) AS USE_YN_NM
+       FROM
+            TCMCT_SVC_WRK_GRP_DTL DTL
+           ,TSYCO_USER USR
+       WHERE DTL.USER_ID = USR.USER_ID
+       AND DTL.SVC_WRK_GRP_ID = #{svcWrkGrpId}
+       ORDER BY DTL.USER_ID             
+    </select>
+    
+    <insert id="insertWorkGrp">
+        INSERT INTO TCMCT_SVC_WRK_GRP (
+             SVC_WRK_GRP_ID
+            ,SVC_WRK_GRP_NM
+            ,SO_ID
+            ,USE_YN
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        (
+            #{seq}
+           ,#{workGrpNm}
+           ,#{soId}
+           ,#{useYn} 
+           ,#{userId} 
+           ,#{today}
+           ,#{userId} 
+           ,#{today} 
+        )
+    </insert>
+    
+    <update id="updateWorkGrp">
+        UPDATE TCMCT_SVC_WRK_GRP
+        SET
+            SVC_WRK_GRP_NM = #{workGrpNm}
+           ,USE_YN         = #{useYn}
+           ,CHGR_ID        = #{userId}
+           ,CHG_DATE       = #{today}
+        WHERE  SVC_WRK_GRP_ID = #{workGrpId}  
+    </update>
+    
+    
+    <insert id="insertWorkUser">
+        INSERT INTO TCMCT_SVC_WRK_GRP_DTL (
+             SVC_WRK_GRP_ID
+            ,USER_ID
+            ,USE_YN
+            ,SMS_YN
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        (
+            #{workGrpId}
+           ,#{addUserId}
+           ,'Y'
+           ,'N' 
+           ,#{userId} 
+           ,#{today}
+           ,#{userId} 
+           ,#{today} 
+        )
+    </insert>
+    
+    <update id="updateWorkUser">
+        UPDATE TCMCT_SVC_WRK_GRP_DTL
+        SET
+            SMS_YN         = #{smsYn}
+           ,USE_YN         = #{useYn}
+           ,CHGR_ID        = #{userId}
+           ,CHG_DATE       = #{today}
+        WHERE  SVC_WRK_GRP_ID = #{workGrpId}
+        AND    USER_ID        = #{updateUserId}  
+    </update>
+    
+    <delete id="deleteWorkUser">
+        DELETE FROM  TCMCT_SVC_WRK_GRP_DTL
+        WHERE  SVC_WRK_GRP_ID = #{workGrpId}
+        AND    USER_ID        = #{deleteUserId}  
+    </delete>
+    
+    <delete id="deleteWorkGrp">
+        DELETE FROM  TCMCT_SVC_WRK_GRP
+        WHERE  SVC_WRK_GRP_ID = #{workGrpId}
+    </delete>
+    
+    <delete id="deleteWorkGrpDtl">
+        DELETE FROM  TCMCT_SVC_WRK_GRP_DTL
+        WHERE  SVC_WRK_GRP_ID = #{workGrpId}
+    </delete>
+</mapper>

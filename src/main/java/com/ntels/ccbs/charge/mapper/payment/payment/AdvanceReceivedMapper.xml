@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.payment.payment.AdvanceReceivedMapper">
+
+
+	<!-- 선수금발생내역 카운트  -->
+	<select id="getPrepayOccCount" parameterType="com.ntels.ccbs.charge.domain.payment.advanceReceived.AdvanceReceivedVO" resultType="int">
+		SELECT   COUNT(0)
+		FROM     TBLPY_PREPAY_OCC    A
+        WHERE  1 = 1
+        AND    (A.CNCL_YN  = 'N' OR A.CNCL_YN IS NULL)                     /* 2013.07.12 취소 건 제외 */
+		
+		
+		<if test="advanceReceivedVO.soId != null and advanceReceivedVO.soId != ''"><!-- 사업 -->
+			AND A.SO_ID 			= #{advanceReceivedVO.soId}
+		</if>
+		<if test="advanceReceivedVO.dpstCl != null and advanceReceivedVO.dpstCl != ''"><!-- 입금구분 -->
+			AND A.DPST_CL 			= #{advanceReceivedVO.dpstCl}
+		</if>
+		<if test="advanceReceivedVO.prepayOccTp != null and advanceReceivedVO.prepayOccTp != ''"><!-- 발생구분 -->
+			AND A.PREPAY_OCC_TP 			= #{advanceReceivedVO.prepayOccTp}
+		</if>
+		<if test="advanceReceivedVO.dtTp == '01'">    /* 발생일시  */
+			AND A.PREPAY_OCC_DTTM BETWEEN CONCAT(#{advanceReceivedVO.startDt}, '000000')  AND CONCAT(#{advanceReceivedVO.endDt}, '999999')
+		</if>
+		<if test="advanceReceivedVO.dtTp == '02'">    /* 입금일자  */
+			AND A.DPST_DT BETWEEN #{advanceReceivedVO.startDt} AND #{advanceReceivedVO.endDt}
+		</if>
+		<if test="advanceReceivedVO.dtTp == '03'">    /* 이체일자  */
+			AND A.TRANS_DT BETWEEN #{advanceReceivedVO.startDt} AND #{advanceReceivedVO.endDt}
+		</if>
+		<if test="advanceReceivedVO.prepayProcStat != null and advanceReceivedVO.prepayProcStat != ''"><!-- 처리상태 -->
+			AND A.PREPAY_PROC_STAT 			= #{advanceReceivedVO.prepayProcStat}
+		</if>
+		<if test="advanceReceivedVO.pymAcntId != null and advanceReceivedVO.pymAcntId != ''"><!-- 납부계정 -->
+			AND A.PYM_ACNT_ID 			= #{advanceReceivedVO.pymAcntId}
+		</if>
+	</select>
+    
+    
+    <!-- 선수금발생내역 리스트-->
+	<select id="getPrepayOccList" parameterType="com.ntels.ccbs.charge.domain.payment.advanceReceived.AdvanceReceivedVO" resultType="com.ntels.ccbs.charge.domain.payment.advanceReceived.AdvanceReceivedVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+		SELECT    A.SO_ID 
+		        , A.PREPAY_OCC_SEQ_NO   AS PREPAY_OCC_SEQ_NO  /* 발생일련번호 */
+				, A.PYM_ACNT_ID        AS PYM_ACNT_ID         /* 납부계정ID */
+				, (SELECT DISTINCT BB.ACNT_NM 
+					FROM IFNBRM_CUST_INFO BB 
+					WHERE BB.PYM_ACNT_ID = A.PYM_ACNT_ID
+				)	AS ACNT_NM 								  /* 납부계정명 */
+				, A.PREPAY_OCC_DTTM    AS PREPAY_OCC_DTTM     /* 선수금발생일시 */
+				, A.DPST_DT            AS DPST_DT             /* 입금일자 */
+				, A.TRANS_DT           AS TRANS_DT            /* 이체일자 */
+				, A.PREPAY_OCC_AMT     AS PREPAY_OCC_AMT      /* 발생금액 */
+				, A.PREPAY_TRANS_AMT   AS PREPAY_TRANS_AMT    /* 대체금액 */
+				, A.PREPAY_BAL         AS PREPAY_BAL          /* 잔액 */
+				, A.REG_DATE           AS REG_DATE            /* 등록일 */
+				, A.CHG_DATE           AS CHG_DATE            /* 최종수정일 */
+				, A.PREPAY_OCC_TP      AS PREPAY_OCC_TP       /* 발생구분코드(BLPY005) */
+				, (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{advanceReceivedVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{advanceReceivedVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00071'
+                                                                AND DETAIL.COMMON_CD = A.PREPAY_OCC_TP
+                                                       ) AS PREPAY_OCC_NM /* 발생구분코드(BL00071) */
+				, A.PREPAY_PROC_STAT   AS PREPAY_PROC_STAT    /* 처리상태코드(BLPY028) */
+				, (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{advanceReceivedVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{advanceReceivedVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00084'
+                                                                AND DETAIL.COMMON_CD = A.PREPAY_PROC_STAT
+                                                       ) AS PREPAY_PROC_STAT_NM /* 처리상태코드(BL00084) */
+				, A.DPST_CL            AS DPST_CL             /* 입금구분코드(BLPY001) */
+				, (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{advanceReceivedVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{advanceReceivedVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00067'
+                                                                AND DETAIL.COMMON_CD = A.DPST_CL
+                                                       ) AS DPST_CL_NM /* 입금구분코드(BL00067) */
+				, A.PREPAY_OCC_RESN    AS PREPAY_OCC_RESN     /* 발생사유코드(BLPY006) */
+				, (SELECT  NAME.CODE_NM AS COMMON_CD_NM
+                                                        FROM 	TSYCO_CODE_MAST MAST
+                                                              , TSYCO_CODE_MAST_NAME MNAME
+                                                              , TSYCO_CODE_DETAIL DETAIL
+                                                              , TSYCO_CODE_DETAIL_NAME NAME
+                                                        WHERE	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                                                AND MNAME.LNG_TYP     = #{advanceReceivedVO.lngTyp}
+                                                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                                                AND NAME.LNG_TYP      = #{advanceReceivedVO.lngTyp}
+                                                                AND MAST.COMMON_GRP   ='BL00072'
+                                                                AND DETAIL.COMMON_CD = A.PREPAY_OCC_RESN
+                                                       ) AS PREPAY_OCC_RESN_NM /* 발생사유코드(BL00072) */
+				, A.REGR_ID            AS REGR_ID             /* 등록자ID */
+				, (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = A.REGR_ID) AS REGR_NM
+				, A.CHGR_ID            AS CHGR_ID             /* 최종수정자ID */
+				, (SELECT USER_NAME FROM TSYCO_USER WHERE USER_ID = A.CHGR_ID) AS CHGR_NM
+        FROM     TBLPY_PREPAY_OCC    A
+        WHERE  1 = 1
+        AND    (A.CNCL_YN  = 'N' OR A.CNCL_YN IS NULL)                     /* 2013.07.12 취소 건 제외 */
+		
+		
+		<if test="advanceReceivedVO.soId != null and advanceReceivedVO.soId != ''"><!-- 사업 -->
+			AND A.SO_ID 			= #{advanceReceivedVO.soId}
+		</if>
+		<if test="advanceReceivedVO.dpstCl != null and advanceReceivedVO.dpstCl != ''"><!-- 입금구분 -->
+			AND A.DPST_CL 			= #{advanceReceivedVO.dpstCl}
+		</if>
+		<if test="advanceReceivedVO.prepayOccTp != null and advanceReceivedVO.prepayOccTp != ''"><!-- 발생구분 -->
+			AND A.PREPAY_OCC_TP 			= #{advanceReceivedVO.prepayOccTp}
+		</if>
+		<if test="advanceReceivedVO.dtTp == '01'">    /* 발생일시  */
+			AND A.PREPAY_OCC_DTTM BETWEEN CONCAT(#{advanceReceivedVO.startDt}, '000000')  AND CONCAT(#{advanceReceivedVO.endDt}, '999999')
+		</if>
+		<if test="advanceReceivedVO.dtTp == '02'">    /* 입금일자  */
+			AND A.DPST_DT BETWEEN #{advanceReceivedVO.startDt} AND #{advanceReceivedVO.endDt}
+		</if>
+		<if test="advanceReceivedVO.dtTp == '03'">    /* 이체일자  */
+			AND A.TRANS_DT BETWEEN #{advanceReceivedVO.startDt} AND #{advanceReceivedVO.endDt}
+		</if>
+		<if test="advanceReceivedVO.prepayProcStat != null and advanceReceivedVO.prepayProcStat != ''"><!-- 처리상태 -->
+			AND A.PREPAY_PROC_STAT 			= #{advanceReceivedVO.prepayProcStat}
+		</if>
+		<if test="advanceReceivedVO.pymAcntId != null and advanceReceivedVO.pymAcntId != ''"><!-- 납부계정 -->
+			AND A.PYM_ACNT_ID 			= #{advanceReceivedVO.pymAcntId}
+		</if>
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	
+	<select id="getBillInvoiceCount" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO" resultType="int">
+        SELECT COUNT(1)
+        FROM  (
+               SELECT A.SO_ID
+                    ,(SELECT C.SO_NM
+                      FROM   TSYCO_SO_MAST C /* SO 마스타*/
+                      WHERE  C.SO_ID = A.SO_ID )            AS SO_NM
+                    , A.BILL_SEQ_NO
+                    , A.BILL_YYMM
+                    , A.BILL_CYCL
+                    , A.BILL_DT
+                    , A.PYM_ACNT_ID
+                    , SUM(A.USG_CNT)                        AS USG_CNT
+                    , SUM(A.USG_AMT)                        AS USG_AMT
+                    , SUM(A.ADJ_PRV_BILL_AMT)               AS ADJ_PRV_BILL_AMT
+                    , SUM(A.ADJ_AMT)                        AS ADJ_AMT
+                    , SUM(A.BILL_AMT)                       AS BILL_AMT
+                    , SUM(A.RCPT_AMT)                       AS RCPT_AMT
+                    , SUM(A.BILL_AMT - A.RCPT_AMT)          AS UNPAY_AMT       /* 미납금액 */
+                    , A.PAY_DUE_DT
+                    , B.BILL_EXPT_YN
+                    , B.SMRY
+                    , B.SML_AMT_YN
+                    , B.PAY_MTHD                                               /* 납부방법 */
+                    ,(SELECT D.FULL_PAY_YN
+                      FROM   TBLIV_BILL_MAST D
+                      WHERE  D.SO_ID = A.SO_ID
+                      AND    D.BILL_SEQ_NO = A.BILL_SEQ_NO ) AS FULL_PAY_YN
+                    ,(SELECT E.ADJ_APPL_CONTS
+                      FROM   TBLIV_CHRG_ADJ_APLY E
+                      WHERE  E.BILL_SEQ_NO = B.BILL_SEQ_NO
+                      ORDER  BY E.ADJ_NO DESC
+                      LIMIT  1)                              AS ADJ_APPL_CONTS /* 조정내역 */
+                    ,(SELECT MAX(DATE_FORMAT(CHG_DATE, '%Y%m%d'))
+                      FROM   TBLIV_CHRG_ADJ_APLY
+                      WHERE  BILL_SEQ_NO = B.BILL_SEQ_NO )   AS CHG_DT
+               FROM   TBLIV_BILL          A /* 청구내역 */
+                    , TBLIV_BILL_TGT_CUST B /* 청구대상자 */
+               WHERE  1=1
+               <if test="billingStatisticsVO.soId != null and billingStatisticsVO.soId != ''">
+               AND    A.SO_ID       = #{billingStatisticsVO.soId}
+               </if>
+               <if test="billingStatisticsVO.pymAcntId != null and billingStatisticsVO.pymAcntId != ''">
+               AND    A.PYM_ACNT_ID = #{billingStatisticsVO.pymAcntId}
+               </if>
+               AND    B.SO_ID       = A.SO_ID
+               AND    B.BILL_SEQ_NO = A.BILL_SEQ_NO
+
+               GROUP  BY A.SO_ID, A.BILL_SEQ_NO, A.BILL_YYMM, A.BILL_CYCL, A.BILL_DT, A.PYM_ACNT_ID, A.PAY_DUE_DT, B.BILL_EXPT_YN, B.SMRY, B.SML_AMT_YN, B.PAY_MTHD              
+              ) Z
+        WHERE  UNPAY_AMT > 0 
+        ORDER  BY Z.SO_ID, Z.BILL_YYMM DESC, Z.BILL_DT
+	</select>
+	
+	<select id="getBillInvoiceList" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO" resultType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT *
+        FROM  (
+               SELECT A.SO_ID
+                    ,(SELECT C.SO_NM
+                      FROM   TSYCO_SO_MAST C /* SO 마스타*/
+                      WHERE  C.SO_ID = A.SO_ID )            AS SO_NM
+                    , A.BILL_SEQ_NO
+                    , A.BILL_YYMM
+                    , A.BILL_CYCL
+                    , A.BILL_DT
+                    , A.PYM_ACNT_ID
+                    , SUM(A.USG_CNT)                        AS USG_CNT
+                    , SUM(A.USG_AMT)                        AS USG_AMT
+                    , SUM(A.ADJ_PRV_BILL_AMT)               AS ADJ_PRV_BILL_AMT
+                    , SUM(A.ADJ_AMT)                        AS ADJ_AMT
+                    , SUM(A.BILL_AMT)                       AS BILL_AMT
+                    , SUM(A.RCPT_AMT)                       AS RCPT_AMT
+                    , SUM(A.BILL_AMT - A.RCPT_AMT)          AS UNPAY_AMT       /* 미납금액 */
+                    , A.PAY_DUE_DT
+                    , B.BILL_EXPT_YN
+                    , B.SMRY
+                    , B.SML_AMT_YN
+                    , B.PAY_MTHD                                               /* 납부방법 */
+                    ,(SELECT D.FULL_PAY_YN
+                      FROM   TBLIV_BILL_MAST D
+                      WHERE  D.SO_ID = A.SO_ID
+                      AND    D.BILL_SEQ_NO = A.BILL_SEQ_NO ) AS FULL_PAY_YN
+                    ,(SELECT E.ADJ_APPL_CONTS
+                      FROM   TBLIV_CHRG_ADJ_APLY E
+                      WHERE  E.BILL_SEQ_NO = B.BILL_SEQ_NO
+                      ORDER  BY E.ADJ_NO DESC
+                      LIMIT  1)                              AS ADJ_APPL_CONTS /* 조정내역 */
+                    ,(SELECT MAX(DATE_FORMAT(CHG_DATE, '%Y%m%d'))
+                      FROM   TBLIV_CHRG_ADJ_APLY
+                      WHERE  BILL_SEQ_NO = B.BILL_SEQ_NO )   AS CHG_DT
+               FROM   TBLIV_BILL          A /* 청구내역 */
+                    , TBLIV_BILL_TGT_CUST B /* 청구대상자 */
+               WHERE  1=1
+               <if test="billingStatisticsVO.soId != null and billingStatisticsVO.soId != ''">
+               AND    A.SO_ID       = #{billingStatisticsVO.soId}
+               </if>
+               <if test="billingStatisticsVO.pymAcntId != null and billingStatisticsVO.pymAcntId != ''">
+               AND    A.PYM_ACNT_ID = #{billingStatisticsVO.pymAcntId}
+               </if>
+               AND    B.SO_ID       = A.SO_ID
+               AND    B.BILL_SEQ_NO = A.BILL_SEQ_NO
+
+               GROUP  BY A.SO_ID, A.BILL_SEQ_NO, A.BILL_YYMM, A.BILL_CYCL, A.BILL_DT, A.PYM_ACNT_ID, A.PAY_DUE_DT, B.BILL_EXPT_YN, B.SMRY, B.SML_AMT_YN, B.PAY_MTHD              
+              ) Z
+        WHERE  UNPAY_AMT > 0 
+        ORDER  BY Z.SO_ID, Z.BILL_YYMM DESC, Z.BILL_DT
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+
+	<select id="getRefundAppliedCnt" parameterType="String" resultType="Integer">
+    SELECT /* PrepayTransMngMapper.getRefundAppliedCnt, 선수금 환불신청건수,  gwhan, 2020.03.25 */
+           COUNT(1) AS COUNT
+    FROM   TBLPY_RFND_APPL
+    WHERE  RFND_OCC_AMT_CL     = '01' /* 01=선수금 */
+    AND    RFND_OCC_TGT_SEQ_NO = #{prepayOccSeqNo}
+    AND    DCSN_PROC_STAT      IN ('01', '03') /* 01=신청, 03=결재요청 */
+	</select>	
+
+    <insert id="insertAction" parameterType="com.ntels.ccbs.charge.domain.billing.billing.BillingStatisticsVO">
+		INSERT INTO TBLPY_TRANS_APPL  /* AdvanceReceivedMapper.insertAction, 대체신청등록,  gwhan, 2020.03.26 */ 
+		(
+		     SO_ID
+			,TRANS_APPL_NO
+			,PYM_ACNT_ID
+			,TRANS_APPL_CL
+			,TRANS_APPL_TGT_NO
+			,BILL_SEQ_NO
+			,CTRT_ID
+			,BILL_YYMM
+			,USE_YYMM
+			,SVC_CMPS_ID
+			,PROD_CMPS_ID
+			,CHRG_ITM_CD
+			,APPL_DT
+			,APPNT_ID
+			,TRANS_APPL_AVLAMT
+			,TRANS_APPL_AMT
+			,APPNT_NM
+			,APPNT_CELL_PHN_NO
+			,APPL_RESN
+			,PROC_DT
+			,PROC_ID
+			,DCSN_PROC_STAT
+			,ATTCH_FILE_SEQ
+			,INPT_MENU_ID
+			,REGR_ID
+			,REG_DATE
+			,CHGR_ID
+			,CHG_DATE
+		) VALUES (
+		     #{billingStatisticsVO.soId}
+		    ,#{billingStatisticsVO.transApplNo}
+		    ,#{billingStatisticsVO.pymAcntId}
+		    ,#{billingStatisticsVO.transApplCl}
+		    ,#{billingStatisticsVO.transApplTgtNo}
+		    ,#{billingStatisticsVO.billSeqNo}
+		    ,#{billingStatisticsVO.ctrtId}
+		    ,#{billingStatisticsVO.billYymm}
+		    ,#{billingStatisticsVO.useYymm}
+		    ,#{billingStatisticsVO.svcCmpsId}
+		    ,#{billingStatisticsVO.prodCmpsId}
+		    ,#{billingStatisticsVO.chrgItmCd}
+		    ,#{billingStatisticsVO.applDt}
+		    ,#{billingStatisticsVO.appntId}
+		    ,#{billingStatisticsVO.transApplAvlamt}
+		    ,#{billingStatisticsVO.transApplAmt}
+		    ,#{billingStatisticsVO.appntNm}
+		    ,#{billingStatisticsVO.appntCellPhnNo}
+		    ,#{billingStatisticsVO.applResn}
+		    ,#{billingStatisticsVO.procDt}
+		    ,#{billingStatisticsVO.procId}
+		    ,#{billingStatisticsVO.dcsnProcStat}
+		    ,#{billingStatisticsVO.attchFileSeq}
+		    ,#{billingStatisticsVO.inptMenuId}
+		    ,#{billingStatisticsVO.regrId}
+		    ,#{billingStatisticsVO.regDate}
+		    ,#{billingStatisticsVO.chgrId}
+		    ,#{billingStatisticsVO.chgDate}
+		)
+    </insert>
+	
+
+</mapper>

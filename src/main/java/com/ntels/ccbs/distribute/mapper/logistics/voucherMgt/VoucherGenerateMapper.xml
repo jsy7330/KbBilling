@@ -1,0 +1,1188 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.voucherMgt.VoucherGenerateMapper">
+
+	<select id="vissueListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TDNDT_ITEM VI
+		    LEFT OUTER JOIN TDNDT_MNCO VM ON VM.SO_ID = VI.SO_ID AND VM.MNCO_ID = VI.MNCO_ID
+		    LEFT OUTER JOIN TDNDT_VISSUE VO ON VO.SO_ID = VI.SO_ID AND VO.ITEM_ID = VI.ITEM_ID
+		    JOIN TSYCO_CODE_DETAIL_NAME CD1 ON CD1.COMMON_CD = VO.VO_TP AND CD1.COMMON_GRP = 'DN00097' AND CD1.LNG_TYP = #{vissueVO.lngTyp}
+		    LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME CD2 ON CD2.COMMON_CD = VO.PO_STAT AND CD2.COMMON_GRP = 'DN00070' AND CD2.LNG_TYP = #{vissueVO.lngTyp}
+		    LEFT OUTER JOIN TDNDT_PO PO ON PO.SO_ID = VO.SO_ID AND PO.PO_NO = VO.PO_NO
+		WHERE 1 = 1
+		AND VO.SO_ID = #{vissueVO.soId}
+		<if test="vissueVO.mncoId != null and vissueVO.mncoId != ''">
+			AND VO.MNCO_ID = ${vissueVO.mncoId}
+		</if>
+		<if test="vissueVO.poStat != null and vissueVO.poStat != ''">
+			AND VO.PO_STAT = ${vissueVO.poStat}
+		</if>
+		<if test="vissueVO.voTp != null and vissueVO.voTp != ''">
+			AND VO.VO_TP = ${vissueVO.voTp}
+		</if>
+		AND VI.ITEM_TP_CD = 'V'
+		ORDER BY VO.VISSUE_SEQ_NO DESC
+	</select>
+
+	<select id="vissueList" resultType="VissueVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT 
+		    VO.SO_ID          --사업구분
+		    , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = VO.SO_ID) AS SO_NM
+		    , VO.VISSUE_SEQ_NO  --발행일련번호
+		    , VO.ITEM_ID        --제품ID
+		    , VI.ITEM_NM        --제품명
+		    , VI.MNCO_OTPT_UT_PRC --매입단가
+		    , VO.MNCO_ID        --제조사ID
+		    , VM.MNCO_NM        --제조사명
+		    , VO.VO_TP          --바우쳐종류
+		    , CD1.CODE_NM AS VO_TP_NM
+		    , VO.VO_ISSUE_AMT   --바우쳐발행금액
+		    , VO.VO_PROD_CD     --바우쳐상품
+		    , (SELECT PROD_NM FROM TPMPD_PROD WHERE SO_ID = VO.SO_ID AND PROD_CD = VO.VO_PROD_CD) AS VO_PROD_NM
+		    , VO.VO_ISSUE_CNT   --바우쳐발행수
+		    , VO.VO_ISSUE_DT    --바우쳐발행일자
+		    , VO.VO_EXPIRED_DT  --바우쳐만료일자
+		    , VO.PO_NO          --발주번호
+		    , VO.PO_DT          --발주일자
+		    , VO.PO_STAT        --발주상태
+		    , CD2.CODE_NM AS PO_STAT_NM
+		    , VO.REGR_ID
+		    , VO.REG_DATE
+		    , VO.CHGR_ID
+		    , VO.CHG_DATE
+		    , ( SELECT COUNT(*) FROM TDNDT_VISSUE_DTL VL WHERE VL.SO_ID = VO.SO_ID AND VL.VISSUE_SEQ_NO = VO.VISSUE_SEQ_NO) AS ISSUE_CHK_CNT
+		    , ( SELECT MAX(VO_STAT_CD) FROM TDNDT_VISSUE_DTL VL WHERE VL.SO_ID = VO.SO_ID AND VL.VISSUE_SEQ_NO = VO.VISSUE_SEQ_NO) AS STAT_CD_CHK
+		    , PO.LGST_CENT_ID
+		    , ( SELECT ORG_NM FROM TDNDI_ORG_INFO WHERE SO_ID = PO.SO_ID AND ORG_ID = PO.LGST_CENT_ID) AS LGST_CENT_NM
+		    , PO.DLGD_AGREE_DT
+		    , PO.DLV_ZIP_CD
+		    , PO.DLV_BSS_ADDR
+		    , PO.DLV_DTL_ADDR
+		FROM TDNDT_ITEM VI
+		    LEFT OUTER JOIN TDNDT_MNCO VM ON VM.SO_ID = VI.SO_ID AND VM.MNCO_ID = VI.MNCO_ID
+		    LEFT OUTER JOIN TDNDT_VISSUE VO ON VO.SO_ID = VI.SO_ID AND VO.ITEM_ID = VI.ITEM_ID
+		    JOIN TSYCO_CODE_DETAIL_NAME CD1 ON CD1.COMMON_CD = VO.VO_TP AND CD1.COMMON_GRP = 'DN00097' AND CD1.LNG_TYP = #{vissueVO.lngTyp}
+		    LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME CD2 ON CD2.COMMON_CD = VO.PO_STAT AND CD2.COMMON_GRP = 'DN00070' AND CD2.LNG_TYP = #{vissueVO.lngTyp}
+		    LEFT OUTER JOIN TDNDT_PO PO ON PO.SO_ID = VO.SO_ID AND PO.PO_NO = VO.PO_NO
+		WHERE 1 = 1
+		AND VO.SO_ID = #{vissueVO.soId}
+		<if test="vissueVO.mncoId != null and vissueVO.mncoId != ''">
+			AND VO.MNCO_ID = ${vissueVO.mncoId}
+		</if>
+		<if test="vissueVO.poStat != null and vissueVO.poStat != ''">
+			AND VO.PO_STAT = ${vissueVO.poStat}
+		</if>
+		<if test="vissueVO.voTp != null and vissueVO.voTp != ''">
+			AND VO.VO_TP = ${vissueVO.voTp}
+		</if>
+		AND VI.ITEM_TP_CD = 'V'
+		ORDER BY VO.VISSUE_SEQ_NO DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="vissueDtlListCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TDNDT_VISSUE_DTL VOL
+			JOIN TSYCO_CODE_DETAIL_NAME CD ON CD.COMMON_CD = VOL.VO_STAT_CD AND CD.COMMON_GRP = 'DN00099' AND CD.LNG_TYP = #{vissueDtlVO.lngTyp}
+			JOIN TDNDI_ORG_INFO OI ON OI.SO_ID = VOL.SO_ID AND OI.ORG_ID = VOL.VO_ISSUE_ORG_ID
+			JOIN TDNDT_VISSUE VI ON VI.SO_ID = VOL.SO_ID AND VI.VISSUE_SEQ_NO = VOL.VISSUE_SEQ_NO
+			JOIN TDNDT_PO PO ON PO.SO_ID = VI.SO_ID AND PO.PO_NO = VI.PO_NO
+		WHERE 1 = 1
+		AND VOL.SO_ID = #{vissueDtlVO.soId}
+		AND VOL.VISSUE_SEQ_NO = #{vissueDtlVO.vissueSeqNo}
+	</select>
+	
+	<select id="vissueDtlList" resultType="VissueDtlVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			VOL.SO_ID
+			, VI.MNCO_ID
+			, ( SELECT MNCO_NM FROM TDNDT_MNCO WHERE SO_ID = VI.SO_ID AND MNCO_ID = VI.MNCO_ID ) AS MNCO_NM
+			, VI.ITEM_ID
+			, ( SELECT ITEM_NM FROM TDNDT_ITEM WHERE SO_ID = VI.SO_ID AND ITEM_ID = VI.ITEM_ID ) AS ITEM_NM
+			, VOL.VO_SEQ_NO
+			, VOL.VISSUE_SEQ_NO
+			, VOL.VO_BAR_CD
+			, VOL.VO_STAT_CD
+			, CD.CODE_NM AS VO_STAT_NM
+			, VOL.VO_ISSUE_AMT
+			, VOL.VO_PROD_CD
+			, (SELECT PROD_NM FROM TPMPD_PROD WHERE SO_ID = VOL.SO_ID AND PROD_CD = VOL.VO_PROD_CD) AS VO_PROD_NM
+			, VOL.VO_ISSUE_DT
+			, VOL.VO_EXPIRED_DT
+			, VOL.VO_ISSUE_ORG_ID
+			, OI.ORG_NM
+			, VOL.VO_PO_DTTM
+			, VOL.VO_IN_DTTM
+			, VOL.REGR_ID
+			, VOL.REG_DATE
+			, VOL.CHGR_ID
+			, VOL.CHG_DATE
+			, PO.DLV_ZIP_CD
+			, PO.DLV_BSS_ADDR || ' ' || PO.DLV_DTL_ADDR AS DLV_ADDR
+			, VOL.VO_ISSUE_DT AS VO_ISSUE_DT2
+			, VOL.VO_EXPIRED_DT AS VO_EXPIRED_DT2
+			, PO.PO_CONF_DT AS PO_CONF_DT
+			, PO.DLGD_AGREE_DT AS DLGD_AGREE_DT
+		FROM TDNDT_VISSUE_DTL VOL
+			JOIN TSYCO_CODE_DETAIL_NAME CD ON CD.COMMON_CD = VOL.VO_STAT_CD AND CD.COMMON_GRP = 'DN00099' AND CD.LNG_TYP = #{vissueDtlVO.lngTyp}
+			JOIN TDNDI_ORG_INFO OI ON OI.SO_ID = VOL.SO_ID AND OI.ORG_ID = VOL.VO_ISSUE_ORG_ID
+			JOIN TDNDT_VISSUE VI ON VI.SO_ID = VOL.SO_ID AND VI.VISSUE_SEQ_NO = VOL.VISSUE_SEQ_NO
+			JOIN TDNDT_PO PO ON PO.SO_ID = VI.SO_ID AND PO.PO_NO = VI.PO_NO
+		WHERE 1 = 1
+		AND VOL.SO_ID = #{vissueDtlVO.soId}
+		AND VOL.VISSUE_SEQ_NO = #{vissueDtlVO.vissueSeqNo}
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="calcTax" resultType="double">
+		SELECT 1 FROM DUAL
+	</select>
+	
+	<select id="logisticsCenterCount" resultType="int">
+		SELECT COUNT(*) AS CNT
+		FROM TDNDI_ORG_INFO  A      -- 조직정보
+			LEFT OUTER JOIN TDNDI_DIST_INFO D ON A.ORG_ID = D.ORG_ID
+			, (
+				SELECT   
+					USER_ID AS USR_ID
+					, USER_NAME AS USR_NM
+					, EMP_NO
+					, ORG_ID AS CRR_ID
+					, TEL_NO
+					, MTEL_NO AS CELL_NO
+					, E_MAIL AS EML
+				FROM TSYCO_USER
+				WHERE USE_YN = 'Y'
+			) B                    -- 사용자Master
+			, (
+				SELECT 
+					EMP_NO
+					, EMP_NM
+					, TEL_CD  AS TEL_NO
+					, CELL_CD AS CELL_NO
+					, EMAIL   AS EML
+					, SO_ID
+				FROM TSYCO_EMP_MAST
+				WHERE USE_YN = 'Y'
+			) C                    -- 직원정보
+		WHERE    A.ORG_ID = B.CRR_ID
+		AND      B.EMP_NO = C.EMP_NO
+		AND      A.SO_ID  = C.SO_ID
+		<if test="logisticsCenterVO.soId != null and logisticsCenterVO.soId != ''">
+			AND A.SO_ID = #{logisticsCenterVO.soId}
+		</if>
+		<if test="logisticsCenterVO.orgId != null and logisticsCenterVO.orgId != ''">
+			AND A.ORG_ID = #{logisticsCenterVO.orgId}
+		</if>
+		<if test="logisticsCenterVO.orgNm != null and logisticsCenterVO.orgNm != ''">
+			AND A.ORG_NM LIKE '%' || #{logisticsCenterVO.orgNm} || '%'
+		</if>
+		<if test="logisticsCenterVO.tpCd != null and logisticsCenterVO.tpCd != ''">
+			AND A.TP_CD = #{logisticsCenterVO.tpCd}
+		</if>
+		<if test="logisticsCenterVO.tpDtlCd != null and logisticsCenterVO.tpDtlCd != ''">
+			AND A.TP_DTL_CD = #{logisticsCenterVO.tpDtlCd}
+		</if>
+		<if test="logisticsCenterVO.usrNm != null and logisticsCenterVO.usrNm != ''">
+			AND B.USR_NM LIKE '%' || #{logisticsCenterVO.usrNm} || '%'
+		</if>
+		<if test="logisticsCenterVO.arClCd != null and logisticsCenterVO.arClCd != ''">
+			AND A.AR_CL_CD = #{logisticsCenterVO.arClCd}
+		</if>
+		<if test="logisticsCenterVO.arTpCd != null and logisticsCenterVO.arTpCd != ''">
+			AND A.AR_TP_CD = #{logisticsCenterVO.arTpCd}
+		</if>
+		ORDER BY A.TP_CD, A.TP_DTL_CD, A.ORG_ID
+	</select>
+	
+	<select id="searchLogisticsCenter" resultType="LogisticsCenterVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			A.SO_ID                                                    -- 사업ID
+			, A.ORG_ID                                                   -- 조직ID:파트너코드
+			, A.ORG_NM                                                   -- 조직명:파트너명
+			, CASE WHEN B.USR_ID IS NULL THEN '' ELSE B.USR_ID END AS USR_ID -- 사용자ID
+			, CASE WHEN B.USR_NM IS NULL THEN '' ELSE B.USR_NM END AS USR_NM -- 사용자 한글이름명
+			, CASE WHEN B.EMP_NO IS NULL THEN '' ELSE B.EMP_NO END AS EMP_NO -- 직원ID
+			, CASE WHEN C.EMP_NM IS NULL THEN '' ELSE C.EMP_NM END AS EMP_NM -- 직원명
+			, A.TP_CD                                                    -- 유형코드
+			, (
+				SELECT B.CODE_NM
+				FROM TSYCO_CODE_DETAIL A
+				LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME B
+				ON B.LNG_TYP = #{logisticsCenterVO.lngTyp} AND A.COMMON_GRP = B.COMMON_GRP AND A.COMMON_CD = B.COMMON_CD
+				WHERE A.COMMON_GRP = 'DN00038'
+				AND A.COMMON_CD = A.TP_CD
+			) AS TP_NM -- 유형코드명
+			, A.TP_DTL_CD                                                -- 유형상세코드
+			, (
+				SELECT B.CODE_NM
+				FROM TSYCO_CODE_DETAIL A
+				LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME B
+				ON B.LNG_TYP = #{logisticsCenterVO.lngTyp} AND A.COMMON_GRP = B.COMMON_GRP AND A.COMMON_CD = B.COMMON_CD
+				WHERE A.COMMON_GRP = 'DN00039'
+				AND A.COMMON_CD = A.TP_DTL_CD
+			) AS TP_DTL_NM -- 유형상세코드명
+			, A.AR_TP_CD                                             -- 지역구분코드
+			, (
+				SELECT B.CODE_NM
+				FROM TSYCO_CODE_DETAIL A
+				LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME B
+				ON B.LNG_TYP = #{logisticsCenterVO.lngTyp} AND A.COMMON_GRP = B.COMMON_GRP AND A.COMMON_CD = B.COMMON_CD
+				WHERE A.COMMON_GRP = 'DN00101'
+				AND A.COMMON_CD = A.AR_TP_CD
+			) AS AR_TP_NM -- 지역구분코드명
+			, A.AR_CL_CD                                            -- 지역분류코드
+			, (
+				SELECT B.CODE_NM
+				FROM TSYCO_CODE_DETAIL A
+				LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME B
+				ON B.LNG_TYP = #{logisticsCenterVO.lngTyp} AND A.COMMON_GRP = B.COMMON_GRP AND A.COMMON_CD = B.COMMON_CD
+				WHERE A.COMMON_GRP = 'DN00100'
+				AND A.COMMON_CD = A.AR_CL_CD
+			) AS AR_CL_NM -- 지역분류코드명
+			, A.INQ_PERM_CD                                         -- 조회권한코드
+			, (
+				SELECT B.CODE_NM
+				FROM TSYCO_CODE_DETAIL A
+				LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME B
+				ON B.LNG_TYP = #{logisticsCenterVO.lngTyp} AND A.COMMON_GRP = B.COMMON_GRP AND A.COMMON_CD = B.COMMON_CD
+				WHERE A.COMMON_GRP = 'DN00051'
+				AND A.COMMON_CD = A.INQ_PERM_CD
+			) AS INQ_PERM_NM -- 조회권한코드명
+			, A.ORG_LV_CD                                            -- 조직레벨코드
+			, (
+				SELECT B.CODE_NM
+				FROM TSYCO_CODE_DETAIL A
+				LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME B
+				ON B.LNG_TYP = #{logisticsCenterVO.lngTyp} AND A.COMMON_GRP = B.COMMON_GRP AND A.COMMON_CD = B.COMMON_CD
+				WHERE A.COMMON_GRP = 'DN00052'
+				AND A.COMMON_CD = A.ORG_LV_CD
+			) AS ORG_LV_NM -- 조직레벨코드명
+			, B.CELL_NO                                                  -- 직원휴대폰번호
+			, B.TEL_NO                                                   -- 직원전화번호
+			, CASE WHEN D.ZIP_CD IS NULL THEN '' ELSE D.ZIP_CD END AS ZIP_CD -- 우편번호
+			, CASE WHEN D.ADDR1 IS NULL THEN '' ELSE D.ADDR1 END AS ADDR1 -- 주소1
+			, CASE WHEN D.ADDR2 IS NULL THEN '' ELSE D.ADDR2 END AS ADDR2 -- 주소2
+			, CASE WHEN B.EML IS NULL THEN '' ELSE B.EML END AS USR_EML
+		FROM TDNDI_ORG_INFO  A
+			LEFT OUTER JOIN TDNDI_DIST_INFO D ON A.ORG_ID = D.ORG_ID
+			, (
+				SELECT   
+					USER_ID AS USR_ID
+					, USER_NAME AS USR_NM
+					, EMP_NO
+					, ORG_ID AS CRR_ID
+					, TEL_NO
+					, MTEL_NO AS CELL_NO
+					, E_MAIL AS EML
+				FROM TSYCO_USER
+				WHERE USE_YN = 'Y'
+			) B
+			, (
+				SELECT 
+					EMP_NO
+					, EMP_NM
+					, TEL_CD  AS TEL_NO
+					, CELL_CD AS CELL_NO
+					, EMAIL   AS EML
+					, SO_ID
+				FROM TSYCO_EMP_MAST
+				WHERE USE_YN = 'Y'
+			) C
+		WHERE    A.ORG_ID = B.CRR_ID
+		AND      B.EMP_NO = C.EMP_NO
+		AND      A.SO_ID  = C.SO_ID
+		<if test="logisticsCenterVO.soId != null and logisticsCenterVO.soId != ''">
+			AND A.SO_ID = #{logisticsCenterVO.soId}
+		</if>
+		<if test="logisticsCenterVO.orgId != null and logisticsCenterVO.orgId != ''">
+			AND A.ORG_ID = #{logisticsCenterVO.orgId}
+		</if>
+		<if test="logisticsCenterVO.orgNm != null and logisticsCenterVO.orgNm != ''">
+			AND A.ORG_NM LIKE '%' || #{logisticsCenterVO.orgNm} || '%'
+		</if>
+		<if test="logisticsCenterVO.tpCd != null and logisticsCenterVO.tpCd != ''">
+			AND A.TP_CD = #{logisticsCenterVO.tpCd}
+		</if>
+		<if test="logisticsCenterVO.tpDtlCd != null and logisticsCenterVO.tpDtlCd != ''">
+			AND A.TP_DTL_CD = #{logisticsCenterVO.tpDtlCd}
+		</if>
+		<if test="logisticsCenterVO.usrNm != null and logisticsCenterVO.usrNm != ''">
+			AND B.USR_NM LIKE '%' || #{logisticsCenterVO.usrNm} || '%'
+		</if>
+		<if test="logisticsCenterVO.arClCd != null and logisticsCenterVO.arClCd != ''">
+			AND A.AR_CL_CD = #{logisticsCenterVO.arClCd}
+		</if>
+		<if test="logisticsCenterVO.arTpCd != null and logisticsCenterVO.arTpCd != ''">
+			AND A.AR_TP_CD = #{logisticsCenterVO.arTpCd}
+		</if>
+		ORDER BY A.TP_CD, A.TP_DTL_CD, A.ORG_ID
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="getPoOrgId" resultType="String">
+		SELECT ORG_ID
+		FROM TDNDI_ORG_INFO
+		WHERE 1=1
+		AND SO_ID = #{soId}
+		AND TP_CD = '1000'
+		ORDER BY ORG_ID DESC
+	</select>
+	
+	<insert id="insertVissue">
+		INSERT INTO TDNDT_VISSUE
+		(
+			SO_ID
+			, VISSUE_SEQ_NO
+			, ITEM_ID
+			, MNCO_ID
+			, VO_TP
+			, VO_ISSUE_AMT
+			, VO_PROD_CD
+			, VO_ISSUE_CNT
+			, VO_ISSUE_DT
+			, VO_EXPIRED_DT
+			, PO_NO
+			, PO_DT
+			, PO_STAT
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)
+		VALUES
+		(
+			#{vissueVO.soId, jdbcType = VARCHAR}
+			, #{vissueVO.vissueSeqNo, jdbcType = VARCHAR}
+			, #{vissueVO.itemId, jdbcType = VARCHAR}
+			, #{vissueVO.mncoId, jdbcType = VARCHAR}
+			, #{vissueVO.voTp, jdbcType = VARCHAR}
+			, #{vissueVO.voIssueAmt, jdbcType = DOUBLE}
+			, #{vissueVO.voProdCd, jdbcType = VARCHAR}
+			, #{vissueVO.voIssueCnt, jdbcType = INTEGER}
+			, #{vissueVO.voIssueDt, jdbcType = VARCHAR}
+			, #{vissueVO.voExpiredDt, jdbcType = VARCHAR}
+			, #{vissueVO.poNo, jdbcType = VARCHAR}
+			, #{vissueVO.poDt, jdbcType = VARCHAR}
+			, #{vissueVO.poStat, jdbcType = VARCHAR}
+			, #{vissueVO.regrId, jdbcType = VARCHAR}
+			, #{vissueVO.regDate, jdbcType = DATE}
+			, #{vissueVO.chgrId, jdbcType = VARCHAR}
+			, #{vissueVO.chgDate, jdbcType = DATE}
+		)
+	</insert>
+	
+	<insert id="insertVissueDtl">
+		INSERT INTO TDNDT_VISSUE_DTL
+		(
+			SO_ID
+			, VO_SEQ_NO
+			, VISSUE_SEQ_NO
+			, VO_BAR_CD
+			, VO_STAT_CD
+			, VO_ISSUE_AMT
+			, VO_PROD_CD
+			, VO_ISSUE_DT
+			, VO_EXPIRED_DT
+			, VO_ISSUE_ORG_ID
+			, VO_PO_DTTM
+			, VO_IN_DTTM
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)
+		VALUES
+		(
+			#{vissueDtlVO.soId, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voSeqNo, jdbcType = VARCHAR}
+			, #{vissueDtlVO.vissueSeqNo, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voBarCd, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voStatCd, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voIssueAmt, jdbcType = DOUBLE}
+			, #{vissueDtlVO.voProdCd, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voIssueDt, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voExpiredDt, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voIssueOrgId, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voPoDttm, jdbcType = VARCHAR}
+			, #{vissueDtlVO.voInDttm, jdbcType = VARCHAR}
+			, #{vissueDtlVO.regrId, jdbcType = VARCHAR}
+			, #{vissueDtlVO.regDate, jdbcType = DATE}
+			, #{vissueDtlVO.chgrId, jdbcType = VARCHAR}
+			, #{vissueDtlVO.chgDate, jdbcType = DATE}
+		)
+	</insert>
+	
+	<update id="updateVissue">
+		UPDATE TDNDT_VISSUE SET
+			PO_STAT = #{vissueVO.poStat, jdbcType = VARCHAR}					--발주상태
+			, PO_DT = #{vissueVO.poDt, jdbcType = VARCHAR}					--발주일자
+			, CHGR_ID = #{vissueVO.chgrId, jdbcType = VARCHAR}
+			, CHG_DATE = #{vissueVO.chgDate, jdbcType = DATE}
+         WHERE SO_ID = #{vissueVO.soId, jdbcType = VARCHAR}				--사업구분
+           AND VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo, jdbcType = VARCHAR} --발행일련번호
+	</update>
+	
+	<select id="voucherItemCount" resultType="int">
+		SELECT COUNT(*)
+		FROM
+		(
+			SELECT
+				A.SO_ID
+			FROM TPMPD_PROD_ATTR A
+				, TPMPD_PROD B
+				, TPMPD_PROD_ATTR C
+			WHERE A.PROD_CD = B.PROD_CD
+			AND B.PROD_CD = C.PROD_CD
+			AND B.SO_ID = #{voucherItemVO.soId}
+			AND A.ATTR_CD = 'AT039'  /*BUNDLE YN*/
+			AND NVL(A.ATTR_VAL,'0') = '1'
+			AND B.SUBS_FL = '1'
+			AND B.MSTR_FL = '1'
+			AND B.BASIC_PROD_FL IN ('V', 'P')
+			AND TO_CHAR(SYSDATE, 'YYYYMMDD') BETWEEN B.ACT_DT AND B.INACT_DT
+			AND C.ATTR_CD = 'DF001'  /*POSTPAID,PREPAID,HYBRID*/
+			AND C.ATTR_VAL IN ('2','3')
+		)
+	</select>
+	
+	<select id="searchVoucherItem" resultType="VoucherItemVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT 
+			SO_ID
+			, SO_NM
+			, PROD_CD
+			, PROD_NM
+			, PROD_AMT
+			, QOS_AMT
+			, DH_TYPE
+			, EFF_PERIOD
+			, PCRF_YN
+			, PDVC_YN
+		FROM
+		(
+			SELECT
+				SO_ID
+				, SO_NM
+				, PROD_CD
+				, PROD_NM
+				, PROD_AMT
+				, QOS_AMT
+				, DH_TYPE
+				, EFF_PERIOD
+				, CASE WHEN MNO_PROD_CD IS NULL THEN 'N' ELSE 'Y' END AS PCRF_YN
+				, PDVC_YN
+			FROM
+			(
+				SELECT
+					B.SO_ID
+					, ( SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = B.SO_ID) AS SO_NM
+					, B.PROD_CD
+					, B.PROD_NM
+					, CASE WHEN (
+							SELECT RATE_VAL
+							FROM TPMPD_RATE
+							WHERE RATE_ITM_CD IN ( SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD )
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 0
+						ELSE
+						(
+							SELECT RATE_VAL
+							FROM TPMPD_RATE
+							WHERE RATE_ITM_CD IN ( SELECT RATE_ITM_CD FROM TPMPD_RATE_ITM WHERE PROD_CD = C.PROD_CD )
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS PROD_AMT
+					, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT033'  --QOS
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1' 
+						) IS NULL THEN '0'
+						ELSE
+						(
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT033'  --QOS
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1' 
+						) END AS QOS_AMT
+					, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT034'  --D/H
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN 'D'
+						ELSE
+						(
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT034'  --D/H
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS DH_TYPE
+					, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT035'  --유효기간
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0'
+						ELSE
+						(
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT035'  --유효기간
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS EFF_PERIOD
+					, CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT036'  --프로모션(친구추천혜택)
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) IS NULL THEN '0'
+						ELSE
+						(
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT036'  --프로모션(친구추천혜택)
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+						) END AS RCMD_YN
+					 , ( SELECT MNO_PROD_CD
+					       FROM TPMPD_PROD
+					      WHERE PROD_CD = B.PROD_CD
+					        AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN ACT_DT AND INACT_DT
+					        AND BASIC_PROD_FL = 'V' -- B:기본요금제 , V:번들
+					        AND MSTR_FL = '1'
+					        AND MNO_PROD_CD LIKE '10%') AS MNO_PROD_CD
+					 , CASE WHEN (
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT038'  --상품바우쳐여부
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+					 	) IS NULL THEN 'N'
+					 	ELSE
+					 	(
+							SELECT ATTR_VAL
+							FROM TPMPD_PROD_ATTR
+							WHERE PROD_CD = B.PROD_CD
+							AND ATTR_CD = 'AT038'  --상품바우쳐여부
+							AND #{voucherItemVO.todayDt} BETWEEN ACT_DT AND INACT_DT
+							AND MSTR_FL = '1'
+					 	) END AS PDVC_YN
+		                  FROM TPMPD_PROD_ATTR A,
+		                       TPMPD_PROD B,
+		                       TPMPD_PROD_ATTR C
+		                 WHERE A.PROD_CD = B.PROD_CD
+		                   AND B.PROD_CD = C.PROD_CD
+		                   AND B.SO_ID = #{voucherItemVO.soId}
+		                   AND A.ATTR_CD = 'AT039'
+		                   AND CASE WHEN A.ATTR_VAL IS NULL THEN '0' ELSE A.ATTR_VAL END = '1'
+		                   AND B.SUBS_FL = '1'
+		                   AND B.MSTR_FL = '1'
+		                   AND B.BASIC_PROD_FL IN ('V', 'P')
+		                   AND #{voucherItemVO.todayDt} BETWEEN B.ACT_DT AND B.INACT_DT
+		                   AND C.ATTR_CD = 'DF001'  /*POSTPAID,PREPAID,HYBRID*/
+		                   AND C.ATTR_VAL IN ('2','3')
+		              )
+		            ORDER BY PROD_CD
+		          )
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<select id="newVoIssueNo" resultType="int">
+         SELECT CASE WHEN MAX(SUBSTR(VISSUE_SEQ_NO, 9, 4)) IS NULL THEN '0' ELSE MAX(SUBSTR(VISSUE_SEQ_NO, 9, 4)) END + 1 AS VISSUE_SEQ_NO
+         FROM TDNDT_VISSUE
+         WHERE REG_DATE >= #{todayDttm}
+	</select>
+	
+	<select id="getTaxMast" resultType="VissueVO">
+	    SELECT TAX_ITM_ID, CALC_TP, TAX_RATE
+	    FROM   TSYCO_TAX_MAST
+	    WHERE  SYSTEM_ID = 'DN'
+	    AND    #{todayDt} BETWEEN START_YM AND END_YM
+	    ORDER BY TAX_PRI
+	</select>
+	
+	<select id="getMaxPoNo" resultType="String">
+		SELECT MAX(PO_NO) FROM TDNDT_PO
+	</select>
+	
+	<insert id="insertPo">
+		INSERT INTO TDNDT_PO
+		(
+			SO_ID
+			, PO_NO
+			, PO_ORG_ID
+			, LGST_CENT_ID
+			, MNCO_ID
+			, PO_PRGR_STAT_CD
+			, ITEM_ID
+			, ITEM_TP_CD
+			, COLOR_CD
+			, DLGD_AGREE_DT
+			, PO_QTY
+			, PO_UT_PRC
+			, PO_AMT
+			, DLV_ZIP_CD
+			, DLV_BSS_ADDR
+			, DLV_DTL_ADDR
+			, ADD_TX
+			, TOT_PRCHS_AMT
+			, PO_REG_DT
+			, PO_CONF_DT
+			, ACTNC_INCHRG
+			, ACTNC_INCHRG_TEL
+			, NOTE
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)
+		VALUES
+		(
+			#{poVO.soId, jdbcType = VARCHAR}
+			, #{poVO.poNo, jdbcType = VARCHAR}
+			, #{poVO.poOrgId, jdbcType = VARCHAR}
+			, #{poVO.lgstCentId, jdbcType = VARCHAR}
+			, #{poVO.mncoId, jdbcType = VARCHAR}
+			, #{poVO.poPrgrStatCd, jdbcType = VARCHAR}
+			, #{poVO.itemId, jdbcType = VARCHAR}
+			, #{poVO.itemTpCd, jdbcType = VARCHAR}
+			, #{poVO.colorCd, jdbcType = VARCHAR}
+			, #{poVO.dlgdAgreeDt, jdbcType = VARCHAR}
+			, #{poVO.poQty, jdbcType = INTEGER}
+			, #{poVO.poUtPrc, jdbcType = DOUBLE}
+			, #{poVO.poAmt, jdbcType = DOUBLE}
+			, #{poVO.dlvZipCd, jdbcType = VARCHAR}
+			, #{poVO.dlvBssAddr, jdbcType = VARCHAR}
+			, #{poVO.dlvDtlAddr, jdbcType = VARCHAR}
+			, #{poVO.addTx, jdbcType = DOUBLE}
+			, #{poVO.totPrchsAmt, jdbcType = DOUBLE}
+			, #{poVO.poRegDt, jdbcType = VARCHAR}
+			, #{poVO.poConfDt, jdbcType = VARCHAR}
+			, #{poVO.actncInchrg, jdbcType = VARCHAR}
+			, #{poVO.actncInchrgTel, jdbcType = VARCHAR}
+			, #{poVO.note, jdbcType = VARCHAR}
+			, #{poVO.regrId, jdbcType = VARCHAR}
+			, #{poVO.regDate, jdbcType = DATE}
+			, #{poVO.chgrId, jdbcType = VARCHAR}
+			, #{poVO.chgDate, jdbcType = DATE}
+		)
+	</insert>
+	
+	<insert id="insertPoStatProcHist">
+		INSERT INTO TDNDT_PO_STAT_PROC_HIST
+		(
+			SO_ID
+			, PO_NO
+			, PO_PRGR_STAT_CD
+			, STAT_PROC_ID
+			, STAT_PROC_DTTM
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)
+		VALUES
+		(
+			#{poVO.soId, jdbcType = VARCHAR}
+			, #{poVO.poNo, jdbcType = VARCHAR}
+			, #{poVO.poPrgrStatCd, jdbcType = VARCHAR}
+			, #{poVO.statProcId, jdbcType = VARCHAR}
+			, #{poVO.statProcDttm, jdbcType = VARCHAR}
+			, #{poVO.regrId, jdbcType = VARCHAR}
+			, #{poVO.regDate, jdbcType = DATE}
+			, #{poVO.chgrId, jdbcType = VARCHAR}
+			, #{poVO.chgDate, jdbcType = DATE}
+		)
+	</insert>
+	
+    <!-- 발주처리대기상태정보를 등록한다. -->
+    <insert id="insertPoIdlDtl">
+        INSERT INTO TDNDT_PO_IDL_DTL
+        (
+            SO_ID
+          , PO_NO         --발주번호
+          , IDL_STAT_CD   --대기상태코드
+          , REG_DATE      --등록일
+          , REGR_ID       --등록자ID
+        )
+        VALUES
+        (
+            #{poVO.soId}
+          , #{poVO.poNo}       --발주번호
+          , '30'               --대기상태코드
+          , #{poVO.regDate}    -- 등록일
+          , #{poVO.regrId}     -- 등록자ID
+        )
+    </insert>
+	
+	<update id="updateVissuePoNo">
+		UPDATE TDNDT_VISSUE SET 
+			PO_NO = #{vissueVO.poNo}					--발주번호
+			, CHGR_ID = #{vissueVO.chgrId}
+			, CHG_DATE = #{vissueVO.chgDate}
+		WHERE SO_ID = #{vissueVO.soId}					--사업구분
+		AND VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo}		--발행일련번호
+	</update>
+	
+	<update id="updateVissuePoStat">
+		UPDATE TDNDT_VISSUE SET
+			PO_STAT = #{vissueVO.poStat}				--발주상태
+			, PO_DT = #{vissueVO.poDt}					--발주일자
+			, CHGR_ID = #{vissueVO.chgrId}
+			, CHG_DATE = #{vissueVO.chgDate}
+		WHERE SO_ID = #{vissueVO.soId}					--사업구분
+		AND VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo}		--발행일련번호
+	</update>
+	
+	<update id="updateVissueDtlVoStatCd">
+        UPDATE TDNDT_VISSUE_DTL SET
+        	VO_STAT_CD = #{vissueDtlVO.voStatCd}		--바우쳐상태
+			, CHGR_ID = #{vissueDtlVO.chgrId}
+			, CHG_DATE = #{vissueDtlVO.chgDate}
+		WHERE SO_ID = #{vissueDtlVO.soId}				--사업구분
+		AND VISSUE_SEQ_NO = #{vissueDtlVO.vissueSeqNo}	--발행일련번호
+	</update>
+	
+    <!-- 바우쳐발행상세 발주일시를 저장한다. -->
+    <update id="updateVissueDtlVoPoDttm">
+        UPDATE TDNDT_VISSUE_DTL
+           SET VO_PO_DTTM = TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') --발주일시
+             , CHGR_ID = #{vissueDtlVO.chgrId}
+             , CHG_DATE = #{vissueDtlVO.chgDate}
+         WHERE SO_ID = #{vissueDtlVO.soId}                    --사업구분
+           AND VISSUE_SEQ_NO = #{vissueDtlVO.vissueSeqNo}    --발행일련번호
+    </update>
+    
+    <!-- 제조사 발주진행상태 정보를 저장한다. -->
+    <update id="updatePoStatInfo">
+        UPDATE TDNDT_PO
+           SET PO_PRGR_STAT_CD = #{poVO.poPrgrStatCd}  --발주진행상태코드
+             , PO_CONF_DT      = #{poVO.poConfDt}   --발주확정일자
+             , CHG_DATE        = #{poVO.chgDate}            --수정일
+             , CHGR_ID         = #{poVO.chgrId}           --수정자ID
+         WHERE SO_ID           = #{poVO.soId}
+           AND PO_NO           = #{poVO.poNo}            --발주번호
+    </update>
+	
+	<select id="vissuePoInfoListCount" resultType="int">
+		  SELECT COUNT(*)
+          FROM TDNDT_PO PO
+               JOIN TDNDT_ITEM IT
+                 ON IT.SO_ID = PO.SO_ID
+                AND IT.ITEM_ID = PO.ITEM_ID
+                AND IT.ITEM_TP_CD = 'V'
+               JOIN TDNDT_MNCO MN
+                 ON MN.SO_ID = PO.SO_ID
+                AND MN.MNCO_ID = PO.MNCO_ID
+               JOIN TDNDI_ORG_INFO OIA
+                 ON OIA.SO_ID = PO.SO_ID
+                AND OIA.ORG_ID = PO.PO_ORG_ID
+               JOIN TDNDI_ORG_INFO OIB
+                 ON OIB.SO_ID = PO.SO_ID
+                AND OIB.ORG_ID = PO.LGST_CENT_ID
+         WHERE 1=1
+           AND PO.SO_ID = #{vissueVO.soId}
+           AND PO.PO_NO = #{vissueVO.poNo}
+           AND PO.ITEM_ID = #{vissueVO.itemId}
+           AND PO.MNCO_ID = #{vissueVO.mncoId}
+           AND PO.PO_PRGR_STAT_CD = #{vissueVO.poStat}
+	</select>
+	
+	<select id="vissuePoInfoList" resultType="VissueVO">
+        SELECT PO.SO_ID
+             , PO.PO_NO
+             , PO.PO_ORG_ID
+             , OIA.ORG_NM PO_ORG_NM
+             , PO.LGST_CENT_ID
+             , OIB.ORG_NM LGST_CENT_NM
+             , PO.MNCO_ID
+             , MN.MNCO_NM
+             , PO.ITEM_ID
+             , IT.ITEM_NM
+          FROM TDNDT_PO PO
+               JOIN TDNDT_ITEM IT
+                 ON IT.SO_ID = PO.SO_ID
+                AND IT.ITEM_ID = PO.ITEM_ID
+                AND IT.ITEM_TP_CD = 'V'
+               JOIN TDNDT_MNCO MN
+                 ON MN.SO_ID = PO.SO_ID
+                AND MN.MNCO_ID = PO.MNCO_ID
+               JOIN TDNDI_ORG_INFO OIA
+                 ON OIA.SO_ID = PO.SO_ID
+                AND OIA.ORG_ID = PO.PO_ORG_ID
+               JOIN TDNDI_ORG_INFO OIB
+                 ON OIB.SO_ID = PO.SO_ID
+                AND OIB.ORG_ID = PO.LGST_CENT_ID
+         WHERE 1=1
+           AND PO.SO_ID = #{vissueVO.soId}
+           AND PO.PO_NO = #{vissueVO.poNo}
+           AND PO.ITEM_ID = #{vissueVO.itemId}
+           AND PO.MNCO_ID = #{vissueVO.mncoId}
+           AND PO.PO_PRGR_STAT_CD = #{vissueVO.poStat}
+	</select>
+	
+	<insert id="insertVeqtInfo">
+        INSERT INTO TDNDT_VEQT
+        ( SO_ID, VO_SEQ_NO, VO_BAR_CD, ITEM_ID, VO_STAT_CD, VO_ISSUE_DT, VO_EXPIRED_DT, VO_ISSUE_AMT, VO_PROD_CD, LGST_PROC_STAT_CD, LGST_PROC_DTTM
+        , OWN_LOC_CD, FRST_IN_DT, AGC_IN_DT, PRCHS_UT_PRC, DSTRB_UT_PRC, CT_ORG_ID, CT_CHG_ID, CT_CHG_DT, REGR_ID, REG_DATE, CHGR_ID, CHG_DATE, REMARK )
+        SELECT
+               VD.SO_ID           --사업구분
+             , VD.VO_SEQ_NO       --바우쳐일련번호
+             , VD.VO_BAR_CD       --바우쳐바코드
+             , VI.ITEM_ID         --제품ID
+             , VD.VO_STAT_CD      --바우쳐상태코드
+             , VD.VO_ISSUE_DT     --바우쳐발행일자
+             , VD.VO_EXPIRED_DT   --바우쳐만료일자
+             , VD.VO_ISSUE_AMT    --바우쳐발행금액
+             , VD.VO_PROD_CD      --바우쳐상품
+             , '000' AS LGST_PROC_STAT_CD  --물류처리상태코드
+             , #{vissueVO.lgstProcDttm} AS LGST_PROC_DTTM   --물류처리일시
+             , NULL AS OWN_LOC_CD   --소유위치코드
+             , NULL AS FRST_IN_DT   --최초물류센터입고일자
+             , NULL AS AGC_IN_DT    --대리점입고일자
+			 , CASE WHEN (
+					SELECT MIN(MNCO_OTPT_UT_PRC)
+					FROM TDNDT_MNCO_UT_PRC_DTL
+					WHERE SO_ID = VI.SO_ID AND ITEM_ID = VI.ITEM_ID
+				) IS NULL THEN VD.VO_ISSUE_AMT
+				ELSE (
+					SELECT MIN(MNCO_OTPT_UT_PRC)
+					FROM TDNDT_MNCO_UT_PRC_DTL
+					WHERE SO_ID = VI.SO_ID AND ITEM_ID = VI.ITEM_ID
+				) END AS PRCHS_UT_PRC --매입단가
+			 , CASE WHEN (
+					SELECT MIN(DSTRB_UT_PRC)
+					FROM TDNDT_DSTRB_UT_PRC_DTL
+					WHERE SO_ID = VI.SO_ID AND ITEM_ID = VI.ITEM_ID
+				) IS NULL THEN VD.VO_ISSUE_AMT
+				ELSE (
+					SELECT MIN(DSTRB_UT_PRC)
+					FROM TDNDT_DSTRB_UT_PRC_DTL
+					WHERE SO_ID = VI.SO_ID AND ITEM_ID = VI.ITEM_ID
+				) END AS DSTRB_UT_PRC    --유통단가
+             , NULL AS CT_ORG_ID    --접점조직
+             , NULL AS CT_CHG_ID    --접점변경자
+             , NULL AS CT_CHG_DT    --접점변경일
+             , #{vissueVO.regrId} AS REGR_ID
+             , #{vissueVO.regDate} AS REG_DATE
+             , #{vissueVO.chgrId} AS CHGR_ID
+             , #{vissueVO.chgDate} AS CHG_DATE
+             , NULL AS REMARK
+          FROM TDNDT_VISSUE_DTL VD
+               JOIN TDNDT_VISSUE VI
+                 ON VI.SO_ID = VD.SO_ID
+                AND VI.VISSUE_SEQ_NO = VD.VISSUE_SEQ_NO
+         WHERE VD.SO_ID = #{vissueVO.soId}
+           AND VD.VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo}
+	</insert>
+	
+	<select id="getMaxCrtSeqNo" resultType="String">
+		SELECT
+			CASE WHEN MAX(CRT_SEQ_NO) IS NULL THEN '0' ELSE MAX(CRT_SEQ_NO) END AS CRT_SEQ_NO
+		FROM TDNDT_VEQT_TRANS
+		WHERE VO_SEQ_NO IN
+			(
+				SELECT MAX(VD.VO_SEQ_NO)
+				FROM TDNDT_VISSUE_DTL VD
+				WHERE VD.SO_ID = #{vissueVO.soId}
+				AND VD.VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo}
+			)
+	</select>
+	
+	<insert id="insertVeqtTransBulfInfo">
+        INSERT INTO TDNDT_VEQT_TRANS
+        ( CRT_SEQ_NO, SO_ID, VO_SEQ_NO, VO_BAR_CD, ITEM_ID, VO_STAT_CD, VO_ISSUE_DT, VO_EXPIRED_DT, VO_ISSUE_AMT, VO_PROD_CD, LGST_PROC_STAT_CD, LGST_PROC_DTTM
+        , OWN_LOC_CD, FRST_IN_DT, AGC_IN_DT, PRCHS_UT_PRC, DSTRB_UT_PRC, CT_ORG_ID, CT_CHG_ID, CT_CHG_DT, REGR_ID, REG_DATE, CHGR_ID, CHG_DATE, REMARK )
+        SELECT #{vissueVO.crtSeqNo} AS CRT_SEQ_NO
+             , VE.SO_ID, VE.VO_SEQ_NO, VE.VO_BAR_CD, VE.ITEM_ID, VE.VO_STAT_CD, VE.VO_ISSUE_DT, VE.VO_EXPIRED_DT, VE.VO_ISSUE_AMT, VE.VO_PROD_CD, VE.LGST_PROC_STAT_CD, VE.LGST_PROC_DTTM
+             , VE.OWN_LOC_CD, VE.FRST_IN_DT, VE.AGC_IN_DT, VE.PRCHS_UT_PRC, VE.DSTRB_UT_PRC, VE.CT_ORG_ID, VE.CT_CHG_ID, VE.CT_CHG_DT, VE.REGR_ID, VE.REG_DATE, VE.CHGR_ID, VE.CHG_DATE, VE.REMARK
+          FROM TDNDT_VEQT VE
+               JOIN TDNDT_VISSUE_DTL VD
+                 ON VD.SO_ID = VE.SO_ID
+                AND VD.VO_SEQ_NO = VE.VO_SEQ_NO
+         WHERE VE.SO_ID = #{vissueVO.soId}
+           AND VD.VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo}
+	</insert>
+	
+	<delete id="deletePoIdlDtl">
+		DELETE
+		FROM TDNDT_PO_IDL_DTL
+		WHERE SO_ID = #{poVO.soId}
+		AND PO_NO = #{poVO.poNo}
+	</delete>
+	
+    <!-- 바우쳐마스터 정보를 저장한다.(발주취소) -->
+    <update id="updateVeqtInfoOrderCancle">
+        UPDATE TDNDT_VEQT
+           SET VO_STAT_CD = #{vissueDtlVO.voStatCd}   --바우쳐상태코드
+             , CHGR_ID = #{vissueDtlVO.chgrId}
+             , CHG_DATE = #{vissueDtlVO.chgDate}
+         WHERE SO_ID = #{vissueDtlVO.soId}             --사업구분
+           AND VO_SEQ_NO IN ( SELECT VO_SEQ_NO FROM TDNDT_VISSUE_DTL WHERE VISSUE_SEQ_NO = #{vissueDtlVO.vissueSeqNo} ) --발행일련번호
+    </update>
+    
+    <!-- 사업자 이관할 바우쳐 갯수 -->
+    <select id="transferVoucherCount" resultType="int">
+      SELECT  COUNT(1)
+        FROM  TDNDT_VEQT
+       WHERE  SO_ID = #{vissueVO.soId}
+         AND  VO_BAR_CD BETWEEN #{vissueVO.fromVoBarCd} AND #{vissueVO.toVoBarCd}
+    </select>
+    
+    <!-- 바우쳐종류, 바우쳐금액 -->
+    <select id="getTransferVissueInfo" resultType="VissueVO">
+      SELECT  A.VO_TP, A.VO_ISSUE_AMT, A.VO_ISSUE_CNT
+        FROM  TDNDT_VISSUE A
+       WHERE  A.SO_ID = #{vissueVO.soId}
+         AND A.VISSUE_SEQ_NO IN (SELECT VISSUE_SEQ_NO FROM TDNDT_VISSUE_DTL WHERE SO_ID = A.SO_ID AND VO_BAR_CD BETWEEN #{vissueVO.fromVoBarCd} AND #{vissueVO.toVoBarCd})
+    </select>
+    
+    <!-- 제조사ID -->
+	<select id="getMncoId" resultType="String">
+      SELECT  MNCO_ID
+        FROM  TDNDT_ITEM
+       WHERE  SO_ID = #{vissueVO.soId}
+         AND ITEM_ID = #{vissueVO.itemId}
+	</select>
+	
+	<!-- 물류센터조직ID -->
+	<select id="getOrgId" resultType="String">
+      SELECT  ORG_ID
+        FROM  TDNDI_ORG_INFO
+       WHERE  SO_ID = #{vissueVO.soId}
+         AND TP_CD = '2000'
+	</select>
+	
+	<!-- 바우쳐발행번호 -->
+	<select id="getMaxVissueSeqNo" resultType="String">
+      SELECT  CASE WHEN MAX(SUBSTR(VISSUE_SEQ_NO, 9, 4)) IS NULL THEN '0' ELSE MAX(SUBSTR(VISSUE_SEQ_NO, 9, 4)) END
+        FROM  TDNDT_VISSUE
+       WHERE  VISSUE_SEQ_NO LIKE ${todayDt}||'%'
+	</select>
+	
+	<!-- 기존 TDNDT_VISSUE 변경 -->
+	<update id="updateVoIssueCnt">
+        UPDATE  TDNDT_VISSUE
+           SET  VO_ISSUE_CNT = #{vissueVO.voIssueCnt} - #{vissueVO.transferCnt}
+             ,  CHGR_ID = #{vissueVO.chgrId}
+             ,  CHG_DATE = #{vissueVO.chgDate}
+         WHERE SO_ID = '00'
+           AND VISSUE_SEQ_NO IN (SELECT A.VISSUE_SEQ_NO FROM TDNDT_VISSUE_DTL A WHERE A.SO_ID = SO_ID AND A.VO_BAR_CD BETWEEN #{vissueVO.fromVoBarCd} AND #{vissueVO.toVoBarCd})
+	</update>
+	
+	<update id="updateVissueDtl">
+        UPDATE  TDNDT_VISSUE_DTL
+           SET  SO_ID = #{vissueVO.soId}
+             ,  VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo}
+             ,  VO_PROD_CD = #{vissueVO.voProdCd}
+             ,  VO_ISSUE_DT = #{vissueVO.voIssueDt}
+             ,  VO_EXPIRED_DT = '99991231'
+             ,  VO_ISSUE_ORG_ID = #{vissueVO.voIssueOrgId}
+             ,  VO_PO_DTTM = #{vissueVO.poDttm}
+             ,  REGR_ID = #{vissueVO.regrId}
+             ,  REG_DATE = #{vissueVO.regDate}
+             ,  CHGR_ID = #{vissueVO.chgrId}
+             ,  CHG_DATE = #{vissueVO.chgDate}
+         WHERE VO_BAR_CD BETWEEN #{vissueVO.fromVoBarCd} AND #{vissueVO.toVoBarCd}
+	</update>
+	
+	<update id="updateVeqt">
+        UPDATE  TDNDT_VEQT
+           SET  SO_ID = #{vissueVO.soId}
+             ,  ITEM_ID = #{vissueVO.itemId}
+             ,  VO_PROD_CD = #{vissueVO.voProdCd}
+             ,  VO_ISSUE_DT = #{vissueVO.voIssueDt}
+             ,  VO_EXPIRED_DT = '99991231'
+             ,  LGST_PROC_DTTM = #{vissueVO.lgstProcDttm}
+             ,  REGR_ID = #{vissueVO.regrId}
+             ,  REG_DATE = #{vissueVO.regDate}
+             ,  CHGR_ID = #{vissueVO.chgrId}
+             ,  CHG_DATE = #{vissueVO.chgDate}
+         WHERE VO_BAR_CD BETWEEN #{vissueVO.fromVoBarCd} AND #{vissueVO.toVoBarCd}
+	</update>
+	
+	<update id="updateVeqtTrans">
+        UPDATE  TDNDT_VEQT_TRANS
+           SET  SO_ID = #{vissueVO.soId}
+             ,  ITEM_ID = #{vissueVO.itemId}
+             ,  VO_PROD_CD = #{vissueVO.voProdCd}
+             ,  VO_ISSUE_DT = #{vissueVO.voIssueDt}
+             ,  VO_EXPIRED_DT = '99991231'
+             ,  LGST_PROC_DTTM = #{vissueVO.lgstProcDttm}
+             ,  REGR_ID = #{vissueVO.regrId}
+             ,  REG_DATE = #{vissueVO.regDate}
+             ,  CHGR_ID = #{vissueVO.chgrId}
+             ,  CHG_DATE = #{vissueVO.chgDate}
+         WHERE VO_BAR_CD BETWEEN #{vissueVO.fromVoBarCd} AND #{vissueVO.toVoBarCd}
+	</update>
+	
+	<!-- 제품 리스트 조회 -->
+	<select id="productList" parameterType="com.ntels.ccbs.system.domain.common.common.ProductMngVO" resultType="com.ntels.ccbs.system.domain.common.common.ProductMngVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.SO_ID					--사업ID
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM		-- 사업명
+					, A.ITEM_ID				--제품ID
+					, A.ITEM_NM				--제품명
+					, A.ITEM_TP_CD			--제품유형코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productMngVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productMngVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM            -- 제품유형코드명
+					, A.ITEM_KND_CD			--제품종류코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productMngVO.lngTyp}
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productMngVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00064'
+								AND DETAIL.COMMON_CD = A.ITEM_KND_CD
+		       		) AS ITEM_KND_NM            -- 제품종류코드명
+					--, C.MNCO_OTPT_UT_PRC	--제조사출고단가
+					, (
+						SELECT DSTRB_UT_PRC
+						FROM TDNDT_DSTRB_UT_PRC_DTL
+						WHERE SO_ID = A.SO_ID AND ITEM_ID = A.ITEM_ID) AS MNCO_OTPT_UT_PRC	--제조사출고단가
+					, B.MNCO_NM				--제조사명    
+					, B.MNCO_ID				--제조사ID
+           	FROM	TDNDT_ITEM A
+           			, TDNDT_MNCO B
+           			, (
+						SELECT 
+								  AA.ITEM_ID
+								  , AA.MNCO_OTPT_UT_PRC
+								  , AA.EFT_STRT_DT
+								  , AA.EFT_END_DT
+								  , AA.PRC_DTL_SEQ
+						FROM 	TDNDT_MNCO_UT_PRC_DTL AA
+								, (
+									SELECT	
+											MAX(AAA.PRC_DTL_SEQ) AS PRC_DTL_SEQ
+											, AAA.ITEM_ID
+									FROM 	TDNDT_MNCO_UT_PRC_DTL AAA
+									GROUP BY AAA.ITEM_ID
+								) BB
+						WHERE AA.PRC_DTL_SEQ = BB.PRC_DTL_SEQ
+					) C
+           	WHERE 	1=1
+           		AND	A.MNCO_ID 	= B.MNCO_ID
+           		AND A.ITEM_ID	= C.ITEM_ID
+           		<if test="productMngVO.soId != null and productMngVO.soId != ''">
+					AND A.SO_ID =  #{productMngVO.soId}
+				</if>
+				<if test="productMngVO.searchType != null and productMngVO.searchType != '' and productMngVO.searchType == '01' ">
+					<if test="productMngVO.searchText != null and productMngVO.searchText != '' ">
+						AND A.ITEM_ID LIKE CONCAT( CONCAT('%', #{productMngVO.searchText} ), '%' )
+					</if>	
+				</if>
+				<if test="productMngVO.searchType != null and productMngVO.searchType != '' and productMngVO.searchType == '02' ">
+					<if test="productMngVO.searchText != null and productMngVO.searchText != '' ">
+						AND A.ITEM_NM LIKE CONCAT( CONCAT('%', #{productMngVO.searchText} ), '%' )
+					</if>	
+				</if>
+           		<if test="productMngVO.mncoId != null and productMngVO.mncoId != ''">
+					AND A.MNCO_ID =  #{productMngVO.mncoId}
+				</if>
+				<if test="productMngVO.itemTpCd != null and productMngVO.itemTpCd != ''">
+					AND A.ITEM_TP_CD =  #{productMngVO.itemTpCd}
+				</if>
+				<if test="productMngVO.itemKndCd != null and productMngVO.itemKndCd != ''">
+					AND A.ITEM_KND_CD =  #{productMngVO.itemKndCd}
+				</if>
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 제품 리스트 카운트 -->
+	<select id="productCount" parameterType="com.ntels.ccbs.system.domain.common.common.ProductMngVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL
+		FROM	TDNDT_ITEM A
+       			, TDNDT_MNCO B
+       			, (
+					SELECT 
+							  AA.ITEM_ID
+							  , AA.MNCO_OTPT_UT_PRC
+							  , AA.EFT_STRT_DT
+							  , AA.EFT_END_DT
+							  , AA.PRC_DTL_SEQ
+					FROM 	TDNDT_MNCO_UT_PRC_DTL AA
+							, (
+								SELECT	
+										MAX(AAA.PRC_DTL_SEQ) AS PRC_DTL_SEQ
+										, AAA.ITEM_ID
+								FROM 	TDNDT_MNCO_UT_PRC_DTL AAA
+								GROUP BY AAA.ITEM_ID
+							) BB
+					WHERE AA.PRC_DTL_SEQ = BB.PRC_DTL_SEQ
+				) C
+       	WHERE 	1=1
+       		AND	A.MNCO_ID 	= B.MNCO_ID
+       		AND A.ITEM_ID	= C.ITEM_ID
+       		<if test="productMngVO.soId != null and productMngVO.soId != ''">
+				AND A.SO_ID =  #{productMngVO.soId}
+			</if>
+			<if test="productMngVO.searchType != null and productMngVO.searchType != '' and productMngVO.searchType == '01' ">
+				<if test="productMngVO.searchText != null and productMngVO.searchText != '' ">
+					AND A.ITEM_ID LIKE CONCAT( CONCAT('%', #{productMngVO.searchText} ), '%' )
+				</if>	
+			</if>
+			<if test="productMngVO.searchType != null and productMngVO.searchType != '' and productMngVO.searchType == '02' ">
+				<if test="productMngVO.searchText != null and productMngVO.searchText != '' ">
+					AND A.ITEM_NM LIKE CONCAT( CONCAT('%', #{productMngVO.searchText} ), '%' )
+				</if>	
+			</if>
+			       		<if test="productMngVO.mncoId != null and productMngVO.mncoId != ''">
+				AND A.MNCO_ID =  #{productMngVO.mncoId}
+			</if>
+			<if test="productMngVO.itemTpCd != null and productMngVO.itemTpCd != ''">
+				AND A.ITEM_TP_CD =  #{productMngVO.itemTpCd}
+			</if>
+			<if test="productMngVO.itemKndCd != null and productMngVO.itemKndCd != ''">
+				AND A.ITEM_KND_CD =  #{productMngVO.itemKndCd}
+			</if>
+		
+	</select>
+
+</mapper>	

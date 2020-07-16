@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.UsageTypeMapMapper">
+
+	<select id="getUsageTypeMapList" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMap"
+		resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMap">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			DATA_NM
+		  , SEQ_NO
+		  , FLD1
+		  , FLD2
+		  , FLD3
+		  , SUBSTR(EFF_DT, 1, 4) || '-' || SUBSTR(EFF_DT, 5, 2) || '-' || SUBSTR(EFF_DT, 7, 2) AS EFF_DT
+		  , SUBSTR(EXP_DT, 1, 4) || '-' || SUBSTR(EXP_DT, 5, 2) || '-' || SUBSTR(EXP_DT, 7, 2) AS EXP_DT
+		  , USG_TYP
+		  , ( SELECT COMMON_CD_NM 
+		        FROM TSYCO_CODE_DETAIL
+		       WHERE 1=1
+		         AND COMMON_GRP = 'PP00303'
+		         AND COMMON_CD = USG_TYP ) AS USG_TYP_NM
+		  , LAST_MOD_BY
+		  , LAST_MOD_DT
+		  FROM TOP_USG_TYP_MAP
+		 WHERE 1=1
+		   AND DATA_NM LIKE ('%' || #{usageTypeMap.searchDataNm} || '%')
+		   AND SEQ_NO  LIKE ('%' || #{usageTypeMap.searchSeqNo} || '%')
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	
+	</select>
+	
+	<select id="getUsageTypeMapListCount" parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMap"
+		resultType="int">
+		
+		SELECT COUNT(*) 
+		  FROM (
+				SELECT *
+				  FROM TOP_USG_TYP_MAP
+				 WHERE 1=1
+				   AND DATA_NM = #{usageTypeMap.insertDataNm}
+				   AND SEQ_NO = #{usageTypeMap.insertSeqNo}
+				   AND FLD1 =  #{usageTypeMap.insertFld1}
+				   AND FLD2 = #{usageTypeMap.insertFld2}
+				   AND FLD3 = #{usageTypeMap.insertFld3}
+				   AND EFF_DT = #{usageTypeMap.insertEffDt}
+		  )
+ 
+	</select>
+	
+	<select id="getDataNmList" resultType="CommonCodeVO">
+	
+		   SELECT DISTINCT
+		          DATA_NM AS COMMON_CD
+                , DATA_NM AS COMMON_CD_NM
+             FROM TOP_USG_TYP_MAP
+            WHERE 1=1 
+	
+	</select>
+	
+	<select id="getSeqNoList" resultType="CommonCodeVO">
+	
+		SELECT DISTINCT
+			  SEQ_NO AS COMMON_CD
+			, SEQ_NO AS COMMON_CD_NM
+		  FROM TOP_USG_TYP_MAP
+		 WHERE 1=1
+		
+	</select>
+
+	<insert id="addUsageTypeMap" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMap">
+    	
+    	INSERT INTO TOP_USG_TYP_MAP (
+    		DATA_NM
+    	  , SEQ_NO
+    	  , FLD1
+    	  , FLD2
+    	  , FLD3
+    	  , EFF_DT
+    	  , EXP_DT
+    	  , USG_TYP
+    	  , LAST_MOD_BY
+    	  , LAST_MOD_DT
+    	)
+    	VALUES (
+    		#{usageTypeMap.insertDataNm}
+          , #{usageTypeMap.insertSeqNo}
+          , #{usageTypeMap.insertFld1}
+          , #{usageTypeMap.insertFld2}
+          , #{usageTypeMap.insertFld3}
+          , #{usageTypeMap.insertEffDt}
+          , #{usageTypeMap.insertExpDt}
+          , #{usageTypeMap.insertUsgTyp}
+          , #{usageTypeMap.userId}
+          , #{usageTypeMap.sysToDate}
+    	)
+
+    </insert>
+    
+	<update id="modUsageTypeMap" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMap">
+    	
+		UPDATE TOP_USG_TYP_MAP
+		   SET 
+		      EXP_DT = #{usageTypeMap.modExpDt}
+			, USG_TYP = #{usageTypeMap.modUsgTyp}
+			, LAST_MOD_BY = #{usageTypeMap.userId}
+			, LAST_MOD_DT = #{usageTypeMap.sysToDate}
+		WHERE 1=1
+		  AND DATA_NM = #{usageTypeMap.modDataNm}
+		  AND SEQ_NO = #{usageTypeMap.modSeqNo}
+		  AND FLD1 = #{usageTypeMap.modFld1}
+		  AND FLD2 = #{usageTypeMap.modFld2}
+		  AND FLD3 = #{usageTypeMap.modFld3}
+		  AND EFF_DT = #{usageTypeMap.modEffDt}
+		
+	</update>
+	
+	<delete id="delUsageTypeMap" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.UsageTypeMap">
+
+		DELETE FROM TOP_USG_TYP_MAP
+		 WHERE 1=1
+		   AND DATA_NM = #{usageTypeMap.delDataNm}
+		   AND SEQ_NO = #{usageTypeMap.delSeqNo}
+		   AND FLD1 =  #{usageTypeMap.delFld1}
+		   AND FLD2 = #{usageTypeMap.delFld2}
+		   AND FLD3 = #{usageTypeMap.delFld3}
+	
+	</delete>
+
+</mapper>

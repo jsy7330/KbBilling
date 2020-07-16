@@ -1,0 +1,198 @@
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.contract.contract.PaymentDetailMapper">
+
+    <select id="paymentDetailInfo" resultType="PaymentDetailVO">
+    	 SELECT
+                     PYM.SO_ID
+                    ,(SELECT 
+                    	SO_NM 
+                    FROM TSYCO_SO_MAST SO 
+                    WHERE SO.SO_ID=PYM.SO_ID) AS SO_NM 
+                    ,PYM.PYM_ACNT_ID
+                    ,PYM.CUST_ID
+                    ,CUST.CUST_NM
+                    ,PYM.ACNT_NM
+                    ,PYM.ZIP_CD
+                    ,PYM.BASE_ADDR
+                    ,PYM.ADDR_DTL AS ADDR_DTL_AS_MASK
+                    ,PYM.EML AS EML_AS_MASK
+                    ,PYM.CITY
+                    ,PYM.STATE
+                    ,(SELECT
+                            NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00050'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = PYM.STATE) AS STATE_NM
+                    ,PYM.TEL_NO
+                    ,PYM.MTEL_NO AS MTEL_NO_AS_MASK
+                    ,PYM.FAX_NO
+                    ,PYM.PYM_MTHD
+                    ,(SELECT
+                            NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00001'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = PYM.PYM_MTHD) AS PYM_MTHD_NM
+                    ,PYM.PMC_RESN
+                    ,(SELECT
+                            NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00002'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = PYM.PMC_RESN) AS PMC_RESN_NM
+                    ,PYM.BILL_MDM_GIRO_YN
+                    ,(SELECT
+                            NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00003'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = PYM.BILL_MDM_GIRO_YN) AS BILL_MDM_GIRO_NM
+                    ,PYM.BILL_MDM_EML_YN
+                    ,(SELECT
+                            NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00004'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = PYM.BILL_MDM_EML_YN) AS BILL_MDM_EML_NM
+                    ,PYM.BILL_MDM_SMS_YN
+                    ,(SELECT
+                            NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00005'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = PYM.BILL_MDM_SMS_YN) AS BILL_MDM_SMS_NM
+                    ,PYM.BNK_CD
+                    ,PYM.ACNT_OWNER_NM
+                    ,FSYCO_DECRYPT(PYM.ACNT_NO,'ACNT_NO') AS ACNT_NO_AS_MASK
+                    ,PYM.CDTCD_EXP_DT
+                    ,PYM.PYM_DT
+                    ,PYM.CMS_CL
+                    ,PYM.TBR_FLG
+                    ,PYM.ARRS_NOBILL_YN
+                    ,PYM.USE_ACNT_NM_YN
+                    ,PYM.BILL_CYCL_CD
+                    ,(SELECT
+                            NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00042'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = PYM.BILL_CYCL_CD) AS BILL_CYCL_NM
+                    ,PYM.RCPT_ID
+                    ,PYM.MST_BNK_CD
+                    ,PYM.VR_ACNT_NO
+                    ,PYM.ORG_ID
+                    ,(SELECT ORG_NM
+                        FROM TSYCO_ORG_INFO A
+                            ,TSYCO_USER B
+                        WHERE B.USER_ID = PYM.REGR_ID 
+                        AND A.ORG_ID = B.ORG_ID
+                        AND A.APPY_STRT_DT &lt;= #{today}
+                        AND A.APPY_END_DT &gt;= #{today}) AS ORG_NM
+                    ,PYM.USR_ID
+                    ,(SELECT USER_NAME
+                        FROM TSYCO_USER
+                        WHERE USER_ID = PYM.USR_ID) AS USR_NM
+                    ,PYM.EXT_ID
+                    ,PYM.REGR_ID
+                    ,(SELECT USER_NAME
+                        FROM TSYCO_USER
+                        WHERE USER_ID = PYM.REGR_ID) AS REGR_NM
+                    ,TO_CHAR(PYM.REG_DATE,'YYYYMMDDHH24MISS') AS REG_DATE
+                    ,PYM.CHGR_ID
+                    ,(SELECT USER_NAME
+                        FROM TSYCO_USER
+                        WHERE USER_ID = PYM.CHGR_ID) AS CHGR_NM
+                    ,(SELECT ORG_ID
+                        FROM TSYCO_USER
+                        WHERE USER_ID = PYM.CHGR_ID) AS CHGR_ORG_ID
+                    ,(SELECT ORG_NM
+                        FROM TSYCO_ORG_INFO A
+                            ,TSYCO_USER B
+                        WHERE B.USER_ID = PYM.CHGR_ID 
+                        AND A.ORG_ID = B.ORG_ID
+                        AND A.APPY_STRT_DT &lt;= #{today}
+                        AND A.APPY_END_DT &gt;= #{today}) AS CHGR_ORG_NM
+                    ,TO_CHAR(PYM.CHG_DATE,'YYYYMMDDHH24MISS') AS CHG_DATE
+                FROM TCMCU_CUST_INFO CUST
+                     ,TCMCU_PYM_ACNT_INFO PYM
+                WHERE CUST.SO_ID = PYM.SO_ID
+                AND CUST.CUST_ID = PYM.CUST_ID
+                AND PYM.SO_ID = #{soId}
+                AND PYM.PYM_ACNT_ID = #{pymAcntId}
+    </select>
+   
+   
+</mapper>

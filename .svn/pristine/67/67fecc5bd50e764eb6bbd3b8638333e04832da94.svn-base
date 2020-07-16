@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.customer.customer.CustomerHistoryManagementMapper">
+
+     <select id="getCustChngHistListTotalCnt" resultType="Integer">
+        SELECT
+             COUNT(CUST.SO_ID)
+        FROM TCMCU_CUST_INFO_HIST CUST
+        WHERE CUST.SO_ID       = #{soId}
+        AND   CUST.CUST_ID     = #{custId}
+         <if test="custInfoHist.sdate != null and custInfoHist.sdate != '' and custInfoHist.edate != null and custInfoHist.edate != ''" >
+        	AND CUST.ACT_DTTM &gt;= CONCAT(#{custInfoHist.sdate},'000000') 
+        	AND CUST.ACT_DTTM &lt;= CONCAT(#{custInfoHist.edate},'235959') 
+		</if>
+        ORDER BY CUST.SO_ID, CUST.CUST_ID, CUST.ACT_DTTM DESC
+     </select>
+
+
+     <select id="getCustChngHistList" resultType="CustomerInfoHistVO">
+        SELECT 
+            RESULT.*
+        FROM (
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+            SELECT
+                SO_ID
+                ,(SELECT SO.SO_NM 
+                	FROM TSYCO_SO_MAST SO
+                	WHERE SO.SO_ID=CUST.SO_ID) AS SO_NM
+                ,CUST_ID
+                ,ACT_DTTM
+                ,CUST_NM
+                ,CUST_TP
+                ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00009'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = CUST_TP) AS CUST_TP_NM
+                ,CUST_CL
+                ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00010'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = CUST_CL) AS CUST_CL_NM
+                ,FSYCO_DECRYPT(CORP_REG_NO,'CORP_REG_NO') AS CORP_REG_NO_AS_MASK
+                ,IPIN_NO
+                ,BIZ_REG_NO
+                ,TAX_TP
+                ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00011'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = TAX_TP) AS TAX_TP_NM
+                ,AUTH_YN
+                ,ZIP_CD
+                ,BASE_ADDR
+                ,ADDR_DTL AS ADDR_DTL_AS_MASK
+                ,CITY
+                ,STATE
+                ,(SELECT
+                            NAME.CODE_NM
+                    FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                    WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00050'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = STATE) AS STATE_NM
+                ,TEL_NO
+                ,FAX_NO
+                ,MTEL_NO AS MTEL_NO_AS_MASK
+                ,EML AS EML_AS_MASK
+                ,CHNG_RESN
+                ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00012'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = CHNG_RESN) AS CHNG_RESN_NM
+                ,RESTRIC_PWD
+                ,REP_NM
+                ,BUSI_CNDT
+                ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00013'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = BUSI_CNDT) AS BUSI_CNDT_NM
+                ,BUSI_TP
+                ,(SELECT NAME.CODE_NM
+                  FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+                        , TSYCO_CODE_DETAIL DETAIL
+                        , TSYCO_CODE_DETAIL_NAME NAME
+                  WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                        AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP     =#{lng} 
+                        AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                        AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                        AND NAME.LNG_TYP      = #{lng}
+                        AND MAST.COMMON_GRP   ='CM00014'
+                        AND DETAIL.USE_YN     ='Y'
+                        AND MAST.USE_YN       ='Y'
+                        AND DETAIL.COMMON_CD = BUSI_TP) AS BUSI_TP_NM
+                ,RCPT_ID
+                ,FOREIGNER_EXPIRAT_DT
+                ,ORG_ID
+                ,(SELECT ORG_NM
+                    FROM TSYCO_ORG_INFO A
+                        ,TSYCO_USER B
+                    WHERE B.USER_ID = CUST.REGR_ID 
+                    AND A.ORG_ID = B.ORG_ID
+                    AND A.APPY_STRT_DT &lt;= #{today}
+                    AND A.APPY_END_DT &gt;= #{today}) AS ORG_NM
+                ,USR_ID
+                ,(SELECT USER_NAME
+                  FROM TSYCO_USER
+                  WHERE USER_ID = CUST.USR_ID) AS USR_NM
+                ,EXT_ID
+                ,REGR_ID
+                ,(SELECT USER_NAME
+                  FROM TSYCO_USER
+                  WHERE USER_ID = CUST.REGR_ID) AS REGR_NM
+                ,REG_DATE
+                ,CHGR_ID
+                ,(SELECT USER_NAME
+                  FROM TSYCO_USER
+                  WHERE USER_ID = CUST.CHGR_ID) AS CHGR_NM
+                ,(SELECT ORG_ID
+                    FROM TSYCO_USER
+                    WHERE USER_ID = CUST.CHGR_ID) AS CHGR_ORG_ID
+                ,(SELECT ORG_NM
+                    FROM TSYCO_ORG_INFO A
+                        ,TSYCO_USER B
+                    WHERE B.USER_ID = CUST.CHGR_ID 
+                    AND A.ORG_ID = B.ORG_ID
+                    AND A.APPY_STRT_DT &lt;= #{today}
+                    AND A.APPY_END_DT &gt;= #{today}) AS CHGR_ORG_NM
+                ,CHG_DATE
+                FROM TCMCU_CUST_INFO_HIST CUST
+                WHERE CUST.SO_ID       = #{soId}
+                AND   CUST.CUST_ID     = #{custId}
+                <if test="custInfoHist.sdate != null and custInfoHist.sdate != '' and custInfoHist.edate != null and custInfoHist.edate != ''" >
+		        	AND CUST.ACT_DTTM &gt;= CONCAT(#{custInfoHist.sdate},'000000') 
+		        	AND CUST.ACT_DTTM &lt;= CONCAT(#{custInfoHist.edate},'235959') 
+				</if>
+                <if test="sidx != null and sidx == 'actDttm'">
+                    ORDER BY CUST.ACT_DTTM ${sord}
+                </if>
+                <if test="sidx != null and sidx == 'chgDate'">
+                    ORDER BY CUST.CHG_DATE ${sord}
+                </if>
+                <if test="sidx != null and sidx == 'regDate'">
+                    ORDER BY CUST.REG_DATE ${sord}
+                </if>
+                <if test="sidx == null or sidx == ''">
+                    ORDER BY CUST.SO_ID, CUST.CUST_ID, CUST.ACT_DTTM DESC
+                </if>
+            <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+            ) RESULT
+     </select>
+</mapper>

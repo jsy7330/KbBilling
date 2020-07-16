@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.system.mapper.common.service.MenuTagMapper">
+
+	<select id="getTopMenu" resultType="TopMenu">
+        SELECT /* 최상위 레벨 메뉴 조회 (JH.YUN) */      
+        		MENU.MENU_NO
+        	   ,COALESCE(
+        			  (SELECT MENU_NAME
+        						FROM    TSYCO_MENU_LANGUAGE
+        						WHERE   MENU_NO = MENU.MENU_NO
+        						AND LANGUAGE_CODE = #{sessionLanguage, jdbcType=VARCHAR}), MENU.MENU_NAME
+        					 ) AS MENU_NM
+        	   ,MENU.STEP_NO
+        	   ,MENU.DISPLAY_ORDER
+        FROM    
+        		TSYCO_MENU MENU,
+                (SELECT AUTH.MENU_NO
+                 FROM TSYCO_USER_GROUP_AUTH AUTH
+                     ,TSYCO_USER_GROUP_ROLE ROLE
+                 WHERE ROLE.USER_ID = #{user_id, jdbcType=VARCHAR}
+                 AND AUTH.USER_GROUP_ID = ROLE.USER_GROUP_ID
+                 GROUP BY MENU_NO) AUTH_MENU
+        WHERE   AUTH_MENU.MENU_NO = MENU.MENU_NO
+        AND     MENU.STEP_NO = 1
+        AND     MENU.USE_YN = 'Y'
+        ORDER BY MENU.DISPLAY_ORDER
+    </select>
+     
+	<select id="getTopSubMenu" resultType="TopSubMenu">
+        SELECT /* 최상위의 하위 레벨 메뉴 조회 (JH.YUN) */
+                INFO.MENU_NO
+               ,INFO.MENU_NM
+               ,INFO.STEP_NO
+               ,INFO.DISPLAY_ORDER
+               ,INFO.TOP_MENU_NO  
+               ,INFO.TOP_MENU_NM     
+             FROM (
+                    SELECT
+                            MENU.MENU_NO
+                           ,COALESCE(
+                                  (SELECT MENU_NAME
+                                            FROM    TSYCO_MENU_LANGUAGE
+                                            WHERE   MENU_NO = MENU.MENU_NO
+                                            AND LANGUAGE_CODE = #{sessionLanguage, jdbcType=VARCHAR}), MENU.MENU_NAME
+                                         ) AS MENU_NM
+                           ,MENU.STEP_NO
+                           ,MENU.DISPLAY_ORDER
+                           ,MENU.UP_MENU_NO AS TOP_MENU_NO
+                           ,COALESCE(
+                                  (SELECT MENU_NAME
+                                            FROM    TSYCO_MENU_LANGUAGE
+                                            WHERE   MENU_NO = MENU.UP_MENU_NO
+                                            AND LANGUAGE_CODE = #{sessionLanguage, jdbcType=VARCHAR}),
+                                  (SELECT MENU_NAME
+                                            FROM TSYCO_MENU
+                                            WHERE MENU_NO = MENU.UP_MENU_NO)
+                                         ) AS TOP_MENU_NM
+                    FROM    
+                            TSYCO_MENU MENU,
+                            (SELECT AUTH.MENU_NO
+                             FROM TSYCO_USER_GROUP_AUTH AUTH
+                                 ,TSYCO_USER_GROUP_ROLE ROLE
+                             WHERE ROLE.USER_ID = #{user_id, jdbcType=VARCHAR}
+                             AND AUTH.USER_GROUP_ID = ROLE.USER_GROUP_ID
+                             GROUP BY MENU_NO) AUTH_MENU
+                    WHERE   AUTH_MENU.MENU_NO = MENU.MENU_NO
+                    AND     MENU.STEP_NO = 2
+                    AND     MENU.USE_YN = 'Y'
+                    AND     MENU.UP_MENU_NO = #{top_menu, jdbcType=VARCHAR}
+                   ) INFO
+          ORDER BY INFO.DISPLAY_ORDER
+    </select>
+
+	<select id="getLeftTopMenu" parameterType="map" resultType="LeftTopMenu">
+        SELECT  /* 3레벨 메뉴 조회 (JH.YUN) */
+            INFO.MENU_NO
+           ,INFO.MENU_NM
+           ,INFO.STEP_NO
+           ,INFO.DISPLAY_ORDER
+           ,COALESCE(
+                  (SELECT MENU_NAME
+                            FROM    TSYCO_MENU_LANGUAGE
+                            WHERE   MENU_NO = INFO.TOP_MENU_NO
+                            AND LANGUAGE_CODE = #{sessionLanguage, jdbcType=VARCHAR}),
+                  (SELECT MENU_NAME
+                            FROM TSYCO_MENU
+                            WHERE MENU_NO = INFO.TOP_MENU_NO)
+                         ) AS TOP_MENU_NM
+         FROM (
+                SELECT
+                        MENU.MENU_NO
+                       ,COALESCE(
+                              (SELECT MENU_NAME
+                                        FROM    TSYCO_MENU_LANGUAGE
+                                        WHERE   MENU_NO = MENU.MENU_NO
+                                        AND LANGUAGE_CODE = #{sessionLanguage, jdbcType=VARCHAR}), MENU.MENU_NAME
+                                     ) AS MENU_NM
+                       ,MENU.STEP_NO
+                       ,MENU.DISPLAY_ORDER
+                       ,(SELECT UP_MENU_NO
+                        FROM TSYCO_MENU
+                        WHERE MENU_NO = MENU.MENU_NO
+                        AND USE_YN = 'Y') AS TOP_MENU_NO
+                FROM    
+                        TSYCO_MENU MENU,
+                        (SELECT AUTH.MENU_NO
+                         FROM TSYCO_USER_GROUP_AUTH AUTH
+                             ,TSYCO_USER_GROUP_ROLE ROLE
+                         WHERE ROLE.USER_ID = #{user_id, jdbcType=VARCHAR}
+                         AND AUTH.USER_GROUP_ID = ROLE.USER_GROUP_ID
+                         GROUP BY MENU_NO) AUTH_MENU
+                WHERE   AUTH_MENU.MENU_NO = MENU.MENU_NO
+                AND     MENU.STEP_NO = 3
+                AND     MENU.USE_YN = 'Y'
+                AND     MENU.UP_MENU_NO = #{up_menu_no, jdbcType=VARCHAR}) INFO
+            ORDER BY INFO.DISPLAY_ORDER
+     </select>
+
+    <select id="getLeftSubMenu" parameterType="map" resultType="LeftSubMenu">
+        SELECT  /* 좌측 하위 메뉴 조회 (JH.YUN) */
+            INFO.MENU_NO
+           ,INFO.MENU_NM
+           ,INFO.STEP_NO
+           ,INFO.VIEW_PATH
+           ,INFO.DISPLAY_ORDER
+           ,INFO.AUTH_R_YN
+           ,INFO.AUTH_C_YN
+           ,INFO.AUTH_P_YN
+           ,INFO.AUTH_U_YN
+           ,INFO.AUTH_D_YN
+         FROM (
+                SELECT
+                        MENU.MENU_NO
+                       ,COALESCE(
+                              (SELECT MENU_NAME
+                                        FROM    TSYCO_MENU_LANGUAGE
+                                        WHERE   MENU_NO = MENU.MENU_NO
+                                        AND LANGUAGE_CODE = #{sessionLanguage, jdbcType=VARCHAR}), MENU.MENU_NAME
+                                     ) AS MENU_NM
+                       ,MENU.STEP_NO
+                       ,MENU.DISPLAY_ORDER
+                       ,MENU.VIEW_PATH
+                       ,AUTH_MENU.AUTH_R_YN
+                       ,AUTH_MENU.AUTH_C_YN
+                       ,AUTH_MENU.AUTH_P_YN
+                       ,AUTH_MENU.AUTH_U_YN
+                       ,AUTH_MENU.AUTH_D_YN
+                FROM    
+                        TSYCO_MENU MENU,
+                        (SELECT MENU.MENU_NO
+                               ,MAX(AUTH.AUTH_R_YN) AS AUTH_R_YN
+                               ,MAX(AUTH.AUTH_C_YN) AS AUTH_C_YN
+                               ,MAX(AUTH.AUTH_P_YN) AS AUTH_P_YN
+                               ,MAX(AUTH.AUTH_U_YN) AS AUTH_U_YN
+                               ,MAX(AUTH.AUTH_D_YN) AS AUTH_D_YN
+                         FROM TSYCO_USER_GROUP_AUTH AUTH
+                             ,TSYCO_MENU MENU
+                             ,TSYCO_USER_GROUP_ROLE ROLE
+                         WHERE ROLE.USER_ID = #{user_id, jdbcType=VARCHAR}
+                         AND AUTH.USER_GROUP_ID = ROLE.USER_GROUP_ID
+                         AND MENU.STEP_NO = 4
+                         AND MENU.USE_YN = 'Y'
+                         AND MENU.UP_MENU_NO = #{left_top_menu_no, jdbcType=VARCHAR}
+                         AND MENU.MENU_NO = AUTH.MENU_NO          
+                         GROUP BY MENU.MENU_NO) AUTH_MENU
+                WHERE   AUTH_MENU.MENU_NO = MENU.MENU_NO
+                ) INFO
+            ORDER BY INFO.DISPLAY_ORDER
+     </select>
+</mapper>

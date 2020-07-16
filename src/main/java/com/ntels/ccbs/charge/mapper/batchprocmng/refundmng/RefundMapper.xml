@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.refundmng.RefundMapper">
+	
+	<select id="getRefundApplList" parameterType="String" resultType="RefundApplVO">
+		SELECT  /* RefundMapper.xml.getRefundApplList, 양연희, 2017.11.27 */
+				RFND_SEQ_NO
+        		,PYM_ACNT_ID
+        		,BNK_CD
+        		,XX1.DEC_VARCHAR2_SEL(ACNT_NO,10,'SSN','TBLPY_RFND_APPL','ACNT_NO') AS ACNT_NO
+        		,ACNT_OWNER_NM
+        		,APPNT_TEL_NO
+        		,RFND_OCC_AMT_CL
+        		,RFND_OCC_TGT_SEQ_NO
+        		,NVL(RFND_APPL_AMT, 0.0) AS RFND_APPL_AMT
+		FROM    TBLPY_RFND_APPL
+		WHERE	RFND_SEQ_NO = #{srfndSeqNo}
+		AND     DCSN_PROC_STAT IN ('01', '03')
+		AND		RFND_APPL_AMT > 0
+	</select>
+	
+	<select id="getRefundOrgInfo" parameterType="String" resultType="RefundOrgVO">
+		SELECT	/* RefundMapper.xml.getRefundOrgInfo, 양연희, 2018.01.19 */
+				A.MNG_CNTER_ORG_ID AS MNG_CNTER_ORG_ID
+				,A.MNG_BR_ORG_ID AS MNG_BR_ORG_ID
+				,'' AS ASSR_PYM_SEQ_NO
+		FROM	TBLPY_PREPAY_OCC A
+		WHERE	#{rfndOccAmtCl} = '01'
+		AND		A.PREPAY_OCC_SEQ_NO = #{rfndOccTgtSeqNo}
+		UNION ALL
+		SELECT	MNG_CNTER_ORG_ID AS MNG_CNTER_ORG_ID
+				,MNG_BR_ORG_ID AS MNG_BR_ORG_ID
+				,'' AS ASSR_PYM_SEQ_NO
+		FROM	TBLPY_AMBG_OCC
+		WHERE	#{rfndOccAmtCl} = '02'
+		AND		AMBG_OCC_SEQ_NO = #{rfndOccTgtSeqNo}
+		UNION ALL
+		SELECT	MNG_CNTER_ORG_ID AS MNG_CNTER_ORG_ID
+				,MNG_BR_ORG_ID AS MNG_BR_ORG_ID
+				,PYM_SEQ_NO AS ASSR_PYM_SEQ_NO
+		FROM	TBLPY_ASSR_OCC
+		WHERE	#{rfndOccAmtCl} = '03'
+		AND		ASSR_OCC_SEQ_NO = #{rfndOccTgtSeqNo}
+	</select>
+	
+	<insert id="insertRefund" parameterType="RefundVO">
+		INSERT INTO	/* RefundMapper.xml.insertRefund, 양연희, 2017.11.27 */
+					TBLPY_RFND
+					(RFND_SEQ_NO
+					,BNK_CD
+					,ACNT_NO
+					,ACNT_OWNER_NM
+					,APPNT_TEL_NO
+					,RFND_AMT
+					,PROC_PSN_ID
+					,PROC_DTTM
+					,CUST_RFND_DT
+					,MNG_CNTER_ORG_ID
+					,MNG_BR_ORG_ID
+					,ERP_SND_YN
+					,INPT_MENU_ID
+					,REGR_ID
+					,REG_DATE
+					)
+			VALUES	(#{refundVO.rfndSeqNo}
+					,#{refundVO.bnkCd}
+					,XX1.ENC_VARCHAR2_INS(#{refundVO.acntNo}, 10, 'SSN', 'TBLPY_RFND', 'ACNT_NO')
+					,#{refundVO.acntOwnerNm}
+					,#{refundVO.appntTelNo}
+					,#{refundVO.rfndAmt}
+					,#{refundVO.procPsnId}
+					,#{refundVO.procDttm}
+					,#{refundVO.custRfndDt}
+					,#{refundVO.mngCnterOrgId}
+					,#{refundVO.mngBrOrgId}
+					,#{refundVO.erpSndYn}
+					,#{refundVO.inptMenuId}
+					,#{refundVO.regrId}
+					,#{refundVO.regDate}
+					)
+	</insert>
+	
+	<update id="updatePrepayOccRfndAmt" parameterType="RefundApplVO">
+		UPDATE	/* RefundMapper.xml.updatePrepayOccRfndAmt, 양연희, 2017.11.27 */
+				TBLPY_PREPAY_OCC
+		SET		PREPAY_BAL			= PREPAY_BAL - #{refundApplVO.rfndApplAmt}
+				,CHGR_ID			= #{refundApplVO.regrId}
+				,CHG_DATE			= #{refundApplVO.regDate}
+		WHERE	PREPAY_OCC_SEQ_NO	= #{refundApplVO.rfndOccTgtSeqNo}
+		AND		PREPAY_BAL			> 0
+		AND		CNCL_YN				= 'N'
+	</update>
+	
+	<update id="updateAmbgOccRfndAmt" parameterType="RefundApplVO">
+		UPDATE	/* RefundMapper.xml.updateAmbgOccRfndAmt, 양연희, 2017.11.27 */
+				TBLPY_AMBG_OCC
+		SET		AMBG_BAL		= AMBG_BAL - #{refundApplVO.rfndApplAmt}
+				,CHGR_ID		= #{refundApplVO.regrId}
+				,CHG_DATE		= #{refundApplVO.regDate}
+		WHERE	AMBG_OCC_SEQ_NO	= #{refundApplVO.rfndOccTgtSeqNo}
+		AND		AMBG_BAL		> 0
+		AND		CNCL_YN			= 'N'
+	</update>
+	
+	<update id="updateAssrOccRfndAmt" parameterType="RefundApplVO">
+		UPDATE	/* RefundMapper.xml.updateAssrOccRfndAmt, 양연희, 2017.11.27 */
+				TBLPY_ASSR_OCC
+		SET		ASSR_BAL		= ASSR_BAL - #{refundApplVO.rfndApplAmt}
+				,CHGR_ID		= #{refundApplVO.regrId}
+				,CHG_DATE		= #{refundApplVO.regDate}
+		WHERE	ASSR_OCC_SEQ_NO	= #{refundApplVO.rfndOccTgtSeqNo}
+		AND		ASSR_BAL		> 0
+		AND		CNCL_YN			= 'N'
+	</update>
+
+	<update id="updateRefundAppl" parameterType="RefundApplVO">
+		UPDATE	/* RefundMapper.xml.updateRefundAppl, 양연희, 2017.11.27 */
+				TBLPY_RFND_APPL
+		SET		DCSN_PROC_STAT	= #{refundApplVO.dcsnProcStat}
+				,APPRR_ID		= #{refundApplVO.apprId}
+				,APPR_DTTM		= #{refundApplVO.apprDttm}
+				,RFND_CMPL_YN	= #{refundApplVO.rfndCmplYn}
+				,RFND_CMPL_DTTM	= #{refundApplVO.rfndCmplDttm}
+				,PROC_PSN_ID	= #{refundApplVO.procPsnId}
+				,PROC_RESN		= #{refundApplVO.procResn}
+				,CHGR_ID		= #{refundApplVO.regrId}
+				,CHG_DATE		= #{refundApplVO.regDate}
+		WHERE	RFND_SEQ_NO		= #{refundApplVO.rfndSeqNo}
+	</update>
+
+</mapper>

@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.payment.payment.ReceiptCancelMapper">
+
+    <!-- 수납내역 카운트 -->
+    <select id="rcptListCnt" parameterType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptCancelVO" resultType="int">
+    SELECT COUNT(*)
+    FROM   TBLPY_RCPT                        A
+           LEFT OUTER JOIN TBLPY_RCPT_CNCL   B
+           ON   A.PYM_SEQ_NO = B.PYM_SEQ_NO
+         , TSYCO_USER                        C
+    WHERE  1 = 1
+    AND    A.SO_ID       = #{receiptCancel.soId}                                    /* SO_ID */
+    AND    C.USER_ID     = A.REGR_ID
+    AND    A.DPST_CL <![CDATA[ <> ]]> '22' /* 필수조건 */
+    AND    A.DPST_CL <![CDATA[ <> ]]> '40' /* 필수조건(청구차감된 원포인트는 수납취소불가) */
+    <if test="receiptCancel.pymAcntId != null and receiptCancel.pymAcntId != ''">
+    AND    A.PYM_ACNT_ID = #{receiptCancel.pymAcntId}                               /* 납부계정ID */
+    </if>
+    <if test="receiptCancel.pymDtTp == '01'">
+    AND    A.PAY_PROC_DT BETWEEN #{receiptCancel.strtDt} AND #{receiptCancel.endDt} /* 수납처리일 */
+    </if>
+    <if test="receiptCancel.pymDtTp == '02'">
+    AND    A.DPST_DT    BETWEEN #{receiptCancel.strtDt} AND #{receiptCancel.endDt}  /* 입금일자 */
+    </if>
+    <if test="receiptCancel.pymDtTp == '03'">
+    AND    A.TRANS_DT   BETWEEN #{receiptCancel.strtDt} AND #{receiptCancel.endDt}  /* 이체일자 */
+    </if>
+    <if test="receiptCancel.usrId != null and receiptCancel.usrId != ''">
+    AND    A.REGR_ID     = #{receiptCancel.usrId}                                   /* 등록자ID */
+    </if>
+    <if test="receiptCancel.pymTp != null and receiptCancel.pymTp != ''">
+    AND    A.DPST_CL     = #{receiptCancel.pymTp}                                   /* 입금구분 */
+    </if>
+    <if test="receiptCancel.cncl != 'A'.toString()">
+    AND    A.CNCL_YN     = #{receiptCancel.cncl}                                    /* 수납취소여부 */
+    </if>
+    <if test="receiptCancel.rcptTp != null and receiptCancel.rcptTp != ''">
+    AND    A.PAY_TP      = #{receiptCancel.rcptTp}                                  /* 수납구분 */
+    </if>
+    </select>
+    
+    <!-- 수납 내역 조회 -->
+    <select id="rcptList" parameterType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptCancelVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptCancelVO">
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    SELECT A.SO_ID                 AS SO_ID        /* SO_ID   */
+         , A.BILL_YYMM             AS BILL_YYMM    /* 청구년월 */
+         , A.CNCL_YN               AS CNCL         /* 수납취소여부 */
+         , A.PYM_ACNT_ID           AS PYM_ACNT_ID  /* 납부계정ID */
+         ,(SELECT DISTINCT BB.ACNT_NM
+            FROM IFNBRM_CUST_INFO BB
+            WHERE A.PYM_ACNT_ID = BB.PYM_ACNT_ID
+          )                        AS ACNT_NM      /* 납부계정명 */
+         , A.TRANS_DT              AS TRANS_DT     /* 이체일자 */
+         , A.DPST_DT               AS DPST_DT      /* 입금일자 */
+         ,(SELECT NAME.CODE_NM
+           FROM   TSYCO_CODE_MAST         MAST
+                , TSYCO_CODE_MAST_NAME    MNAME
+                , TSYCO_CODE_DETAIL       DETAIL
+                , TSYCO_CODE_DETAIL_NAME  NAME
+           WHERE  MAST.COMMON_GRP   = DETAIL.COMMON_GRP
+           AND    MAST.COMMON_GRP   = MNAME.COMMON_GRP
+           AND    MNAME.LNG_TYP     = #{receiptCancel.lngTyp}
+           AND    DETAIL.COMMON_GRP = NAME.COMMON_GRP
+           AND    DETAIL.COMMON_CD  = NAME.COMMON_CD
+           AND    NAME.LNG_TYP      = #{receiptCancel.lngTyp}
+           AND    MAST.COMMON_GRP   = 'BL00067'
+           AND    DETAIL.COMMON_CD  = A.DPST_CL
+           AND    DETAIL.USE_YN     = 'Y'
+           AND    MAST.USE_YN       = 'Y'
+          )                        AS DPST_CL_NM          /* 입금구분명(BLPY001) */
+         ,(SELECT NAME.CODE_NM
+           FROM   TSYCO_CODE_MAST         MAST
+                , TSYCO_CODE_MAST_NAME    MNAME
+                , TSYCO_CODE_DETAIL       DETAIL
+                , TSYCO_CODE_DETAIL_NAME  NAME
+           WHERE  MAST.COMMON_GRP   = DETAIL.COMMON_GRP
+           AND    MAST.COMMON_GRP   = MNAME.COMMON_GRP
+           AND    MNAME.LNG_TYP     = #{receiptCancel.lngTyp}
+           AND    DETAIL.COMMON_GRP = NAME.COMMON_GRP
+           AND    DETAIL.COMMON_CD  = NAME.COMMON_CD
+           AND    NAME.LNG_TYP      = #{receiptCancel.lngTyp}
+           AND    MAST.COMMON_GRP   = 'BL00079'
+           AND    DETAIL.COMMON_CD  = A.PAY_TP
+           AND    DETAIL.USE_YN     = 'Y'
+           AND    MAST.USE_YN       = 'Y'
+          )                        AS PAY_TP_NM           /* 수납구분명(BLPY013) */
+         , A.PAY_APLY_AMT          AS BILL_AMT     /* 청구금액 */
+         , A.PRE_RCPT_AMT          AS PRE_RCPT_AMT /* 이전수납금액 */
+         , A.RCPT_AMT              AS RCPT_AMT     /* 수납금액 */
+         , A.PAY_PROC_DT           AS PAY_PROC_DT  /* 수납처리일자 */
+         , A.DPST_PROC_DT          AS DPST_PROC_DT /* 입금처리일자 */
+         , B.CNCL_DT               AS CNCL_DT      /* 수납취소일시 */
+         , B.CNCL_EMP_ID           AS CNCL_EMP_ID  /* 취소자 */
+         , A.PYM_SEQ_NO            AS PYM_SEQ_NO   /* 수납일련번호 */
+         , A.BILL_DT               AS BILL_DT      /* 청구일자 */
+         , A.BILL_SEQ_NO           AS BILL_SEQ_NO  /* 청구일련번호 */
+         , C.USER_NAME             AS USR_NM       /* 등록자명 */
+         , A.REGR_ID               AS REGR_ID      /* 등록자ID */
+         , A.REG_DATE              AS REG_DATE     /* 등록일 */
+         , A.DPST_CL               AS DPST_CL      /* 입금구분 */
+         , A.PAY_TP                AS PAY_TP       /* 수납구분 */
+    FROM   TBLPY_RCPT                          A
+           LEFT OUTER JOIN TBLPY_RCPT_CNCL     B
+           ON   A.PYM_SEQ_NO = B.PYM_SEQ_NO
+         , TSYCO_USER                          C
+    WHERE  1 = 1
+    AND    A.SO_ID       = #{receiptCancel.soId}                                    /* SO_ID */
+    AND    C.USER_ID          = A.REGR_ID
+    AND    A.DPST_CL <![CDATA[ <> ]]> '22' /* 필수조건 */
+    AND    A.DPST_CL <![CDATA[ <> ]]> '40' /* 필수조건(청구차감된 원포인트는 수납취소불가) */
+    <if test="receiptCancel.pymAcntId != null and receiptCancel.pymAcntId != ''">
+    AND    A.PYM_ACNT_ID = #{receiptCancel.pymAcntId}                               /* 납부계정ID */
+    </if>
+    <if test="receiptCancel.pymDtTp == '01'">
+    AND    A.PAY_PROC_DT BETWEEN #{receiptCancel.strtDt} AND #{receiptCancel.endDt} /* 수납처리일 */
+    </if>
+    <if test="receiptCancel.pymDtTp == '02'">
+    AND    A.DPST_DT BETWEEN #{receiptCancel.strtDt} AND #{receiptCancel.endDt}     /* 입금일자 */
+    </if>
+    <if test="receiptCancel.pymDtTp == '03'">
+    AND    A.TRANS_DT BETWEEN #{receiptCancel.strtDt} AND #{receiptCancel.endDt}    /* 이체일자 */
+    </if>
+    <if test="receiptCancel.usrId != null and receiptCancel.usrId != ''">
+    AND    A.REGR_ID     = #{receiptCancel.usrId}                                   /* 등록자ID */
+    </if>
+    <if test="receiptCancel.pymTp != null and receiptCancel.pymTp != ''">
+    AND    A.DPST_CL     = #{receiptCancel.pymTp}                                   /* 입금구분 */
+    </if>
+    <if test="receiptCancel.cncl != 'A'.toString()">
+    AND    A.CNCL_YN     = #{receiptCancel.cncl}                                    /* 수납취소여부 */
+    </if>
+    <if test="receiptCancel.rcptTp != null and receiptCancel.rcptTp != ''">
+    AND    A.PAY_TP      = #{receiptCancel.rcptTp}                                  /* 수납구분 */
+    </if>
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+	
+	
+	<!-- 수납취소 결과 조회 -->
+    <select id="receiptCancelResultList" parameterType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptCancelVO" resultType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptCancelVO">
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+    SELECT C.CNCL_DT           AS CNCL_DT         /* 수납취소일시 */
+         , E.USER_NAME         AS CNCL_EMP_NM     /* 취소자명 */
+         , A.PYM_ACNT_ID       AS PYM_ACNT_ID     /* 납부계정ID */
+         ,(SELECT DISTINCT BB.ACNT_NM
+           FROM   IFNBRM_CUST_INFO BB
+           WHERE  A.PYM_ACNT_ID = BB.PYM_ACNT_ID
+          )                    AS ACNT_NM         /* 납부계정명 */
+         , A.BILL_YYMM         AS BILL_YYMM       /* 청구년월 */
+         , A.TRANS_DT          AS TRANS_DT        /* 이체일자 */
+         , A.DPST_DT           AS DPST_DT         /* 입금일자 */
+         ,(SELECT NAME.CODE_NM
+           FROM   TSYCO_CODE_MAST MAST
+                , TSYCO_CODE_MAST_NAME MNAME
+                , TSYCO_CODE_DETAIL DETAIL
+                , TSYCO_CODE_DETAIL_NAME NAME
+           WHERE  MAST.COMMON_GRP   = DETAIL.COMMON_GRP
+           AND    MAST.COMMON_GRP   = MNAME.COMMON_GRP
+           AND    MNAME.LNG_TYP     = #{receiptCancel.lngTyp}
+           AND    DETAIL.COMMON_GRP = NAME.COMMON_GRP
+           AND    DETAIL.COMMON_CD  = NAME.COMMON_CD
+           AND    NAME.LNG_TYP      = #{receiptCancel.lngTyp}
+           AND    MAST.COMMON_GRP   = 'BL00067'
+           AND    DETAIL.COMMON_CD  = A.DPST_CL
+           AND    DETAIL.USE_YN     = 'Y'
+           AND    MAST.USE_YN       = 'Y'
+          )                    AS DPST_CL_NM   /* 입금구분명(BLPY001) */
+         ,(SELECT NAME.CODE_NM
+           FROM   TSYCO_CODE_MAST MAST
+                , TSYCO_CODE_MAST_NAME MNAME
+                , TSYCO_CODE_DETAIL DETAIL
+                , TSYCO_CODE_DETAIL_NAME NAME
+           WHERE  MAST.COMMON_GRP   = DETAIL.COMMON_GRP
+           AND    MAST.COMMON_GRP   = MNAME.COMMON_GRP
+           AND    MNAME.LNG_TYP     = #{receiptCancel.lngTyp}
+           AND    DETAIL.COMMON_GRP = NAME.COMMON_GRP
+           AND    DETAIL.COMMON_CD  = NAME.COMMON_CD
+           AND    NAME.LNG_TYP      = #{receiptCancel.lngTyp}
+           AND    MAST.COMMON_GRP   = 'BL00079'
+           AND    DETAIL.COMMON_CD  = A.PAY_TP
+           AND    DETAIL.USE_YN     = 'Y'
+           AND    MAST.USE_YN       = 'Y'
+          )                    AS PAY_TP_NM       /* 수납구분명(BLPY013) */
+         , A.PAY_APLY_AMT      AS BILL_AMT        /* 청구금액 */
+         , A.PRE_RCPT_AMT      AS PRE_RCPT_AMT    /* 이전수납금액 */
+         , A.RCPT_AMT          AS RCPT_AMT        /* 수납금액 */
+         , A.PAY_PROC_DT       AS PAY_PROC_DT     /* 수납처리일자 */
+         , A.DPST_PROC_DT      AS DPST_PROC_DT    /* 입금처리일자 */
+         , C.CNCL_EMP_ID       AS CNCL_EMP_ID     /* 취소자 */
+         , A.PYM_SEQ_NO        AS PYM_SEQ_NO      /* 수납일련번호 */
+         , A.BILL_DT           AS BILL_DT         /* 청구일자 */
+         , A.BILL_SEQ_NO       AS BILL_SEQ_NO     /* 청구일련번호 */
+         , D.USER_NAME         AS USR_NM          /* 등록자명 */
+         , A.REGR_ID           AS REGR_ID         /* 등록자ID */
+         , A.REG_DATE          AS REG_DATE        /* 등록일 */
+         , A.DPST_CL           AS DPST_CL         /* 입금구분 */
+         , A.PAY_TP            AS PAY_TP          /* 수납구분 */
+    FROM   TBLPY_RCPT A
+         , TBLPY_RCPT_CNCL C
+         , TSYCO_USER D
+         , TSYCO_USER E
+    WHERE  1 = 1
+    AND    A.SO_ID            = #{receiptCancel.soId}                                    /* SO_ID */
+    AND    A.PYM_SEQ_NO       = C.PYM_SEQ_NO
+    AND    A.REGR_ID          = D.USER_ID
+    AND    C.CNCL_EMP_ID      = E.USER_ID
+    AND    A.DPST_CL <![CDATA[ <> ]]> '22' /* 필수조건 */
+    AND    A.DPST_CL <![CDATA[ <> ]]> '40' /* 필수조건(청구차감된 원포인트는 수납취소불가) */
+    <if test="receiptCancel.searchDateTp != null and receiptCancel.searchDateTp == '01'">  /* 입금일자 */
+    AND    A.DPST_DT BETWEEN #{receiptCancel.searchStatDt} AND #{receiptCancel.searchEndDt}
+    </if>
+    <if test="receiptCancel.searchDateTp != null and receiptCancel.searchDateTp == '02'">  /* 이체일자  */
+    AND    A.TRANS_DT BETWEEN #{receiptCancel.searchStatDt} AND #{receiptCancel.searchEndDt}
+    </if>
+    <if test="receiptCancel.searchDateTp != null and receiptCancel.searchDateTp == '03'">  /* 수납처리일자 */
+    AND    A.PAY_PROC_DT BETWEEN #{receiptCancel.searchStatDt} AND #{receiptCancel.searchEndDt}
+    </if>
+    <if test="receiptCancel.searchDateTp != null and receiptCancel.searchDateTp == '04'">  /* 취소일자 */
+    AND    C.CNCL_DT BETWEEN #{receiptCancel.searchStatDt} AND #{receiptCancel.searchEndDt}
+    </if>
+    <if test="receiptCancel.searchCustId != null and receiptCancel.searchCustId != ''">
+    AND    C.CNCL_EMP_ID      = #{receiptCancel.searchCustId}      /* 취소자ID */
+    </if>
+    <if test="receiptCancel.searchPymAcntId != null and receiptCancel.searchPymAcntId != ''">
+    AND    C.PYM_ACNT_ID      = #{receiptCancel.searchPymAcntId}       /* 납부계정 */
+    </if>
+        
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+    
+    <!-- 수납취소 결과 카운트 -->
+    <select id="receiptCancelResultListCount" parameterType="com.ntels.ccbs.charge.domain.payment.payment.ReceiptCancelVO" resultType="int">
+    SELECT COUNT(*)
+    FROM   TBLPY_RCPT A
+         , TBLPY_RCPT_CNCL C
+         , TSYCO_USER D
+         , TSYCO_USER E
+
+    WHERE  1 = 1
+    AND    A.SO_ID            = #{receiptCancel.soId}                                    /* SO_ID */
+    AND    A.PYM_SEQ_NO       = C.PYM_SEQ_NO
+    AND    A.REGR_ID          = D.USER_ID
+    AND    C.CNCL_EMP_ID      = E.USER_ID
+    AND    A.DPST_CL <![CDATA[ <> ]]> '22' /* 필수조건 */
+    AND    A.DPST_CL <![CDATA[ <> ]]> '40' /* 필수조건(청구차감된 원포인트는 수납취소불가) */
+    <if test="receiptCancel.searchDateTp != null and receiptCancel.searchDateTp == '01'">  /* 입금일자 */
+    AND    A.DPST_DT BETWEEN #{receiptCancel.searchStatDt} AND #{receiptCancel.searchEndDt}
+    </if>
+    <if test="receiptCancel.searchDateTp != null and receiptCancel.searchDateTp == '02'">  /* 이체일자  */
+    AND    A.TRANS_DT BETWEEN #{receiptCancel.searchStatDt} AND #{receiptCancel.searchEndDt}
+    </if>
+    <if test="receiptCancel.searchDateTp != null and receiptCancel.searchDateTp == '03'">  /* 수납처리일자 */
+    AND    A.PAY_PROC_DT BETWEEN #{receiptCancel.searchStatDt} AND #{receiptCancel.searchEndDt}
+    </if>
+    <if test="receiptCancel.searchDateTp != null and receiptCancel.searchDateTp == '04'">  /* 취소일자 */
+    AND    C.CNCL_DT BETWEEN #{receiptCancel.searchStatDt} AND #{receiptCancel.searchEndDt}
+    </if>
+    <if test="receiptCancel.searchCustId != null and receiptCancel.searchCustId != ''">
+    AND    C.CNCL_EMP_ID      = #{receiptCancel.searchCustId}      /* 취소자ID */
+    </if>
+    <if test="receiptCancel.searchPymAcntId != null and receiptCancel.searchPymAcntId != ''">
+    AND    C.PYM_ACNT_ID      = #{receiptCancel.searchPymAcntId}       /* 납부계정 */
+    </if>
+    </select>
+    
+    
+    
+    
+
+	<select id="getTransApplCheckCnt" parameterType="String" resultType="int">
+		SELECT	/* PaymentCancelMapper.xml.getTransApplCheckCnt, 양연희, 2018.01.04 */
+				A.APPL_CNT1 + B.APPL_CNT2 + C.APPL_CNT3 + D.APPL_CNT4
+		FROM	(SELECT  COUNT(TRANS_APPL_NO) AS APPL_CNT1
+                FROM    TBLPY_TRANS_APPL
+                WHERE   TRANS_APPL_CL = '03'
+                AND     TRANS_APPL_TGT_NO IN (SELECT  ASSR_OCC_SEQ_NO
+                                            FROM    TBLPY_RCPT_DTL A
+                                                    ,TBLPY_ASSR_TRANS_HIST B
+                                            WHERE   A.PYM_SEQ_NO = #{pymSeqNo}
+                                            AND     B.ASSR_TRANS_SEQ_NO = A.ASSR_TRANS_SEQ_NO
+                )
+                AND     DCSN_PROC_STAT IN ('01','03')) A
+				,(SELECT COUNT(C.RFND_SEQ_NO) AS APPL_CNT2
+				FROM	TBLPY_RCPT A
+						,TBLPY_DPST B
+						,TBLPY_RFND_APPL C
+				WHERE	A.PYM_SEQ_NO = #{pymSeqNo}
+				AND		B.DPST_SEQ_NO = A.DPST_SEQ_NO
+				AND		C.RFND_OCC_TGT_SEQ_NO = B.PREPAY_OCC_SEQ_NO 
+				AND		C.RFND_OCC_AMT_CL = '01'
+				AND		C.DCSN_PROC_STAT IN ('01','03')) B
+				,(SELECT COUNT(C.RFND_SEQ_NO) AS APPL_CNT3
+				FROM	TBLPY_RCPT A
+						,TBLPY_DPST B
+						,TBLPY_RFND_APPL C
+				WHERE	A.PYM_SEQ_NO = #{pymSeqNo}
+				AND		B.DPST_SEQ_NO = A.DPST_SEQ_NO
+				AND		C.RFND_OCC_TGT_SEQ_NO = B.AMBG_OCC_SEQ_NO 
+				AND		C.RFND_OCC_AMT_CL = '02'
+				AND		C.DCSN_PROC_STAT IN ('01','03')) C
+				,(SELECT COUNT(C.RFND_SEQ_NO) AS APPL_CNT4
+				FROM	TBLPY_RCPT A
+						,TBLPY_DPST B
+						,TBLPY_RFND_APPL C
+				WHERE	A.PYM_SEQ_NO = #{pymSeqNo}
+				AND		B.DPST_SEQ_NO = A.DPST_SEQ_NO
+				AND		C.RFND_OCC_TGT_SEQ_NO = B.ASSR_OCC_SEQ_NO 
+				AND		C.RFND_OCC_AMT_CL = '03'
+				AND		C.DCSN_PROC_STAT IN ('01','03')) D
+	</select>
+    
+    
+    
+        
+</mapper>

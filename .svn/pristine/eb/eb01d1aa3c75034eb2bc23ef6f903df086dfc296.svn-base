@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.common.UserGroupMngMapper">
+	<select id="userGroupList" parameterType="UserGroupMngVO" resultType="UserGroupMngVO">
+		SELECT
+		   	USER_GROUP_ID AS userGroupId
+		   	,USER_GROUP_NAME AS userGroupName
+		FROM TSYCO_USER_GROUP
+		ORDER BY DISPLAY_ORDER ${sord}
+	</select>
+</mapper>

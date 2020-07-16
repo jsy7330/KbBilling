@@ -1,0 +1,813 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.inventoryMoveChangeMng.ProductStatusMapper">
+
+
+	<!-- 단말기 상태 변경 리스트 조회 -->
+	<select id="eqtStatList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 	
+					B.UPD_PROC_DTTM					--상태처리일자
+					, A.EQT_SEQ						--단말기일련번호
+					, A.ITEM_ID						--제품ID
+					, C.ITEM_NM						--제품명
+					, A.CLOR_CD
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00078'
+								AND DETAIL.COMMON_CD = A.CLOR_CD
+		       		) AS COLOR_NM					--색상명
+					, A.EQT_USE_CD					--상태코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00065'
+								AND DETAIL.COMMON_CD = A.EQT_USE_CD
+		       		) AS EQT_USE_NM					--상태코드명
+					, A.LGST_PROC_STAT_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00067'
+								AND DETAIL.COMMON_CD = A.LGST_PROC_STAT_CD
+		       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+					, B.UPD_BFR_CD					--변경전코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = B.UPD_BFR_CD
+		       		) AS UPD_BFR_NM					--변경전코드명
+					, A.OWN_LOC_CD					--소유위치코드 
+					, D.ORG_NM	AS OWN_LOC_NM		--소유위치명
+					, B.AFTR_UPD_CD					--변경후코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = B.AFTR_UPD_CD
+		       		) AS AFTR_UPD_NM				--변경후코드명
+					, B.UPD_PROC_ID					--처리자ID
+					, B.UPD_PROC_CL_CD				--처리구분코드
+					, A.CHG_DATE					--수정일
+					, F.USER_NAME	AS UPD_PROC_NM		--변경처리자명
+			FROM	TDNDT_EQT A
+					, TDNDT_UPD_PROC_HIST B
+					, TDNDT_ITEM C
+					, TDNDI_ORG_INFO D
+					, TSYCO_USER F 
+			WHERE	1=1
+				AND	B.UPD_PROC_ID		= F.USER_ID
+				AND A.EQT_SEQ			= B.EQT_SEQ
+				AND A.ITEM_ID			= B.ITEM_ID
+				AND A.ITEM_ID			= C.ITEM_ID
+				AND A.OWN_LOC_CD		= D.ORG_ID
+				AND B.UPD_PROC_CL_CD	= '20'
+				AND A.SO_ID				= #{productStatusVO.soId}			--사업ID
+				
+				<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+					AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+				</if>
+				<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+					AND A.ITEM_ID =  #{productStatusVO.itemId}
+				</if>
+				<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+					AND A.EQT_SEQ =  #{productStatusVO.eqtSeq}
+				</if>
+				<if test="productStatusVO.updBfrCd != null and productStatusVO.updBfrCd != ''">
+					AND B.UPD_BFR_CD =  #{productStatusVO.updBfrCd}
+				</if>
+				<if test="productStatusVO.aftrUpdCd != null and productStatusVO.aftrUpdCd != ''">
+					AND B.AFTR_UPD_CD =  #{productStatusVO.aftrUpdCd}
+				</if>
+				<if test="productStatusVO.eqtSeqStart != null and productStatusVO.eqtSeqStart != ''">
+					AND B.UPD_PROC_DTTM <![CDATA[>=]]> #{productStatusVO.eqtSeqStart}
+				</if>	
+				<if test="productStatusVO.eqtSeqEnd != null and productStatusVO.eqtSeqEnd != ''">
+					AND B.UPD_PROC_DTTM <![CDATA[<=]]> #{productStatusVO.eqtSeqEnd}
+				</if>
+
+
+			ORDER BY B.UPD_PROC_DTTM DESC
+					
+					    
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+	</select>
+
+
+	<!-- 단말기 상태 변경 내역 카운트 -->
+	<select id="eqtStatCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="int">
+	
+		SELECT 
+			COUNT(0) AS TOTAL
+		FROM	TDNDT_EQT A
+				, TDNDT_UPD_PROC_HIST B
+				, TDNDT_ITEM C
+				, TDNDI_ORG_INFO D
+				, TSYCO_USER F 
+		WHERE	1=1
+			AND	B.UPD_PROC_ID		= F.USER_ID
+			AND A.EQT_SEQ			= B.EQT_SEQ
+			AND A.ITEM_ID			= B.ITEM_ID
+			AND A.ITEM_ID			= C.ITEM_ID
+			AND A.OWN_LOC_CD		= D.ORG_ID
+			AND B.UPD_PROC_CL_CD	= '20'
+			AND A.SO_ID				= #{productStatusVO.soId}			--사업ID
+			
+			<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+				AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+			</if>
+			<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+				AND A.ITEM_ID =  #{productStatusVO.itemId}
+			</if>
+			<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+				AND A.EQT_SEQ =  #{productStatusVO.eqtSeq}
+			</if>
+			<if test="productStatusVO.updBfrCd != null and productStatusVO.updBfrCd != ''">
+				AND B.UPD_BFR_CD =  #{productStatusVO.updBfrCd}
+			</if>
+			<if test="productStatusVO.aftrUpdCd != null and productStatusVO.aftrUpdCd != ''">
+				AND B.AFTR_UPD_CD =  #{productStatusVO.aftrUpdCd}
+			</if>
+			<if test="productStatusVO.eqtSeqStart != null and productStatusVO.eqtSeqStart != ''">
+				AND B.UPD_PROC_DTTM <![CDATA[>=]]> #{productStatusVO.eqtSeqStart}
+			</if>	
+			<if test="productStatusVO.eqtSeqEnd != null and productStatusVO.eqtSeqEnd != ''">
+				AND B.UPD_PROC_DTTM <![CDATA[<=]]> #{productStatusVO.eqtSeqEnd}
+			</if> 
+			
+	</select>
+
+
+	<!-- 유심상태변경 리스트조회 -->
+	<select id="usimStatList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 	
+					B.UPD_PROC_DTTM					--상태처리일자
+					, A.USIM_SEQ AS EQT_SEQ			--유심일련번호
+					, A.ITEM_ID						--제품ID
+					, C.ITEM_NM						--제품명
+					, A.LGST_PROC_STAT_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00067'
+								AND DETAIL.COMMON_CD = A.LGST_PROC_STAT_CD
+		       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+					, B.UPD_BFR_CD					--변경전코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = B.UPD_BFR_CD
+		       		) AS UPD_BFR_NM					--변경전코드명
+					, A.OWN_LOC_CD					--소유위치코드 
+					, D.ORG_NM	AS OWN_LOC_NM		--소유위치명
+					, B.AFTR_UPD_CD					--변경후코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = B.AFTR_UPD_CD
+		       		) AS AFTR_UPD_NM				--변경후코드명
+					, B.UPD_PROC_ID					--처리자ID
+					, B.UPD_PROC_CL_CD				--처리구분코드
+					, A.CHG_DATE					--수정일
+					, F.USER_NAME	AS UPD_PROC_NM		--변경처리자명
+			FROM	TDNDT_USIM A
+					, TDNDT_UPD_PROC_HIST B
+					, TDNDT_ITEM C
+					, TDNDI_ORG_INFO D
+					, TSYCO_USER F 
+			WHERE	1=1
+				AND	B.UPD_PROC_ID		= F.USER_ID
+				AND A.USIM_SEQ			= B.EQT_SEQ
+				AND A.ITEM_ID			= B.ITEM_ID
+				AND A.ITEM_ID			= C.ITEM_ID
+				AND A.OWN_LOC_CD		= D.ORG_ID
+				AND B.UPD_PROC_CL_CD	= '20'
+				AND A.SO_ID				= #{productStatusVO.soId}			--사업ID
+				
+				<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+					AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+				</if>
+				<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+					AND A.ITEM_ID =  #{productStatusVO.itemId}
+				</if>
+				<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+					AND A.USIM_SEQ =  #{productStatusVO.eqtSeq}
+				</if>
+				<if test="productStatusVO.updBfrCd != null and productStatusVO.updBfrCd != ''">
+					AND B.UPD_BFR_CD =  #{productStatusVO.updBfrCd}
+				</if>
+				<if test="productStatusVO.aftrUpdCd != null and productStatusVO.aftrUpdCd != ''">
+					AND B.AFTR_UPD_CD =  #{productStatusVO.aftrUpdCd}
+				</if>
+				<if test="productStatusVO.eqtSeqStart != null and productStatusVO.eqtSeqStart != ''">
+					AND B.UPD_PROC_DTTM <![CDATA[>=]]> #{productStatusVO.eqtSeqStart}
+				</if>	
+				<if test="productStatusVO.eqtSeqEnd != null and productStatusVO.eqtSeqEnd != ''">
+					AND B.UPD_PROC_DTTM <![CDATA[<=]]> #{productStatusVO.eqtSeqEnd}
+				</if>
+
+
+			ORDER BY B.UPD_PROC_DTTM DESC
+					
+					    
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+	</select>
+
+
+	<!-- 유심상태변경 내역 카운트 -->
+	<select id="usimStatCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="int">
+	
+		SELECT 
+			COUNT(0) AS TOTAL
+		FROM	TDNDT_USIM A
+				, TDNDT_UPD_PROC_HIST B
+				, TDNDT_ITEM C
+				, TDNDI_ORG_INFO D
+				, TSYCO_USER F 
+		WHERE	1=1
+			AND	B.UPD_PROC_ID		= F.USER_ID
+			AND A.USIM_SEQ			= B.EQT_SEQ
+			AND A.ITEM_ID			= B.ITEM_ID
+			AND A.ITEM_ID			= C.ITEM_ID
+			AND A.OWN_LOC_CD		= D.ORG_ID
+			AND B.UPD_PROC_CL_CD	= '20'
+			AND A.SO_ID				= #{productStatusVO.soId}			--사업ID
+			
+			<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+				AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+			</if>
+			<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+				AND A.ITEM_ID =  #{productStatusVO.itemId}
+			</if>
+			<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+				AND A.USIM_SEQ =  #{productStatusVO.eqtSeq}
+			</if>
+			<if test="productStatusVO.updBfrCd != null and productStatusVO.updBfrCd != ''">
+				AND B.UPD_BFR_CD =  #{productStatusVO.updBfrCd}
+			</if>
+			<if test="productStatusVO.aftrUpdCd != null and productStatusVO.aftrUpdCd != ''">
+				AND B.AFTR_UPD_CD =  #{productStatusVO.aftrUpdCd}
+			</if>
+			<if test="productStatusVO.eqtSeqStart != null and productStatusVO.eqtSeqStart != ''">
+				AND B.UPD_PROC_DTTM <![CDATA[>=]]> #{productStatusVO.eqtSeqStart}
+			</if>	
+			<if test="productStatusVO.eqtSeqEnd != null and productStatusVO.eqtSeqEnd != ''">
+				AND B.UPD_PROC_DTTM <![CDATA[<=]]> #{productStatusVO.eqtSeqEnd}
+			</if>
+			
+	</select>
+
+
+	<!-- 바우쳐상태변경 리스트조회 -->
+	<select id="veqtStatList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT 	
+					B.UPD_PROC_DTTM					--상태처리일자
+					, A.VO_SEQ_NO	AS EQT_SEQ		--바우쳐일련번호
+					, A.ITEM_ID						--제품ID
+					, C.ITEM_NM						--제품명
+					, A.LGST_PROC_STAT_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00067'
+								AND DETAIL.COMMON_CD = A.LGST_PROC_STAT_CD
+		       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+					, B.UPD_BFR_CD					--변경전코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = B.UPD_BFR_CD
+		       		) AS UPD_BFR_NM					--변경전코드명
+					, A.OWN_LOC_CD					--소유위치코드 
+					, D.ORG_NM	AS OWN_LOC_NM		--소유위치명
+					, B.AFTR_UPD_CD					--변경후코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00066'
+								AND DETAIL.COMMON_CD = B.AFTR_UPD_CD
+		       		) AS AFTR_UPD_NM				--변경후코드명
+					, B.UPD_PROC_ID					--처리자ID
+					, B.UPD_PROC_CL_CD				--처리구분코드
+					, A.CHG_DATE					--수정일
+					, F.USER_NAME	AS UPD_PROC_NM		--변경처리자명
+			FROM	TDNDT_VEQT A
+					, TDNDT_UPD_PROC_HIST B
+					, TDNDT_ITEM C
+					, TDNDI_ORG_INFO D
+					, TSYCO_USER F 
+			WHERE	1=1
+				AND	B.UPD_PROC_ID		= F.USER_ID
+				AND A.VO_SEQ_NO			= B.EQT_SEQ
+				AND A.ITEM_ID			= B.ITEM_ID
+				AND A.ITEM_ID			= C.ITEM_ID
+				AND A.OWN_LOC_CD		= D.ORG_ID
+				AND B.UPD_PROC_CL_CD	= '20'
+				AND A.SO_ID				= #{productStatusVO.soId}			--사업ID
+				
+				<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+					AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+				</if>
+				<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+					AND A.ITEM_ID =  #{productStatusVO.itemId}
+				</if>
+				<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+					AND A.VO_SEQ_NO =  #{productStatusVO.eqtSeq}
+				</if>
+				<if test="productStatusVO.updBfrCd != null and productStatusVO.updBfrCd != ''">
+					AND B.UPD_BFR_CD =  #{productStatusVO.updBfrCd}
+				</if>
+				<if test="productStatusVO.aftrUpdCd != null and productStatusVO.aftrUpdCd != ''">
+					AND B.AFTR_UPD_CD =  #{productStatusVO.aftrUpdCd}
+				</if>
+				<if test="productStatusVO.eqtSeqStart != null and productStatusVO.eqtSeqStart != ''">
+					AND B.UPD_PROC_DTTM <![CDATA[>=]]> #{productStatusVO.eqtSeqStart}
+				</if>	
+				<if test="productStatusVO.eqtSeqEnd != null and productStatusVO.eqtSeqEnd != ''">
+					AND B.UPD_PROC_DTTM <![CDATA[<=]]> #{productStatusVO.eqtSeqEnd}
+				</if>
+
+
+			ORDER BY B.UPD_PROC_DTTM DESC
+					
+					    
+
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+	</select>
+
+
+	<!-- 바우쳐상태변경 내역 카운트 -->
+	<select id="veqtStatCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="int">
+	
+		SELECT 
+			COUNT(0) AS TOTAL
+		FROM	TDNDT_VEQT A
+				, TDNDT_UPD_PROC_HIST B
+				, TDNDT_ITEM C
+				, TDNDI_ORG_INFO D
+				, TSYCO_USER F 
+		WHERE	1=1
+			AND	B.UPD_PROC_ID		= F.USER_ID
+			AND A.VO_SEQ_NO			= B.EQT_SEQ
+			AND A.ITEM_ID			= B.ITEM_ID
+			AND A.ITEM_ID			= C.ITEM_ID
+			AND A.OWN_LOC_CD		= D.ORG_ID
+			AND B.UPD_PROC_CL_CD	= '20'
+			AND A.SO_ID				= #{productStatusVO.soId}			--사업ID
+			
+			<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+				AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+			</if>
+			<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+				AND A.ITEM_ID =  #{productStatusVO.itemId}
+			</if>
+			<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+				AND A.VO_SEQ_NO =  #{productStatusVO.eqtSeq}
+			</if>
+			<if test="productStatusVO.updBfrCd != null and productStatusVO.updBfrCd != ''">
+				AND B.UPD_BFR_CD =  #{productStatusVO.updBfrCd}
+			</if>
+			<if test="productStatusVO.aftrUpdCd != null and productStatusVO.aftrUpdCd != ''">
+				AND B.AFTR_UPD_CD =  #{productStatusVO.aftrUpdCd}
+			</if>
+			<if test="productStatusVO.eqtSeqStart != null and productStatusVO.eqtSeqStart != ''">
+				AND B.UPD_PROC_DTTM <![CDATA[>=]]> #{productStatusVO.eqtSeqStart}
+			</if>	
+			<if test="productStatusVO.eqtSeqEnd != null and productStatusVO.eqtSeqEnd != ''">
+				AND B.UPD_PROC_DTTM <![CDATA[<=]]> #{productStatusVO.eqtSeqEnd}
+			</if>
+			
+	</select>
+
+
+
+	<!-- 단말기 상태 변경 리스트 조회 -->
+	<select id="eqtStatInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+		
+		SELECT 	
+				A.EQT_SEQ					--단말기일련번호
+				, A.ITEM_ID					--제품ID
+				, C.ITEM_NM					--제품명
+				, A.CLOR_CD
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00078'
+							AND DETAIL.COMMON_CD = A.CLOR_CD
+	       		) AS COLOR_NM					--색상명
+	       		, A.EQT_USE_CD					--상태코드
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00065'
+							AND DETAIL.COMMON_CD = A.EQT_USE_CD
+	       		) AS EQT_USE_NM					--상태코드명
+	       		, A.LGST_PROC_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = A.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+	       		, A.OWN_LOC_CD					--소유위치코드
+				, D.ORG_NM 	AS OWN_LOC_NM		--소유위치명
+		        , A.EQT_STAT_CD					--현재상태코드
+		        , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00066'
+							AND DETAIL.COMMON_CD = A.EQT_STAT_CD
+	       		) AS EQT_STAT_NM 				--현재상태코드명
+	       		, 'C'		AS ITEM_TP_CD 		--제품유형
+                , A.SO_ID						--사업자ID
+		FROM	TDNDT_EQT A
+				, TDNDT_ITEM C
+				, TDNDI_ORG_INFO D
+		WHERE	1 = 1
+			AND A.ITEM_ID		= C.ITEM_ID
+			AND A.OWN_LOC_CD	= D.ORG_ID		
+			AND A.SO_ID			= #{productStatusVO.soId}			--사업ID
+			
+			<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+				AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+			</if>
+			<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+				AND A.ITEM_ID =  #{productStatusVO.itemId}
+			</if>
+			<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+				AND A.EQT_SEQ =  #{productStatusVO.eqtSeq}
+			</if>
+			
+			<if test="productStatusVO.eqtStatCd != null and productStatusVO.eqtStatCd != ''">
+				AND A.EQT_STAT_CD =  #{productStatusVO.eqtStatCd}
+			</if>
+		ORDER BY C.ITEM_NM, A.EQT_SEQ
+	</select>
+	
+	
+
+	<!-- 유심 상태 변경 리스트 조회 -->
+	<select id="usimStatInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+		
+		SELECT 	
+				A.USIM_SEQ	AS EQT_SEQ		--단말기일련번호
+				, A.ITEM_ID					--제품ID
+				, C.ITEM_NM					--제품명
+	       		, A.LGST_PROC_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = A.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+	       		, A.OWN_LOC_CD					--소유위치코드
+				, D.ORG_NM 	AS OWN_LOC_NM		--소유위치명
+		        , A.USIM_STAT_CD	AS EQT_STAT_CD		--현재상태코드
+		        , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00066'
+							AND DETAIL.COMMON_CD = A.USIM_STAT_CD
+	       		) AS EQT_STAT_NM 				--현재상태코드명
+	       		, 'U'		AS ITEM_TP_CD 		--제품유형
+                , A.SO_ID						--사업자ID
+		FROM	TDNDT_USIM A
+				, TDNDT_ITEM C
+				, TDNDI_ORG_INFO D
+		WHERE	1 = 1
+			AND A.ITEM_ID		= C.ITEM_ID
+			AND A.OWN_LOC_CD	= D.ORG_ID		
+			AND A.SO_ID			= #{productStatusVO.soId}			--사업ID
+			
+			<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+				AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+			</if>
+			<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+				AND A.ITEM_ID =  #{productStatusVO.itemId}
+			</if>
+			<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+				AND A.USIM_SEQ =  #{productStatusVO.eqtSeq}
+			</if>
+			
+			<if test="productStatusVO.eqtStatCd != null and productStatusVO.eqtStatCd != ''">
+				AND A.USIM_STAT_CD =  #{productStatusVO.eqtStatCd}
+			</if>
+		ORDER BY C.ITEM_NM, A.USIM_SEQ
+	</select>
+	
+	
+	<!-- 바우쳐 상태 변경 리스트 조회 -->
+	<select id="veqtStatInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO" resultType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+		
+		SELECT 	
+				A.VO_SEQ_NO		AS EQT_SEQ	--단말기일련번호
+				, A.ITEM_ID					--제품ID
+				, C.ITEM_NM					--제품명
+	       		, A.LGST_PROC_STAT_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00067'
+							AND DETAIL.COMMON_CD = A.LGST_PROC_STAT_CD
+	       		) AS LGST_PROC_STAT_NM 			--물류처리상태코드명
+	       		, A.OWN_LOC_CD					--소유위치코드
+				, D.ORG_NM 	AS OWN_LOC_NM		--소유위치명
+		        , A.VO_STAT_CD	AS EQT_STAT_CD		--현재상태코드
+		        , (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{productStatusVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productStatusVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00066'
+							AND DETAIL.COMMON_CD = A.VO_STAT_CD
+	       		) AS EQT_STAT_NM 				--현재상태코드명
+	       		, 'V'		AS ITEM_TP_CD 		--제품유형
+                , A.SO_ID						--사업자ID
+		FROM	TDNDT_VEQT A
+				, TDNDT_ITEM C
+				, TDNDI_ORG_INFO D
+		WHERE	1 = 1
+			AND A.ITEM_ID		= C.ITEM_ID
+			AND A.OWN_LOC_CD	= D.ORG_ID		
+			AND A.SO_ID			= #{productStatusVO.soId}			--사업ID
+			
+			<if test="productStatusVO.ownLocCd != null and productStatusVO.ownLocCd != ''">
+				AND A.OWN_LOC_CD =  #{productStatusVO.ownLocCd}
+			</if>
+			<if test="productStatusVO.itemId != null and productStatusVO.itemId != ''">
+				AND A.ITEM_ID =  #{productStatusVO.itemId}
+			</if>
+			<if test="productStatusVO.eqtSeq != null and productStatusVO.eqtSeq != ''">
+				AND A.VO_SEQ_NO =  #{productStatusVO.eqtSeq}
+			</if>
+			
+			<if test="productStatusVO.eqtStatCd != null and productStatusVO.eqtStatCd != ''">
+				AND A.VO_STAT_CD =  #{productStatusVO.eqtStatCd}
+			</if>
+		ORDER BY C.ITEM_NM, A.VO_SEQ_NO
+	</select>
+	
+	
+	<!-- 단말기 상태변경 업데이트 -->
+	<update id="updateEqtStat" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+	
+		UPDATE TDNDT_EQT
+			SET	EQT_STAT_CD			= #{productStatusVO.eqtStatCd2}		--제품상태
+				, CHG_DATE			= #{productStatusVO.chgDate}		--수정일
+				, CHGR_ID			= #{productStatusVO.chgrId}			--수정자ID
+		WHERE	EQT_SEQ				= #{productStatusVO.eqtSeq}			--
+			AND ITEM_ID				= #{productStatusVO.itemId}			--제품ID
+
+	</update>
+	
+	
+	
+	<!-- 유심 상태변경 업데이트 -->
+	<update id="updateUsimStat" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+	
+		UPDATE TDNDT_USIM
+			SET	USIM_STAT_CD		= #{productStatusVO.eqtStatCd2}		--제품상태
+				, CHG_DATE			= #{productStatusVO.chgDate}		--수정일
+				, CHGR_ID			= #{productStatusVO.chgrId}			--수정자ID
+		WHERE	USIM_SEQ			= #{productStatusVO.eqtSeq}			--
+			AND ITEM_ID				= #{productStatusVO.itemId}			--제품ID
+
+	</update>
+	
+	
+	<!-- 바우쳐 상태변경 업데이트 -->
+	<update id="updateVeqtStat" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+	
+		UPDATE TDNDT_VEQT
+			SET	VO_STAT_CD			= #{productStatusVO.eqtStatCd2}		--제품상태
+				, CHG_DATE			= #{productStatusVO.chgDate}		--수정일
+				, CHGR_ID			= #{productStatusVO.chgrId}			--수정자ID
+		WHERE	VO_SEQ_NO			= #{productStatusVO.eqtSeq}			--
+			AND ITEM_ID				= #{productStatusVO.itemId}			--제품ID
+
+	</update>
+	
+	<!-- 단말기 상태변경 히스토리 인서트 -->
+	<insert id="insertUpdProcHist" parameterType="com.ntels.ccbs.distribute.domain.logistics.inventoryMoveChangeMng.ProductStatusVO">
+	
+		INSERT INTO TDNDT_UPD_PROC_HIST
+			( HIST_SEQ				--일련번호
+			, UPD_PROC_CL_CD		--변경처리 구분코드
+			, SO_ID
+			, ITEM_ID				--아이템ID
+			, EQT_SEQ				--단말기일련번호
+			, UPD_BFR_CD			--변경전상태
+			, AFTR_UPD_CD			--변경후상태 
+			, UPD_PROC_ID			--변경자ID
+			, UPD_PROC_DTTM			--변경일
+			, REGR_ID				--등록자
+			, REG_DATE				--등록일시
+			, CHGR_ID				--수정자
+			, CHG_DATE				--수정일시
+			)
+        VALUES
+			( #{productStatusVO.histSeq}		--일련번호
+			, '20'								--변경처리 구분코드 10용도, 20상태
+			, #{productStatusVO.soId}
+			, #{productStatusVO.itemId}			--아이템ID
+			, #{productStatusVO.eqtSeq}			--단말기일련번호
+			, #{productStatusVO.eqtStatCd}		--변경전상태
+			, #{productStatusVO.eqtStatCd2}		--변경후상태
+			, #{productStatusVO.chgrId}			--변경자ID
+			, #{productStatusVO.updProcDttm}	--변경일
+			, #{productStatusVO.regrId}			--등록자
+			, #{productStatusVO.regDate}		--등록일시
+			, #{productStatusVO.chgrId}			--수정자
+			, #{productStatusVO.chgDate}		--수정일시
+			)			
+	</insert>
+	
+	
+	
+	
+	
+</mapper>

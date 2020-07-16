@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ifg.httpRest.mapper.distribute.DistributeMapper">
+
+    <select id="getDealerOrgId" resultType="String">
+        SELECT   CASE  TP_CD                                -- 유형코드(5000:대리점,6000:접점)
+                 WHEN  '6000'  THEN
+                        (
+                        SELECT   PART_ORG_ID                -- 상대조직 ID(대리점ID)
+                        FROM     TDNDI_ORG_REL_HIST         -- 조직관계이력
+                        WHERE    APPY_END_DT = '99991231'   -- 적용일자(To)
+                        AND      REL_TP_CD   = '101'        -- 관계유형(접점조직관계)
+                        AND      ORG_ID      = 'NZ00000200'     -- 조직ID
+                        )
+                 ELSE   ORG_ID
+                 END AS ORG_ID
+        FROM     TDNDI_ORG_INFO
+        WHERE    ORG_ID      = #{orgId}
+        
+    </select>
+    
+    <select id="getDeviceList"  resultType="java.util.HashMap">
+		SELECT
+	                    T1.ITEM_TP_CD
+	                    , B.MNCO_NM
+	                    , A.OWN_LOC_CD          AS ORG_ID                                                                                                                                                                                 
+	                    , A.ITEM_ID                                                                                                                                                                                   
+	                    , C.ITEM_NM
+	                    , A.EQT_SEQ
+	                    , A.OWN_LOC_CD
+	                    , A.PRCHS_UT_PRC        AS MNCO_OTPT_UT_PRC
+	                    , A.DSTRB_UT_PRC
+	                    , A.PRCHS_UT_PRC
+	                    , D.IMEI_NO
+	                    , T2.EQT_RSRC_CL_CD
+	                    , T3.EQT_USE_CD   
+	                    , T4.EQT_STAT_CD
+	                    , T5.CLOR_CD
+	                    , T6.LGST_PROC_STAT_CD
+        FROM
+	                      TDNDT_EQT             A
+	                    , TDNDT_MNCO            B
+	                    , TDNDT_ITEM            C
+	                    , TDNDT_EQT_OTHS_ATTR   D
+                        ,(SELECT DETAIL.COMMON_CD
+                                ,NAME.CODE_NM             AS ITEM_TP_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00063'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T1
+                        ,(SELECT DETAIL.COMMON_CD
+                                ,NAME.CODE_NM             AS EQT_RSRC_CL_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00068'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T2
+                        ,(SELECT DETAIL.COMMON_CD
+                                ,NAME.CODE_NM             AS EQT_USE_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00065'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T3
+                        ,(SELECT DETAIL.COMMON_CD
+                                ,NAME.CODE_NM             AS EQT_STAT_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00066'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T4
+                        ,(SELECT DETAIL.COMMON_CD
+                                ,NAME.CODE_NM             AS CLOR_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00078'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T5  
+                        ,(SELECT DETAIL.COMMON_CD
+                                ,NAME.CODE_NM             AS LGST_PROC_STAT_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00067'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T6  
+	        WHERE
+	                    A.LGST_PROC_STAT_CD IN ('001','101','201','301','401','911')
+	        AND         A.ITEM_ID       = C.ITEM_ID
+	        AND         C.MNCO_ID       = B.MNCO_ID
+	        AND         A.EQT_SEQ       = D.EQT_SEQ
+	        AND         A.ITEM_ID       = D.ITEM_ID
+	        AND         A.EQT_STAT_CD   = '001'
+	        AND         A.OWN_LOC_CD    = #{orgId}
+	        AND         A.ITEM_ID       = #{itemId}
+            <if test="imei != null and imei != ''">
+                AND     D.IMEI_NO LIKE CONCAT(CONCAT('%', #{imei} ), '%')
+            </if>
+	        AND         T1.COMMON_CD    = C.ITEM_TP_CD
+	        AND         T2.COMMON_CD    = A.EQT_RSRC_CL_CD
+	        AND         T3.COMMON_CD    = A.EQT_USE_CD
+	        AND         T4.COMMON_CD    = A.EQT_STAT_CD
+	        AND         T5.COMMON_CD(+) = A.CLOR_CD
+	        AND         T6.COMMON_CD    = A.LGST_PROC_STAT_CD
+	        ORDER BY    B.MNCO_NM, A.EQT_SEQ ASC
+    </select>
+    
+    
+    <select id="getUsimList"  resultType="java.util.HashMap">
+            SELECT
+                  T1.ITEM_TP_CD
+                , A.MNCO_NM
+                , B.OWN_LOC_CD AS ORG_ID
+                , B.ITEM_ID
+                , C.ITEM_NM
+                , B.USIM_SEQ
+                , T2.USIM_STAT_CD
+                , T3.LGST_PROC_STAT_CD
+                , B.USIM_BAR_CD
+                , B.IMSI_NO
+            FROM
+                  TDNDT_MNCO A
+                , TDNDT_USIM B
+                , TDNDT_ITEM C
+                ,(SELECT DETAIL.COMMON_CD
+                        ,NAME.CODE_NM AS ITEM_TP_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00063'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T1
+                ,(SELECT DETAIL.COMMON_CD
+                        ,NAME.CODE_NM AS USIM_STAT_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00066'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T2
+                ,(SELECT DETAIL.COMMON_CD
+                        ,NAME.CODE_NM AS LGST_PROC_STAT_CD
+                          FROM TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+                                , TSYCO_CODE_DETAIL DETAIL
+                                , TSYCO_CODE_DETAIL_NAME NAME
+                          WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{lng} 
+                                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                                AND NAME.LNG_TYP      = #{lng}
+                                AND MAST.COMMON_GRP   ='DN00067'
+                                AND DETAIL.USE_YN     ='Y'
+                                AND MAST.USE_YN       ='Y') T3
+            WHERE
+                B.LGST_PROC_STAT_CD IN ('001','101','201','301','401','911') 
+            AND B.ITEM_ID       = C.ITEM_ID
+            AND A.MNCO_ID       = C.MNCO_ID
+            AND B.USIM_STAT_CD  = '101'  
+            AND B.OWN_LOC_CD    = #{orgId}
+            AND T1.COMMON_CD    = C.ITEM_TP_CD
+            AND T2.COMMON_CD    = B.USIM_STAT_CD
+            AND T3.COMMON_CD    = B.LGST_PROC_STAT_CD
+            AND B.ITEM_ID       = #{itemId}    
+            <if test="imsi != null and imsi != ''">
+                AND     B.IMSI_NO LIKE CONCAT(CONCAT('%', #{imsi} ), '%')
+            </if>
+            ORDER BY    A.MNCO_NM, B.USIM_SEQ
+    </select>
+    
+    <select id="getDtItemSale" resultType="java.util.HashMap">
+           SELECT LGST_PROC_STAT_CD                                         -- 물류처리상태코드
+                 ,EQT_SEQ                                                   -- 단말기일련번호
+                 ,SO_ID
+           FROM   TDNDT_EQT                                                 -- 단말기
+           WHERE  ITEM_ID=#{item_id}                                        -- 제품ID
+           AND    LGST_PROC_STAT_CD NOT IN ('902')
+           AND    EQT_STAT_CD = '001'
+           AND    EQT_SEQ = #{eqt_seq}       
+           AND	  OWN_LOC_CD=#{org_id}
+    </select>
+    
+    <select id="getUsimItemSale" resultType="java.util.HashMap">
+           SELECT LGST_PROC_STAT_CD                                         -- 물류처리상태코드
+                 ,SO_ID
+           FROM   TDNDT_USIM                                                -- 단말기
+           WHERE ITEM_ID=#{item_id}                                         -- 제품ID   변경
+           AND   USIM_SEQ=#{eqt_seq}                                        -- 유심일련번호
+           AND	 OWN_LOC_CD=#{org_id}                                       -- 조직코드
+    </select>
+    
+    
+    <select id="getDtItemCancle" resultType="java.util.HashMap">
+        SELECT       A.HIST_SEQ
+                    ,A.UPD_BFR_CD                      -- 변경전코드
+                    ,B.LGST_PROC_STAT_CD               -- 변경이력
+                    ,B.SO_ID
+        FROM        TDNDT_UPD_PROC_HIST A
+                    ,TDNDT_EQT          B
+        WHERE       A.HIST_SEQ     = (
+                                            SELECT  MAX(HIST_SEQ)
+                                            FROM    TDNDT_UPD_PROC_HIST
+                                            WHERE   1=1
+                                            AND     EQT_SEQ    = #{eqt_seq}
+                                            AND     ITEM_ID     = #{item_id}
+                                            AND     UPD_PROC_CL_CD    = '30' 
+                                          )
+        AND         A.ITEM_ID           = B.ITEM_ID
+        AND         A.EQT_SEQ           = B.EQT_SEQ
+        AND         A.AFTR_UPD_CD       IN ('902','911')
+    </select>
+
+
+    <insert id="insertProcHist">
+    
+        INSERT  INTO TDNDT_UPD_PROC_HIST
+            ( HIST_SEQ          --이력일련번호
+            , UPD_PROC_CL_CD    --변경처리구분코드
+            , SO_ID             --사업ID
+            , ITEM_ID           --제품ID
+            , EQT_SEQ           --단말기일련번호
+            , UPD_BFR_CD        --변경전코드
+            , AFTR_UPD_CD       --변경후코드
+            , UPD_PROC_ID       --변경처리자ID
+            , UPD_PROC_DTTM     --변경처리일시
+            , REGR_ID           --등록자
+            , REG_DATE          --등록일시
+            , CHGR_ID           --수정자
+            , CHG_DATE          --수정일시
+            )
+        VALUES  
+            ( #{parameter.seq,jdbcType=VARCHAR}                         --이력일련번호
+            , '30'                                                      --변경처리구분코드
+            , #{parameter.so_id,jdbcType=VARCHAR}                       --사업ID
+            , #{parameter.item_id,jdbcType=VARCHAR}                     --제품ID
+            , #{parameter.eqt_seq,jdbcType=VARCHAR}                     --단말기일련번호
+            , #{parameter.lgst_proc_stat_cd,jdbcType=VARCHAR}           --변경전코드
+            , '902'                                                     --변경후코드             
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --변경처리자ID
+            , #{nowDttm}                                                --변경처리일시
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --등록자
+            , #{nowDate}                                                --등록일시
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --수정자
+            , #{nowDate}                                                --수정일시
+            )   
+    </insert>
+    
+    <insert id="insertUsimProcHist">
+    
+        INSERT  INTO TDNDT_UPD_PROC_HIST
+            ( HIST_SEQ          --이력일련번호
+            , UPD_PROC_CL_CD    --변경처리구분코드
+            , SO_ID             --사업ID
+            , ITEM_ID           --제품ID
+            , USIM_SEQ          --USIM일련번호
+            , UPD_BFR_CD        --변경전코드
+            , AFTR_UPD_CD       --변경후코드
+            , UPD_PROC_ID       --변경처리자ID
+            , UPD_PROC_DTTM     --변경처리일시
+            , REGR_ID           --등록자
+            , REG_DATE          --등록일시
+            , CHGR_ID           --수정자
+            , CHG_DATE          --수정일시
+            )
+        VALUES  
+            ( #{parameter.seq,jdbcType=VARCHAR}                         --이력일련번호
+            , '30'                                                      --변경처리구분코드
+            , #{parameter.so_id,jdbcType=VARCHAR}                       --사업ID
+            , #{parameter.item_id,jdbcType=VARCHAR}                     --제품ID
+            , #{parameter.eqt_seq,jdbcType=VARCHAR}                     --USIM일련번호
+            , #{parameter.lgst_proc_stat_cd,jdbcType=VARCHAR}           --변경전코드
+            , '902'                                                     --변경후코드             
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --변경처리자ID
+            , #{nowDttm}                                                --변경처리일시
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --등록자
+            , #{nowDate}                                                --등록일시
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --수정자
+            , #{nowDate}                                                --수정일시
+            )   
+    </insert>
+     <!-- 유심단말기 판매(단말기)-->
+    <update id="updateProc">
+              UPDATE      TDNDT_EQT                                            -- 단말기
+              SET         LGST_PROC_STAT_CD = '902'                            -- 변경이력
+                         ,LGST_PROC_DTTM    = #{nowDttm}                       -- 변경일자
+                         ,CHGR_ID    = #{parameter.usr_id,jdbcType=VARCHAR}     -- 변경자ID
+                         ,CHG_DATE   = #{nowDate}                                -- 변경일자
+              WHERE       ITEM_ID    = #{parameter.item_id,jdbcType=VARCHAR}  
+              AND         EQT_SEQ    = #{parameter.eqt_seq,jdbcType=VARCHAR} 
+              AND         OWN_LOC_CD = #{parameter.org_id,jdbcType=VARCHAR} 
+    </update>
+    
+    <!-- 유심단말기 판매(단말기)-->
+    <update id="updateUsimProc">
+              UPDATE      TDNDT_USIM                                             -- 단말기
+              SET         LGST_PROC_STAT_CD = '902'                              -- 변경이력
+                         ,LGST_PROC_DTTM    = #{nowDttm}                         -- 변경일자
+                         ,CHGR_ID    = #{parameter.usr_id,jdbcType=VARCHAR}      -- 변경자ID
+                         ,CHG_DATE   = #{nowDate}                                -- 변경일자
+              WHERE       ITEM_ID    = #{parameter.item_id,jdbcType=VARCHAR}  
+              AND         USIM_SEQ   = #{parameter.eqt_seq,jdbcType=VARCHAR} 
+              AND         OWN_LOC_CD = #{parameter.org_id,jdbcType=VARCHAR} 
+    </update>
+    
+        
+    <update id="updateItemCancel">
+             UPDATE      TDNDT_EQT                                                -- 단말기
+             SET         LGST_PROC_STAT_CD = '911'                                -- 변경이력
+                        ,LGST_PROC_DTTM = #{nowDttm}  -- 변경일자
+                        ,CHGR_ID = #{parameter.usr_id,jdbcType=VARCHAR}            -- 변경자ID
+                        ,CHG_DATE = #{nowDate}                                      -- 변경일자
+             WHERE       ITEM_ID = #{parameter.item_id,jdbcType=VARCHAR}
+             AND         EQT_SEQ = #{parameter.eqt_seq,jdbcType=VARCHAR}
+    </update>
+    
+    <insert id="insertProcHistCancel">
+    
+        INSERT  INTO TDNDT_UPD_PROC_HIST
+            ( HIST_SEQ          --이력일련번호
+            , UPD_PROC_CL_CD    --변경처리구분코드
+            , SO_ID             --사업ID
+            , ITEM_ID           --제품ID
+            , EQT_SEQ           --단말기일련번호
+            , UPD_BFR_CD        --변경전코드
+            , AFTR_UPD_CD       --변경후코드
+            , UPD_PROC_ID       --변경처리자ID
+            , UPD_PROC_DTTM     --변경처리일시
+            , REGR_ID           --등록자
+            , REG_DATE          --등록일시
+            , CHGR_ID           --수정자
+            , CHG_DATE          --수정일시
+            )
+        VALUES  
+            ( #{parameter.seq,jdbcType=VARCHAR}                         --이력일련번호
+            , '30'                                                      --변경처리구분코드
+            , #{parameter.so_id,jdbcType=VARCHAR}                       --사업ID
+            , #{parameter.item_id,jdbcType=VARCHAR}                     --제품ID
+            , #{parameter.eqt_seq,jdbcType=VARCHAR}                     --단말기일련번호
+            , #{parameter.lgst_proc_stat_cd,jdbcType=VARCHAR}           --변경전코드
+            , '911'                                                     --변경후코드             
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --변경처리자ID
+            , #{nowDttm}                                                --변경처리일시
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --등록자
+            , #{nowDate}                                                --등록일시
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --수정자
+            , #{nowDate}                                                --수정일시
+            )   
+    </insert>
+    
+    <insert id="insertUsimProcHistCancel">
+        INSERT  INTO TDNDT_UPD_PROC_HIST
+            ( HIST_SEQ          --이력일련번호
+            , UPD_PROC_CL_CD    --변경처리구분코드
+            , SO_ID             --사업ID
+            , ITEM_ID           --제품ID
+            , USIM_SEQ          --USIM일련번호
+            , UPD_BFR_CD        --변경전코드
+            , AFTR_UPD_CD       --변경후코드
+            , UPD_PROC_ID       --변경처리자ID
+            , UPD_PROC_DTTM     --변경처리일시
+            , REGR_ID           --등록자
+            , REG_DATE          --등록일시
+            , CHGR_ID           --수정자
+            , CHG_DATE          --수정일시
+            )
+        VALUES  
+            ( #{parameter.seq,jdbcType=VARCHAR}                         --이력일련번호
+            , '30'                                                      --변경처리구분코드
+            , #{parameter.so_id,jdbcType=VARCHAR}                       --사업ID
+            , #{parameter.item_id,jdbcType=VARCHAR}                     --제품ID
+            , #{parameter.eqt_seq,jdbcType=VARCHAR}                     --USIM일련번호
+            , #{parameter.lgst_proc_stat_cd,jdbcType=VARCHAR}           --변경전코드
+            , '911'                                                     --변경후코드             
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --변경처리자ID
+            , #{nowDttm}                                                --변경처리일시
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --등록자
+            , #{nowDate}                                                --등록일시
+            , #{parameter.usr_id,jdbcType=VARCHAR}                      --수정자
+            , #{nowDate}                                                --수정일시
+            )   
+    </insert>
+    <select id="getDtUsimCancle" resultType="java.util.HashMap">
+        SELECT      A.HIST_SEQ
+                   ,A.UPD_BFR_CD                            -- 변경전코드
+                   ,B.LGST_PROC_STAT_CD                     -- 변경이력
+                   ,B.USIM_SEQ                              --USIM_SEQ
+                   ,B.SO_ID
+        FROM        TDNDT_UPD_PROC_HIST A
+                    ,TDNDT_USIM         B
+        WHERE       A.HIST_SEQ = (
+                                        SELECT  MAX(HIST_SEQ)
+                                        FROM    TDNDT_UPD_PROC_HIST A
+                                               ,TDNDT_USIM          B
+                                        WHERE   A.USIM_SEQ = B.USIM_SEQ
+                                         AND    A.USIM_SEQ = #{eqt_seq}
+                                      )
+        AND         A.ITEM_ID       = #{item_id}
+        AND         A.USIM_SEQ      = B.USIM_SEQ
+        AND         A.UPD_PROC_CL_CD ='30'
+        AND         A.AFTR_UPD_CD  IN ('902','911')
+    </select>
+    
+    <update id="updateUsimCancel">
+             UPDATE      TDNDT_USIM                                            -- USIM 테이블
+             SET         LGST_PROC_STAT_CD = '911'                              -- 변경이력
+                        ,LGST_PROC_DTTM = #{nowDttm}                            -- 변경일자
+                        ,CHGR_ID = #{parameter.usr_id,jdbcType=VARCHAR}          -- 변경자ID
+                        ,CHG_DATE = #{nowDate}                                      -- 변경일자
+             WHERE       ITEM_ID  = #{parameter.item_id,jdbcType=VARCHAR}
+             AND         USIM_SEQ = #{parameter.eqt_seq,jdbcType=VARCHAR}
+    </update>
+    
+</mapper>

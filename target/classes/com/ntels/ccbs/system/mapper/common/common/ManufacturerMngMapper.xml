@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.common.ManufacturerMngMapper">
+
+	<!-- 제조사 리스트 조회 -->
+	<select id="manufacturerList" parameterType="com.ntels.ccbs.system.domain.common.common.ManufacturerMngVO" resultType="com.ntels.ccbs.system.domain.common.common.ManufacturerMngVO">
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			
+			SELECT	
+					A.SO_ID						/*사업자ID*/
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM		/* 사업명*/
+					, A.MNCO_ID					/*제조사ID */
+					, A.MNCO_NM					/*제조사명  */
+					, A.BOR_NO					/*사업자번호 */
+					, A.REP_NM					/*대표자명  */
+					, A.REP_TEL_NO				/*대표전화번호    */
+					, A.REP_FAX_NO				/*대표팩스번호*/
+			FROM 	TDNDT_MNCO A  			/*제조사*/
+			WHERE 	1 = 1
+				<if test="manufacturerMngVO.soId != null and manufacturerMngVO.soId != ''">
+					AND A.SO_ID =  #{manufacturerMngVO.soId}
+				</if>
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		
+		
+	</select>
+	
+	
+	<!-- 제조사 리스트 카운트 -->
+	<select id="manufacturerCount" parameterType="com.ntels.ccbs.system.domain.common.common.ManufacturerMngVO"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM   TDNDT_MNCO  A 
+		WHERE 	1 = 1
+			<if test="manufacturerMngVO.soId != null and manufacturerMngVO.soId != ''">
+				AND A.SO_ID =  #{manufacturerMngVO.soId}
+			</if>        
+	</select>
+
+</mapper>

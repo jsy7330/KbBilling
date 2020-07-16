@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.refInfo.itemTypeMgt.ChargeTypeMapper">
+
+<select id="getRateTypeListCount" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType">
+        SELECT COUNT(*)
+       	FROM   TPMBI_RATE_ITM_TYP     A, TSYCO_CODE_DETAIL B
+       	LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+       	ON #{chargeType.lngTyp} = C.LNG_TYP
+       	AND B.COMMON_GRP = C.COMMON_GRP
+       	AND B.COMMON_CD = C.COMMON_CD
+       	WHERE  B.COMMON_GRP = 'PP00031'
+       	AND    B.COMMON_CD   = A.CHRG_CTGRY        
+        AND    A.MSTR_FL     = '1'
+        AND    A.INACT_DT >= #{chargeType.currentDay}
+		<if test="chargeType.chrgCtgry != null">
+	       AND  CHRG_CTGRY = #{chargeType.chrgCtgry}
+	    </if>        
+        ORDER BY A.DISP_PRI_NO
+</select>
+
+<select id="getRateTypeList" resultType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType">
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	        
+        SELECT A.RATE_ITM_TYP_CD,
+               A.ACT_DT,
+ 	           A.INACT_DT,
+               A.RATE_ITM_TYP_NM,
+               A.CHRG_CTGRY,
+               A.DISP_PRI_NO,
+               A.MSTR_FL,
+               B.COMMON_CD_NM CHRG_CTGRY_NM,
+               A.CHG_DATE
+       	FROM   TPMBI_RATE_ITM_TYP     A, TSYCO_CODE_DETAIL B
+       	LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+       	ON  #{chargeType.lngTyp} = C.LNG_TYP
+       	AND B.COMMON_GRP = C.COMMON_GRP
+       	AND B.COMMON_CD = C.COMMON_CD
+       	WHERE  B.COMMON_GRP = 'PP00031'
+       	AND    B.COMMON_CD   = A.CHRG_CTGRY        
+        AND    A.MSTR_FL     = '1'
+        AND    A.INACT_DT >= #{chargeType.currentDay}
+		<if test="chargeType.chrgCtgry != null">
+	       AND  CHRG_CTGRY = #{chargeType.chrgCtgry}
+	    </if>        
+        ORDER BY A.DISP_PRI_NO
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>	        
+</select>
+
+<select id="getRateTypeMaxPriNo" resultType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType">
+		SELECT COMMON_CD,
+               ( SELECT CASE WHEN MAX(T.DISP_PRI_NO) IS NULL THEN 0
+               				ELSE MAX(T.DISP_PRI_NO) + 1
+               			END
+               	 FROM TSYCO_CODE_DETAIL A		
+               	 LEFT OUTER JOIN TPMBI_RATE_ITM_TYP T
+               	 ON A.COMMON_CD = T.CHRG_CTGRY
+               ) MAX_PRI_NO
+        FROM   TSYCO_CODE_DETAIL
+        WHERE  COMMON_GRP	 =   'PP00031'
+        AND    COMMON_CD     =   #{chargeType.commonCd}
+</select>
+
+<select id="getRateTypeDupCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" >
+		SELECT 
+			(CASE WHEN COUNT(RATE_ITM_TYP_CD) IS NULL
+				THEN 0 
+				ELSE COUNT(RATE_ITM_TYP_CD)
+			END) AS DATA_CNT
+        FROM   TPMBI_RATE_ITM_TYP
+        WHERE  RATE_ITM_TYP_NM   =   #{chargeType.rateItmTypNm}
+        AND    MSTR_FL           =   '1'
+        AND    INACT_DT        >   #{chargeType.currentDay}
+
+
+</select>
+
+<insert id="addRateType" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" >
+		INSERT INTO TPMBI_RATE_ITM_TYP
+        (
+          RATE_ITM_TYP_CD     ,
+          ACT_DT           ,
+          INACT_DT          ,
+          RATE_ITM_TYP_NM     ,
+          CHRG_CTGRY          ,
+          DISP_PRI_NO         ,
+          MSTR_FL             ,
+          REGR_ID        ,
+          REG_DATE      ,
+          CHGR_ID          ,
+          CHG_DATE
+        )
+        VALUES
+        (
+          #{chargeType.rateItmTypCd, jdbcType=VARCHAR },
+          #{chargeType.actDt, jdbcType=VARCHAR },
+          #{chargeType.inactDt, jdbcType=VARCHAR },
+          #{chargeType.rateItmTypNm, jdbcType=VARCHAR },
+          #{chargeType.chrgCtgry, jdbcType=VARCHAR },
+          #{chargeType.dispPriNo, jdbcType=NUMERIC },
+          
+          '1'                 ,
+          #{chargeType.regrId, jdbcType=VARCHAR },
+          #{chargeType.sysDate},   
+          #{chargeType.chgrId, jdbcType=VARCHAR },   
+          #{chargeType.sysDate}
+        )
+
+</insert>
+
+<select id="getRateType" resultType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType">
+		SELECT A.RATE_ITM_TYP_CD,
+               A.ACT_DT,
+ 	           A.INACT_DT,
+               A.RATE_ITM_TYP_NM,
+               A.CHRG_CTGRY,
+               A.DISP_PRI_NO,
+               A.MSTR_FL,
+               A.REGR_ID,
+               A.CHGR_ID,
+               A.ACT_DT AS BASE_ACT_DT
+      	FROM   TPMBI_RATE_ITM_TYP A,
+               TSYCO_CODE_DETAIL B
+       	WHERE  B.COMMON_GRP    =   'PP00031'
+       	AND    B.COMMON_CD     =   A.CHRG_CTGRY
+       	AND    RATE_ITM_TYP_CD =    #{chargeType.rateItmTypCd}
+        AND    MSTR_FL         =   '1'
+        AND    INACT_DT      =   #{chargeType.inactDt}
+        AND    ACT_DT       =   #{chargeType.actDt}
+</select>
+
+<select id="getRateTypeDupExpCnt" resultType="int" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" >
+		SELECT 
+			(CASE WHEN COUNT(RATE_ITM_TYP_CD) IS NULL
+				THEN 0 
+				ELSE COUNT(RATE_ITM_TYP_CD)
+			END) AS DATA_CNT
+        FROM   TPMBI_RATE_ITM_TYP
+        WHERE  RATE_ITM_TYP_NM   =   #{chargeType.rateItmTypNm}
+        AND    MSTR_FL           =   '1'
+        AND    INACT_DT        >   #{chargeType.currentDay}
+        AND    RATE_ITM_TYP_CD  !=   #{chargeType.rateItmTypCd}
+</select>
+
+<update id="modRateType" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" >
+		UPDATE TPMBI_RATE_ITM_TYP
+        SET    RATE_ITM_TYP_NM 		= 		#{chargeType.rateItmTypNm},
+               CHRG_CTGRY         	= 		#{chargeType.chrgCtgry},
+               DISP_PRI_NO     		= 		#{chargeType.dispPriNo},
+               CHGR_ID     		    = 		#{chargeType.chgrId},
+               CHG_DATE     	    = 		#{chargeType.sysDate},
+               ACT_DT       		= 		#{chargeType.actDt}
+        WHERE  RATE_ITM_TYP_CD 		= 		#{chargeType.rateItmTypCd}
+        AND    ACT_DT       		= 		#{chargeType.baseActDt}
+</update>
+
+<update id="modRateTypeActDt" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" >
+		UPDATE TPMBI_RATE_ITM_TYP
+        SET    INACT_DT           =       #{chargeType.inactDt}       ,
+               MSTR_FL            =       #{chargeType.mstrFl}        ,
+               CHGR_ID            =       #{chargeType.chgrId}        ,
+               CHG_DATE           =       #{chargeType.sysDate}       
+        WHERE  RATE_ITM_TYP_CD 		= 		#{chargeType.rateItmTypCd}
+        AND    ACT_DT       		= 		#{chargeType.baseActDt}
+        AND MSTR_FL = '1'
+</update>
+
+<update id="modRateTypeActDtion" parameterType="com.ntels.ccbs.product.domain.refInfo.itemTypeMgt.ChargeType" >
+		UPDATE TPMBI_RATE_ITM_TYP
+         SET   INACT_DT            =  #{chargeType.inactDt}      ,
+               CHGR_ID             =  #{chargeType.chgrId}       ,
+               MSTR_FL            =       #{chargeType.mstrFl}        ,               
+               CHG_DATE            =  #{chargeType.sysDate}
+        WHERE  RATE_ITM_TYP_CD 	   =  #{chargeType.rateItmTypCd}
+        AND    ACT_DT       	   =  #{chargeType.baseActDt}
+</update>
+
+</mapper>

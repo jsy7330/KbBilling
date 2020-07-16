@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.bulletin.bulletinMng.BulletinMapper">
+<!-- 공지사항 리스트 -->
+	<select id="list" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO" resultType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO">
+	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT /* BulletinMapper.list */
+			A.NOTICE_ID As noticeId
+		    ,(SELECT NAME.CODE_NM FROM TSYCO_CODE_MAST MAST , TSYCO_CODE_DETAIL DETAIL, TSYCO_CODE_DETAIL_NAME NAME
+				WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP AND DETAIL.COMMON_CD=NAME.COMMON_CD AND DETAIL.COMMON_GRP=NAME.COMMON_GRP
+				AND MAST.COMMON_GRP='SY00001' AND NAME.LNG_TYP=#{bulletin.lngTyp,jdbcType=VARCHAR} AND DETAIL.COMMON_CD='000'
+				AND DETAIL.USE_YN='Y'AND MAST.USE_YN='Y') AS noticeCl
+		    ,A.TITLE AS title
+		    ,A.CONTENTS AS content
+		    ,A.VIEW_CNT AS viewCnt
+		    ,A.UP_NOTICE_ID AS upNoticeId
+		    ,A.EFFECT_START_DT AS effectStartDt
+		    ,A.EFFECT_END_DT AS effectEndDt
+		    ,A.POPUP_YN AS popupYn
+		    ,A.REGR_ID AS regrId
+		    ,A.REG_DATE AS regDate
+		    <!-- ,(select C.FILE_UUID from TSYCO_NOTICE_FILE C where C.notice_id=A.notice_id)AS fileUuid
+        	,(select C.FILE_NM from TSYCO_NOTICE_FILE C where C.notice_id=A.notice_id)AS fileNm -->
+		FROM TSYCO_NOTICE A
+		    WHERE A.USE_YN='Y'
+		   <if test="bulletin.srchTyp == 'SEL'">
+				AND (A.TITLE like CONCAT(CONCAT('%',#{bulletin.srchNm,jdbcType=VARCHAR}),'%') OR A.CONTENTS like CONCAT(CONCAT('%',#{bulletin.srchNm,jdbcType=VARCHAR}),'%'))
+			</if>
+		   <if test="bulletin.srchTyp == 'title'">
+				AND A.TITLE like CONCAT(CONCAT('%',#{bulletin.srchNm,jdbcType=VARCHAR}),'%')
+			</if>
+			<if test="bulletin.srchTyp == 'content'">
+				AND A.CONTENTS like CONCAT(CONCAT('%',#{bulletin.srchNm,jdbcType=VARCHAR}),'%')
+			</if> 
+		   ORDER BY A.REG_DATE ${sord} 
+		   <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		</select>
+
+<!-- 공지사항 총 카운트 -->	
+	<select id="count" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO" resultType="int">
+		SELECT /* NoticeMapper.count */
+			COUNT(*) 
+		FROM 
+			TSYCO_NOTICE A WHERE A.USE_YN='Y'
+		<if test="bulletin.srchTyp == 'SEL'">
+			AND (A.TITLE like CONCAT(CONCAT('%',#{bulletin.srchNm,jdbcType=VARCHAR}),'%') OR A.CONTENTS like CONCAT(CONCAT('%',#{bulletin.srchNm,jdbcType=VARCHAR}),'%'))
+		</if>
+		  <if test="bulletin.srchTyp == 'title'">
+			AND A.TITLE like CONCAT(CONCAT('%',#{bulletin.srchNm,jdbcType=VARCHAR}),'%')
+		</if>
+		<if test="bulletin.srchTyp == 'content'">
+			AND A.CONTENTS like CONCAT(CONCAT('%',#{bulletin.srchNm,jdbcType=VARCHAR}),'%')
+		</if> 
+
+    </select>
+    
+    <!-- 공지사항 등록 -->	
+	<insert id="insert" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO">
+		INSERT INTO /* NoticeMapper.insert */
+				TSYCO_NOTICE
+			(
+				 NOTICE_ID
+				,NOTICE_CL
+		  	  	,EFFECT_START_DT
+		  	  	,EFFECT_END_DT
+				,TITLE
+				,CONTENTS
+				,POPUP_YN
+				,REGR_ID
+				,REG_DATE
+                ,CHGR_ID
+                ,CHG_DATE
+				,VIEW_CNT
+				,USE_YN
+			)
+			VALUES (
+				 #{noticeId}
+				,'001'
+				,#{effectStartDt}
+				,#{effectEndDt}
+				,#{title}
+				,#{content}
+				,#{popupYn}
+				,#{regrId}
+				,#{sysToDate}
+                ,#{regrId}
+                ,#{sysToDate}
+				,0
+				,'Y'
+			)
+	</insert>
+ 
+ 	<insert id="insertAuth" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO">
+ 		INSERT INTO
+ 			TSYCO_NOTICE_AUTH
+ 			(
+	 			  AUTH_ID
+	 			 ,NOTICE_ID
+	 			 ,AUTH_GROUP
+				,REGR_ID
+				,REG_DATE
+                ,CHGR_ID
+                ,CHG_DATE
+ 			)
+ 			VALUES(
+ 				#{authId}
+ 				,#{noticeId}
+ 				,#{userGroupId}
+				,#{regrId}
+				,#{sysToDate}
+				,#{regrId}
+				,#{sysToDate}
+ 			)
+ 	</insert>
+ 	
+ 	<update id="updateBulletinAction" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO" >
+ 		UPDATE /* BulletinMapper.bulletinUpdateAction */
+				TSYCO_NOTICE
+		SET
+			 NOTICE_CL 				= '001'
+			, EFFECT_START_DT		= #{effectStartDt,jdbcType=VARCHAR}
+			, EFFECT_END_DT			= #{effectEndDt,jdbcType=VARCHAR}
+			, POPUP_YN				= #{popupYn,jdbcType=VARCHAR}
+			, TITLE   				= #{title,jdbcType=VARCHAR}
+			, CONTENTS				= #{content,jdbcType=VARCHAR}
+			, CHGR_ID				= #{chgrId,jdbcType=VARCHAR}
+			, CHG_DATE				= #{sysToDate,jdbcType=VARCHAR}
+       	WHERE NOTICE_ID = #{noticeId,jdbcType=VARCHAR}
+ 	</update>
+ 	
+ 	<update id="deleteBulletin" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO">
+        DELETE FROM
+	    	TSYCO_NOTICE
+	    WHERE NOTICE_ID = #{noticeId,jdbcType=VARCHAR}
+ 	</update>
+ 	
+ 	<delete id="deleteAuth" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO">
+ 		DELETE FROM TSYCO_NOTICE_AUTH WHERE NOTICE_ID = #{noticeId,jdbcType=VARCHAR}
+ 	</delete>
+ 	
+ 	<insert id="insertFile" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO">
+ 		INSERT INTO
+ 			TSYCO_NOTICE_FILE
+ 			(
+ 				NOTICE_ID
+ 				,FILE_SEQ
+ 				,FILE_PATH
+ 				,FILE_NM
+ 				,FILE_UUID
+                ,CHGR_ID
+                ,CHG_DATE
+ 				,REGR_ID
+ 				,REG_DATE
+ 			)VALUES(
+ 				#{noticeId}
+ 				,#{fileSeq}
+ 				,#{filePath}
+ 				,#{fileNm}
+ 				,#{fileUuid}
+                ,#{regrId}
+                ,#{sysToDate}
+ 				,#{regrId}
+ 				,#{sysToDate}
+ 			)
+ 	</insert>
+
+ 	<select id="authList" parameterType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO" resultType="com.ntels.ccbs.system.domain.bulletin.bulletinMng.BulletinMngVO">
+ 		SELECT 
+ 			A.AUTH_ID
+ 			,A.NOTICE_ID
+ 			,A.AUTH_GROUP
+     		,(SELECT B.USER_GROUP_NAME FROM TSYCO_USER_GROUP B WHERE A.AUTH_GROUP=B.USER_GROUP_ID) AS USER_GROUP_NAME
+ 		FROM TSYCO_NOTICE_AUTH A
+ 		WHERE NOTICE_ID = #{bulletin.noticeId,jdbcType=VARCHAR}
+ 	</select>
+    
+ 	<select id="getFileList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+ 		SELECT 
+ 			 A.FILE_PATH
+ 			,A.FILE_NM
+ 			,A.FILE_UUID
+ 		FROM TSYCO_NOTICE_FILE A
+ 		WHERE NOTICE_ID = #{noticeId}
+        ORDER BY FILE_SEQ
+ 	</select>
+    
+    <delete id="deleteFile">
+        DELETE 
+        FROM TSYCO_NOTICE_FILE
+        WHERE NOTICE_ID = #{noticeId}
+        AND   FILE_UUID = #{uuid}
+    </delete>
+    
+ 	<select id="getFileInfo" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+ 		SELECT 
+ 			 A.FILE_PATH
+ 			,A.FILE_NM
+ 			,A.FILE_UUID
+ 		FROM TSYCO_NOTICE_FILE A
+ 		WHERE NOTICE_ID = #{noticeId}
+        AND   FILE_UUID = #{uuid}
+ 	</select>
+    
+    <select id="getMaxFileSeq" resultType="int">
+        SELECT 
+            CASE WHEN A.MAX_SEQ IS NULL THEN 0
+               ELSE A.MAX_SEQ
+            END
+        FROM (    
+            SELECT 
+                 MAX(A.FILE_SEQ) AS MAX_SEQ
+            FROM TSYCO_NOTICE_FILE A
+            WHERE NOTICE_ID = #{noticeId}
+            ) A
+    </select>
+    
+</mapper>

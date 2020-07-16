@@ -1,0 +1,925 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.assignmentOrderMgt.OrderDistributorMapper">
+
+	<!-- 주문관리조직 리스트 조회 -->
+	<select id="orderMngOrgList" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO" resultType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">	
+		SELECT
+				SO_ID
+				, ORG_ID
+				, ORG_NM
+		FROM	TDNDI_ORG_INFO
+		WHERE 	1 = 1
+			AND SO_ID 	= #{orderDistributorVO.soId}
+			AND ORG_ID	= #{orderDistributorVO.orgId}
+		
+		UNION ALL
+		
+		SELECT
+				*
+		FROM (
+				SELECT
+						A.SO_ID
+						, A.ORG_ID
+						, B.ORG_NM
+				FROM	TDNDI_ORG_REL_HIST A
+						, TDNDI_ORG_INFO B
+				WHERE 	1 = 1
+					AND A.SO_ID 	= #{orderDistributorVO.soId}
+					AND A.SO_ID		= B.SO_ID
+					AND A.ORG_ID	= B.ORG_ID
+					AND A.REL_TP_CD	= '101'
+					AND B.TP_CD		= '1000'
+					AND B.TP_DTL_CD 	IN ('1004','1005')
+					AND B.APPY_END_DT	= '99991231'
+					AND (A.PART_ORG_ID	= #{orderDistributorVO.orgId}
+							OR PART_ORG_ID IN (
+												SELECT	ORG_ID
+												FROM	TDNDI_ORG_REL_HIST
+												WHERE 	SO_ID 		= #{orderDistributorVO.soId}
+													AND PART_ORG_ID	= #{orderDistributorVO.orgId}
+												)
+						)
+					ORDER BY B.ORG_NM
+		)
+		
+
+
+	</select>
+	
+	
+	<!-- 할당내역 리스트 조회 -->
+	<select id="asgnList" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO" resultType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		
+			SELECT	A.ASGN_NO				--할당번호
+					, A.ASGN_ORG_ID			--할당조직ID
+					, H.ORG_NM 			AS ASGN_ORG_NM	--할당조직명
+					, A.ITEM_TP_CD			--제품유형코드
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM	--제품유형명
+		       		, A.ITEM_ID
+		       		, B.ITEM_NM
+		       		, B.ITEM_KND_CD
+		       		, A.EQT_USE_CD		--단말기용도코드
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00065'
+								AND DETAIL.COMMON_CD = A.EQT_USE_CD
+		       		) AS EQT_USE_NM	--단말기용도코드명
+		       		, A.CLOR_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00078'
+								AND DETAIL.COMMON_CD = A.CLOR_CD
+		       		) AS COLOR_NM			--색상명
+					, A.ASGN_DT
+					, A.STCK_OWN_QTY
+					, A.ASGN_QTY
+		       		, CASE WHEN A.UPP_LV_ASGN_NO IS NULL OR A.UPP_LV_ASGN_NO = ''
+		       			THEN (	SELECT CASE WHEN SUM(BB.ORD_QTY) IS NULL THEN 0 ELSE SUM(BB.ORD_QTY) END AS ORD_QTY
+								FROM	TDNDT_ORD BB
+										, TDNDT_ASGN CC
+								WHERE 	BB.SO_ID = A.SO_ID
+									AND CC.SO_ID = A.SO_ID
+									AND CC.UPP_LV_ASGN_NO = A.ASGN_NO
+									AND CC.UPP_LV_ASGN_ORG_ID = A.ASGN_ORG_ID
+									AND CC.ASGN_NO = BB.ASGN_NO
+									AND CC.ASGN_ORG_ID = BB.ASGN_ORG_ID
+									AND BB.ORD_PRGR_STAT_CD IN ('10','20')
+							)
+						ELSE (
+								SELECT CASE WHEN SUM(BB.ORD_QTY) IS NULL THEN 0 ELSE SUM(BB.ORD_QTY) END ORD_QTY
+								FROM 	TDNDT_ORD BB
+								WHERE 	BB.SO_ID 		= A.SO_ID
+									AND BB.ASGN_NO 		= A.ASGN_NO
+									AND BB.ASGN_ORG_ID 	= A.ASGN_ORG_ID
+									AND BB.ORD_PRGR_STAT_CD IN ('10','20')
+							) END AS ORD_QTY
+					, A.ASGN_QTY - CASE WHEN A.UPP_LV_ASGN_NO IS NULL OR A.UPP_LV_ASGN_NO = ''
+		       			THEN (	SELECT CASE WHEN SUM(BB.ORD_QTY) IS NULL THEN 0 ELSE SUM(BB.ORD_QTY) END AS ORD_QTY
+								FROM	TDNDT_ORD BB
+										, TDNDT_ASGN CC
+								WHERE 	BB.SO_ID = A.SO_ID
+									AND CC.SO_ID = A.SO_ID
+									AND CC.UPP_LV_ASGN_NO = A.ASGN_NO
+									AND CC.UPP_LV_ASGN_ORG_ID = A.ASGN_ORG_ID
+									AND CC.ASGN_NO = BB.ASGN_NO
+									AND CC.ASGN_ORG_ID = BB.ASGN_ORG_ID
+									AND BB.ORD_PRGR_STAT_CD IN ('10','20')
+							)
+						ELSE (
+								SELECT CASE WHEN SUM(BB.ORD_QTY) IS NULL THEN 0 ELSE SUM(BB.ORD_QTY) END ORD_QTY
+								FROM 	TDNDT_ORD BB
+								WHERE 	BB.SO_ID 		= A.SO_ID
+									AND BB.ASGN_NO 		= A.ASGN_NO
+									AND BB.ASGN_ORG_ID 	= A.ASGN_ORG_ID
+									AND BB.ORD_PRGR_STAT_CD IN ('10','20')
+							) END 
+					AS NO_ORD_QTY
+					, A.STCK_OWN_QTY - CASE WHEN A.UPP_LV_ASGN_NO IS NULL OR A.UPP_LV_ASGN_NO = ''
+		       			THEN (	SELECT CASE WHEN SUM(BB.ORD_QTY) IS NULL THEN 0 ELSE SUM(BB.ORD_QTY) END AS ORD_QTY
+								FROM	TDNDT_ORD BB
+										, TDNDT_ASGN CC
+								WHERE 	BB.SO_ID = A.SO_ID
+									AND CC.SO_ID = A.SO_ID
+									AND CC.UPP_LV_ASGN_NO = A.ASGN_NO
+									AND CC.UPP_LV_ASGN_ORG_ID = A.ASGN_ORG_ID
+									AND CC.ASGN_NO = BB.ASGN_NO
+									AND CC.ASGN_ORG_ID = BB.ASGN_ORG_ID
+									AND BB.ORD_PRGR_STAT_CD IN ('10','20')
+							)
+						ELSE (
+								SELECT CASE WHEN SUM(BB.ORD_QTY) IS NULL THEN 0 ELSE SUM(BB.ORD_QTY) END ORD_QTY
+								FROM 	TDNDT_ORD BB
+								WHERE 	BB.SO_ID 		= A.SO_ID
+									AND BB.ASGN_NO 		= A.ASGN_NO
+									AND BB.ASGN_ORG_ID 	= A.ASGN_ORG_ID
+									AND BB.ORD_PRGR_STAT_CD IN ('10','20')
+							) END 
+					AS NO_ORD_QTY0
+					, A.NOTE
+					, A.ASGN_MNG_ORG_ID
+					, ( SELECT 	ORG_NM
+						FROM 	TDNDI_ORG_INFO
+						WHERE 	SO_ID = A.SO_ID
+							AND ORG_ID = A.ASGN_MNG_ORG_ID ) AS ASGN_MNG_ORG_NM
+					, A.ASGN_MNG_INCHRG_ID
+ 					, ( SELECT 	USER_NAME
+						FROM 	TSYCO_USER
+						WHERE 	USER_ID = A.ASGN_MNG_INCHRG_ID ) AS ASGN_MNG_INCHRG_NM
+					, A.LGST_CENT_ID
+					, I.ORG_NM AS LGST_CENT_NM
+					, A.UPP_LV_ASGN_NO
+					, A.ASGN_END_YN
+					, A.NOASGN_QTY
+					, A.REGR_ID
+					, A.REG_DATE
+					, A.CHGR_ID
+					, A.CHG_DATE
+			FROM 	TDNDT_ASGN A
+					, TDNDT_ITEM B					
+					, TDNDI_ORG_INFO H
+					, TDNDI_ORG_INFO I
+			WHERE 	1 = 1
+				AND A.SO_ID  		= #{orderDistributorVO.soId}
+				AND A.SO_ID 		= B.SO_ID
+				AND A.ITEM_ID 		= B.ITEM_ID 
+				AND A.SO_ID 		= H.SO_ID
+				AND A.ASGN_ORG_ID 	= H.ORG_ID
+				AND A.SO_ID 		= I.SO_ID
+				AND A.LGST_CENT_ID 	= I.ORG_ID
+				
+				<if test="orderDistributorVO.asgnOrgId != null and orderDistributorVO.asgnOrgId != ''">
+					AND A.ASGN_ORG_ID =  #{orderDistributorVO.asgnOrgId}
+				</if>	
+				<if test="orderDistributorVO.asgnEndYn != null and orderDistributorVO.asgnEndYn != ''">
+					AND A.ASGN_END_YN =  #{orderDistributorVO.asgnEndYn}
+				</if>
+				
+				
+				<if test="orderDistributorVO.searchStatDt != null and orderDistributorVO.searchStatDt != ''">
+					AND A.ASGN_DT <![CDATA[ >= ]]> #{orderDistributorVO.searchStatDt}
+				</if>
+				<if test="orderDistributorVO.searchEndDt != null and orderDistributorVO.searchEndDt != ''">
+					AND A.ASGN_DT <![CDATA[ <= ]]> #{orderDistributorVO.searchEndDt}
+				</if>
+				ORDER BY A.ASGN_DT DESC
+					
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	
+	<!-- 할당내역 리스트 카운트 -->
+	<select id="asgnCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM 	TDNDT_ASGN A
+				, TDNDT_ITEM B					
+				, TDNDI_ORG_INFO H
+				, TDNDI_ORG_INFO I
+		WHERE 	1 = 1
+			AND A.SO_ID  		= #{orderDistributorVO.soId}
+			AND A.SO_ID 		= B.SO_ID
+			AND A.ITEM_ID 		= B.ITEM_ID 
+			AND A.SO_ID 		= H.SO_ID
+			AND A.ASGN_ORG_ID 	= H.ORG_ID
+			AND A.SO_ID 		= I.SO_ID
+			AND A.LGST_CENT_ID 	= I.ORG_ID
+			
+			<if test="orderDistributorVO.asgnOrgId != null and orderDistributorVO.asgnOrgId != ''">
+				AND A.ASGN_ORG_ID =  #{orderDistributorVO.asgnOrgId}
+			</if>	
+			<if test="orderDistributorVO.asgnOrgId != null and orderDistributorVO.asgnOrgId != ''">
+				AND A.ASGN_END_YN =  #{orderDistributorVO.asgnEndYn}
+			</if>
+			
+			
+			<if test="orderDistributorVO.searchStatDt != null and orderDistributorVO.searchStatDt != ''">
+				AND A.ASGN_DT <![CDATA[ >= ]]> #{orderDistributorVO.searchStatDt}
+			</if>
+			<if test="orderDistributorVO.searchEndDt != null and orderDistributorVO.searchEndDt != ''">
+				AND A.ASGN_DT <![CDATA[ <= ]]> #{orderDistributorVO.searchEndDt}
+			</if>
+	</select>
+
+
+	<!-- 유통점 주문 정보 리스트 조회 -->
+	<select id="ordList" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO" resultType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+		SELECT	A.SO_ID
+				, A.ORD_NO
+				, A.ORD_ORG_ID
+				, ( SELECT	ORG_NM
+					FROM 	TDNDI_ORG_INFO
+					WHERE 	SO_ID 	= A.SO_ID
+						AND ORG_ID 	= A.ORD_ORG_ID ) AS ORD_ORG_NM
+				, A.LGST_CENT_ID
+				, ( SELECT 	ORG_NM
+					FROM 	TDNDI_ORG_INFO
+					WHERE 	SO_ID 	= A.SO_ID
+						AND ORG_ID 	= A.LGST_CENT_ID ) AS LGST_CENT_NM
+				, A.ORD_MNG_ORG_ID
+				, ( SELECT 	ORG_NM
+					FROM 	TDNDI_ORG_INFO
+					WHERE 	SO_ID = A.SO_ID
+						AND ORG_ID = A.ORD_MNG_ORG_ID ) AS ORD_MNG_ORG_NM
+				, A.ORD_MNG_INCHRG_ID
+				, A.ORD_PRGR_STAT_CD
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00076'
+							AND DETAIL.COMMON_CD = A.ORD_PRGR_STAT_CD
+	       		) AS ORD_PRGR_STAT_NM		--주문진행상태코드명
+	       		, A.ITEM_ID
+				, B.ITEM_NM
+				, A.ITEM_TP_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00063'
+							AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+	       		) AS ITEM_TP_NM	--제품유형명
+	       		, B.ITEM_KND_CD
+				, A.EQT_USE_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00065'
+							AND DETAIL.COMMON_CD = A.EQT_USE_CD
+	       		) AS EQT_USE_NM	--단말기용도코드명
+	       		, A.CLOR_CD
+	       		, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00078'
+							AND DETAIL.COMMON_CD = A.CLOR_CD
+	       		) AS COLOR_NM			--색상명
+	       		, A.ORD_QTY
+				, A.ORD_UT_PRC
+				, A.ORD_AMT
+				, A.ORD_ADD_TX
+				, A.ORD_TOT_AMT
+				, A.ORD_CONF_QTY
+				, A.STAT_PROC_ID
+				, A.STAT_PROC_DTTM
+				, A.DLV_ZIP_CD
+				, A.DLV_BSS_ADDR
+				, A.DLV_DTL_ADDR
+	       		, CONCAT(A.DLV_BSS_ADDR, A.DLV_DTL_ADDR) AS DLV_ADDR
+				, A.ORD_NOTE
+				, A.ASGN_NO
+				, A.ASGN_ORG_ID
+	       		, ( SELECT 	ORG_NM
+					FROM 	TDNDI_ORG_INFO
+					WHERE 	SO_ID = A.SO_ID
+						AND ORG_ID = A.ASGN_ORG_ID ) AS ASGN_ORG_NM
+				, A.REGR_ID
+				, A.REG_DATE
+				, A.CHGR_ID
+				, A.CHG_DATE
+	       		, ( SELECT 	USER_NAME
+					FROM 	TSYCO_USER
+					WHERE 	USER_ID = A.REGR_ID) AS REG_NM
+				, ( SELECT 	STCK_OWN_QTY
+					FROM 	TDNDT_ASGN
+					WHERE 	SO_ID 		= A.SO_ID
+						AND ASGN_NO 	= A.ASGN_NO
+						AND ASGN_ORG_ID = A.ASGN_ORG_ID ) AS ASGN_QTY
+		FROM 	TDNDT_ORD A
+				, TDNDT_ITEM B
+		WHERE 	1 = 1
+			AND A.SO_ID 	= #{orderDistributorVO.soId}
+			AND A.SO_ID 	= B.SO_ID
+			AND A.ITEM_ID 	= B.ITEM_ID
+			AND A.ORD_PRGR_STAT_CD IN ('10','20')
+			
+			<if test="orderDistributorVO.ordQty != null and orderDistributorVO.ordQty != ''">
+				AND A.ORD_QTY >  #{orderDistributorVO.ordQty}
+			</if>
+			<if test="orderDistributorVO.asgnNo != null and orderDistributorVO.asgnNo != ''">
+				AND A.ASGN_NO =  #{orderDistributorVO.asgnNo}
+			</if>
+			<if test="orderDistributorVO.asgnOrgId != null and orderDistributorVO.asgnOrgId != ''">
+				AND A.ASGN_ORG_ID =  #{orderDistributorVO.asgnOrgId}
+			</if>
+	
+	</select>
+
+
+	<!-- 유통점 주문 정보를 관리 조회 -->
+	<select id="ordPreList" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO" resultType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+	
+		SELECT
+				B.SO_ID
+				, C.ORD_NO AS ORD_NO
+				, A.ORG_ID AS ORD_ORG_ID
+				, B.ORG_NM AS ORD_ORG_NM 
+				, #{orderDistributorVO.lgstCentId} 		AS LGST_CENT_ID
+				, #{orderDistributorVO.ordMngOrgId} 	AS ORD_MNG_ORG_ID
+				, #{orderDistributorVO.ordMngInchrgId} 	AS ORD_MNG_INCHRG_ID
+				, C.ORD_PRGR_STAT_CD
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                               , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00076'
+							AND DETAIL.COMMON_CD = C.ORD_PRGR_STAT_CD
+	       		) AS ORD_PRGR_STAT_NM		--주문진행상태코드명
+				, #{orderDistributorVO.itemId} AS ITEM_ID
+				, #{orderDistributorVO.itemNm} AS ITEM_NM
+				, #{orderDistributorVO.itemTpCd} AS ITEM_TP_CD
+				, #{orderDistributorVO.itemTpNm} AS ITEM_TP_NM
+				, #{orderDistributorVO.eqtUseCd} AS EQT_USE_CD
+				, #{orderDistributorVO.eqtUseNm} AS EQT_USE_NM
+				, #{orderDistributorVO.clorCd} AS CLOR_CD
+				, #{orderDistributorVO.colorNm} AS COLOR_NM
+				, CASE WHEN C.ORD_QTY IS NULL THEN 0 ELSE C.ORD_QTY END AS ORD_QTY
+				, CASE WHEN C.ORD_QTY IS NULL THEN 0 ELSE C.ORD_QTY END AS OLD_ORD_QTY
+				, CASE WHEN (SELECT DSTRB_UT_PRC
+							FROM 	TDNDT_DSTRB_UT_PRC_DTL
+							WHERE 	SO_ID 		= #{orderDistributorVO.soId}
+							AND 	ITEM_ID 	= #{orderDistributorVO.itemId}
+							AND 	EFT_END_DT 	= '99991231' 
+							) IS NULL THEN 0 
+					ELSE (SELECT DSTRB_UT_PRC
+							FROM 	TDNDT_DSTRB_UT_PRC_DTL
+							WHERE 	SO_ID 		= #{orderDistributorVO.soId}
+							AND 	ITEM_ID 	= #{orderDistributorVO.itemId}
+							AND 	EFT_END_DT 	= '99991231' 
+							) END AS ORD_UT_PRC
+				, CASE WHEN C.ORD_AMT IS NULL THEN 0 ELSE C.ORD_AMT END AS ORD_AMT
+				, CASE WHEN C.ORD_ADD_TX IS NULL THEN 0 ELSE C.ORD_ADD_TX END AS ORD_ADD_TX
+				, CASE WHEN C.ORD_TOT_AMT IS NULL THEN 0 ELSE C.ORD_TOT_AMT END AS ORD_TOT_AMT
+				, CASE WHEN C.ORD_CONF_QTY IS NULL THEN 0 ELSE C.ORD_CONF_QTY END AS ORD_CONF_QTY
+				, C.STAT_PROC_ID
+				, C.STAT_PROC_DTTM
+				, CASE WHEN C.DLV_ZIP_CD IS NULL THEN D.ZIP_CD ELSE C.DLV_ZIP_CD END AS DLV_ZIP_CD
+				, CASE WHEN C.DLV_BSS_ADDR IS NULL THEN D.ADDR1 ELSE C.DLV_BSS_ADDR END AS DLV_BSS_ADDR
+				, CASE WHEN C.DLV_DTL_ADDR IS NULL THEN D.ADDR2 ELSE C.DLV_DTL_ADDR END AS DLV_DTL_ADDR
+				, C.ORD_NOTE
+				, #{orderDistributorVO.asgnNo} AS ASGN_NO
+				, #{orderDistributorVO.asgnOrgId} AS ASGN_ORG_ID
+				, #{orderDistributorVO.sysDate} AS SYS_DATE
+				, (SELECT 
+						CASE WHEN COUNT(*) = 0 THEN 'N'
+						ELSE 'Y' END AS IO_CHK
+					FROM	TDNDT_INOUT_DTL AA
+							, TDNDT_INOUT BB
+       						, TDNDT_ORD CC
+					WHERE  	AA.INOUT_ID = BB.INOUT_ID
+					AND		AA.ORD_NO   = CC.ORD_NO
+					AND		BB.INOUT_DT <![CDATA[<=]]> #{orderDistributorVO.sysDate}
+					AND		AA.INOUT_RESN_CD 	= '40'
+					AND		BB.INOUT_CL_CD 		= '2'
+					AND		CC.ORD_PRGR_STAT_CD = '20'
+					AND		BB.OWN_ORG_ID 		= A.ORG_ID
+					AND		AA.ITEM_ID 			= #{orderDistributorVO.itemId}
+					AND		BB.INOUT_PRGR_STAT_CD = '20'
+					AND		1 <![CDATA[<=]]> (SELECT COUNT(*) FROM TDNDT_INOUT_DTL X, TDNDT_INOUT Y
+            									WHERE X.INOUT_ID = Y.INOUT_ID AND X.ORD_NO = AA.ORD_NO
+            									AND  X.ITEM_ID = #{orderDistributorVO.itemId}
+									            AND  X.INOUT_RESN_CD||X.INOUT_CL_CD = '401' AND INOUT_PRGR_STAT_CD = '10'
+									            AND  Y.INOUT_DT <![CDATA[<]]> #{orderDistributorVO.sysDate} - 4
+            								)
+				) AS IO_CHK
+		FROM 	TDNDI_ORG_REL_HIST A
+				INNER JOIN TDNDI_ORG_INFO B ON A.SO_ID = B.SO_ID AND A.ORG_ID	= B.ORG_ID
+				LEFT OUTER JOIN TDNDT_ORD C ON A.SO_ID = C.SO_ID 
+												AND #{orderDistributorVO.asgnNo} = C.ASGN_NO 
+												AND #{orderDistributorVO.asgnOrgId} = C.ASGN_ORG_ID
+												AND A.ORG_ID = C.ORD_ORG_ID
+												AND '20' <![CDATA[<>]]> C.ORD_PRGR_STAT_CD
+												AND '30'<![CDATA[<>]]> C.ORD_PRGR_STAT_CD
+												 
+				INNER JOIN TDNDI_DIST_INFO D ON A.SO_ID = D.SO_ID AND A.ORG_ID = D.ORG_ID
+		WHERE 	1 = 1
+			AND B.SO_ID 		= #{orderDistributorVO.soId}
+			AND A.APPY_END_DT	= '99991231'
+			<!-- AND A.PART_ORG_ID 	= #{orderDistributorVO.ordMngOrgId} -->
+			AND A.PART_ORG_ID 	= #{orderDistributorVO.asgnOrgId}
+			AND REL_TP_CD='101'
+	
+	</select>
+	
+	<!-- 유통점 주문 정보 등록 -->
+	<insert id="insertOrd" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+	
+		INSERT INTO TDNDT_ORD
+			( SO_ID				--사업ID
+			, ORD_NO			--주문번호
+			, ORD_ORG_ID		--주문조직ID
+			, LGST_CENT_ID		--물류센터ID
+			, ORD_MNG_ORG_ID	--주문관리조직ID
+			, ORD_MNG_INCHRG_ID	--주문관리담당자ID
+			, ORD_PRGR_STAT_CD	--주문진행상태코드
+			, ITEM_ID			--제품ID
+			, ITEM_TP_CD		--제품유형코드
+			, EQT_USE_CD		--단말기용도코드
+			, CLOR_CD			--색상코드
+			, ORD_QTY			--주문수량
+			, ORD_UT_PRC		--주문단가
+			, ORD_AMT			--주문공급가액
+			, ORD_ADD_TX		--주문부가세
+			, ORD_TOT_AMT		--주문총금액
+			, ORD_CONF_QTY		--주문확정수량
+			, STAT_PROC_ID		--상태처리자ID
+			, STAT_PROC_DTTM	--상태처리일시
+			, DLV_ZIP_CD		--배송지우편번호
+			, DLV_BSS_ADDR		--배송지기본주소
+			, DLV_DTL_ADDR		--배송지상세주소
+			, ORD_NOTE			--주문비고
+			, ASGN_NO			--할당번호
+			, ASGN_ORG_ID		--할당조직ID
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+			)
+        VALUES
+			( #{orderDistributorVO.soId}			--사업ID
+			, #{orderDistributorVO.ordNo}			--주문번호
+			, #{orderDistributorVO.ordOrgId}		--주문조직ID
+			, #{orderDistributorVO.lgstCentId}		--물류센터ID
+			, #{orderDistributorVO.ordMngOrgId}		--주문관리조직ID
+			, #{orderDistributorVO.ordMngInchrgId}	--주문관리담당자ID
+			, #{orderDistributorVO.ordPrgrStatCd}	--주문진행상태코드
+			, #{orderDistributorVO.itemId}			--제품ID
+			, #{orderDistributorVO.itemTpCd}		--제품유형코드
+			, #{orderDistributorVO.eqtUseCd}		--단말기용도코드
+			, #{orderDistributorVO.clorCd}			--색상코드
+			, #{orderDistributorVO.ordQty}			--주문수량
+			, #{orderDistributorVO.ordUtPrc}		--주문단가
+			, #{orderDistributorVO.ordAmt}			--주문공급가액
+			, #{orderDistributorVO.ordAddTx}		--주문부가세
+			, #{orderDistributorVO.ordTotAmt}		--주문총금액
+			, #{orderDistributorVO.ordConfQty}		--주문확정수량
+			, #{orderDistributorVO.statProcId}		--상태처리자ID
+			, #{orderDistributorVO.statProcDttm}	--상태처리일시
+			, #{orderDistributorVO.dlvZipCd}		--배송지우편번호
+			, #{orderDistributorVO.dlvBssAddr}		--배송지기본주소
+			, #{orderDistributorVO.dlvDtlAddr}		--배송지상세주소
+			, #{orderDistributorVO.ordNote}			--주문비고
+			, #{orderDistributorVO.asgnNo}			--할당번호
+			, #{orderDistributorVO.asgnOrgId}		--할당조직ID
+			, #{orderDistributorVO.regrId}			--등록자
+			, #{orderDistributorVO.regDate}			--등록일시
+			, #{orderDistributorVO.chgrId}			--수정자
+			, #{orderDistributorVO.chgDate}			--수정일시
+			)			
+	</insert>
+	
+	
+	<!-- 유통점 주문 정보 등록 -->
+	<insert id="insertOrdStatProcHist" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+	
+		INSERT INTO TDNDT_ORD_STAT_PROC_HIST
+			( SO_ID				--사업ID
+			, ORD_NO			--주문번호
+			, ORD_PRGR_STAT_CD	--주문진행상태코드
+			, STAT_PROC_ID		--상태처리자ID
+			, STAT_PROC_DTTM	--상태처리일시
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+			)
+        VALUES
+			( #{orderDistributorVO.soId}			--사업ID
+			, #{orderDistributorVO.ordNo}			--주문번호
+			, #{orderDistributorVO.ordPrgrStatCd}	--주문진행상태코드
+			, #{orderDistributorVO.statProcId}		--상태처리자ID
+			, #{orderDistributorVO.statProcDttm}	--상태처리일시
+			, #{orderDistributorVO.regrId}			--등록자
+			, #{orderDistributorVO.regDate}			--등록일시
+			, #{orderDistributorVO.chgrId}			--수정자
+			, #{orderDistributorVO.chgDate}			--수정일시
+			)			
+	</insert>
+	
+	
+	<!-- 유통점 주문 정보 수정 -->
+	<update id="updateOrd" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+		UPDATE TDNDT_ORD
+			SET	ORD_QTY			= #{orderDistributorVO.ordQty}			--주문수량
+				, ORD_UT_PRC	= #{orderDistributorVO.ordUtPrc}		--주문단가
+				, ORD_AMT		= #{orderDistributorVO.ordAmt}			--주문공급가액
+				, ORD_ADD_TX	= #{orderDistributorVO.ordAddTx}		--주문부가세
+				, ORD_TOT_AMT	= #{orderDistributorVO.ordTotAmt}		--주문총금액
+				, STAT_PROC_ID	= #{orderDistributorVO.statProcId}		--상태처리자ID
+				, STAT_PROC_DTTM	= #{orderDistributorVO.statProcDttm}	--상태처리일시
+				, DLV_ZIP_CD	= #{orderDistributorVO.dlvZipCd}		--배송지우편번호
+				, DLV_BSS_ADDR	= #{orderDistributorVO.dlvBssAddr}		--배송지기본주소
+				, DLV_DTL_ADDR	= #{orderDistributorVO.dlvDtlAddr}		--배송지상세주소
+				, ORD_NOTE		= #{orderDistributorVO.ordNote}			--주문비고
+				, CHGR_ID		= #{orderDistributorVO.chgrId}			--수정자
+				, CHG_DATE		= #{orderDistributorVO.chgDate}			--수정일시
+		WHERE	ORD_NO			= #{orderDistributorVO.ordNo}			--주문번호
+	</update>
+	
+	<!-- 유통점 주문 정보 수정 -->
+	<update id="updateOrd2" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+		UPDATE TDNDT_ORD
+			SET	ORD_PRGR_STAT_CD	= #{orderDistributorVO.ordPrgrStatCd}	--주문진행상태코드
+				, ORD_CONF_QTY		= #{orderDistributorVO.ordConfQty}		--주문확정수량
+				, STAT_PROC_ID		= #{orderDistributorVO.statProcId}		--상태처리자ID
+				, STAT_PROC_DTTM	= #{orderDistributorVO.statProcDttm}	--상태처리일시
+				, CHGR_ID			= #{orderDistributorVO.chgrId}			--수정자
+				, CHG_DATE			= #{orderDistributorVO.chgDate}			--수정일시
+		WHERE	ORD_NO				= #{orderDistributorVO.ordNo}			--주문번호
+	</update>
+	
+	
+	<!-- 주문 처리 대기 상태테이블 등록 -->
+	<insert id="insertOrdIdlDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+	
+		INSERT INTO TDNDT_ORD_IDL_DTL
+			( SO_ID			--사업ID
+			, ORD_NO		--주문번호
+			, IDL_STAT_CD	--대기상태코드
+			, REGR_ID		--등록자
+			, REG_DATE		--등록일시
+			, CHGR_ID		--수정자
+			, CHG_DATE		--수정일시
+			)
+        VALUES
+			( #{orderDistributorVO.soId}		--사업ID
+			, #{orderDistributorVO.ordNo}		--주문번호
+			, #{orderDistributorVO.idlStatCd}	--대기상태코드
+			, #{orderDistributorVO.regrId}		--등록자
+			, #{orderDistributorVO.regDate}		--등록일시
+			, #{orderDistributorVO.chgrId}		--수정자
+			, #{orderDistributorVO.chgDate}		--수정일시
+			)			
+	</insert>
+	
+	
+	<!-- 여신정보 조회 -->
+	<select id="ordLoanInfo" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO" resultType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+		SELECT
+				A.SO_ID				--사업ID
+				, A.ORG_ID			--조직ID
+				, A.LOAN_KND_CD		--여신종류코드
+				, A.NORM_LOAN_AMT	--일반여신금액
+				, A.SPCL_LOAN_AMT	--특별여신금액
+				, A.LOAN_USE_AMT	--여신사용금액
+				, A.LOAN_AVL_AMT	--여신가능금액
+				, (SELECT LOAN_GV_FLG
+					FROM	TDNDI_ORG_INFO
+					WHERE	ORG_ID = A.ORG_ID) AS LOAN_GV_FLG 	-- 여신부여여부
+		FROM	TDNDI_LOAN_INFO A
+		WHERE 	A.ORG_ID		= #{orderDistributorVO.orgId}		--조직ID
+			AND A.LOAN_KND_CD	= #{orderDistributorVO.loanKndCd}	--여신종류코드
+	
+	</select>
+	
+	<!-- 채권선수금 I/F TR 등록 -->
+	<insert id="insertBondRcptTr" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+		INSERT INTO TDNAC_BOND_RCPT_TR
+			( ACC_DT			--발생일자
+			, CLS_CD			--구분코드
+			, ACC_NO			--발생번호
+			, ORG_ID			--조직ID
+			, LOAN_KND_CD		--여신종류코드
+			, CTRT_ID			--계약ID
+			, ITM				--항목
+			, QTY				--수량
+			, AMT				--금액
+			, LOAN_YN			--여신반영여부
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+			, INOUT_ID			--
+			)
+        VALUES
+			( #{orderDistributorVO.accDt}		--발생일자
+			, #{orderDistributorVO.clsCd}		--구분코드
+			, #{orderDistributorVO.accNo}		--발생번호
+			, #{orderDistributorVO.orgId}		--조직ID
+			, #{orderDistributorVO.loanKndCd}	--여신종류코드
+			, #{orderDistributorVO.ctrtId}		--계약ID
+			, #{orderDistributorVO.itm}			--항목
+			, #{orderDistributorVO.qty}			--수량
+			, #{orderDistributorVO.amt}			--금액
+			, #{orderDistributorVO.loanYn}		--여신반영여부
+			, #{orderDistributorVO.regrId}		--등록자
+			, #{orderDistributorVO.regDate}		--등록일시
+			, #{orderDistributorVO.chgrId}		--수정자
+			, #{orderDistributorVO.chgDate}		--수정일시
+			, #{orderDistributorVO.inoutId}		--
+			)	
+	</insert>
+	
+	<!--  여신 사용금액 부활 이력 등록 -->
+	<insert id="insertLoanUseHist" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+		INSERT INTO TDNDI_LOAN_USE_HIST
+			( SO_ID				--사업ID
+			, ORG_ID			--조직ID
+			, LOAN_KND_CD		--여신종류코드
+			, LOAN_USE_ORD		--여신사용순번
+			, LOAN_USE_TP		--여신사용구분 (단말기/유심:10, 요금수납:20, 대리점입금:90)
+			, LOAN_USE_DT		--여신사용일자
+			, LOAN_USE_AMT		--여신사용금액
+			, ITEM_ID			--제품ID
+			, INOUT_ID			--제품입출고ID
+			, USE_CNT			--사용 건수
+			, USE_AMT			--사용 금액
+			, USE_TAX			--사용 TAX
+			, REGR_ID			--등록자
+			, REG_DATE			--등록일시
+			, CHGR_ID			--수정자
+			, CHG_DATE			--수정일시
+			)
+        VALUES
+			( #{orderDistributorVO.soId}		--사업ID
+			, #{orderDistributorVO.orgId}		--조직ID
+			, #{orderDistributorVO.loanKndCd}	--여신종류코드
+			, #{orderDistributorVO.loanUseOrd}	--여신사용순번
+			, #{orderDistributorVO.loanUseTp}	--여신사용구분 (단말기/유심:10, 요금수납:20, 대리점입금:90)
+			, #{orderDistributorVO.loanUseDt}	--여신사용일자
+			, #{orderDistributorVO.loanUseAmt}	--여신사용금액
+			, #{orderDistributorVO.itemId}		--제품ID
+			, #{orderDistributorVO.inoutId}		--제품입출고ID
+			, #{orderDistributorVO.useCnt}		--사용 건수
+			, #{orderDistributorVO.useAmt}		--사용 금액
+			, #{orderDistributorVO.useTax}		--사용 TAX
+			, #{orderDistributorVO.regrId}		--등록자
+			, #{orderDistributorVO.regDate}		--등록일시
+			, #{orderDistributorVO.chgrId}		--수정자
+			, #{orderDistributorVO.chgDate}		--수정일시
+			)	
+	</insert>
+	
+	<!-- 채권/여신 수정 -->
+	<update id="updateLoanInfo" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+		UPDATE TDNDI_LOAN_INFO
+			SET	LOAN_USE_AMT	= #{orderDistributorVO.loanUseAmt}		--여신사용금액
+				, LOAN_AVL_AMT	= #{orderDistributorVO.loanAvlAmt}		--일반여신금액 + 특별여신금액 - 여신사용금액 - 입력여신사용금액
+				, CHGR_ID		= #{orderDistributorVO.chgrId}			--수정자
+				, CHG_DATE		= #{orderDistributorVO.chgDate}			--수정일시
+		WHERE	ORG_ID			= #{orderDistributorVO.orgId}			--조직ID
+			AND LOAN_KND_CD		= #{orderDistributorVO.loanKndCd}		-- 여신종류코드
+	</update>
+	
+	
+	<!-- 유통점 주문 정보 리스트 조회 -->
+	<select id="ordList2" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO" resultType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT	A.SO_ID
+					, A.ORD_NO
+					, A.ORD_ORG_ID
+					, ( SELECT	ORG_NM
+						FROM 	TDNDI_ORG_INFO
+						WHERE 	SO_ID 	= A.SO_ID
+							AND ORG_ID 	= A.ORD_ORG_ID ) AS ORD_ORG_NM
+					, A.LGST_CENT_ID
+					, ( SELECT 	ORG_NM
+						FROM 	TDNDI_ORG_INFO
+						WHERE 	SO_ID 	= A.SO_ID
+							AND ORG_ID 	= A.LGST_CENT_ID ) AS LGST_CENT_NM
+					, A.ORD_MNG_ORG_ID
+					, ( SELECT 	ORG_NM
+						FROM 	TDNDI_ORG_INFO
+						WHERE 	SO_ID = A.SO_ID
+							AND ORG_ID = A.ORD_MNG_ORG_ID ) AS ORD_MNG_ORG_NM
+					, A.ORD_MNG_INCHRG_ID
+					, A.ORD_PRGR_STAT_CD
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00076'
+								AND DETAIL.COMMON_CD = A.ORD_PRGR_STAT_CD
+		       		) AS ORD_PRGR_STAT_NM		--주문진행상태코드명
+		       		, A.ITEM_ID
+					, B.ITEM_NM
+					, A.ITEM_TP_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM	--제품유형명
+		       		, B.ITEM_KND_CD
+					, A.EQT_USE_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00065'
+								AND DETAIL.COMMON_CD = A.EQT_USE_CD
+		       		) AS EQT_USE_NM	--단말기용도코드명
+		       		, A.CLOR_CD
+		       		, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+	                               , TSYCO_CODE_MAST_NAME MNAME
+	   							, TSYCO_CODE_DETAIL DETAIL
+	   							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+	                               AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+	                               AND MNAME.LNG_TYP     =#{orderDistributorVO.lngTyp} 
+	   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+	   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+	   							AND NAME.LNG_TYP      = #{orderDistributorVO.lngTyp}
+	   							AND MAST.COMMON_GRP   ='DN00078'
+								AND DETAIL.COMMON_CD = A.CLOR_CD
+		       		) AS COLOR_NM			--색상명
+		       		, A.ORD_QTY
+					, A.ORD_UT_PRC
+					, A.ORD_AMT
+					, A.ORD_ADD_TX
+					, A.ORD_TOT_AMT
+					, A.ORD_CONF_QTY
+					, A.STAT_PROC_ID
+					, A.STAT_PROC_DTTM
+					, A.DLV_ZIP_CD
+					, A.DLV_BSS_ADDR
+					, A.DLV_DTL_ADDR
+		       		, CONCAT(A.DLV_BSS_ADDR, A.DLV_DTL_ADDR) AS DLV_ADDR
+					, A.ORD_NOTE
+					, A.ASGN_NO
+					, A.ASGN_ORG_ID
+		       		, ( SELECT 	ORG_NM
+						FROM 	TDNDI_ORG_INFO
+						WHERE 	SO_ID = A.SO_ID
+							AND ORG_ID = A.ASGN_ORG_ID ) AS ASGN_ORG_NM
+					, A.REGR_ID
+					, A.REG_DATE
+					, A.CHGR_ID
+					, A.CHG_DATE
+		       		, ( SELECT 	USER_NAME
+						FROM 	TSYCO_USER
+						WHERE 	USER_ID = A.REGR_ID) AS REG_NM
+					, ( SELECT 	STCK_OWN_QTY
+						FROM 	TDNDT_ASGN
+						WHERE 	SO_ID 		= A.SO_ID
+							AND ASGN_NO 	= A.ASGN_NO
+							AND ASGN_ORG_ID = A.ASGN_ORG_ID ) AS ASGN_QTY
+			FROM 	TDNDT_ORD A
+					, TDNDT_ITEM B
+			WHERE 	1 = 1
+				AND A.SO_ID 	= #{orderDistributorVO.soId}
+				AND A.SO_ID 	= B.SO_ID
+				AND A.ITEM_ID 	= B.ITEM_ID
+				AND A.ORD_PRGR_STAT_CD IN ('10','20')
+				
+				<if test="orderDistributorVO.ordQty != null and orderDistributorVO.ordQty != ''">
+					AND A.ORD_QTY >  #{orderDistributorVO.ordQty}
+				</if>
+				<if test="orderDistributorVO.asgnNo != null and orderDistributorVO.asgnNo != ''">
+					AND A.ASGN_NO =  #{orderDistributorVO.asgnNo}
+				</if>
+				<if test="orderDistributorVO.asgnOrgId != null and orderDistributorVO.asgnOrgId != ''">
+					AND A.ASGN_ORG_ID =  #{orderDistributorVO.asgnOrgId}
+				</if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	
+	<!-- 할당내역 리스트 카운트 -->
+	<select id="ordCount2" parameterType="com.ntels.ccbs.distribute.domain.logistics.assignmentOrderMgt.OrderDistributorVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM 	TDNDT_ORD A
+					, TDNDT_ITEM B
+			WHERE 	1 = 1
+			AND A.SO_ID 	= #{orderDistributorVO.soId}
+			AND A.SO_ID 	= B.SO_ID
+			AND A.ITEM_ID 	= B.ITEM_ID
+			AND A.ORD_PRGR_STAT_CD IN ('10','20')
+			
+			<if test="orderDistributorVO.ordQty != null and orderDistributorVO.ordQty != ''">
+				AND A.ORD_QTY >  #{orderDistributorVO.ordQty}
+			</if>
+			<if test="orderDistributorVO.asgnNo != null and orderDistributorVO.asgnNo != ''">
+				AND A.ASGN_NO =  #{orderDistributorVO.asgnNo}
+			</if>
+			<if test="orderDistributorVO.asgnOrgId != null and orderDistributorVO.asgnOrgId != ''">
+				AND A.ASGN_ORG_ID =  #{orderDistributorVO.asgnOrgId}
+			</if>
+	</select>
+</mapper>

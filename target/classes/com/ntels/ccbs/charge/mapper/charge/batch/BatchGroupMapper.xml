@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.charge.batch.BatchGroupMapper">
+
+	<select id="getBatGrpIdCount" resultType="int">
+		SELECT COUNT(*)
+		FROM TBLIV_BAT_GRP
+		WHERE BAT_GRP_ID = #{batGrpId}
+	</select>
+
+	<sql id="fromBatchGroupList">
+		FROM TBLIV_BAT_GRP BAT_GRP
+		LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME GRP_TP_CODE 
+			ON GRP_TP_CODE.COMMON_GRP = 'BL00031'
+			AND GRP_TP_CODE.LNG_TYP = #{lang} 
+			AND BAT_GRP.BAT_GRP_TP = GRP_TP_CODE.COMMON_CD
+		LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME PROC_TP_CODE
+			ON PROC_TP_CODE.COMMON_GRP = 'BL00032'
+			AND PROC_TP_CODE.LNG_TYP = #{lang}
+			AND BAT_GRP.BAT_PROC_TP = PROC_TP_CODE.COMMON_CD
+	</sql>
+
+	<sql id="whereBatchGroupList">
+		<where>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(soId)">AND BAT_GRP.SO_ID = #{soId}</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(batGrpNm)">AND BAT_GRP.BAT_GRP_NM LIKE '%'||#{batGrpNm}||'%'</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(batGrpTp)">AND BAT_GRP.BAT_GRP_TP = #{batGrpTp}</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(batProcTp)">AND BAT_GRP.BAT_PROC_TP = #{batProcTp}</if>
+		</where>
+	</sql>
+	
+	<select id="getBatchGroupCount" resultType="int">
+		SELECT COUNT(*)
+		<include refid="fromBatchGroupList"/>
+		<include refid="whereBatchGroupList"/>
+	</select>
+
+	<select id="getBatchGroupList" resultType="com.ntels.ccbs.charge.domain.charge.batch.BatchGroupVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT
+			BAT_GRP.BAT_GRP_ID
+			, BAT_GRP.BAT_GRP_NM
+			, BAT_GRP.BAT_GRP_TP
+			, BAT_GRP.BAT_PROC_TP
+			, BAT_GRP.REGR_ID
+			, BAT_GRP.REG_DATE
+			, BAT_GRP.CHG_DATE
+			, BAT_GRP.CHGR_ID
+			, BAT_GRP.SO_ID
+			, GRP_TP_CODE.CODE_NM AS BAT_GRP_TP_NM
+			, PROC_TP_CODE.CODE_NM AS BAT_PROC_TP_NM
+		<include refid="fromBatchGroupList"/>
+		<include refid="whereBatchGroupList"/>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<insert id="insertBatchGroup">
+		INSERT INTO TBLIV_BAT_GRP
+		(
+			BAT_GRP_ID
+			, BAT_GRP_NM
+			, BAT_GRP_TP
+			, BAT_PROC_TP
+			, REGR_ID
+			, REG_DATE
+			, CHG_DATE
+			, CHGR_ID
+			, SO_ID
+		)
+		VALUES
+		(
+			#{batGrpId}
+			, #{batGrpNm}
+			, #{batGrpTp}
+			, #{batProcTp}
+			, #{regrId}
+			, #{regDate}
+			, #{chgDate}
+			, #{chgrId}
+			, #{soId}
+		)
+	</insert>
+	
+	<update id="updateBatchGroup">
+		UPDATE TBLIV_BAT_GRP
+		<set>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(batGrpNm)">
+				BAT_GRP_NM = #{batGrpNm},
+			</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(batGrpTp)">
+				BAT_GRP_TP = #{batGrpTp},
+			</if>
+			<if test="@org.apache.commons.lang.StringUtils@isNotEmpty(batProcTp)">
+				BAT_PROC_TP = #{batProcTp},
+			</if>
+			CHGR_ID = #{chgrId},
+			CHG_DATE = #{chgDate}
+		</set>
+		<where>
+			BAT_GRP_ID = #{batGrpId}
+		</where>
+	</update>
+	
+	<delete id="deleteBatchGroup">
+		DELETE FROM TBLIV_BAT_GRP
+		WHERE BAT_GRP_ID = #{batGrpId}
+	</delete>
+	
+</mapper>

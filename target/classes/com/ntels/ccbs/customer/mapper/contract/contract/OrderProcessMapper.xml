@@ -1,0 +1,2095 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.customer.mapper.contract.contract.OrderProcessMapper">
+
+    <select id="getPreProcessOrderCnt" resultType="int">
+        SELECT COUNT(ORDER_ID)
+        FROM TCMCT_OCTRT_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_STAT NOT IN ('03', '04')
+    </select>
+    
+    <select id="getPrecheckFailCnt" resultType="int">
+        SELECT COUNT(SO_ID)
+        FROM TCMCT_PRECHECK_RESULT
+        WHERE SO_ID = #{soId}
+        AND   CUST_ID = #{custId}
+        AND   RCPT_ID = #{rcptId}
+        AND   ORDER_CD = #{orderCd}
+        AND   BASIC_SVC_CD = #{basicSvcCd}
+        AND   CUST_TP = #{custTp}
+        AND   RESULT_CD NOT IN ('00', '01')
+    </select>
+    
+    <select id="getPymAcntCnt" resultType="int">
+        SELECT COUNT(SO_ID)
+        FROM TCMCU_PYM_ACNT_INFO
+        WHERE SO_ID = #{soId}
+        AND   CUST_ID = #{custId}
+        AND   PYM_ACNT_ID = #{pymAcntId}
+    </select>
+    
+    
+    <select id="getBasicProdCnt" resultType="int">
+        SELECT
+             COUNT(IFPROD.SO_ID)
+        FROM IFNCRM_PROD_INFO IFPROD
+        WHERE IFPROD.SO_ID = #{soId}
+        AND   IFPROD.SVC_CD = #{basicSvcCd}
+        AND   IFPROD.PROD_GRP = #{basicProdGrp}
+        AND   IFPROD.PROD_CD = #{basicProdCd}
+        AND   IFPROD.CTRT_YN = 'Y'
+        AND   IFPROD.PROD_TYP = '11'
+        AND   IFPROD.ACT_DT &lt;= #{today}
+        AND   IFPROD.INACT_DT &gt;= #{today}
+        ORDER BY IFPROD.PROD_CD
+    </select>
+    
+    
+    <select id="getRcptReqCustInfo" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT
+            REQ_NM
+           ,CUST_REL
+        FROM
+            TCMRC_CNSL_RCPT_INFO
+        WHERE SO_ID = #{soId}
+        AND   RCPT_ID = #{rcptId}
+    </select>
+    
+    <insert id="insertOrderMast">
+        INSERT INTO TCMCT_OCTRT_INFO
+        (
+             SO_ID
+            ,CTRT_ID
+            ,ORDER_ID
+            ,ORDER_STAT
+            ,ORDER_DT
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,SVC_TEL_NO
+            ,ORDER_TP
+            ,CTRT_NM
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,CTRT_CL
+            ,RCPT_ID
+            ,CUST_ID
+            ,CUST_REL
+            ,APPNT
+            ,PYM_ACNT_ID
+            ,ACNT_CUST_REL
+            ,CUST_CL_DC_APLY_YN
+            ,PROD_CMPS_ID
+            ,PROD_CD
+            ,PROD_GRP
+            ,INSTL_ZIP_CD
+            ,INSTL_BASE_ADDR
+            ,INSTL_ADDR_DTL
+            ,INSTL_CITY
+            ,INSTL_STATE
+            ,INSTL_AGNT
+            ,SALES_USR_ID
+            ,SALES_ORG_ID
+            ,CTRT_STAT
+            ,CTRT_CHG_RESN_CD
+            ,SUS_HOPE_DD
+            ,MMT_SUS_HOPE_DD
+            ,MMT_SUS_CD
+            ,TERM_HOPE_DT
+            ,DEF_RESN_CD
+            ,SVC_STRT_DD
+            ,SVC_STRT_HOPE_DT
+            ,JOIN_ID
+            ,PROM_YN
+            ,PROM_ID
+            ,ORG_ID
+            ,USR_ID
+            ,SERVICE_ID
+            ,RCV_TRANS_CTRT_ID
+            ,SND_TRANS_CTRT_ID
+            ,TRANS_CTRT_YN
+            ,EXT_ID
+            ,NP_YN
+            ,BEF_NP
+            ,ORG_NP
+            ,FIRST_ORG_ID
+            ,FIRST_USR_ID
+            ,REMARK
+            ,IF_SUC_YN
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        (
+         #{octrtMast.soId,jdbcType=VARCHAR}
+        ,#{octrtMast.ctrtId,jdbcType=VARCHAR}
+        ,#{octrtMast.orderId,jdbcType=VARCHAR}
+        ,#{octrtMast.orderStat,jdbcType=VARCHAR}
+        ,#{octrtMast.orderDt,jdbcType=VARCHAR}
+        ,#{octrtMast.inactDttm,jdbcType=VARCHAR}
+        ,#{octrtMast.actDttm,jdbcType=VARCHAR}
+        ,#{octrtMast.svcTelNo,jdbcType=VARCHAR}
+        ,#{octrtMast.orderTp,jdbcType=VARCHAR}
+        ,#{octrtMast.ctrtNm,jdbcType=VARCHAR}
+        ,#{octrtMast.rateStrtDt,jdbcType=VARCHAR}
+        ,#{octrtMast.rateEndDt,jdbcType=VARCHAR}
+        ,#{octrtMast.openDd,jdbcType=VARCHAR}
+        ,#{octrtMast.termDt,jdbcType=VARCHAR}
+        ,#{octrtMast.ctrtCl,jdbcType=VARCHAR}
+        ,#{octrtMast.rcptId,jdbcType=VARCHAR}
+        ,#{octrtMast.custId,jdbcType=VARCHAR}
+        ,#{octrtMast.custRel,jdbcType=VARCHAR}
+        ,#{octrtMast.appnt,jdbcType=VARCHAR}
+        ,#{octrtMast.pymAcntId,jdbcType=VARCHAR}
+        ,#{octrtMast.acntCustRel,jdbcType=VARCHAR}
+        ,#{octrtMast.custClDcAplyYn,jdbcType=VARCHAR}
+        ,#{octrtMast.prodCmpsId,jdbcType=VARCHAR}
+        ,#{octrtMast.prodCd,jdbcType=VARCHAR}
+        ,#{octrtMast.prodGrp,jdbcType=VARCHAR}
+        ,#{octrtMast.instlZipCd,jdbcType=VARCHAR}
+        ,#{octrtMast.instlBaseAddr,jdbcType=VARCHAR}
+        ,#{octrtMast.instlAddrDtl,jdbcType=VARCHAR}
+        ,#{octrtMast.instlCity,jdbcType=VARCHAR}
+        ,#{octrtMast.instlState,jdbcType=VARCHAR}
+        ,#{octrtMast.instlAgnt,jdbcType=VARCHAR}
+        ,#{octrtMast.salesUsrId,jdbcType=VARCHAR}
+        ,#{octrtMast.salesOrgId,jdbcType=VARCHAR}
+        ,#{octrtMast.ctrtStat,jdbcType=VARCHAR}
+        ,#{octrtMast.ctrtChgResnCd,jdbcType=VARCHAR}
+        ,#{octrtMast.susHopeDd,jdbcType=VARCHAR}
+        ,#{octrtMast.mmtSusHopeDd,jdbcType=VARCHAR}
+        ,#{octrtMast.mmtSusCd,jdbcType=VARCHAR}
+        ,#{octrtMast.termHopeDt,jdbcType=VARCHAR}
+        ,#{octrtMast.defResnCd,jdbcType=VARCHAR}
+        ,#{octrtMast.svcStrtDd,jdbcType=VARCHAR}
+        ,#{octrtMast.svcStrtHopeDt,jdbcType=VARCHAR}
+        ,#{octrtMast.joinId,jdbcType=VARCHAR}
+        ,#{octrtMast.promYn,jdbcType=VARCHAR}
+        ,#{octrtMast.promId,jdbcType=VARCHAR}
+        ,#{octrtMast.orgId,jdbcType=VARCHAR}
+        ,#{octrtMast.usrId,jdbcType=VARCHAR}
+        ,#{octrtMast.serviceId,jdbcType=VARCHAR}
+        ,#{octrtMast.rcvTransCtrtId,jdbcType=VARCHAR}
+        ,#{octrtMast.sndTransCtrtId,jdbcType=VARCHAR}
+        ,#{octrtMast.transCtrtYn,jdbcType=VARCHAR}
+        ,#{octrtMast.extId,jdbcType=VARCHAR}
+        ,#{octrtMast.npYn,jdbcType=VARCHAR}
+        ,#{octrtMast.befNp,jdbcType=VARCHAR}
+        ,#{octrtMast.orgNp,jdbcType=VARCHAR}
+        ,#{octrtMast.firstOrgId,jdbcType=VARCHAR}
+        ,#{octrtMast.firstUsrId,jdbcType=VARCHAR}
+        ,#{octrtMast.remark,jdbcType=VARCHAR}
+        ,#{octrtMast.ifSucYn,jdbcType=VARCHAR}
+        ,#{octrtMast.regrId,jdbcType=VARCHAR}
+        ,#{octrtMast.regDate}
+        ,#{octrtMast.chgrId,jdbcType=VARCHAR}
+        ,#{octrtMast.chgDate}
+        )
+    </insert>
+    
+    <insert id="insertOrderProdCmps">
+        INSERT INTO TCMCT_OPROD_CMPS_INFO
+        (
+             SO_ID
+            ,CTRT_ID
+            ,ORDER_ID
+            ,PROD_CMPS_ID
+            ,ORDER_TP
+            ,ORDER_STAT
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,RCPT_ID
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,PROD_GRP
+            ,PROD_CMPS_CL
+            ,PROD_CD
+            ,UP_PROD_GRP
+            ,UP_PROD_CMPS_ID
+            ,UP_PROD_CD
+            ,BEF_CMPS_PROD_ID
+            ,BEF_PROD_GRP
+            ,BEF_PROD_CD
+            ,ORG_ID
+            ,USR_ID
+            ,PROD_CHG_CL
+            ,PROD_STAT_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        ( 
+             #{oprodBasicCmpsInfo.soId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.ctrtId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.orderId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.prodCmpsId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.orderTp,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.orderStat,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.inactDttm,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.actDttm,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.rcptId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.rateStrtDt,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.rateEndDt,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.openDd,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.termDt,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.prodGrp,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.prodCmpsCl,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.prodCd,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.upProdGrp,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.upProdCmpsId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.upProdCd,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.befCmpsProdId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.befProdGrp,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.befProdCd,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.orgId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.usrId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.prodChgCl,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.prodStatCd,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.extId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.regrId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.regDate}
+            ,#{oprodBasicCmpsInfo.chgrId,jdbcType=VARCHAR}
+            ,#{oprodBasicCmpsInfo.chgDate}
+        )
+    </insert>
+    
+    <insert id="insertOrderSvcCmps">
+        INSERT INTO TCMCT_OSVC_CMPS_INFO
+        (
+             SO_ID
+            ,CTRT_ID
+            ,ORDER_ID
+            ,SVC_CMPS_ID
+            ,ORDER_TP
+            ,ORDER_STAT
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,RCPT_ID
+            ,PROD_CD
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,SVC_GRP
+            ,SVC_CD
+            ,SVC_CHG_CL
+            ,SVC_STS_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        (
+             #{osvcBasicCmpsInfo.soId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.ctrtId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.orderId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.svcCmpsId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.orderTp,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.orderStat,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.inactDttm,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.actDttm,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.prodCmpsId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.rcptId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.prodCd,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.rateStrtDt,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.rateEndDt,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.openDd,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.termDt,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.svcGrp,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.svcCd,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.svcChgCl,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.svcStsCd,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.extId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.regrId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.regDate}
+            ,#{osvcBasicCmpsInfo.chgrId,jdbcType=VARCHAR}
+            ,#{osvcBasicCmpsInfo.chgDate}
+        )
+    </insert>
+    
+    
+    
+    
+    <select id="getOProdCmpsInfo" resultType="OProdCmpsVO">
+        SELECT
+             SO_ID
+            ,CTRT_ID
+            ,ORDER_ID
+            ,PROD_CMPS_ID
+            ,ORDER_TP
+            ,ORDER_STAT
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,RCPT_ID
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,PROD_GRP
+            ,PROD_CMPS_CL
+            ,PROD_CD
+            ,UP_PROD_GRP
+            ,UP_PROD_CMPS_ID
+            ,UP_PROD_CD
+            ,BEF_CMPS_PROD_ID
+            ,BEF_PROD_GRP
+            ,BEF_PROD_CD
+            ,ORG_ID
+            ,USR_ID
+            ,PROD_CHG_CL
+            ,PROD_STAT_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        FROM
+            TCMCT_OPROD_CMPS_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+        AND   ORDER_TP = #{orderTp}
+        AND   PROD_CD = #{prodCd}
+    </select>
+    
+    <update id="updateOProdExtId">
+        UPDATE 
+            TCMCT_OPROD_CMPS_INFO
+        SET
+            EXT_ID = #{extId}
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+        AND   ORDER_TP = #{orderTp}
+        AND   PROD_CD = #{prodCd}
+    </update>
+    
+    <insert id="insertOrderProdCmpsExt">
+        INSERT INTO TCMCT_OPROD_CMPS_INFO_EXT
+        (
+             EXT_ID
+            ,ORDER_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,SEQ_NO
+            ,ICCID
+            ,IMSI
+            ,IMEI
+            ,ITEM_MID_CD
+            ,EQT_CL_CD
+            ,ITEM_ID
+            ,REMARK
+            ,CHGR_ID
+            ,CHG_DATE
+            ,REGR_ID
+            ,REG_DATE
+        ) VALUES
+        (
+             #{oprodCmpsExtInfo.extId,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.orderId,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.inactDttm,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.actDttm,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.seqNo,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.iccid,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.imsi,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.imei,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.itemMidCd,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.eqtClCd,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.itemId,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.remark,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.chgrId,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.chgDate}
+            ,#{oprodCmpsExtInfo.regrId,jdbcType=VARCHAR}
+            ,#{oprodCmpsExtInfo.regDate}
+        )
+    </insert>
+    
+    
+     <select id="getOSvcCmpsInfo" resultType="OSvcCmpsVO">
+        SELECT
+             SO_ID
+            ,CTRT_ID
+            ,ORDER_ID
+            ,SVC_CMPS_ID
+            ,ORDER_TP
+            ,ORDER_STAT
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,RCPT_ID
+            ,PROD_CD
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,SVC_GRP
+            ,SVC_CD
+            ,SVC_CHG_CL
+            ,SVC_STS_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        FROM
+            TCMCT_OSVC_CMPS_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+        AND   ORDER_TP = #{orderTp}
+        AND   PROD_CD = #{prodCd}
+        AND   SVC_CMPS_ID = #{svcCmpsId}
+    </select>
+    
+    <update id="updateOSvcExtId">
+        UPDATE 
+            TCMCT_OSVC_CMPS_INFO
+        SET
+            EXT_ID = #{extId}
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+        AND   ORDER_TP = #{orderTp}
+        AND   PROD_CD = #{prodCd}
+        AND   SVC_CMPS_ID = #{svcCmpsId}
+    </update>
+    
+    <insert id="insertOrderSvcCmpsExt">
+        INSERT INTO TCMCT_OSVC_CMPS_INFO_EXT
+        (
+			 EXT_ID
+			,ORDER_ID
+			,INACT_DTTM
+			,ACT_DTTM
+			,MONTHLY_AMT
+			,MONTHLY_NEGO_RATE
+			,MONTHLY_NEGO_AMT
+			,ONETIME_AMT
+			,ONETIME_INSTL_CNT
+			,ONETIME_NEGO_RATE
+			,ONETIME_NEGO_AMT
+			,PROD_CNT
+			,OTHER
+			,CHG_DATE
+			,CHGR_ID
+			,REG_DATE
+			,REGR_ID
+						
+			,CORE_CNT
+			,LOCAL
+			,OS_TYP
+			,SVC_LVL
+			,RT_ID
+			,CNT
+			,BASIC_CORE_CNT
+			,ADD_CORE_CNT
+			,M_NO
+			,FIX_RATE
+			,USE_RATE
+			,M_CD
+			,MODEL_CD
+			,MODEL_NO	
+			,PACKAGE_CD
+			
+			,ITEM01		
+			,ITEM02
+			,ITEM03
+			,ITEM04
+			,ITEM05
+			,ITEM06
+			,ITEM07
+			,ITEM08
+			,ITEM09
+			,ITEM10				
+        ) VALUES
+        (
+             #{osvcCmpsExtInfo.extId,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.orderId,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.inactDttm,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.actDttm,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.monthlyAmt,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.monthlyNegoRate,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.monthlyNegoAmt,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.onetimeAmt,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.onetimeInstlCnt,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.onetimeNegoRate,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.onetimeNegoAmt,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.prodCnt,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.other,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.chgDate}
+            ,#{osvcCmpsExtInfo.chgrId,jdbcType=VARCHAR}
+            ,#{osvcCmpsExtInfo.regDate}
+            ,#{osvcCmpsExtInfo.regrId,jdbcType=VARCHAR}
+            
+            ,#{osvcCmpsExtInfo.coreCnt,jdbcType=VARCHAR}
+			,IFNULL(#{osvcCmpsExtInfo.local,jdbcType=VARCHAR},'99')
+			,IFNULL(#{osvcCmpsExtInfo.osTyp,jdbcType=VARCHAR},'99')
+			,IFNULL(#{osvcCmpsExtInfo.svcLvl,jdbcType=VARCHAR},'*')
+			,#{osvcCmpsExtInfo.rtId,jdbcType=VARCHAR}
+			,#{osvcCmpsExtInfo.cnt,jdbcType=VARCHAR}
+			,#{osvcCmpsExtInfo.basicCoreCnt,jdbcType=VARCHAR}
+			,#{osvcCmpsExtInfo.addCoreCnt,jdbcType=VARCHAR}
+			
+			,#{osvcCmpsExtInfo.mNo,jdbcType=VARCHAR}
+			,#{osvcCmpsExtInfo.fixRate,jdbcType=VARCHAR}
+			,#{osvcCmpsExtInfo.useRate,jdbcType=VARCHAR}
+			,#{osvcCmpsExtInfo.mCd,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.mCd,jdbcType=VARCHAR}
+			,#{osvcCmpsExtInfo.mNo,jdbcType=VARCHAR}
+			,#{osvcCmpsExtInfo.packageCd,jdbcType=VARCHAR}		
+			
+			,#{osvcCmpsExtInfo.item01,jdbcType=VARCHAR}		
+			,#{osvcCmpsExtInfo.item02,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.item03,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.item04,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.item05,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.item06,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.item07,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.item08,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.item09,jdbcType=VARCHAR}	
+			,#{osvcCmpsExtInfo.item10,jdbcType=VARCHAR}	
+        )
+    </insert>
+    
+    <update id="updateRcptInfo">
+        UPDATE 
+            TCMRC_CNSL_RCPT_INFO
+        SET
+            CTRT_ID = #{ctrtId}
+        WHERE SO_ID = #{soId}
+        AND   RCPT_ID = #{rcptId}
+    </update>
+    
+    <select id="getOctrtMastInfo" resultType="OCtrtMastVO">
+        SELECT
+                SO_ID
+                ,CTRT_ID
+                ,ORDER_ID
+                ,ORDER_STAT
+                ,ORDER_DT
+                ,INACT_DTTM
+                ,ACT_DTTM
+                ,SVC_TEL_NO
+                ,ORDER_TP
+                ,CTRT_NM
+                ,RATE_STRT_DT
+                ,RATE_END_DT
+                ,OPEN_DD
+                ,TERM_DT
+                ,CTRT_CL
+                ,RCPT_ID
+                ,CUST_ID
+                ,CUST_REL
+                ,APPNT
+                ,PYM_ACNT_ID
+                ,ACNT_CUST_REL
+                ,CUST_CL_DC_APLY_YN
+                ,PROD_CMPS_ID
+                ,PROD_CD
+                ,PROD_GRP
+                ,INSTL_ZIP_CD
+                ,INSTL_BASE_ADDR
+                ,INSTL_ADDR_DTL
+                ,INSTL_CITY
+                ,INSTL_STATE
+                ,INSTL_AGNT
+                ,SALES_USR_ID
+                ,SALES_ORG_ID
+                ,CTRT_STAT
+                ,CTRT_CHG_RESN_CD
+                ,SUS_HOPE_DD
+                ,MMT_SUS_HOPE_DD
+                ,MMT_SUS_CD
+                ,TERM_HOPE_DT
+                ,DEF_RESN_CD
+                ,SVC_STRT_DD
+                ,SVC_STRT_HOPE_DT
+                ,JOIN_ID
+                ,PROM_YN
+                ,PROM_ID
+                ,ORG_ID
+                ,USR_ID
+                ,SERVICE_ID
+                ,RCV_TRANS_CTRT_ID
+                ,SND_TRANS_CTRT_ID
+                ,TRANS_CTRT_YN
+                ,EXT_ID
+                ,NP_YN
+                ,BEF_NP
+                ,ORG_NP
+                ,FIRST_ORG_ID
+                ,FIRST_USR_ID
+                ,REMARK
+                ,IF_SUC_YN
+                ,REGR_ID
+                ,REG_DATE
+                ,CHGR_ID
+                ,CHG_DATE
+        FROM TCMCT_OCTRT_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+    </select>
+    
+    <insert id="insertCtrtMast">
+        INSERT INTO TCMCT_CTRT_INFO
+        (
+             SO_ID
+            ,CTRT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,SVC_TEL_NO
+            ,ORDER_ID
+            ,ORDER_TP
+            ,CTRT_NM
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,CTRT_CL
+            ,RCPT_ID
+            ,CUST_ID
+            ,CUST_REL
+            ,APPNT
+            ,PYM_ACNT_ID
+            ,ACNT_CUST_REL
+            ,CUST_CL_DC_APLY_YN
+            ,PROD_CMPS_ID
+            ,PROD_CD
+            ,PROD_GRP
+            ,INSTL_ZIP_CD
+            ,INSTL_BASE_ADDR
+            ,INSTL_ADDR_DTL
+            ,INSTL_CITY
+            ,INSTL_STATE
+            ,INSTL_AGNT
+            ,SALES_USR_ID
+            ,SALES_ORG_ID
+            ,CTRT_STAT
+            ,CTRT_CHG_RESN_CD
+            ,SUS_HOPE_DD
+            ,MMT_SUS_HOPE_DD
+            ,MMT_SUS_CD
+            ,TERM_HOPE_DT
+            ,DEF_RESN_CD
+            ,SVC_STRT_DD
+            ,SVC_STRT_HOPE_DT
+            ,JOIN_ID
+            ,PROM_YN
+            ,PROM_ID
+            ,ORG_ID
+            ,USR_ID
+            ,SERVICE_ID
+            ,RCV_TRANS_CTRT_ID
+            ,SND_TRANS_CTRT_ID
+            ,TRANS_CTRT_YN
+            ,EXT_ID
+            ,NP_YN
+            ,BEF_NP
+            ,ORG_NP
+            ,FIRST_ORG_ID
+            ,FIRST_USR_ID
+            ,REMARK
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        (
+         #{ctrtMastInfo.soId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.ctrtId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.inactDttm,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.actDttm,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.svcTelNo,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.orderId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.orderTp,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.ctrtNm,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.rateStrtDt,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.rateEndDt,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.openDd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.termDt,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.ctrtCl,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.rcptId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.custId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.custRel,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.appnt,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.pymAcntId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.acntCustRel,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.custClDcAplyYn,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.prodCmpsId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.prodCd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.prodGrp,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.instlZipCd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.instlBaseAddr,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.instlAddrDtl,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.instlCity,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.instlState,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.instlAgnt,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.salesUsrId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.salesOrgId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.ctrtStat,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.ctrtChgResnCd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.susHopeDd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.mmtSusHopeDd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.mmtSusCd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.termHopeDt,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.defResnCd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.svcStrtDd,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.svcStrtHopeDt,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.joinId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.promYn,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.promId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.orgId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.usrId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.serviceId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.rcvTransCtrtId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.sndTransCtrtId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.transCtrtYn,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.extId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.npYn,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.befNp,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.orgNp,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.firstOrgId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.firstUsrId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.remark,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.regrId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.regDate}
+        ,#{ctrtMastInfo.chgrId,jdbcType=VARCHAR}
+        ,#{ctrtMastInfo.chgDate}
+        )
+    </insert>
+    
+    <select id="getOProdCmpsInfoList" resultType="OProdCmpsVO">
+        SELECT
+             SO_ID
+            ,CTRT_ID
+            ,ORDER_ID
+            ,PROD_CMPS_ID
+            ,ORDER_TP
+            ,ORDER_STAT
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,RCPT_ID
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,PROD_GRP
+            ,PROD_CMPS_CL
+            ,PROD_CD
+            ,UP_PROD_GRP
+            ,UP_PROD_CMPS_ID
+            ,UP_PROD_CD
+            ,BEF_CMPS_PROD_ID
+            ,BEF_PROD_GRP
+            ,BEF_PROD_CD
+            ,ORG_ID
+            ,USR_ID
+            ,PROD_CHG_CL
+            ,PROD_STAT_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        FROM
+            TCMCT_OPROD_CMPS_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+        ORDER BY PROD_CMPS_ID
+    </select>
+    
+    <insert id="insertProdCmps">
+        INSERT INTO TCMCT_PROD_CMPS_INFO
+        (
+             SO_ID
+            ,CTRT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,ORDER_ID
+            ,RCPT_ID
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,PROD_GRP
+            ,PROD_CMPS_CL
+            ,PROD_CD
+            ,UP_PROD_GRP
+            ,UP_PROD_CMPS_ID
+            ,UP_PROD_CD
+            ,BEF_CMPS_PROD_ID
+            ,BEF_PROD_GRP
+            ,BEF_PROD_CD
+            ,ORG_ID
+            ,USR_ID
+            ,PROD_CHG_CL
+            ,PROD_STAT_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        (
+             #{prodCmpsInfo.soId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.ctrtId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.inactDttm,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.actDttm,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.prodCmpsId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.orderId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.rcptId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.rateStrtDt,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.rateEndDt,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.openDd,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.termDt,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.prodGrp,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.prodCmpsCl,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.prodCd,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.upProdGrp,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.upProdCmpsId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.upProdCd,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.befCmpsProdId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.befProdGrp,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.befProdCd,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.orgId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.usrId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.prodChgCl,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.prodStatCd,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.extId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.regrId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.regDate}
+            ,#{prodCmpsInfo.chgrId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfo.chgDate}
+        )
+    </insert>
+    
+    
+    <select id="getOProdCmpsExtInfo" resultType="OProdCmpsExtVO">
+        SELECT 
+             EXT_ID
+            ,ORDER_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,SEQ_NO
+            ,ICCID
+            ,IMSI
+            ,IMEI
+            ,ITEM_MID_CD
+            ,EQT_CL_CD
+            ,ITEM_ID
+            ,REMARK
+            ,CHGR_ID
+            ,CHG_DATE
+            ,REGR_ID
+            ,REG_DATE
+        FROM TCMCT_OPROD_CMPS_INFO_EXT
+        WHERE EXT_ID = #{extId}
+        AND   ORDER_ID = #{orderId}
+    </select>
+    
+    <insert id="insertProdCmpsExt">
+        INSERT INTO TCMCT_PROD_CMPS_INFO_EXT
+        (
+             EXT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,SEQ_NO
+            ,ICCID
+            ,IMSI
+            ,IMEI
+            ,ITEM_MID_CD
+            ,EQT_CL_CD
+            ,ITEM_ID
+            ,REMARK
+            ,CHGR_ID
+            ,CHG_DATE
+            ,REGR_ID
+            ,REG_DATE
+        ) VALUES
+        (
+             #{prodCmpsInfoExt.extId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.inactDttm,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.actDttm,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.seqNo,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.iccid,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.imsi,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.imei,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.itemMidCd,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.eqtClCd,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.itemId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.remark,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.chgrId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.chgDate}
+            ,#{prodCmpsInfoExt.regrId,jdbcType=VARCHAR}
+            ,#{prodCmpsInfoExt.regDate}
+        )
+    </insert>
+    
+    <select id="getOSvcCmpsInfoList" resultType="OSvcCmpsVO">
+        SELECT
+             SO_ID
+            ,CTRT_ID
+            ,ORDER_ID
+            ,SVC_CMPS_ID
+            ,ORDER_TP
+            ,ORDER_STAT
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,RCPT_ID
+            ,PROD_CD
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,SVC_GRP
+            ,SVC_CD
+            ,SVC_CHG_CL
+            ,SVC_STS_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        FROM
+            TCMCT_OSVC_CMPS_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+        ORDER BY SVC_CMPS_ID
+    </select>
+    
+    <insert id="insertSvcCmps">
+        INSERT INTO TCMCT_SVC_CMPS_INFO
+        (
+             SO_ID
+            ,CTRT_ID
+            ,SVC_CMPS_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,ORDER_ID
+            ,RCPT_ID
+            ,PROD_CD
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,SVC_GRP
+            ,SVC_CD
+            ,SVC_CHG_CL
+            ,SVC_STS_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        (
+             #{svcCmpsInfo.soId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.ctrtId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.svcCmpsId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.inactDttm,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.actDttm,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.prodCmpsId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.orderId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.rcptId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.prodCd,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.rateStrtDt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.rateEndDt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.openDd,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.termDt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.svcGrp,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.svcCd,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.svcChgCl,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.svcStsCd,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.extId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.regrId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.regDate}
+            ,#{svcCmpsInfo.chgrId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfo.chgDate}
+        )
+    </insert>
+    
+    <select id="getOSvcCmpsExtInfo" resultType="OSvcCmpsExtVO">
+        SELECT
+			 EXT_ID
+			,ORDER_ID
+			,INACT_DTTM
+			,ACT_DTTM
+			,MONTHLY_AMT
+			,MONTHLY_NEGO_RATE
+			,MONTHLY_NEGO_AMT
+			,ONETIME_AMT
+			,ONETIME_INSTL_CNT
+			,ONETIME_NEGO_RATE
+			,ONETIME_NEGO_AMT
+			,PROD_CNT
+			,OTHER
+			,CHG_DATE
+			,CHGR_ID
+			,REG_DATE
+			,REGR_ID
+			
+			,CORE_CNT
+			,LOCAL
+			,OS_TYP
+			,SVC_LVL
+			,RT_ID
+			,CNT
+			,BASIC_CORE_CNT
+			,ADD_CORE_CNT
+			,M_NO
+			,FIX_RATE
+			,USE_RATE
+			,M_CD
+			
+			,item01
+			,item02
+			,item03
+			,item04
+			,item05
+			,item06
+			,item07
+			,item08
+			,item09
+			,item10
+			,PACKAGE_CD 
+			
+			
+       FROM TCMCT_OSVC_CMPS_INFO_EXT
+       WHERE EXT_ID = #{extId}
+        AND   ORDER_ID = #{orderId}
+    </select>
+    
+    <insert id="insertSvcCmpsExt">
+        INSERT INTO TCMCT_SVC_CMPS_INFO_EXT
+        (
+			 EXT_ID
+			,INACT_DTTM
+			,ACT_DTTM
+			,MONTHLY_AMT
+			,MONTHLY_NEGO_RATE
+			,MONTHLY_NEGO_AMT
+			,ONETIME_AMT
+			,ONETIME_INSTL_CNT
+			,ONETIME_NEGO_RATE
+			,ONETIME_NEGO_AMT
+			,PROD_CNT
+			,OTHER
+			,CHG_DATE
+			,CHGR_ID
+			,REG_DATE
+			,REGR_ID
+			
+			,CORE_CNT
+			,LOCAL
+			,OS_TYP
+			,SVC_LVL
+			,RT_ID
+			,CNT
+			,BASIC_CORE_CNT
+			,ADD_CORE_CNT
+			,M_NO
+			,FIX_RATE
+			,USE_RATE
+			,M_CD
+			,MODEL_NO
+			,MODEL_CD	
+			,PACKAGE_CD		
+			
+			,ITEM01		
+			,ITEM02
+			,ITEM03
+			,ITEM04
+			,ITEM05
+			,ITEM06
+			,ITEM07
+			,ITEM08
+			,ITEM09
+			,ITEM10																																					
+        ) VALUES
+        (
+             #{svcCmpsInfoExt.extId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.inactDttm,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.actDttm,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.monthlyAmt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.monthlyNegoRate,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.monthlyNegoAmt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.onetimeAmt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.onetimeInstlCnt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.onetimeNegoRate,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.onetimeNegoAmt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.prodCnt,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.other,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.chgDate}
+            ,#{svcCmpsInfoExt.chgrId,jdbcType=VARCHAR}
+            ,#{svcCmpsInfoExt.regDate}
+            ,#{svcCmpsInfoExt.regrId,jdbcType=VARCHAR}
+            
+            ,#{svcCmpsInfoExt.coreCnt,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.local,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.osTyp,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.svcLvl,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.rtId,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.cnt,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.basicCoreCnt,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.addCoreCnt,jdbcType=VARCHAR}
+
+			,#{svcCmpsInfoExt.mNo,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.fixRate,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.useRate,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.mCd,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.mNo,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.mCd,jdbcType=VARCHAR}
+			,#{svcCmpsInfoExt.packageCd,jdbcType=VARCHAR}			
+			
+			,#{svcCmpsInfoExt.item01,jdbcType=VARCHAR}		
+			,#{svcCmpsInfoExt.item02,jdbcType=VARCHAR}	
+			,#{svcCmpsInfoExt.item03,jdbcType=VARCHAR}	
+			,#{svcCmpsInfoExt.item04,jdbcType=VARCHAR}	
+			,#{svcCmpsInfoExt.item05,jdbcType=VARCHAR}	
+			,#{svcCmpsInfoExt.item06,jdbcType=VARCHAR}	
+			,#{svcCmpsInfoExt.item07,jdbcType=VARCHAR}	
+			,#{svcCmpsInfoExt.item08,jdbcType=VARCHAR}	
+			,#{svcCmpsInfoExt.item09,jdbcType=VARCHAR}	
+			,#{svcCmpsInfoExt.item10,jdbcType=VARCHAR}																														
+        )
+    </insert>
+    
+    <update id="updateStatusOCtrtMast">
+        UPDATE 
+            TCMCT_OCTRT_INFO
+        SET
+            ORDER_STAT = #{stat}
+           ,CHGR_ID    = #{usrId}
+           ,CHG_DATE   = #{today}
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+    </update>
+    
+    <update id="updateStatusOProdCmps">
+        UPDATE 
+            TCMCT_OPROD_CMPS_INFO
+        SET
+            ORDER_STAT = #{stat}
+           ,CHGR_ID    = #{usrId}
+           ,CHG_DATE   = #{today}
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+        AND   PROD_CMPS_ID = #{prodCmpsId}
+    </update>
+    
+    <update id="updateStatusOSvcCmps">
+        UPDATE 
+            TCMCT_OSVC_CMPS_INFO
+        SET
+            ORDER_STAT = #{stat}
+           ,CHGR_ID    = #{usrId}
+           ,CHG_DATE   = #{today}
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+        AND   SVC_CMPS_ID = #{svcCmpsId}
+    </update>
+    
+    
+    <insert id="insertOrderMastExt">
+        INSERT INTO TCMCT_OCTRT_INFO_EXT
+        (
+             EXT_ID
+            ,ORDER_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,REAL_CUST_NM
+            ,REAL_CUST_TEL_NO
+            ,REAL_CUST_REL
+            ,PROC_RATE
+            ,REMARK
+            ,CHGR_ID
+            ,CHG_DATE
+            ,REGR_ID
+            ,REG_DATE
+
+        ) VALUES
+        (
+             #{octrtMastExt.extId,jdbcType=VARCHAR}
+            ,#{octrtMastExt.orderId,jdbcType=VARCHAR}
+            ,#{octrtMastExt.inactDttm,jdbcType=VARCHAR}
+            ,#{octrtMastExt.actDttm,jdbcType=VARCHAR}
+            ,#{octrtMastExt.realCustNm,jdbcType=VARCHAR}
+            ,#{octrtMastExt.realCustTelNo,jdbcType=VARCHAR}
+            ,#{octrtMastExt.realCustRel,jdbcType=VARCHAR}
+            ,#{octrtMastExt.procRate,jdbcType=VARCHAR}
+            ,#{octrtMastExt.remark,jdbcType=VARCHAR}
+            ,#{octrtMastExt.chgrId,jdbcType=VARCHAR}
+            ,#{octrtMastExt.chgDate}
+            ,#{octrtMastExt.regrId,jdbcType=VARCHAR}
+            ,#{octrtMastExt.regDate}
+        )
+    </insert>
+    
+    <update id="updateOCtrtExtId">
+        UPDATE 
+            TCMCT_OCTRT_INFO
+        SET
+            EXT_ID = #{ctrtExtId}
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+    </update>
+    
+    <insert id="insertCtrtMastExt">
+        INSERT INTO TCMCT_CTRT_INFO_EXT
+        (
+             EXT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,REAL_CUST_NM
+            ,REAL_CUST_TEL_NO
+            ,REAL_CUST_REL
+            ,PROC_RATE
+            ,REMARK
+            ,CHGR_ID
+            ,CHG_DATE
+            ,REGR_ID
+            ,REG_DATE
+
+        ) VALUES
+        (
+             #{ctrtMastExt.extId,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.inactDttm,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.actDttm,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.realCustNm,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.realCustTelNo,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.realCustRel,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.procRate,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.remark,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.chgrId,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.chgDate}
+            ,#{ctrtMastExt.regrId,jdbcType=VARCHAR}
+            ,#{ctrtMastExt.regDate}
+        )
+    </insert>
+    
+    <select id="getOCtrtMastExtInfo" resultType="OCtrtMastExtVO">
+       SELECT
+             EXT_ID
+            ,ORDER_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,REAL_CUST_NM
+            ,REAL_CUST_TEL_NO
+            ,REAL_CUST_REL
+            ,PROC_RATE
+            ,REMARK
+            ,CHGR_ID
+            ,CHG_DATE
+            ,REGR_ID
+            ,REG_DATE
+        FROM TCMCT_OCTRT_INFO_EXT
+        WHERE EXT_ID = #{extId}
+        AND   ORDER_ID = #{orderId}
+    </select>
+    
+    
+    <select id="getWorkInfoList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT
+             SO_ID
+            ,PROD_CD
+            ,SVC_CD
+            ,ORDER_TP
+            ,WRK_SEQ_NO
+            ,WRK_DEF_ID
+            ,WRK_DFT_WRKER
+            ,WRK_REF_WRKER
+            ,WRK_AUTO_CMT_YN
+            ,ATRT_YN
+        FROM TPMPD_PROD_WRK
+        WHERE SO_ID     = #{soId}
+        AND   PROD_CD   = #{basicProdCd}
+        AND   SVC_CD    = #{basicSvcCd}
+        AND   ORDER_TP  = #{orderTp}
+        ORDER BY WRK_SEQ_NO
+    </select>
+    
+        
+    <insert id="insertWorkInfo">
+        INSERT INTO TCMCT_SVC_WRK
+        (
+             WRK_ID
+            ,ORDER_ID
+            ,WRK_SEQ_NO
+            ,WRK_DEF_ID
+            ,WRK_STAT
+            ,WRK_DFT_WRKER
+            ,WRK_REF_WRKER
+            ,WRK_REQ_WRKER
+            ,WRK_ACT_DT
+            ,WRK_CMT_DT
+            ,WRK_REQ_DT
+            ,WRK_AUTO_CMT_YN
+            ,PROD_CD
+            ,SVC_CD
+            ,SO_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        ) VALUES
+        (
+             #{workInfo.wrk_id,jdbcType=VARCHAR}
+            ,#{workInfo.order_id,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_seq_no,jdbcType=INTEGER}
+            ,#{workInfo.wrk_def_id,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_stat,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_dft_wrker,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_ref_wrker,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_req_wrker,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_act_dt,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_cmt_dt,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_req_dt,jdbcType=VARCHAR}
+            ,#{workInfo.wrk_auto_cmt_yn,jdbcType=VARCHAR}
+            ,#{workInfo.prod_cd,jdbcType=VARCHAR}
+            ,#{workInfo.svc_cd,jdbcType=VARCHAR}
+            ,#{workInfo.so_id,jdbcType=VARCHAR}
+            ,#{workInfo.usr_id,jdbcType=VARCHAR}
+            ,#{workInfo.today}
+            ,#{workInfo.usr_id,jdbcType=VARCHAR}
+            ,#{workInfo.today}
+        )
+    </insert>
+    
+    <select id="getCtrtMastLastInfo" resultType="OCtrtMastVO">
+    	SELECT
+	    	 SO_ID
+            ,CTRT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,SVC_TEL_NO
+            ,ORDER_ID
+            ,ORDER_TP
+            ,CTRT_NM
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,CTRT_CL
+            ,RCPT_ID
+            ,CUST_ID
+            ,CUST_REL
+            ,APPNT
+            ,PYM_ACNT_ID
+            ,ACNT_CUST_REL
+            ,CUST_CL_DC_APLY_YN
+            ,PROD_CMPS_ID
+            ,PROD_CD
+            ,PROD_GRP
+            ,INSTL_ZIP_CD
+            ,INSTL_BASE_ADDR
+            ,INSTL_ADDR_DTL
+            ,INSTL_CITY
+            ,INSTL_STATE
+            ,INSTL_AGNT
+            ,SALES_USR_ID
+            ,SALES_ORG_ID
+            ,CTRT_STAT
+            ,CTRT_CHG_RESN_CD
+            ,SUS_HOPE_DD
+            ,MMT_SUS_HOPE_DD
+            ,MMT_SUS_CD
+            ,TERM_HOPE_DT
+            ,DEF_RESN_CD
+            ,SVC_STRT_DD
+            ,SVC_STRT_HOPE_DT
+            ,JOIN_ID
+            ,PROM_YN
+            ,PROM_ID
+            ,ORG_ID
+            ,USR_ID
+            ,SERVICE_ID
+            ,RCV_TRANS_CTRT_ID
+            ,SND_TRANS_CTRT_ID
+            ,TRANS_CTRT_YN
+            ,EXT_ID
+            ,NP_YN
+            ,BEF_NP
+            ,ORG_NP
+            ,FIRST_ORG_ID
+            ,FIRST_USR_ID
+            ,REMARK
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+    	FROM TCMCT_CTRT_INFO
+    	WHERE SO_ID = #{soId}
+    	AND   CUST_ID = #{custId}
+    	AND   CTRT_ID = #{ctrtId}
+    	AND   INACT_DTTM = '99991231235959'
+    </select>
+    
+        
+    <select id="getCtrtMastLastExtInfo" resultType="OCtrtMastExtVO">
+       SELECT
+             EXT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,REAL_CUST_NM
+            ,REAL_CUST_TEL_NO
+            ,REAL_CUST_REL
+            ,PROC_RATE
+            ,REMARK
+            ,CHGR_ID
+            ,CHG_DATE
+            ,REGR_ID
+            ,REG_DATE
+        FROM TCMCT_CTRT_INFO_EXT
+        WHERE EXT_ID = #{extId}
+        AND   INACT_DTTM = '99991231235959'
+    </select>
+    
+    
+    <update id="updateOCtrtInfo">
+        UPDATE 
+            TCMCT_OCTRT_INFO
+        SET
+			 ORDER_STAT=#{orderMast.orderStat,jdbcType=VARCHAR}
+			,ORDER_DT=#{orderMast.orderDt,jdbcType=VARCHAR}
+			,INACT_DTTM=#{orderMast.inactDttm,jdbcType=VARCHAR}
+			,ACT_DTTM=#{orderMast.actDttm,jdbcType=VARCHAR}
+			,SVC_TEL_NO=#{orderMast.svcTelNo,jdbcType=VARCHAR}
+			,ORDER_TP=#{orderMast.orderTp,jdbcType=VARCHAR}
+			,CTRT_NM=#{orderMast.ctrtNm,jdbcType=VARCHAR}
+			,RATE_STRT_DT=#{orderMast.rateStrtDt,jdbcType=VARCHAR}
+			,RATE_END_DT=#{orderMast.rateEndDt,jdbcType=VARCHAR}
+			,OPEN_DD=#{orderMast.openDd,jdbcType=VARCHAR}
+			,TERM_DT=#{orderMast.termDt,jdbcType=VARCHAR}
+			,CTRT_CL=#{orderMast.ctrtCl,jdbcType=VARCHAR}
+			,RCPT_ID=#{orderMast.rcptId,jdbcType=VARCHAR}
+			,CUST_ID=#{orderMast.custId,jdbcType=VARCHAR}
+			,CUST_REL=#{orderMast.custRel,jdbcType=VARCHAR}
+			,APPNT=#{orderMast.appnt,jdbcType=VARCHAR}
+			,PYM_ACNT_ID=#{orderMast.pymAcntId,jdbcType=VARCHAR}
+			,ACNT_CUST_REL=#{orderMast.acntCustRel,jdbcType=VARCHAR}
+			,CUST_CL_DC_APLY_YN=#{orderMast.custClDcAplyYn,jdbcType=VARCHAR}
+			,PROD_CMPS_ID=#{orderMast.prodCmpsId,jdbcType=VARCHAR}
+			,PROD_CD=#{orderMast.prodCd,jdbcType=VARCHAR}
+			,PROD_GRP=#{orderMast.prodGrp,jdbcType=VARCHAR}
+			,INSTL_ZIP_CD=#{orderMast.instlZipCd,jdbcType=VARCHAR}
+			,INSTL_BASE_ADDR=#{orderMast.instlBaseAddr,jdbcType=VARCHAR}
+			,INSTL_ADDR_DTL=#{orderMast.instlAddrDtl,jdbcType=VARCHAR}
+			,INSTL_CITY=#{orderMast.instlCity,jdbcType=VARCHAR}
+			,INSTL_STATE=#{orderMast.instlState,jdbcType=VARCHAR}
+			,INSTL_AGNT=#{orderMast.instlAgnt,jdbcType=VARCHAR}
+			,SALES_USR_ID=#{orderMast.salesUsrId,jdbcType=VARCHAR}
+			,SALES_ORG_ID=#{orderMast.salesOrgId,jdbcType=VARCHAR}
+			,CTRT_STAT=#{orderMast.ctrtStat,jdbcType=VARCHAR}
+			,CTRT_CHG_RESN_CD=#{orderMast.ctrtChgResnCd,jdbcType=VARCHAR}
+			,SUS_HOPE_DD=#{orderMast.susHopeDd,jdbcType=VARCHAR}
+			,MMT_SUS_HOPE_DD=#{orderMast.mmtSusHopeDd,jdbcType=VARCHAR}
+			,MMT_SUS_CD=#{orderMast.mmtSusCd,jdbcType=VARCHAR}
+			,TERM_HOPE_DT=#{orderMast.termHopeDt,jdbcType=VARCHAR}
+			,DEF_RESN_CD=#{orderMast.defResnCd,jdbcType=VARCHAR}
+			,SVC_STRT_DD=#{orderMast.svcStrtDd,jdbcType=VARCHAR}
+			,SVC_STRT_HOPE_DT=#{orderMast.svcStrtHopeDt,jdbcType=VARCHAR}
+			,JOIN_ID=#{orderMast.joinId,jdbcType=VARCHAR}
+			,PROM_YN=#{orderMast.promYn,jdbcType=VARCHAR}
+			,PROM_ID=#{orderMast.promId,jdbcType=VARCHAR}
+			,ORG_ID=#{orderMast.orgId,jdbcType=VARCHAR}
+			,USR_ID=#{orderMast.usrId,jdbcType=VARCHAR}
+			,SERVICE_ID=#{orderMast.serviceId,jdbcType=VARCHAR}
+			,RCV_TRANS_CTRT_ID=#{orderMast.rcvTransCtrtId,jdbcType=VARCHAR}
+			,SND_TRANS_CTRT_ID=#{orderMast.sndTransCtrtId,jdbcType=VARCHAR}
+			,TRANS_CTRT_YN=#{orderMast.transCtrtYn,jdbcType=VARCHAR}
+			,EXT_ID=#{orderMast.extId,jdbcType=VARCHAR}
+			,NP_YN=#{orderMast.npYn,jdbcType=VARCHAR}
+			,BEF_NP=#{orderMast.befNp,jdbcType=VARCHAR}
+			,ORG_NP=#{orderMast.orgNp,jdbcType=VARCHAR}
+			,FIRST_ORG_ID=#{orderMast.firstOrgId,jdbcType=VARCHAR}
+			,FIRST_USR_ID=#{orderMast.firstUsrId,jdbcType=VARCHAR}
+			,REMARK=#{orderMast.remark,jdbcType=VARCHAR}
+			,IF_SUC_YN=#{orderMast.ifSucYn,jdbcType=VARCHAR}
+			,CHGR_ID=#{orderMast.chgrId,jdbcType=VARCHAR}
+			,CHG_DATE=#{orderMast.chgDate}
+        WHERE SO_ID = #{orderMast.soId}
+        AND   CTRT_ID = #{orderMast.ctrtId}
+        AND   ORDER_ID = #{orderMast.orderId}
+    </update>
+    
+    
+    <update id="updateOCtrtExtInfo">
+        UPDATE 
+            TCMCT_OCTRT_INFO_EXT
+        SET
+			 PROC_RATE=#{octrtExt.procRate,jdbcType=VARCHAR}
+			,REAL_CUST_NM=#{octrtExt.realCustNm,jdbcType=VARCHAR}
+			,REAL_CUST_TEL_NO=#{octrtExt.realCustTelNo,jdbcType=VARCHAR}
+			,REAL_CUST_REL=#{octrtExt.realCustRel,jdbcType=VARCHAR}
+			,REMARK=#{octrtExt.remark,jdbcType=VARCHAR}
+			,CHGR_ID=#{octrtExt.chgrId,jdbcType=VARCHAR}
+			,CHG_DATE=#{octrtExt.chgDate}
+        WHERE EXT_ID = #{octrtExt.extId}
+        AND   ORDER_ID = #{octrtExt.orderId}
+    </update>
+    
+    <update id="updateOProdCmpsInfo">
+        UPDATE 
+            TCMCT_OPROD_CMPS_INFO
+        SET
+             SO_ID          = #{oprodCmps.soId, jdbcType=VARCHAR}
+            ,CTRT_ID        = #{oprodCmps.ctrtId, jdbcType=VARCHAR}
+            ,ORDER_ID       = #{oprodCmps.orderId, jdbcType=VARCHAR}
+            ,PROD_CMPS_ID   = #{oprodCmps.prodCmpsId, jdbcType=VARCHAR}
+            ,ORDER_TP       = #{oprodCmps.orderTp, jdbcType=VARCHAR}
+            ,ORDER_STAT     = #{oprodCmps.orderStat, jdbcType=VARCHAR}
+            ,INACT_DTTM     = #{oprodCmps.inactDttm, jdbcType=VARCHAR}
+            ,ACT_DTTM       = #{oprodCmps.actDttm, jdbcType=VARCHAR}
+            ,RCPT_ID        = #{oprodCmps.rcptId, jdbcType=VARCHAR}
+            ,RATE_STRT_DT   = #{oprodCmps.rateStrtDt, jdbcType=VARCHAR}
+            ,RATE_END_DT    = #{oprodCmps.rateEndDt, jdbcType=VARCHAR}
+            ,OPEN_DD        = #{oprodCmps.openDd, jdbcType=VARCHAR}
+            ,TERM_DT        = #{oprodCmps.termDt, jdbcType=VARCHAR}
+            ,PROD_GRP       = #{oprodCmps.prodGrp, jdbcType=VARCHAR}
+            ,PROD_CMPS_CL   = #{oprodCmps.prodCmpsCl, jdbcType=VARCHAR}
+            ,PROD_CD        = #{oprodCmps.prodCd, jdbcType=VARCHAR}
+            ,UP_PROD_GRP    = #{oprodCmps.upProdGrp, jdbcType=VARCHAR}
+            ,UP_PROD_CMPS_ID = #{oprodCmps.upProdCmpsId, jdbcType=VARCHAR}
+            ,UP_PROD_CD      = #{oprodCmps.upProdCd, jdbcType=VARCHAR}
+            ,BEF_CMPS_PROD_ID = #{oprodCmps.befCmpsProdId, jdbcType=VARCHAR}
+            ,BEF_PROD_GRP     = #{oprodCmps.befProdGrp, jdbcType=VARCHAR}
+            ,BEF_PROD_CD      = #{oprodCmps.befProdCd, jdbcType=VARCHAR}
+            ,ORG_ID         = #{oprodCmps.orgId, jdbcType=VARCHAR}
+            ,USR_ID         = #{oprodCmps.usrId, jdbcType=VARCHAR}
+            ,PROD_CHG_CL    = #{oprodCmps.prodChgCl, jdbcType=VARCHAR}
+            ,PROD_STAT_CD   = #{oprodCmps.prodStatCd, jdbcType=VARCHAR}
+            ,EXT_ID         = #{oprodCmps.extId, jdbcType=VARCHAR}
+            ,CHGR_ID        = #{oprodCmps.chgrId, jdbcType=VARCHAR}
+            ,CHG_DATE       = #{oprodCmps.chgDate}
+        WHERE SO_ID = #{oprodCmps.soId}
+        AND   CTRT_ID = #{oprodCmps.ctrtId}
+        AND   ORDER_ID = #{oprodCmps.orderId}
+        AND   PROD_CMPS_ID = #{oprodCmps.prodCmpsId}
+    </update>
+
+    <update id="updateOSvcCmpsInfo">
+        UPDATE 
+            TCMCT_OSVC_CMPS_INFO
+        SET
+             SO_ID            = #{osvcCmps.soId, jdbcType=VARCHAR}
+            ,CTRT_ID          = #{osvcCmps.ctrtId, jdbcType=VARCHAR}
+            ,ORDER_ID         = #{osvcCmps.orderId, jdbcType=VARCHAR}
+            ,SVC_CMPS_ID      = #{osvcCmps.svcCmpsId, jdbcType=VARCHAR}
+            ,ORDER_TP         = #{osvcCmps.orderTp, jdbcType=VARCHAR}
+            ,ORDER_STAT       = #{osvcCmps.orderStat, jdbcType=VARCHAR}
+            ,INACT_DTTM       = #{osvcCmps.inactDttm, jdbcType=VARCHAR}
+            ,ACT_DTTM         = #{osvcCmps.actDttm, jdbcType=VARCHAR}
+            ,PROD_CMPS_ID     = #{osvcCmps.prodCmpsId, jdbcType=VARCHAR}
+            ,RCPT_ID          = #{osvcCmps.rcptId, jdbcType=VARCHAR}
+            ,PROD_CD          = #{osvcCmps.prodCd, jdbcType=VARCHAR}
+            ,RATE_STRT_DT     = #{osvcCmps.rateStrtDt, jdbcType=VARCHAR}
+            ,RATE_END_DT      = #{osvcCmps.rateEndDt, jdbcType=VARCHAR}
+            ,OPEN_DD          = #{osvcCmps.openDd, jdbcType=VARCHAR}
+            ,TERM_DT          = #{osvcCmps.termDt, jdbcType=VARCHAR}
+            ,SVC_GRP          = #{osvcCmps.svcGrp, jdbcType=VARCHAR}
+            ,SVC_CD           = #{osvcCmps.svcCd, jdbcType=VARCHAR}
+            ,SVC_CHG_CL       = #{osvcCmps.svcChgCl, jdbcType=VARCHAR}
+            ,SVC_STS_CD       = #{osvcCmps.svcStsCd, jdbcType=VARCHAR}
+            ,EXT_ID           = #{osvcCmps.extId, jdbcType=VARCHAR}
+            ,CHGR_ID          = #{osvcCmps.chgrId, jdbcType=VARCHAR}
+            ,CHG_DATE         = #{osvcCmps.chgDate}
+        WHERE SO_ID = #{osvcCmps.soId}
+        AND   CTRT_ID = #{osvcCmps.ctrtId}
+        AND   ORDER_ID = #{osvcCmps.orderId}
+        AND   SVC_CMPS_ID = #{osvcCmps.svcCmpsId}
+    </update>
+    
+    <update id="updateCtrtHist">
+    	UPDATE
+    		TCMCT_CTRT_INFO
+    	SET
+    		INACT_DTTM = #{orderInfo.orderReqDttm, jdbcType=VARCHAR}
+   		<if test="cancleCtrtStat != null and cancleCtrtStat != ''" >
+    	   ,CTRT_STAT = #{cancleCtrtStat}
+    	</if>
+    	WHERE SO_ID = #{orderInfo.soId}
+    	AND   CUST_ID = #{orderInfo.custId}
+    	AND   CTRT_ID = #{orderInfo.ctrtId}
+    	AND   INACT_DTTM = '99991231235959'
+    </update>
+    
+    <update id="updateCtrtExtHist">
+    	UPDATE
+    		TCMCT_CTRT_INFO_EXT
+    	SET
+    		INACT_DTTM = #{actDttm}
+    	WHERE EXT_ID = #{extId}
+    	AND   INACT_DTTM = '99991231235959'
+    </update>
+    
+    
+    <select id="getCtrtStat" resultType="String">
+    	SELECT CTRT_STAT
+    	FROM TCMCT_CTRT_INFO
+    	WHERE SO_ID = #{soId}
+    	AND   CUST_ID = #{custId}
+    	AND   CTRT_ID = #{ctrtId}
+    	AND   INACT_DTTM = '99991231235959'
+    </select>
+    
+    <select id="getProdCmpsLastInfo" resultType="OProdCmpsVO">
+    	SELECT
+    		 SO_ID
+            ,CTRT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,ORDER_ID
+            ,RCPT_ID
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,PROD_GRP
+            ,PROD_CMPS_CL
+            ,PROD_CD
+            ,UP_PROD_GRP
+            ,UP_PROD_CMPS_ID
+            ,UP_PROD_CD
+            ,BEF_CMPS_PROD_ID
+            ,BEF_PROD_GRP
+            ,BEF_PROD_CD
+            ,ORG_ID
+            ,USR_ID
+            ,PROD_CHG_CL
+            ,PROD_STAT_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        FROM TCMCT_PROD_CMPS_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   PROD_STAT_CD IN ('20','30','40')
+        AND   INACT_DTTM = '99991231235959'
+        ORDER BY PROD_CMPS_ID
+    </select>
+    
+    <select id='getProdCmpsExtLastInfo' resultType="OProdCmpsExtVO">
+    	SELECT
+    		 EXT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,SEQ_NO
+            ,ICCID
+            ,IMSI
+            ,IMEI
+            ,ITEM_MID_CD
+            ,EQT_CL_CD
+            ,ITEM_ID
+            ,REMARK
+            ,CHGR_ID
+            ,CHG_DATE
+            ,REGR_ID
+            ,REG_DATE
+       FROM TCMCT_PROD_CMPS_INFO_EXT
+       WHERE EXT_ID = #{extId}
+       AND   INACT_DTTM = '99991231235959'   
+    </select>
+    
+    <select id="getSvcCmpsLastInfo" resultType="OSvcCmpsVO">
+    	SELECT
+             SO_ID
+            ,CTRT_ID
+            ,SVC_CMPS_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,ORDER_ID
+            ,RCPT_ID
+            ,PROD_CD
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,SVC_GRP
+            ,SVC_CD
+            ,SVC_CHG_CL
+            ,SVC_STS_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        FROM TCMCT_SVC_CMPS_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   SVC_STS_CD IN ('20','30','40')
+        AND   INACT_DTTM = '99991231235959'
+        ORDER BY SVC_CMPS_ID
+    </select>
+    
+    
+    <select id='getSvcCmpsExtLastInfo' resultType="OSvcCmpsExtVO">
+    	SELECT
+			 EXT_ID
+			,INACT_DTTM
+			,ACT_DTTM
+			,MONTHLY_AMT
+			,MONTHLY_NEGO_RATE
+			,MONTHLY_NEGO_AMT
+			,ONETIME_AMT
+			,ONETIME_INSTL_CNT
+			,ONETIME_NEGO_RATE
+			,ONETIME_NEGO_AMT
+			,PROD_CNT
+			,OTHER
+			,CHG_DATE
+			,CHGR_ID
+			,REG_DATE
+			,REGR_ID
+       FROM TCMCT_SVC_CMPS_INFO_EXT
+       WHERE EXT_ID = #{extId}
+       AND   INACT_DTTM = '99991231235959'   
+    </select>
+    
+    <update id="updateProdCmpsHist">
+    	UPDATE
+    		TCMCT_PROD_CMPS_INFO
+    	SET
+    		INACT_DTTM = #{orderReqDttm}
+    	<if test="cancleCtrtStat != null and cancleCtrtStat != ''" >
+    	   ,PROD_STAT_CD = #{cancleCtrtStat}
+    	</if>
+    	WHERE SO_ID = #{soId}
+    	AND   CTRT_ID = #{ctrtId}
+    	AND   PROD_CMPS_ID = #{prodCmpsId}
+    	AND   INACT_DTTM = '99991231235959'
+    </update>
+    
+    <update id="updateProdCmpsExtHist">
+    	UPDATE
+    		TCMCT_PROD_CMPS_INFO_EXT
+    	SET
+    		INACT_DTTM = #{orderReqDttm}
+       WHERE EXT_ID = #{extId}
+       AND   INACT_DTTM = '99991231235959'   
+    </update>
+    
+    <update id="updateSvcCmpsHist">
+    	UPDATE
+    		TCMCT_SVC_CMPS_INFO
+    	SET
+    		INACT_DTTM = #{orderReqDttm}
+		<if test="cancleCtrtStat != null and cancleCtrtStat != ''" >
+    	   ,SVC_STS_CD = #{cancleCtrtStat}
+    	</if>
+    	WHERE SO_ID = #{soId}
+    	AND   CTRT_ID = #{ctrtId}
+    	AND   SVC_CMPS_ID = #{svcCmpsId}
+    	AND   INACT_DTTM = '99991231235959'
+    </update>
+    
+    <update id="updateSvcCmpsExtHist">
+    	UPDATE
+    		TCMCT_SVC_CMPS_INFO_EXT
+    	SET
+    		INACT_DTTM = #{orderReqDttm}
+       WHERE EXT_ID = #{extId}
+       AND   INACT_DTTM = '99991231235959'   
+    </update>
+    
+    <select id="getProdCmpsLastInfoTerminated" resultType="OProdCmpsVO">
+    	SELECT
+    		 SO_ID
+            ,CTRT_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,ORDER_ID
+            ,RCPT_ID
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,PROD_GRP
+            ,PROD_CMPS_CL
+            ,PROD_CD
+            ,UP_PROD_GRP
+            ,UP_PROD_CMPS_ID
+            ,UP_PROD_CD
+            ,BEF_CMPS_PROD_ID
+            ,BEF_PROD_GRP
+            ,BEF_PROD_CD
+            ,ORG_ID
+            ,USR_ID
+            ,PROD_CHG_CL
+            ,PROD_STAT_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        FROM TCMCT_PROD_CMPS_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{lastOrderId}
+        AND   PROD_STAT_CD IN ('50','90')
+        ORDER BY PROD_CMPS_ID
+    </select>
+    
+    <select id="getSvcCmpsLastInfoTerminated" resultType="OSvcCmpsVO">
+    	SELECT
+             SO_ID
+            ,CTRT_ID
+            ,SVC_CMPS_ID
+            ,INACT_DTTM
+            ,ACT_DTTM
+            ,PROD_CMPS_ID
+            ,ORDER_ID
+            ,RCPT_ID
+            ,PROD_CD
+            ,RATE_STRT_DT
+            ,RATE_END_DT
+            ,OPEN_DD
+            ,TERM_DT
+            ,SVC_GRP
+            ,SVC_CD
+            ,SVC_CHG_CL
+            ,SVC_STS_CD
+            ,EXT_ID
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+        FROM TCMCT_SVC_CMPS_INFO
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{lastOrderId}
+        AND   SVC_STS_CD IN ('50','90')
+        ORDER BY SVC_CMPS_ID
+    </select>
+    
+    <select id="getSuspendedList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+    	SELECT
+    		 SO_ID
+    		,CTRT_ID
+    		,INACT_DTTM
+    		,ACT_DTTM
+    		,CTRT_CHG_RESN_CD
+    		,CTRT_STAT
+    	FROM TCMCT_CTRT_INFO
+    	WHERE SO_ID = #{soId}
+    	AND   CUST_ID = #{custId}
+    	AND   CTRT_ID = #{ctrtId}
+    	AND   CTRT_STAT = '30'
+    	AND   INACT_DTTM &gt;= #{dttm}
+    	ORDER BY ORDER_ID
+    </select>
+    
+    
+    <insert id="insetCtrtPromInfo">
+        INSERT INTO TCMCT_PROM_CTRT_INFO
+        (
+             PROM_CTRT_ID
+			,RCPT_DTTM
+			,MSTR_FL
+			,CTRT_APLY_STRT_DT
+			,CTRT_APLY_END_DT
+			,CTRT_ID
+			,PROM_CNT
+			,PROM_CHG_CD
+			,PROM_CHGRSN_CD
+			,USE_YN
+			,REGR_ID
+			,REG_DATE
+			,CHGR_ID
+			,CHG_DATE
+        ) VALUES
+        (
+         #{promCtrtInfo.promCtrtId,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.rcptDttm,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.mstrFl,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.ctrtAplyStrtDt,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.ctrtAplyEndDt,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.ctrtId,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.promCnt,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.promChgCd,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.promChgrsnCd,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.useYn,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.regrId,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.regDate}
+        ,#{promCtrtInfo.chgrId,jdbcType=VARCHAR}
+        ,#{promCtrtInfo.chgDate}
+        )
+    </insert>
+    
+    <update id="updatePromCtrtId">
+        UPDATE 
+            TCMCT_OCTRT_INFO
+        SET
+            PROM_ID = #{promCtrtId}
+        WHERE SO_ID = #{soId}
+        AND   CTRT_ID = #{ctrtId}
+        AND   ORDER_ID = #{orderId}
+    </update>
+    
+    <update id="updatePromCtrtCancle">
+        UPDATE 
+            TCMCT_PROM_CTRT_INFO
+        SET
+            USE_YN = 'N'
+        WHERE PROM_CTRT_ID = #{promCtrtId}
+        AND   CTRT_ID = #{ctrtId}
+    </update>
+    
+    <update id="updatePromCtrt">
+        UPDATE 
+            TCMCT_PROM_CTRT_INFO
+        SET
+             CTRT_APLY_STRT_DT = #{ctrtPromInfo.ctrtAplyStrtDt,jdbcType=VARCHAR}
+			,CTRT_APLY_END_DT  = #{ctrtPromInfo.ctrtAplyEndDt,jdbcType=VARCHAR}
+			,CHGR_ID           = #{ctrtPromInfo.chgrId,jdbcType=VARCHAR}
+			,CHG_DATE          = #{ctrtPromInfo.chgDate}
+        WHERE PROM_CTRT_ID = #{ctrtPromInfo.promCtrtId}
+        AND   CTRT_ID = #{ctrtPromInfo.ctrtId}
+    </update>
+    
+    <select id="getThrwyInfoList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+		  SELECT  OA.CTRT_ID
+		         ,OA.SO_ID
+		         ,OA.CUST_ID
+		         ,OA.ORDER_TP
+		         ,OB.PROD_CD
+		         ,OB.PROD_CMPS_ID
+		         ,OB.SVC_CMPS_ID
+		         ,PRI.RATE_ITM_NM
+		         ,PRI.CHRG_CTGRY
+		         ,PRI.RATE_ITM_CD
+		         ,PRI.SVC_RATE_ITM_TYP_CD AS CHRG_ITM_ID
+		         ,PRI.RATE_ITM_TYP_CD
+		         ,PRI.RATE_VAL
+		         ,OBE.ONETIME_AMT
+		         ,OBE.ONETIME_INSTL_CNT
+                 ,OBE.ONETIME_NEGO_RATE
+                 ,OBE.ONETIME_NEGO_AMT
+		  FROM
+                  TCMCT_OCTRT_INFO  OA
+		         ,TCMCT_OSVC_CMPS_INFO OB
+		         ,TCMCT_OSVC_CMPS_INFO_EXT OBE
+		         ,IFNCRM_PROD_RATE_INFO PRI
+		  WHERE  OA.ORDER_ID  = #{orderId}
+		  AND    OB.ORDER_STAT NOT IN ('03','04')
+		  AND    OA.INACT_DTTM = '99991231235959'
+		  AND    OB.ORDER_ID   = OA.ORDER_ID
+		  AND    OB.CTRT_ID    = OA.CTRT_ID
+		  AND    OB.INACT_DTTM = '99991231235959'
+		  AND    OB.ORDER_ID   = OBE.ORDER_ID
+		  AND    OB.EXT_ID     = OBE.EXT_ID
+		  AND    OBE.INACT_DTTM = '99991231235959'
+		  AND    OB.SO_ID      = PRI.SO_ID
+		  AND    OB.PROD_CD    = PRI.PROD_CD
+		  AND    OB.SVC_STS_CD = '20'
+		  AND    PRI.CHRG_CTGRY = 'N'
+    </select>
+    
+    <insert id="insertThrwyInfo">
+        INSERT INTO TBLIV_THRWY_CHRG_INFO
+        (
+             THRWY_CHRG_ID
+			,REQ_DT
+			,MSTR_FL
+			,CTRT_ID
+			,PROD_CMPS_ID
+			,SVC_CMPS_ID
+			,PROD_CD
+			,CHRG_ITM_ID
+			,RATE_ITM_CD
+			,CLC_WRK_NO
+			,THRWY_CHRG_OCC_CL
+			,THRWY_CHRG_RESN
+			,OT_CHRG_STAT
+			,OCC_AMT
+			,VAT
+			,DC_AMT
+			,BILL_AMT
+			,ITLLMT_PYM_FLG
+			,IPM_MM_CNT
+			,FULL_PAY_YN
+			,ADJ_RESN_CD
+			,PRMS_CL
+			,RCPT_AMT
+			,BILL_YYMM
+			,BILL_APLY_DT
+			,RCPT_MTHD
+			,CMPL_DT
+			,UPYM_AMT
+			,UNPAY_RESN_CD
+			,RCPT_ID
+			,SO_ID
+			,RMRK
+			,REGR_ID
+			,REG_DATE
+			,CHGR_ID
+			,CHG_DATE
+        ) VALUES
+        (
+         #{insertParam.thrwyChrgId,jdbcType=VARCHAR}
+        ,#{insertParam.reqDt,jdbcType=VARCHAR}
+        ,#{insertParam.mstrFl,jdbcType=VARCHAR}
+        ,#{insertParam.ctrtId,jdbcType=VARCHAR}
+        ,#{insertParam.prodCmpsId,jdbcType=VARCHAR}
+        ,#{insertParam.svcCmpsId,jdbcType=VARCHAR}
+        ,#{insertParam.prodCd,jdbcType=VARCHAR}
+        ,#{insertParam.chrgItmId,jdbcType=VARCHAR}
+        ,#{insertParam.rateItmCd,jdbcType=VARCHAR}
+        ,#{insertParam.clcWrkNo,jdbcType=VARCHAR}
+        ,#{insertParam.thrwyChrgOccCl,jdbcType=VARCHAR}
+        ,#{insertParam.thrwyChrgResn,jdbcType=VARCHAR}
+        ,#{insertParam.otChrgStat,jdbcType=VARCHAR}
+        ,#{insertParam.occAmt}
+        ,#{insertParam.vat}
+        ,#{insertParam.dcAmt}
+        ,#{insertParam.billAmt}
+        ,#{insertParam.itllmtPymFlg,jdbcType=VARCHAR}
+        ,#{insertParam.ipmMmCnt}
+        ,#{insertParam.fullPayYn,jdbcType=VARCHAR}
+        ,#{insertParam.adjResnCd,jdbcType=VARCHAR}
+        ,#{insertParam.prmsCl,jdbcType=VARCHAR}
+        ,#{insertParam.rcptAmt}
+        ,#{insertParam.billYymm,jdbcType=VARCHAR}
+        ,#{insertParam.billAplyDt,jdbcType=VARCHAR}
+        ,#{insertParam.rcptMthd,jdbcType=VARCHAR}
+        ,#{insertParam.cmplDt,jdbcType=VARCHAR}
+        ,#{insertParam.upymAmt}
+        ,#{insertParam.unpayResnCd,jdbcType=VARCHAR}
+        ,#{insertParam.rcptId,jdbcType=VARCHAR}
+        ,#{insertParam.soId,jdbcType=VARCHAR}
+        ,#{insertParam.rmrk,jdbcType=VARCHAR}
+        ,#{insertParam.regrId,jdbcType=VARCHAR}
+        ,#{insertParam.regDate}
+        ,#{insertParam.chgrId,jdbcType=VARCHAR}
+        ,#{insertParam.chgDate}
+        )
+    </insert>
+    
+</mapper>
+    

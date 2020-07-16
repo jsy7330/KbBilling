@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.voucherMgt.VoucherMasterMngMapper">
+
+	<!-- 조회대상 제품 수 -->
+	<select id="vissueListCount" resultType="int">
+		  SELECT COUNT(*)
+          FROM TDNDT_ITEM VI
+               JOIN TDNDT_MNCO VM
+                 ON VM.SO_ID = VI.SO_ID
+                AND VM.MNCO_ID = VI.MNCO_ID
+               JOIN TDNDT_VISSUE VO
+                 ON VO.SO_ID = VI.SO_ID
+                AND VO.ITEM_ID = VI.ITEM_ID
+         WHERE 1 = 1
+           AND VI.SO_ID = #{vissueVO.soId}
+           AND VI.ITEM_TP_CD = 'V'
+		<if test="vissueVO.itemId != null and vissueVO.itemId != ''">
+			AND VO.ITEM_ID = #{vissueVO.itemId}
+		</if>
+		<if test="vissueVO.itemNm != null and vissueVO.itemNm != ''">
+			AND VO.ITEM_NM = #{vissueVO.itemNm}
+		</if>
+		<if test="vissueVO.mncoId != null and vissueVO.mncoId != ''">
+			AND VO.MNCO_ID = #{vissueVO.mncoId}
+		</if>
+		<if test="vissueVO.mncoNm != null and vissueVO.mncoNm != ''">
+			AND VO.MNCO_NM = #{vissueVO.mncoNm}
+		</if>
+		<if test="vissueVO.voTp != null and vissueVO.voTp != ''">
+			AND VO.VO_TP = #{vissueVO.voTp}
+		</if>
+         ORDER BY VO.VISSUE_SEQ_NO DESC
+	</select>
+
+    <!-- 바우쳐발행팝업 제품조회 -->
+    <select id="getVissueList" resultType="VissueVO">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT VO.SO_ID          --사업구분
+             , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = VO.SO_ID) AS SO_NM
+             , VO.VISSUE_SEQ_NO  --발행일련번호
+             , VO.ITEM_ID        --제품ID
+             , VI.ITEM_NM        --제품명
+             , VO.MNCO_ID        --제조사ID
+             , VM.MNCO_NM        --제조사명
+             , VO.VO_TP          --바우쳐종류
+             , VO.VO_ISSUE_AMT   --바우쳐발행금액
+             , VO.VO_ISSUE_CNT   --바우쳐발행수
+             , VO.VO_ISSUE_DT    --바우쳐발행일자
+             , VO.VO_EXPIRED_DT  --바우쳐만료일자
+          FROM TDNDT_ITEM VI
+               JOIN TDNDT_MNCO VM
+                 ON VM.SO_ID = VI.SO_ID
+                AND VM.MNCO_ID = VI.MNCO_ID
+               JOIN TDNDT_VISSUE VO
+                 ON VO.SO_ID = VI.SO_ID
+                AND VO.ITEM_ID = VI.ITEM_ID
+         WHERE 1 = 1
+           AND VI.SO_ID = #{vissueVO.soId}
+           AND VI.ITEM_TP_CD = 'V'
+		<if test="vissueVO.itemId != null and vissueVO.itemId != ''">
+			AND VO.ITEM_ID = #{vissueVO.itemId}
+		</if>
+		<if test="vissueVO.itemNm != null and vissueVO.itemNm != ''">
+			AND VO.ITEM_NM = #{vissueVO.itemNm}
+		</if>
+		<if test="vissueVO.mncoId != null and vissueVO.mncoId != ''">
+			AND VO.MNCO_ID = #{vissueVO.mncoId}
+		</if>
+		<if test="vissueVO.mncoNm != null and vissueVO.mncoNm != ''">
+			AND VO.MNCO_NM = #{vissueVO.mncoNm}
+		</if>
+		<if test="vissueVO.voTp != null and vissueVO.voTp != ''">
+			AND VO.VO_TP = #{vissueVO.voTp}
+		</if>
+         ORDER BY VO.VISSUE_SEQ_NO DESC
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+    
+    <!-- 바우쳐마스터 정보의 수를 조회한다. -->
+    <select id="getVeqtInfoCount" resultType="int">
+    	  SELECT COUNT(*)
+          FROM TDNDT_VEQT VE
+               JOIN TDNDT_VISSUE_DTL VD
+                 ON VD.SO_ID = VE.SO_ID
+                AND VD.VO_SEQ_NO = VE.VO_SEQ_NO
+               JOIN TDNDT_VISSUE VI
+                 ON VI.SO_ID = VD.SO_ID
+                AND VI.VISSUE_SEQ_NO = VD.VISSUE_SEQ_NO
+               JOIN TDNDT_ITEM IT
+                 ON IT.SO_ID = VE.SO_ID
+                AND IT.ITEM_ID = VE.ITEM_ID
+               JOIN TDNDT_MNCO MN
+                 ON MN.SO_ID = VI.SO_ID
+                AND MN.MNCO_ID = VI.MNCO_ID
+               LEFT OUTER JOIN TDNDI_ORG_INFO OI
+                 ON OI.SO_ID = VE.SO_ID
+                AND OI.ORG_ID = VE.OWN_LOC_CD
+         WHERE 1=1
+           AND VE.SO_ID = #{vissueVO.soId}
+        <if test="vissueVO.itemId != null and vissueVO.itemId != ''">
+           AND VE.ITEM_ID = #{vissueVO.itemId}
+        </if>
+        <if test="vissueVO.vissueSeqNo != null and vissueVO.vissueSeqNo != ''">
+           AND VD.VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo}
+        </if>
+        <if test="vissueVO.poStat != null and vissueVO.poStat != ''">
+           AND VE.VO_STAT_CD = #{vissueVO.poStat}
+        </if>
+        <if test="vissueVO.voBarCd != null and vissueVO.voBarCd != ''">
+           AND VE.VO_BAR_CD = #{vissueVO.voBarCd}
+        </if>
+        <if test="vissueVO.voIssueOrgId != null and vissueVO.voIssueOrgId != ''">
+           AND VE.OWN_LOC_CD = #{vissueVO.voIssueOrgId}
+        </if>
+    </select>
+    
+    <!-- 바우쳐마스터 정보를 조회한다. -->
+    <select id="getVeqtInfoList" resultType="VoucherMasterVO">
+    	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        SELECT VE.SO_ID
+             , (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = VE.SO_ID) AS SO_NM
+             , VI.VISSUE_SEQ_NO
+             , VE.ITEM_ID
+             , IT.ITEM_NM
+             , VI.MNCO_ID
+             , MN.MNCO_NM
+             , VI.VO_TP
+             , ( SELECT CODE_NM
+                   FROM TSYCO_CODE_DETAIL_NAME
+                  WHERE LNG_TYP = #{vissueVO.lngTyp}
+                    AND COMMON_GRP = 'DN00097'
+                    AND COMMON_CD = VI.VO_TP ) AS VO_TP_NM
+             , VE.VO_SEQ_NO
+             , VE.VO_BAR_CD
+             , VE.VO_STAT_CD
+             , ( SELECT CODE_NM
+                   FROM TSYCO_CODE_DETAIL_NAME
+                  WHERE LNG_TYP = #{vissueVO.lngTyp}
+                    AND COMMON_GRP = 'DN00099'
+                    AND COMMON_CD = VE.VO_STAT_CD ) AS VO_STAT_NM
+             , VE.VO_ISSUE_DT
+             , VE.VO_EXPIRED_DT
+             , VE.VO_ISSUE_AMT
+             , VE.VO_PROD_CD
+             , (SELECT PROD_NM FROM TPMPD_PROD WHERE SO_ID = VE.SO_ID AND PROD_CD = VE.VO_PROD_CD) AS VO_PROD_NM
+             , VE.LGST_PROC_STAT_CD
+             , ( SELECT CODE_NM
+                   FROM TSYCO_CODE_DETAIL_NAME
+                  WHERE LNG_TYP = #{vissueVO.lngTyp}
+                    AND COMMON_GRP = 'DN00067'
+                    AND COMMON_CD = VE.LGST_PROC_STAT_CD ) AS LGST_PROC_STAT_NM
+             , VE.LGST_PROC_DTTM
+             , VE.OWN_LOC_CD
+             , OI.ORG_NM AS OWN_LOC_NM
+             , VE.FRST_IN_DT
+             , VE.AGC_IN_DT
+             , VE.PRCHS_UT_PRC
+             , VE.DSTRB_UT_PRC
+             , VE.CT_ORG_ID
+             , VE.CT_CHG_ID
+             , VE.CT_CHG_DT
+             , VE.REGR_ID
+             , VE.REG_DATE
+             , VE.CHGR_ID
+             , VE.CHG_DATE
+             , VE.REMARK
+          FROM TDNDT_VEQT VE
+               JOIN TDNDT_VISSUE_DTL VD
+                 ON VD.SO_ID = VE.SO_ID
+                AND VD.VO_SEQ_NO = VE.VO_SEQ_NO
+               JOIN TDNDT_VISSUE VI
+                 ON VI.SO_ID = VD.SO_ID
+                AND VI.VISSUE_SEQ_NO = VD.VISSUE_SEQ_NO
+               JOIN TDNDT_ITEM IT
+                 ON IT.SO_ID = VE.SO_ID
+                AND IT.ITEM_ID = VE.ITEM_ID
+               JOIN TDNDT_MNCO MN
+                 ON MN.SO_ID = VI.SO_ID
+                AND MN.MNCO_ID = VI.MNCO_ID
+               LEFT OUTER JOIN TDNDI_ORG_INFO OI
+                 ON OI.SO_ID = VE.SO_ID
+                AND OI.ORG_ID = VE.OWN_LOC_CD
+         WHERE 1=1
+           AND VE.SO_ID = #{vissueVO.soId}
+        <if test="vissueVO.itemId != null and vissueVO.itemId != ''">
+           AND VE.ITEM_ID = #{vissueVO.itemId}
+        </if>
+        <if test="vissueVO.vissueSeqNo != null and vissueVO.vissueSeqNo != ''">
+           AND VD.VISSUE_SEQ_NO = #{vissueVO.vissueSeqNo}
+        </if>
+        <if test="vissueVO.poStat != null and vissueVO.poStat != ''">
+           AND VE.VO_STAT_CD = #{vissueVO.poStat}
+        </if>
+        <if test="vissueVO.voBarCd != null and vissueVO.voBarCd != ''">
+           AND VE.VO_BAR_CD = #{vissueVO.voBarCd}
+        </if>
+        <if test="vissueVO.voIssueOrgId != null and vissueVO.voIssueOrgId != ''">
+           AND VE.OWN_LOC_CD = #{vissueVO.voIssueOrgId}
+        </if>
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+    
+    <!-- 바우쳐팝업 정보의 수를 조회한다.(바우쳐마스터관리/판매처리) -->
+    <select id="getSaleProcessPopVeqtCount" resultType="int">
+        SELECT COUNT(*)
+          FROM TDNDT_VISSUE_DTL VD
+               JOIN TDNDT_VEQT VE
+                 ON VE.SO_ID = VD.SO_ID
+                AND VE.VO_SEQ_NO = VD.VO_SEQ_NO
+         WHERE 1=1
+           AND VD.SO_ID = #{voucherMaster.soId}
+           AND VD.VISSUE_SEQ_NO = #{voucherMaster.vissueSeqNo}
+           AND VE.VO_STAT_CD = '30'
+           AND VE.LGST_PROC_STAT_CD = '401'
+           AND VE.OWN_LOC_CD = #{voucherMaster.ownLocCd}
+        <if test="voucherMaster.voSeqNo != null and voucherMaster.voSeqNo != ''">
+        	AND VE.VO_SEQ_NO = #{voucherMaster.voSeqNo}
+        </if>
+        <if test="voucherMaster.voBarCd != null and voucherMaster.voBarCd != ''">
+        	AND VE.VO_BAR_CD = #{voucherMaster.voBarCd}
+        </if>
+         ORDER BY VD.VO_BAR_CD
+    </select>
+    
+    <!-- 바우쳐팝업 정보를 조회한다.(바우쳐마스터관리/판매처리) -->
+    <select id="getSalesProcessPopVeqtList" resultType="VoucherMasterVO">
+        SELECT
+             VE.SO_ID
+             , VE.ITEM_ID
+             , VE.VO_SEQ_NO
+             , VE.VO_BAR_CD
+             , VE.VO_ISSUE_DT
+             , VE.VO_ISSUE_AMT
+             , VE.VO_STAT_CD
+             , VE.LGST_PROC_STAT_CD
+          FROM TDNDT_VISSUE_DTL VD
+               JOIN TDNDT_VEQT VE
+                 ON VE.SO_ID = VD.SO_ID
+                AND VE.VO_SEQ_NO = VD.VO_SEQ_NO
+         WHERE 1=1
+           AND VD.SO_ID = #{voucherMaster.soId}
+           AND VD.VISSUE_SEQ_NO = #{voucherMaster.vissueSeqNo}
+           AND VE.VO_STAT_CD = '30'
+           AND VE.LGST_PROC_STAT_CD = '401'
+           AND VE.OWN_LOC_CD = #{voucherMaster.ownLocCd}
+        <if test="voucherMaster.voSeqNo != null and voucherMaster.voSeqNo != ''">
+        	AND VE.VO_SEQ_NO = #{voucherMaster.voSeqNo}
+        </if>
+        <if test="voucherMaster.voBarCd != null and voucherMaster.voBarCd != ''">
+        	AND VE.VO_BAR_CD = #{voucherMaster.voBarCd}
+        </if>
+         ORDER BY VD.VO_BAR_CD
+    </select>
+    
+    <!-- 바우쳐마스터 정보를 저장한다.(바우쳐상태, 물류처리상태) -->
+    <update id="updateVeqtInfoVoStatLgst">
+        UPDATE TDNDT_VEQT
+           SET VO_STAT_CD = #{voucherMaster.voStatCd}                 --바우쳐상태
+			<if test="voucherMaster.lgstProcStatCd != null and voucherMaster.lgstProcStatCd != ''">
+				, LGST_PROC_STAT_CD = #{voucherMaster.lgstProcStatCd}
+			</if>
+			<if test="voucherMaster.lgstProcStatCd != null and voucherMaster.lgstProcStatCd != ''">
+				, LGST_PROC_DTTM = #{voucherMaster.lgstProcDttm}
+			</if>
+			<if test="voucherMaster.ownLocCd != null and voucherMaster.ownLocCd != ''">
+				, OWN_LOC_CD = #{voucherMaster.ownLocCd}				--소유위치코드
+			</if>
+			<if test="voucherMaster.dstrbUtPrc != null and voucherMaster.dstrbUtPrc != ''">
+				, DSTRB_UT_PRC = ${voucherMaster.dstrbUtPrc}			--유통단가
+			</if>
+			<if test="voucherMaster.remark != null and voucherMaster.remark != ''">
+				, DSTRB_UT_PRC = ${voucherMaster.remark}			--비고
+			</if>			
+             , CHGR_ID = #{voucherMaster.ctChgId}
+             , CHG_DATE = ${voucherMaster.chgDate}
+         WHERE SO_ID = #{voucherMaster.soId}
+           AND VO_SEQ_NO = #{voucherMaster.voSeqNo}
+           <if test="voucherMaster.actTp != null and voucherMaster.actTp == '001'">
+           	AND VO_STAT_CD IN ('30','80') -- 충전 (사용가능, 판매처리)
+           </if>
+           <if test="voucherMaster.actTp != null and voucherMaster.actTp == '002'">
+           	AND VO_STAT_CD = '70' -- 충전취소 (사용완료)
+           </if>
+           <if test="voucherMaster.actTp != null and voucherMaster.actTp == '003'">
+           	AND VO_STAT_CD = '30' -- 판매처리 (사용가능)
+           </if>
+    </update>
+    
+    <!-- CRT_SEQ_NO의 신규발급을 위한 기존 값 조회 -->
+    <select id="getMaxCrtSeqNo" resultType="String">
+    	SELECT
+    		CASE WHEN MAX(CRT_SEQ_NO) IS NULL THEN '0' ELSE MAX(CRT_SEQ_NO) END
+    	FROM TDNDT_VEQT_TRANS
+    	WHERE VO_SEQ_NO = #{vqetVO.voSeqNo}
+    </select>
+    
+    <!-- 바우쳐이력을 조회한다.(바우쳐마스터 해당 바우쳐일련번호 등록) -->
+    <select id="getVeqtTransInfoInit_voSeqNo" resultType="VeqtVO">
+        SELECT 
+             VE.SO_ID, VE.VO_SEQ_NO, VE.VO_BAR_CD, VE.ITEM_ID, VE.VO_STAT_CD, VE.VO_ISSUE_DT, VE.VO_EXPIRED_DT, VE.VO_ISSUE_AMT, VE.VO_PROD_CD, VE.LGST_PROC_STAT_CD, VE.LGST_PROC_DTTM
+             , VE.OWN_LOC_CD, VE.FRST_IN_DT, VE.AGC_IN_DT, VE.PRCHS_UT_PRC, VE.DSTRB_UT_PRC, VE.CT_ORG_ID, VE.CT_CHG_ID, VE.CT_CHG_DT, VE.REGR_ID, VE.REG_DATE, VE.CHGR_ID, VE.CHG_DATE
+             , VE.REMARK
+          FROM TDNDT_VEQT VE
+         WHERE VE.SO_ID = #{veqtVO.soId}
+           AND VE.VO_SEQ_NO = #{veqtVO.voSeqNo}
+    </select>
+    
+    <!-- 바우쳐이력을 등록한다.(바우쳐마스터 해당 바우쳐일련번호 등록) -->
+    <insert id="addVeqtTransInfoInit_voSeqNo">
+		INSERT INTO TDNDT_VEQT_TRANS
+		(
+			CRT_SEQ_NO
+			, SO_ID
+			, VO_SEQ_NO
+			, VO_BAR_CD
+			, ITEM_ID
+			, VO_STAT_CD
+			, VO_ISSUE_DT
+			, VO_EXPIRED_DT
+			, VO_ISSUE_AMT
+			, VO_PROD_CD
+			, LGST_PROC_STAT_CD
+			, LGST_PROC_DTTM
+			, OWN_LOC_CD
+			, FRST_IN_DT
+			, AGC_IN_DT
+			, PRCHS_UT_PRC
+			, DSTRB_UT_PRC
+			, CT_ORG_ID
+			, CT_CHG_ID
+			, CT_CHG_DT
+			, REMARK
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)
+		VALUES
+		(
+			#(veqtVO.crtSeqNo, jdbcType=VARCHAR}
+			, #(veqtVO.soId, jdbcType=VARCHAR}
+			, #(veqtVO.voSeqNo, jdbcType=VARCHAR}
+			, #(veqtVO.voBarCd, jdbcType=VARCHAR}
+			, #(veqtVO.itemId, jdbcType=VARCHAR}
+			, #(veqtVO.voStatCd, jdbcType=VARCHAR}
+			, #(veqtVO.voIssueDt, jdbcType=VARCHAR}
+			, #(veqtVO.voExpiredDt, jdbcType=VARCHAR}
+			, #(veqtVO.voIssueAmt, jdbcType=INTEGER}
+			, #(veqtVO.voProdCd, jdbcType=VARCHAR}
+			, #(veqtVO.lgstProcStatCd, jdbcType=VARCHAR}
+			, #(veqtVO.lgstProcDttm, jdbcType=VARCHAR}
+			, #(veqtVO.ownLocCd, jdbcType=VARCHAR}
+			, #(veqtVO.frstInDt, jdbcType=VARCHAR}
+			, #(veqtVO.agcInDt, jdbcType=VARCHAR}
+			, #(veqtVO.prchsUtPrc, jdbcType=INTEGER}
+			, #(veqtVO.dstrbUtPrc, jdbcType=INTEGER}
+			, #(veqtVO.ctOrgId, jdbcType=VARCHAR}
+			, #(veqtVO.ctChgId, jdbcType=VARCHAR}
+			, #(veqtVO.ctChgDt, jdbcType=DATE}
+			, #(veqtVO.remark, jdbcType=VARCHAR}
+			, #(veqtVO.regrId, jdbcType=VARCHAR}
+			, #(veqtVO.regDate, jdbcType=DATE}
+			, #(veqtVO.chgrId, jdbcType=VARCHAR}
+			, #(veqtVO.chgDate, jdbcType=DATE}
+		)
+    </insert>
+    
+    <!-- 단말기 상태수정이력 등록 -->
+    <insert id="insertUpdProcHistInfo">
+		INSERT INTO TDNDT_UPD_PROD_HIST
+		(
+			HIST_SEQ
+			, UPD_PROC_CL_CD
+			, SO_ID
+			, ITEM_ID
+			, EQT_SEQ
+			, USIM_SEQ
+			, UPD_BFR_CD
+			, AFTR_UPD_CD
+			, UPD_PROC_ID
+			, UPD_PROC_DTTM
+			, REGR_ID
+			, REG_DATE
+			, CHGR_ID
+			, CHG_DATE
+		)
+		VALUES
+		(
+			#{updProcHistVO.histSeq, jdbcType = VARCHAR}
+			, #{updProcHistVO.updProcClCd, jdbcType = VARCHAR}
+			, #{updProcHistVO.soId, jdbcType = VARCHAR}
+			, #{updProcHistVO.itemId, jdbcType = VARCHAR}
+			, #{updProcHistVO.eqtSeq, jdbcType = VARCHAR}
+			, #{updProcHistVO.usimSeq, jdbcType = VARCHAR}
+			, #{updProcHistVO.updBfrCd, jdbcType = VARCHAR}
+			, #{updProcHistVO.aftrUpdCd, jdbcType = VARCHAR}
+			, #{updProcHistVO.updProcId, jdbcType = VARCHAR}
+			, #{updProcHistVO.updProcDttm, jdbcType = VARCHAR}
+			, #{updProcHistVO.regrId, jdbcType = VARCHAR}
+			, #{updProcHistVO.regDate, jdbcType = DATE}
+			, #{updProcHistVO.chgrId, jdbcType = VARCHAR}
+			, #{updProcHistVO.chgDate, jdbcType = DATE}
+		)
+    </insert>
+
+</mapper>	

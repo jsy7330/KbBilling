@@ -1,0 +1,53 @@
+package com.ntels.ccbs.system.service.sample.sample.impl;
+
+import java.net.URLDecoder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.ntels.ccbs.common.exception.ServiceException;
+import com.ntels.ccbs.product.domain.product.productDev.ProductDevMgt;
+import com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor;
+import com.ntels.ccbs.system.domain.auth.authMng.AuthMngVO;
+import com.ntels.ccbs.system.domain.sample.sample.TreeSampleVO;
+import com.ntels.ccbs.system.mapper.sample.sample.TreeSampleMapper;
+import com.ntels.ccbs.system.service.sample.sample.TreeSampleService;
+
+@Service
+public class TreeSampleServiceImpl implements TreeSampleService {
+
+	@Autowired
+	private TreeSampleMapper treeSampleMapper;
+
+	TreeSampleService treeSampleService;
+
+	@Override
+	public List<TreeSampleVO> getMenuList(String svcCd) {
+
+		List<Map<String,Object>> stepList = treeSampleMapper.getStepList(svcCd);		
+		return treeSampleMapper.getAuthList(svcCd, stepList);
+	}	
+
+	@Override
+	public List<TreeSampleVO> getComboList(String svcCd) {
+	
+		return treeSampleMapper.getComboList(svcCd);
+	}	
+
+	@Override
+	public List<TreeSampleVO> getPordListAction(String prodList) {
+		return treeSampleMapper.getPordListAction(prodList);
+	}
+	@Override
+	public List<TreeSampleVO> getInputProdList(String prodCd) {
+		return treeSampleMapper.getInputProdList(prodCd);
+	}
+	@Override
+	public int getInputProdCnt(String prodCd) {
+		return treeSampleMapper.getInputProdCnt(prodCd);
+	}
+}

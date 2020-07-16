@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Ruleper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="com.ntels.ccbs.product.mapper.refInfo.ratingRefInfo.RatingCodeGrpMapper">
+ 
+	<select id="getRatingCodeGrpList" resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeGrp"
+		 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeGrp">
+		 <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+        
+        SELECT 
+	          A.USG_TYP
+	        , A.CHRG_CD
+	        , A.USG_TYP_GRP_CD
+	        , ( SELECT COMMON_CD_NM 
+	              FROM  TSYCO_CODE_DETAIL 
+	             WHERE  COMMON_GRP = 'PP00281' 
+	               AND  USE_YN = 'Y' 
+	               AND  COMMON_CD = A.USG_TYP_GRP_CD )  AS  USG_TYP_GRP_NM            
+	        , A.EFF_DT
+	        , A.EXP_DT
+	        , A.LMT_INCLUDE
+	        , CASE WHEN A.USG_TYP = '0000000000'
+	               THEN '0000000000'
+	               ELSE (SELECT DISTINCT(USG_TYP_NM) FROM TOP_USG_TYP WHERE USG_TYP = A.USG_TYP)
+	          END AS USG_TYP_NM
+	        , ( SELECT DISTINCT(DESCRIPTION) 
+	              FROM TOP_CHRG_CD 
+	             WHERE CHRG_CD =A.CHRG_CD ) AS DESCRIPTION
+         FROM ( SELECT   USG_TYP
+                       , CHRG_CD
+                       , USG_TYP_GRP_CD
+                       , EFF_DT
+                       , EXP_DT
+                       , LMT_INCLUDE
+                       , LAST_MOD_BY
+                       , LAST_MOD_DT
+                  FROM   TOP_USG_TYP_GRP
+                 WHERE  1 = 1 ) A
+        WHERE A.USG_TYP_GRP_CD LIKE ( '%' || #{ratingCodeGrp.searchChrgGrpCd} || '%' )
+        
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+    </select>
+    
+    
+   	<select id="getRatingCodeGrpListCount" resultType="int"
+	 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeGrp">
+
+		 SELECT COUNT(*) 
+	       FROM (
+	 		 	SELECT 
+			 		*
+			 	  FROM TOP_USG_TYP_GRP
+			 	 WHERE 1=1
+			 	   AND USG_TYP = #{ratingCodeGrp.searchUsgTyp}
+			 	   AND CHRG_CD = #{ratingCodeGrp.searchChrgCd}
+			 	   AND USG_TYP_GRP_CD = #{ratingCodeGrp.searchChrgGrpCd}
+			 	   AND EFF_DT = #{ratingCodeGrp.searchEffDt} 
+           )
+
+    </select>   
+    
+    <select id="getRatingDescription" resultType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeGrp"
+		 parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeGrp">
+        
+         
+		SELECT USG_TYP,
+		       CHRG_CD,
+		       EFF_DT,
+		       EXP_DT,
+		       DESCRIPTION,
+		       ( SELECT COMMON_CD_NM
+		             FROM TSYCO_CODE_DETAIL
+		           WHERE COMMON_GRP='PP00303'
+		             AND COMMON_CD = A.USG_TYP) AS USG_TYP_NM
+	        FROM TOP_CHRG_CD A
+		 WHERE 1=1
+		   AND CHRG_CD LIKE ( '%' || #{ratingCodeGrp.searchChrgCd} || '%' )
+		   AND DESCRIPTION LIKE ( '%' || #{ratingCodeGrp.searchDescription} || '%' ) 
+		          
+        
+    </select>  
+        
+    <insert id="addRatingCodeGrp" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeGrp">
+    	
+    	INSERT INTO TOP_USG_TYP_GRP (
+    		   USG_TYP 
+    	     , CHRG_CD
+    	     , USG_TYP_GRP_CD 
+    	     , EFF_DT 
+    	     , EXP_DT 
+    	     , LMT_INCLUDE
+    	     , LAST_MOD_BY
+    	     , LAST_MOD_DT 
+    	)
+    	  VALUES (
+    	       #{ratingCodeGrp.insertUsgTyp}
+    	     , #{ratingCodeGrp.insertChrgCd}
+    	     , #{ratingCodeGrp.insertChrgGrpCd}
+    	     , #{ratingCodeGrp.insertEffDt}
+    	     , #{ratingCodeGrp.insertExpDt}
+    	     , #{ratingCodeGrp.insertLmtInclude}
+    	     , #{ratingCodeGrp.userId}
+    	     , #{ratingCodeGrp.sysToDate} 
+    	 )
+
+    </insert>
+    
+    <update id="modRatingCodeGrp" 
+    	parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeGrp">
+    	
+    	UPDATE TOP_USG_TYP_GRP
+    	   SET 
+    	 	    LMT_INCLUDE = #{ratingCodeGrp.insertLmtInclude}
+    	  	  , LAST_MOD_BY = #{ratingCodeGrp.userId}
+    	  	  , LAST_MOD_DT = #{ratingCodeGrp.sysToDate}
+    	  WHERE 1=1
+    	    AND USG_TYP = #{ratingCodeGrp.insertUsgTyp}
+		    AND CHRG_CD = #{ratingCodeGrp.insertChrgCd}
+		    AND USG_TYP_GRP_CD = #{ratingCodeGrp.insertChrgGrpCd}
+		    AND EFF_DT = #{ratingCodeGrp.insertEffDt} 
+    
+    </update>
+  
+    <delete id="delRatingCodeGrp"  parameterType="com.ntels.ccbs.product.domain.refInfo.ratingRefInfo.RatingCodeGrp">
+		
+		DELETE 
+		  FROM TOP_USG_TYP_GRP
+		 WHERE USG_TYP = #{ratingCodeGrp.delUsgTyp}
+		   AND CHRG_CD = #{ratingCodeGrp.delChrgCd}
+		   AND USG_TYP_GRP_CD = #{ratingCodeGrp.delChrgGrpCd}
+		   AND EFF_DT = #{ratingCodeGrp.delEffDt} 
+
+    </delete>
+
+</mapper>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.common.common.ViewPathMngMapper">
+	<select id="list" parameterType="ViewPathVO" resultType="ViewPathVO">
+    SELECT 
+        DATA.COMMON_GRP
+        ,DATA2.CODE_NM AS COMMON_GRP_NM
+        ,DATA.SORT_NO
+        ,DATA.USE_YN
+        ,DATA.COMMON_CD_NM
+        ,DATA2.REF_CODE2
+     FROM (
+            SELECT 
+				MAST.COMMON_GRP
+				,MNAME.COMMON_GRP_NM 
+				,DETAIL.COMMON_CD
+				,NAME.CODE_NM AS COMMON_CD_NM
+				,DETAIL.SORT_NO
+				,DETAIL.USE_YN
+            FROM TSYCO_CODE_MAST MAST
+                , TSYCO_CODE_MAST_NAME MNAME
+                , TSYCO_CODE_DETAIL DETAIL
+                , TSYCO_CODE_DETAIL_NAME NAME
+            WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                AND MNAME.LNG_TYP     = #{lng, jdbcType=VARCHAR}
+                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                AND NAME.LNG_TYP      = #{lng, jdbcType=VARCHAR}
+                AND MAST.COMMON_GRP   ='SY00006'
+                AND DETAIL.USE_YN='Y') DATA
+		,(
+            SELECT              
+	             DETAIL.REF_CODE
+	            ,DETAIL.REF_CODE2
+	            ,DETAIL.SORT_NO
+	            ,DETAIL.USE_YN 
+                ,NAME.CODE_NM                
+            FROM TSYCO_CODE_MAST MAST
+                , TSYCO_CODE_MAST_NAME MNAME
+                , TSYCO_CODE_DETAIL DETAIL
+                , TSYCO_CODE_DETAIL_NAME NAME
+            WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                AND MNAME.LNG_TYP     = #{lng, jdbcType=VARCHAR}
+                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                AND NAME.LNG_TYP      = #{lng, jdbcType=VARCHAR}
+                AND MAST.COMMON_GRP   ='SY00007'
+                AND DETAIL.USE_YN='Y') DATA2  
+            WHERE DATA.COMMON_CD = DATA2.REF_CODE		 
+			<if test="view.condCommonCd != null and view.condCommonCd != '' and view.condCommonCd != 'SEL'" >
+				AND DATA2.REF_CODE =#{view.condCommonCd,jdbcType=VARCHAR}
+			</if>
+			<if test="view.condCommonCdNm != null and view.condCommonCdNm != ''">
+				AND DATA2.REF_CODE2 LIKE CONCAT(#{view.condCommonCdNm,jdbcType=VARCHAR},'%')
+			</if>
+            ORDER BY DATA.SORT_NO,DATA2.SORT_NO
+	</select>
+	
+	<select id="getCommonCdList" parameterType="ViewPathVO" resultType="ViewPathVO">
+		SELECT 
+         	DATA.COMMON_GRP
+	        ,DATA.COMMON_GRP_NM
+	        ,DATA.COMMON_CD 
+	        ,DATA.COMMON_CD_NM	
+	        ,DATA.ORG_COMMON_CD_NM
+	     FROM (
+	            SELECT 
+                     MAST.COMMON_GRP
+                    ,MNAME.COMMON_GRP_NM 
+                    ,DETAIL.COMMON_CD
+                    ,NAME.CODE_NM AS COMMON_CD_NM
+                    ,DETAIL.COMMON_CD_NM AS ORG_COMMON_CD_NM
+                    ,DETAIL.REF_CODE
+                    ,DETAIL.REF_CODE2
+                    ,DETAIL.REF_CODE3
+                    ,DETAIL.REF_CODE4
+                    ,DETAIL.DEFAULT_YN
+                    ,DETAIL.RMRK
+                    ,DETAIL.SORT_NO
+                    ,DETAIL.USE_YN
+                    ,DETAIL.CHG_DATE
+                    ,DETAIL.CHGR_ID
+                    ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = DETAIL.CHGR_ID) AS CHGR_NM
+                    ,DETAIL.REG_DATE
+                    ,DETAIL.REGR_ID
+                    ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = DETAIL.REGR_ID) AS REGR_NM
+            FROM TSYCO_CODE_MAST MAST
+                , TSYCO_CODE_MAST_NAME MNAME
+                , TSYCO_CODE_DETAIL DETAIL
+                , TSYCO_CODE_DETAIL_NAME NAME
+            WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                AND MNAME.LNG_TYP     = #{lng, jdbcType=VARCHAR}
+                AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                AND NAME.LNG_TYP      = #{lng, jdbcType=VARCHAR}
+                AND MAST.COMMON_GRP   ='SY00006') DATA         
+            ORDER BY DATA.SORT_NO
+	</select>
+</mapper>

@@ -1,0 +1,719 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.referenceInfo.ProductInfoMapper">
+
+	<!-- 제품 리스트 조회 -->
+	<select id="productInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.SO_ID					/*사업ID*/
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM		/* 사업명*/
+					, A.ITEM_ID				/*제품ID*/
+					, A.ITEM_NM				/*제품명*/
+					, A.ITEM_TP_CD			/*제품유형코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productInfoVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ITEM_TP_CD
+		       		) AS ITEM_TP_NM            /*제품유형코드명*/
+					, A.ITEM_KND_CD			/*제품종류코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productInfoVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00064'
+								AND DETAIL.COMMON_CD = A.ITEM_KND_CD
+		       		) AS ITEM_KND_NM            /*제품종류코드명*/
+					, A.CTRT_TP_CD			/*계약유형*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productInfoVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00060'
+								AND DETAIL.COMMON_CD = A.CTRT_TP_CD
+		       		) AS CTRT_TP_NM            /*계약유형명*/
+					, A.FACE_AMT			/*액면금액*/
+					, A.MNCO_OTPT_UT_PRC	/*제조사출고단가*/
+					, A.IMG_UUID			/*이미지파일ID*/
+					, A.IMG_FILE_NM			/*이미지파일명*/
+					, A.ITEM_SMRY_DESC		/*제품요약정보*/
+					, A.ITEM_FTR_DESC		/*제품특징정보*/
+					, A.ITEM_FUNC_DESC		/*제품기능정보*/
+					, A.ITEM_CMPS_DESC		/*제품구성정보*/
+					, A.ITEM_SPEC_DESC		/*제품스펙정보*/
+					, A.MNCO_ID				/*제조사ID*/
+					, A.NOTE				/*비고*/
+					, A.EQT_CL_CD			/*장비유형코드(서비스연동참조정보)*/
+					, A.LOAN_USG_AMT		/*여신사용금액*/
+					, A.REP_ITEM_ID			/*대표제품ID*/
+					, A.PHONE_MDL_ID		/*폰모델ID*/
+					, B.MNCO_NM				/*제조사명    */
+					<!--      
+					, (SELECT ATTR_VAL_NM 
+            			FROM                          
+                   			TDNDT_ITEM_ATTR_MAPP	DD
+                  			, TDNDT_ITEM_ATTR		EE
+                  			, TDNDT_ITEM_ATTR_VAL	FF
+                   		WHERE	1=1
+           				AND		DD.ATTR_CD = EE.ATTR_CD
+           				AND		EE.ATTR_CD = FF.ATTR_CD
+           				AND		DD.ATTR_VAL_CD = FF.ATTR_VAL_CD
+           				AND		DD.ITEM_ID  = A.ITEM_ID)      COLOR_NM  
+           				 -->
+           	FROM	TDNDT_ITEM A
+           			, TDNDT_MNCO B
+           	WHERE 	1=1
+           		AND	A.MNCO_ID = B.MNCO_ID
+           		<if test="productInfoVO.soId != null and productInfoVO.soId != ''">
+					AND A.SO_ID =  #{productInfoVO.soId}
+				</if>
+				<if test="productInfoVO.searchType != null and productInfoVO.searchType != '' and productInfoVO.searchType == '01' ">
+					<if test="productInfoVO.searchText != null and productInfoVO.searchText != '' ">
+						AND A.ITEM_ID LIKE CONCAT( CONCAT('%', #{productInfoVO.searchText} ), '%' )
+					</if>	
+				</if>
+				<if test="productInfoVO.searchType != null and productInfoVO.searchType != '' and productInfoVO.searchType == '02' ">
+					<if test="productInfoVO.searchText != null and productInfoVO.searchText != '' ">
+						AND A.ITEM_NM LIKE CONCAT( CONCAT('%', #{productInfoVO.searchText} ), '%' )
+					</if>	
+				</if>
+           		<if test="productInfoVO.mncoId != null and productInfoVO.mncoId != ''">
+					AND A.MNCO_ID =  #{productInfoVO.mncoId}
+				</if>
+				<if test="productInfoVO.itemTpCd != null and productInfoVO.itemTpCd != ''">
+					AND A.ITEM_TP_CD =  #{productInfoVO.itemTpCd}
+				</if>
+				<if test="productInfoVO.itemKndCd != null and productInfoVO.itemKndCd != ''">
+					AND A.ITEM_KND_CD =  #{productInfoVO.itemKndCd}
+				</if>
+		 	ORDER BY A.REG_DATE DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 제품 리스트 카운트 -->
+	<select id="productInfoCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_ITEM A
+	      		, TDNDT_MNCO B
+	    WHERE 	1=1
+	       	AND	A.MNCO_ID = B.MNCO_ID
+	    <if test="productInfoVO.soId != null and productInfoVO.soId != ''">
+			AND A.SO_ID =  #{productInfoVO.soId}
+		</if>
+		<if test="productInfoVO.searchType != null and productInfoVO.searchType != '' and productInfoVO.searchType == '01' ">
+			<if test="productInfoVO.searchText != null and productInfoVO.searchText != '' ">
+				AND A.ITEM_ID LIKE CONCAT( CONCAT('%', #{productInfoVO.searchText} ), '%' )
+			</if>	
+		</if>
+		<if test="productInfoVO.searchType != null and productInfoVO.searchType != '' and productInfoVO.searchType == '02' ">
+			<if test="productInfoVO.searchText != null and productInfoVO.searchText != '' ">
+				AND A.ITEM_NM LIKE CONCAT( CONCAT('%', #{productInfoVO.searchText} ), '%' )
+			</if>	
+		</if>
+         		<if test="productInfoVO.mncoId != null and productInfoVO.mncoId != ''">
+			AND A.MNCO_ID =  #{productInfoVO.mncoId}
+		</if>
+		<if test="productInfoVO.itemTpCd != null and productInfoVO.itemTpCd != ''">
+			AND A.ITEM_TP_CD =  #{productInfoVO.itemTpCd}
+		</if>
+		<if test="productInfoVO.itemKndCd != null and productInfoVO.itemKndCd != ''">
+			AND A.ITEM_KND_CD =  #{productInfoVO.itemKndCd}
+		</if>
+	</select>
+	
+	<!-- ID중복체크 -->
+	<select id="checkItemId" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="int">
+		SELECT 
+				COUNT(ITEM_ID) 
+		FROM 	TDNDT_ITEM 
+		WHERE 	ITEM_ID 	= #{productInfoVO.itemId}
+	</select>
+	
+	<!-- 제품 등록 -->
+	<insert id="insertProductInfo" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+	
+		INSERT INTO TDNDT_ITEM
+			( SO_ID				/*사업ID*/
+			, ITEM_ID			/*제품ID*/
+			, ITEM_NM			/*제품명*/
+			, ITEM_TP_CD		/*제품유형코드*/
+			, ITEM_KND_CD		/*제품종류코드*/
+			, CTRT_TP_CD		/*계약유형*/
+			, FACE_AMT			/*액면금액*/
+			, MNCO_OTPT_UT_PRC	/*제조사출고단가*/
+			, IMG_UUID			/*이미지파일ID*/
+			, IMG_FILE_NM		/*이미지파일명*/
+			, MNCO_ID			/*제조사ID*/
+			, NOTE				/*비고*/
+			, EQT_CL_CD			/*장비유형코드(서비스연동참조정보)*/
+			, LOAN_USG_AMT		/*여신사용금액*/
+			, REP_ITEM_ID		/*대표제품ID*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{productInfoVO.soId}				/*사업ID*/
+			, #{productInfoVO.itemId}			/*제품ID*/
+			, #{productInfoVO.itemNm}			/*제품명*/
+			, #{productInfoVO.itemTpCd}			/*제품유형코드*/
+			, #{productInfoVO.itemKndCd}		/*제품종류코드*/
+			, #{productInfoVO.ctrtTpCd}			/*계약유형*/
+			, #{productInfoVO.faceAmt}			/*액면금액*/
+			, #{productInfoVO.mncoOtptUtPrc}	/*제조사출고단가*/
+			, #{productInfoVO.imgUuid}			/*이미지파일ID*/
+			, #{productInfoVO.imgFileNm}		/*이미지파일명*/
+			, #{productInfoVO.mncoId}			/*제조사ID*/
+			, #{productInfoVO.note}				/*비고*/
+			, #{productInfoVO.eqtClCd}			/*장비유형코드(서비스연동참조정보)*/
+			, #{productInfoVO.loanUsgAmt}		/*여신사용금액*/
+			, #{productInfoVO.repItemId}		/*대표제품ID*/
+			, #{productInfoVO.regrId}			/*등록자*/
+			, #{productInfoVO.regDate}			/*등록일시*/
+			, #{productInfoVO.chgrId}			/*수정자*/
+			, #{productInfoVO.chgDate}			/*수정일시*/
+			)			
+		
+		
+	</insert>
+	
+	<!-- 제품별 제조사 출고단가를 관리 등록 -->
+	<insert id="insertTdndtMncoUtPrcDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+	
+		INSERT INTO TDNDT_MNCO_UT_PRC_DTL
+			( PRC_DTL_SEQ		/*단가상세일련번호*/
+			, SO_ID				/*사업ID*/
+			, ITEM_ID			/*제품ID*/
+			, MNCO_OTPT_UT_PRC	/*제조사출고단가*/
+			, EFT_STRT_DT		/*효력시작일자*/
+			, EFT_END_DT		/*효력종료일자*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{productInfoVO.prcDtlSeq}		/*단가상세일련번호*/
+			, #{productInfoVO.soId}				/*사업ID*/
+			, #{productInfoVO.itemId}			/*제품ID*/
+			, #{productInfoVO.mncoOtptUtPrc}	/*제조사출고단가*/
+			, #{productInfoVO.eftStrtDt}		/*효력시작일자*/
+			, #{productInfoVO.eftEndDt}			/*효력종료일자*/
+			, #{productInfoVO.regrId}			/*등록자*/
+			, #{productInfoVO.regDate}			/*등록일시*/
+			, #{productInfoVO.chgrId}			/*수정자*/
+			, #{productInfoVO.chgDate}			/*수정일시*/			
+			)
+	</insert>
+	
+	<!--  제품 매입단가 이력 이전 날짜로 수정 -->
+	<update id="updateMncoUtPrcDtlEndDt" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		UPDATE TDNDT_MNCO_UT_PRC_DTL
+			SET	EFT_END_DT 			= #{productInfoVO.eftEndDt}		/*효력종료일자*/
+				, CHGR_ID 			= #{productInfoVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{productInfoVO.chgDate}		/*수정일시   */   
+		WHERE	PRC_DTL_SEQ			= (
+										SELECT	
+											MAX(A.PRC_DTL_SEQ) AS PRC_DTL_SEQ
+										FROM 	TDNDT_MNCO_UT_PRC_DTL A
+                  						WHERE ITEM_ID = #{productInfoVO.itemId}			/*제품ID*/
+										) 
+			AND SO_ID =  #{productInfoVO.soId}
+	</update>
+	
+	
+	<!-- 제품 수정 -->
+	<update id="updateProductInfo" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		UPDATE TDNDT_ITEM
+			SET	SO_ID 				= #{productInfoVO.soId}				/*SO_ID*/
+				, ITEM_NM			= #{productInfoVO.itemId}			/*제품ID*/
+				, ITEM_TP_CD		= #{productInfoVO.itemTpCd}			/*제품유형코드*/
+				, ITEM_KND_CD		= #{productInfoVO.itemKndCd}		/*제품종류코드*/
+				, CTRT_TP_CD		= #{productInfoVO.ctrtTpCd}			/*계약유형*/
+				, FACE_AMT			= #{productInfoVO.faceAmt}			/*액면금액*/
+				, MNCO_OTPT_UT_PRC	= #{productInfoVO.mncoOtptUtPrc}	/*제조사출고단가*/
+				, IMG_UUID			= #{productInfoVO.imgUuid}			/*이미지파일ID*/
+				, IMG_FILE_NM		= #{productInfoVO.imgFileNm}		/*이미지파일명*/
+				, MNCO_ID			= #{productInfoVO.mncoId}			/*제조사ID*/
+				, NOTE				= #{productInfoVO.note}				/*비고*/
+				, REP_ITEM_ID		= #{productInfoVO.repItemId}		/*대표제품ID*/
+				, CHGR_ID 			= #{productInfoVO.chgrId}			/*수정자*/
+				, CHG_DATE 			= #{productInfoVO.chgDate}			/*수정일시      */
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}			/*제품ID*/
+			AND SO_ID =  #{productInfoVO.soId}
+	</update>
+	
+	<!-- 제품의 유통단가 삭제 -->
+	<delete id="deleteTdndtDstrbUtPrcDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		DELETE
+		FROM	TDNDT_DSTRB_UT_PRC_DTL
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}			/*제품ID*/
+			AND SO_ID				= #{productInfoVO.soId}				/*사업ID*/
+    </delete>
+	
+	<!-- 제품별 제조사 출고단가 삭제 -->
+	<delete id="deleteTdndtMncoUtPrcDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		DELETE
+		FROM	TDNDT_MNCO_UT_PRC_DTL
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}			/*제품ID*/
+			AND SO_ID				= #{productInfoVO.soId}				/*사업ID*/
+    </delete>
+	
+	<!-- 제품과 속성키의 매핑 정보 삭제 -->
+	<delete id="deleteTdndtItemAttrMapp" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		DELETE
+		FROM	TDNDT_ITEM_ATTR_MAPP
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}			/*제품ID*/
+			AND SO_ID				= #{productInfoVO.soId}				/*사업ID*/
+			<if test="productInfoVO.mappOrd != null and productInfoVO.mappOrd != ''">
+				AND MAPP_ORD =  #{productInfoVO.mappOrd}
+			</if>
+    </delete>
+    
+    <!-- 제품의 상세정보 삭제 -->
+	<delete id="deleteTdndtItemDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		DELETE
+		FROM	TDNDT_ITEM_DTL
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}			/*제품ID*/
+			AND SO_ID				= #{productInfoVO.soId}				/*사업ID*/
+			<if test="productInfoVO.dtlInfoOrd != null and productInfoVO.dtlInfoOrd != ''">
+				AND DTL_INFO_ORD		= #{productInfoVO.dtlInfoOrd}	/*매핑순번*/
+			</if>
+    </delete>
+    
+    <!-- 단말기와 패키지액세서리 제품의 매핑 정보 삭제 -->
+	<delete id="deleteTdndtPckgAcceMapp" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		DELETE
+		FROM	TDNDT_PCKG_ACCE_MAPP
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}			/*제품ID*/
+			AND SO_ID				= #{productInfoVO.soId}				/*사업ID*/
+    </delete>
+    
+    <!-- 제품 정보 삭제 -->
+	<delete id="deleteTdndtItem" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		DELETE
+		FROM	TDNDT_ITEM
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}			/*제품ID*/
+			AND SO_ID				= #{productInfoVO.soId}				/*사업ID*/
+    </delete>
+
+    
+    
+    
+    
+    <!-- 속성키 리스트 조회 -->
+	<select id="itemAttrList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.ATTR_CD					/*속성코드*/
+					, A.ATTR_NM					/*속성명*/
+					, A.ATTR_CL_CD				/*속성구분코드*/
+					, (
+						SELECT  NAME.CODE_NM AS COMMON_CD_NM
+						FROM 	TSYCO_CODE_MAST MAST
+                                , TSYCO_CODE_MAST_NAME MNAME
+    							, TSYCO_CODE_DETAIL DETAIL
+    							, TSYCO_CODE_DETAIL_NAME NAME
+						WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                                AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                                AND MNAME.LNG_TYP     =#{productInfoVO.lngTyp} 
+    							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+    							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+    							AND NAME.LNG_TYP      = #{productInfoVO.lngTyp}
+    							AND MAST.COMMON_GRP   ='DN00063'
+								AND DETAIL.COMMON_CD = A.ATTR_CL_CD
+		       		) AS ATTR_CL_NM            /* 속성구분코드명*/
+					, A.PRI_NO					/*우선순위*/
+					, A.USE_YN					/*사용여부*/
+					, A.COMM_CD_REF				/*공통코드참조*/
+           	FROM	TDNDT_ITEM_ATTR A
+           	WHERE 	1=1
+           	ORDER BY A.PRI_NO
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 속성키 리스트 카운트 -->
+	<select id="itemAttrCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_ITEM_ATTR A
+	    WHERE 	1=1
+	</select>
+	
+	<!-- ID중복체크 -->
+	<select id="checkAttrCd" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="int">
+		SELECT 
+				COUNT(ATTR_CD) 
+		FROM 	TDNDT_ITEM_ATTR 
+		WHERE 	ATTR_CD 	= #{productInfoVO.attrCd}
+	</select>
+	
+	<!-- 속성키 등록 -->
+	<insert id="insertItemAttr" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+	
+		INSERT INTO TDNDT_ITEM_ATTR
+			( ATTR_CD			/*속성코드*/
+			, ATTR_NM			/*속성명*/
+			, ATTR_CL_CD		/*속성구분코드*/
+			, PRI_NO			/*우선순위*/
+			, USE_YN			/*사용여부*/
+			, COMM_CD_REF		/*공통코드참조*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{productInfoVO.attrCd}			/*속성코드*/
+			, #{productInfoVO.attrNm}			/*속성명*/
+			, #{productInfoVO.attrClCd}			/*속성구분코드*/
+			, #{productInfoVO.priNo}			/*우선순위*/
+			, #{productInfoVO.useYn}			/*사용여부*/
+			, #{productInfoVO.commCdRef}		/*공통코드참조*/		
+			, #{productInfoVO.regrId}			/*등록자*/
+			, #{productInfoVO.regDate}			/*등록일시*/
+			, #{productInfoVO.chgrId}			/*수정자*/
+			, #{productInfoVO.chgDate}			/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 속성키 수정 -->
+	<update id="updateItemAttr" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		UPDATE TDNDT_ITEM_ATTR
+			SET	ATTR_NM 			= #{productInfoVO.attrNm}		/*속성명*/
+				, ATTR_CL_CD		= #{productInfoVO.attrClCd}		/*속성구분코드*/
+				, PRI_NO			= #{productInfoVO.priNo}		/*우선순위*/
+				, USE_YN			= #{productInfoVO.useYn}		/*사용여부*/
+				, COMM_CD_REF		= #{productInfoVO.commCdRef}	/*공통코드참조*/
+				, CHGR_ID 			= #{productInfoVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{productInfoVO.chgDate}		/*수정일시  */
+		WHERE	ATTR_CD				= #{productInfoVO.attrCd}		/*속성코드*/
+	</update>
+	
+	<!-- 속성키 정보 삭제 -->
+	<delete id="deleteItemAttr" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		DELETE
+		FROM	TDNDT_ITEM_ATTR
+		WHERE	ATTR_CD				= #{productInfoVO.attrCd}		/*속성코드*/
+    </delete>
+	
+	
+	
+	
+	
+	
+	
+	<!-- 속성값 리스트 조회 -->
+	<select id="itemAttrValList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.ATTR_CD					/*속성코드*/
+					, A.ATTR_VAL_CD				/*속성값코드*/
+					, A.ATTR_VAL_NM				/*속성값명*/
+					, A.PRI_NO					/*우선순위*/
+					, A.USE_YN					/*사용여부*/
+           	FROM	TDNDT_ITEM_ATTR_VAL A
+           	WHERE 	1=1
+           		<if test="productInfoVO.attrCd != null and productInfoVO.attrCd != ''">
+					AND A.ATTR_CD =  #{productInfoVO.attrCd}
+				</if>
+			ORDER BY A.PRI_NO
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 속성값 리스트 카운트 -->
+	<select id="itemAttrValCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_ITEM_ATTR_VAL A
+	    	WHERE 	1=1
+           		<if test="productInfoVO.attrCd != null and productInfoVO.attrCd != ''">
+					AND A.ATTR_CD =  #{productInfoVO.attrCd}
+				</if>
+	</select>
+	
+	<!-- ID중복체크 -->
+	<select id="checkAttrValCd" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="int">
+		SELECT 
+				COUNT(ATTR_CD) 
+		FROM 	TDNDT_ITEM_ATTR_VAL 
+		WHERE 	ATTR_CD 	= #{productInfoVO.attrCd}
+			AND ATTR_VAL_CD = #{productInfoVO.attrValCd}
+	</select>
+	
+	<!-- 속성값 등록 -->
+	<insert id="insertItemAttrVal" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+	
+		INSERT INTO TDNDT_ITEM_ATTR_VAL
+			( ATTR_CD			/*속성코드*/
+			, ATTR_VAL_CD		/*속성값코드*/
+			, ATTR_VAL_NM		/*속성값명*/
+			, PRI_NO			/*우선순위*/
+			, USE_YN			/*사용여부*/
+			, REGR_ID			/*등록자*/
+			, REG_DATE			/*등록일시*/
+			, CHGR_ID			/*수정자*/
+			, CHG_DATE			/*수정일시*/
+			)
+        VALUES
+			( #{productInfoVO.attrCd}			/*속성코드*/
+			, #{productInfoVO.attrValCd}		/*속성값코드*/
+			, #{productInfoVO.attrValNm}		/*속성값명*/
+			, #{productInfoVO.priNo}			/*우선순위*/
+			, #{productInfoVO.useYn}			/*사용여부*/
+			, #{productInfoVO.regrId}			/*등록자*/
+			, #{productInfoVO.regDate}			/*등록일시*/
+			, #{productInfoVO.chgrId}			/*수정자*/
+			, #{productInfoVO.chgDate}			/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 속성값 수정 -->
+	<update id="updateItemAttrVal" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		UPDATE TDNDT_ITEM_ATTR_VAL
+			SET	ATTR_VAL_NM 		= #{productInfoVO.attrValNm}	/*속성값명*/
+				, PRI_NO			= #{productInfoVO.priNo}		/*우선순위*/
+				, USE_YN			= #{productInfoVO.useYn}		/*사용여부*/
+				, CHGR_ID 			= #{productInfoVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{productInfoVO.chgDate}		/*수정일시 */
+		WHERE	ATTR_CD				= #{productInfoVO.attrCd}		/*속성코드*/
+			AND ATTR_VAL_CD			= #{productInfoVO.attrValCd}	/*속성값코드*/
+	</update>
+	
+	<!-- 속성키 정보 삭제 -->
+	<delete id="deleteItemAttrVal" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		DELETE
+		FROM	TDNDT_ITEM_ATTR_VAL
+		WHERE	ATTR_CD				= #{productInfoVO.attrCd}		/*속성코드*/
+		<if test="productInfoVO.attrValCd != null and productInfoVO.attrValCd != ''">
+			AND ATTR_VAL_CD		= #{productInfoVO.attrValCd}
+		</if>
+    </delete>
+    
+    
+    
+    <!-- 속성 매핑 리스트  -->
+	<select id="itemAttrMappList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.ITEM_ID				/*제품ID*/
+					, A.MAPP_ORD			/*매핑순번*/
+					, A.ATTR_CD				/*속성코드*/
+					, A.ATTR_VAL_CD			/*속성값코드*/
+					, B.ATTR_NM				/*속성명*/
+					, C.ATTR_VAL_NM			/*속성값명*/
+           	FROM	TDNDT_ITEM_ATTR_MAPP A
+           			, TDNDT_ITEM_ATTR B
+           			, TDNDT_ITEM_ATTR_VAL C
+           	WHERE 	1=1
+           		AND ITEM_ID 		= #{productInfoVO.itemId}
+           		AND A.ATTR_CD		= B.ATTR_CD
+           		AND B.ATTR_CD		= C.ATTR_CD
+           		AND A.ATTR_VAL_CD	= C.ATTR_VAL_CD
+           	ORDER BY A.MAPP_ORD
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 속성키 리스트 카운트 -->
+	<select id="itemAttrMappCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM	TDNDT_ITEM_ATTR_MAPP A
+         		, TDNDT_ITEM_ATTR B
+         		, TDNDT_ITEM_ATTR_VAL C
+         WHERE 	1=1
+         	AND ITEM_ID 		= #{productInfoVO.itemId}
+         	AND A.ATTR_CD		= B.ATTR_CD
+         	AND A.ATTR_VAL_CD	= C.ATTR_VAL_CD
+	</select>
+    
+    
+    <!-- 속성키 리스트 조회 -->
+	<select id="itemAttrSelectList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">	
+		SELECT
+				A.ATTR_CD					/*속성코드*/
+				, A.ATTR_NM					/*속성명*/
+				, A.ATTR_CL_CD				/*속성구분코드*/
+				, (
+					SELECT  NAME.CODE_NM AS COMMON_CD_NM
+					FROM 	TSYCO_CODE_MAST MAST
+                            , TSYCO_CODE_MAST_NAME MNAME
+   							, TSYCO_CODE_DETAIL DETAIL
+   							, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE 	MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                            AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                            AND MNAME.LNG_TYP     =#{productInfoVO.lngTyp} 
+   							AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+   							AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+   							AND NAME.LNG_TYP      = #{productInfoVO.lngTyp}
+   							AND MAST.COMMON_GRP   ='DN00063'
+							AND DETAIL.COMMON_CD = A.ATTR_CL_CD
+	       		) AS ATTR_CL_NM            /* 속성구분코드명*/
+				, A.PRI_NO					/*우선순위*/
+				, A.USE_YN					/*사용여부*/
+				, A.COMM_CD_REF				/*공통코드참조*/
+         FROM	TDNDT_ITEM_ATTR A
+         WHERE 	1=1
+         	AND A.ATTR_CL_CD 	= #{productInfoVO.attrClCd}
+         	AND A.USE_YN		= 'Y'
+         ORDER BY A.PRI_NO
+	</select>
+	
+	<!-- 속성값 리스트 조회 -->
+	<select id="itemAttrValSelectList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">	
+		SELECT
+				A.ATTR_CD					/*속성코드*/
+				, A.ATTR_VAL_CD				/*속성값코드*/
+				, A.ATTR_VAL_NM				/*속성값명*/
+				, A.PRI_NO					/*우선순위*/
+				, A.USE_YN					/*사용여부*/
+          	FROM	TDNDT_ITEM_ATTR_VAL A
+          	WHERE 	1=1
+				AND A.ATTR_CD 		=  #{productInfoVO.attrCd}
+				AND A.USE_YN		= 'Y'
+		ORDER BY A.PRI_NO
+	</select>
+	
+	
+	<!-- 속성 매핑 등록 -->
+	<insert id="insertItemAttrMapp" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+	
+		INSERT INTO TDNDT_ITEM_ATTR_MAPP
+			( SO_ID			/*사업ID*/
+			, ITEM_ID		/*제품ID*/
+			, MAPP_ORD		/*매핑순번*/
+			, ATTR_CD		/*속성코드*/
+			, ATTR_VAL_CD	/*속성값코드*/
+			, REGR_ID		/*등록자*/
+			, REG_DATE		/*등록일시*/
+			, CHGR_ID		/*수정자*/
+			, CHG_DATE		/*수정일시*/
+			)
+        VALUES
+			( #{productInfoVO.soId}			/*사업ID*/
+			, #{productInfoVO.itemId}		/*제품ID*/
+			, #{productInfoVO.mappOrd}		/*매핑순번*/
+			, #{productInfoVO.attrCd}		/*속성코드*/
+			, #{productInfoVO.attrValCd}	/*속성값코드*/
+			, #{productInfoVO.regrId}		/*등록자*/
+			, #{productInfoVO.regDate}		/*등록일시*/
+			, #{productInfoVO.chgrId}		/*수정자*/
+			, #{productInfoVO.chgDate}		/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 속성 매핑 수정 -->
+	<update id="updateItemAttrMapp" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		UPDATE TDNDT_ITEM_ATTR_MAPP
+			SET	ATTR_CD 			= #{productInfoVO.attrCd}		/*속성코드*/
+				, ATTR_VAL_CD		= #{productInfoVO.attrValCd}	/*속성값코드*/
+				, CHGR_ID 			= #{productInfoVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{productInfoVO.chgDate}		/*수정일시    */  
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}		/*제품ID*/
+			AND MAPP_ORD			= #{productInfoVO.mappOrd}		/*매핑순번*/
+	</update>
+	
+	
+	<!-- 제품 상세 리스트  -->
+	<select id="itemDtlList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT
+					A.SO_ID				/*사업ID*/
+					, A.ITEM_ID			/*제품ID*/
+					, A.DTL_INFO_ORD	/*상세정보순번*/
+					, A.CL_NM			/*구분명*/
+					, A.TTL				/*제목*/
+					, A.ATTCH_CT		/*내용*/
+					, A.ATTCH_UUID		/*첨부파일ID*/
+					, A.ATTCH_FILE_NM	/*첨부파일명*/
+           	FROM	TDNDT_ITEM_DTL A
+           	WHERE 	1=1
+           		AND A.ITEM_ID 		= #{productInfoVO.itemId}
+           	ORDER BY A.DTL_INFO_ORD
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+	
+	<!-- 제품 상세 카운트 -->
+	<select id="itemDtlCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+			FROM	TDNDT_ITEM_DTL A
+           	WHERE 	1=1
+           		AND A.ITEM_ID 		= #{productInfoVO.itemId}
+	</select>
+	
+	<!-- 속성 매핑 등록 -->
+	<insert id="insertItemDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+	
+		INSERT INTO TDNDT_ITEM_DTL
+			( SO_ID			/*사업ID*/
+			, ITEM_ID		/*제품ID*/
+			, DTL_INFO_ORD	/*상세정보순번*/
+			, CL_NM			/*구분명*/
+			, TTL			/*제목*/
+			, ATTCH_CT		/*내용*/
+			, ATTCH_UUID	/*첨부파일ID*/
+			, ATTCH_FILE_NM	/*첨부파일명*/
+			, REGR_ID		/*등록자*/
+			, REG_DATE		/*등록일시*/
+			, CHGR_ID		/*수정자*/
+			, CHG_DATE		/*수정일시*/
+			)
+        VALUES
+			( #{productInfoVO.soId}			/*사업ID*/
+			, #{productInfoVO.itemId}		/*제품ID*/
+			, #{productInfoVO.dtlInfoOrd}	/*상세정보순번*/
+			, #{productInfoVO.clNm}			/*구분명*/
+			, #{productInfoVO.ttl}			/*제목*/
+			, #{productInfoVO.attchCt}		/*내용*/
+			, #{productInfoVO.attchUuid}	/*첨부파일ID*/
+			, #{productInfoVO.attchFileNm}	/*첨부파일명*/
+			, #{productInfoVO.regrId}		/*등록자*/
+			, #{productInfoVO.regDate}		/*등록일시*/
+			, #{productInfoVO.chgrId}		/*수정자*/
+			, #{productInfoVO.chgDate}		/*수정일시*/
+			)			
+	</insert>
+	
+	<!-- 속성 매핑 수정 -->
+	<update id="updateItemDtl" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ProductInfoVO">
+		UPDATE TDNDT_ITEM_DTL
+			SET	CL_NM 				= #{productInfoVO.clNm}			/*구분명*/
+				, TTL				= #{productInfoVO.ttl}			/*제목*/
+				, ATTCH_CT			= #{productInfoVO.attchCt}		/*제목*/
+				, ATTCH_UUID		= #{productInfoVO.attchUuid}	/*첨부파일ID*/
+				, ATTCH_FILE_NM		= #{productInfoVO.attchFileNm}	/*제목*/
+				, CHGR_ID 			= #{productInfoVO.chgrId}		/*수정자*/
+				, CHG_DATE 			= #{productInfoVO.chgDate}		/*수정일시*/ 
+		WHERE	ITEM_ID				= #{productInfoVO.itemId}		/*제품ID*/
+			AND DTL_INFO_ORD		= #{productInfoVO.dtlInfoOrd}	/*매핑순번*/
+	</update>
+</mapper>

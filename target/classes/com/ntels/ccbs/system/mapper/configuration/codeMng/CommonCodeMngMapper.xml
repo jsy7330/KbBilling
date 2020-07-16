@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.configuration.codeMng.CommonCodeMngMapper">
+    <select id="getCodeGrpList"  resultType="CommonGrpVO">
+        SELECT 
+                 MAST.COMMON_GRP
+                ,COALESCE((SELECT COMMON_GRP_NM 
+                  FROM TSYCO_CODE_MAST_NAME NAME
+                  WHERE NAME.COMMON_GRP = MAST.COMMON_GRP
+                  AND   NAME.LNG_TYP    =#{lng}),MAST.COMMON_GRP_NM) AS COMMON_GRP_NM
+                ,MAST.SYSTEM_ID
+                ,MAST.LENGTH
+                ,MAST.REF_CODE
+                ,MAST.REF_CODE2
+                ,MAST.REF_CODE3
+                ,MAST.RMRK
+                ,MAST.USE_YN
+                ,MAST.SYS_FLG
+                ,MAST.REGR_ID
+                ,MAST.REG_DATE
+                ,MAST.CHGR_ID
+                ,MAST.CHG_DATE
+        FROM TSYCO_CODE_MAST MAST
+        WHERE MAST.SYSTEM_ID    =#{codeType}
+        ORDER BY MAST.COMMON_GRP    
+    </select>
+    
+    
+    <!-- 공통코드 리스트 조회 -->
+    <select id="getCommonCodeList" resultType="CommonCodeVO">
+    SELECT 
+         DATA.COMMON_GRP
+        ,DATA.COMMON_GRP_NM
+        ,DATA.COMMON_CD
+        ,DATA.COMMON_CD_NM
+        ,DATA.ORG_COMMON_CD_NM
+        ,DATA.REF_CODE
+        ,DATA.REF_CODE2
+        ,DATA.REF_CODE3
+        ,DATA.REF_CODE4
+        ,DATA.DEFAULT_YN
+        ,DATA.RMRK
+        ,DATA.SORT_NO
+        ,DATA.USE_YN
+        ,DATA.CHG_DATE
+        ,DATA.CHGR_ID
+        ,DATA.CHGR_NM
+        ,DATA.REG_DATE
+        ,DATA.REGR_ID
+        ,DATA.REGR_NM
+     FROM (
+            SELECT 
+                     MAST.COMMON_GRP
+                    ,COALESCE((SELECT COMMON_GRP_NM 
+                               FROM TSYCO_CODE_MAST_NAME NAME
+                               WHERE NAME.COMMON_GRP = MAST.COMMON_GRP
+                               AND   NAME.LNG_TYP    =#{lng}),MAST.COMMON_GRP_NM) AS COMMON_GRP_NM
+                    ,DETAIL.COMMON_CD
+                    ,COALESCE((SELECT CODE_NM 
+                               FROM TSYCO_CODE_DETAIL_NAME NAME
+                               WHERE NAME.COMMON_GRP = DETAIL.COMMON_GRP
+                               AND   NAME.COMMON_CD  = DETAIL.COMMON_CD
+                                AND   NAME.LNG_TYP    =#{lng}),DETAIL.COMMON_CD_NM) AS COMMON_CD_NM
+                    ,DETAIL.COMMON_CD_NM AS ORG_COMMON_CD_NM
+                    ,DETAIL.REF_CODE
+                    ,DETAIL.REF_CODE2
+                    ,DETAIL.REF_CODE3
+                    ,DETAIL.REF_CODE4
+                    ,DETAIL.DEFAULT_YN
+                    ,DETAIL.RMRK
+                    ,DETAIL.SORT_NO
+                    ,DETAIL.USE_YN
+                    ,DETAIL.CHG_DATE
+                    ,DETAIL.CHGR_ID
+                    ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = DETAIL.CHGR_ID) AS CHGR_NM
+                    ,DETAIL.REG_DATE
+                    ,DETAIL.REGR_ID
+                    ,(SELECT USER_NAME
+                      FROM TSYCO_USER
+                      WHERE USER_ID = DETAIL.REGR_ID) AS REGR_NM
+            FROM TSYCO_CODE_MAST MAST
+                , TSYCO_CODE_DETAIL DETAIL
+            WHERE   MAST.COMMON_GRP   =DETAIL.COMMON_GRP
+                AND MAST.COMMON_GRP   =#{condGroupId}) DATA
+        <if test="sidx != null and sidx == 'commonCd'">
+            ORDER BY DATA.COMMON_CD ${sord}
+        </if>
+        <if test="sidx != null and sidx == 'commonCdNm'">
+            ORDER BY DATA.COMMON_CD_NM ${sord}
+        </if>
+        <if test="sidx != null and sidx == 'sortNo'">
+            ORDER BY DATA.SORT_NO ${sord}
+        </if>
+        <if test="sidx != null and sidx == 'useYn'">
+            ORDER BY DATA.USE_YN ${sord}
+        </if>
+        <if test="sidx == null or sidx == ''">
+            ORDER BY DATA.SORT_NO
+        </if>
+    </select>
+    
+    <select id="getCodeDetailLngList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT LNG.LANGUAGE_CODE
+              ,LNG.LANGUAGE_NAME
+              ,NAME.COMMON_GRP
+              ,NAME.COMMON_CD
+              ,NAME.CODE_NM
+        FROM TSYCO_CODE_DETAIL_NAME NAME
+            RIGHT OUTER JOIN TSYCO_COUNTRY_LANGUAGE LNG
+        ON
+              LNG.LANGUAGE_CODE = NAME.LNG_TYP
+         AND  NAME.COMMON_GRP   = #{commonGrp}
+         AND  NAME.COMMON_CD    = #{commonCd}
+         ORDER BY LNG.LANGUAGE_CODE DESC
+    </select>
+    
+    
+    <select id="getLngList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT LNG.LANGUAGE_CODE
+              ,LNG.LANGUAGE_NAME
+              ,'' AS CODE_NM
+        FROM TSYCO_COUNTRY_LANGUAGE LNG
+        ORDER BY LNG.LANGUAGE_CODE DESC
+    </select>
+    
+    
+    <select id="getCodeDetailCnt" resultType="int">
+        SELECT COUNT(COMMON_CD)
+        FROM TSYCO_CODE_DETAIL
+        WHERE COMMON_GRP = #{commonGrp}
+        AND   COMMON_CD  = #{commonCd}
+    </select>
+    
+    
+    <insert id="insertCodeDetail" parameterType="CommonCodeVO">
+        INSERT INTO
+            TSYCO_CODE_DETAIL(
+                 COMMON_GRP
+                ,COMMON_CD
+                ,COMMON_CD_NM
+                ,REF_CODE
+                ,REF_CODE2
+                ,REF_CODE3
+                ,REF_CODE4
+                ,DEFAULT_YN
+                ,RMRK
+                ,SORT_NO
+                ,USE_YN
+                ,SYS_FLG
+                ,REGR_ID
+                ,REG_DATE
+                ,CHGR_ID
+                ,CHG_DATE
+            )VALUES(
+                 #{code.commonGrp, jdbcType=VARCHAR}
+                ,#{code.commonCd, jdbcType=VARCHAR}
+                ,#{code.commonCdNm, jdbcType=VARCHAR}
+                ,#{code.refCode, jdbcType=VARCHAR}
+                ,#{code.refCode2, jdbcType=VARCHAR}
+                ,#{code.refCode3, jdbcType=VARCHAR}
+                ,#{code.refCode4, jdbcType=VARCHAR}
+                ,#{code.defaultYn, jdbcType=VARCHAR}
+                ,#{code.rmrk, jdbcType=VARCHAR}
+                ,#{code.sortNo, jdbcType=VARCHAR}
+                ,#{code.useYn, jdbcType=VARCHAR}
+                ,'Y'
+                ,#{code.regrId, jdbcType=VARCHAR}
+                ,#{code.regDate}
+                ,#{code.chgrId, jdbcType=VARCHAR}
+                ,#{code.chgDate}
+            )
+    </insert>
+    
+    
+    <insert id="insertCodeDetailLng" parameterType="CommonCodeLngVO">
+        INSERT INTO
+            TSYCO_CODE_DETAIL_NAME(
+                 LNG_TYP
+                ,COMMON_GRP
+                ,COMMON_CD
+                ,CODE_NM
+                ,REGR_ID
+                ,REG_DATE
+                ,CHGR_ID
+                ,CHG_DATE
+            )VALUES(
+                 #{lng.lngTyp, jdbcType=VARCHAR}
+                ,#{lng.commonGrp, jdbcType=VARCHAR}
+                ,#{lng.commonCd, jdbcType=VARCHAR}
+                ,#{lng.codeNm, jdbcType=VARCHAR}
+                ,#{lng.regrId, jdbcType=VARCHAR}
+                ,#{lng.regDate}
+                ,#{lng.chgrId, jdbcType=VARCHAR}
+                ,#{lng.chgDate}
+            )
+    </insert>
+    
+    <delete id="deleteCodeDetail">
+        DELETE FROM TSYCO_CODE_DETAIL
+        WHERE COMMON_GRP = #{codeGrp}
+         AND  COMMON_CD  = #{code}
+    </delete>
+    
+    <delete id="deleteCodeDetailLng">
+        DELETE FROM TSYCO_CODE_DETAIL_NAME
+        WHERE COMMON_GRP = #{codeGrp}
+         AND  COMMON_CD  = #{code}
+    </delete>
+    
+    <update id="updateCodeDetail" parameterType="CommonCodeVO">
+        UPDATE TSYCO_CODE_DETAIL
+            SET
+                COMMON_CD_NM = #{code.commonCdNm, jdbcType=VARCHAR}
+               ,REF_CODE     = #{code.refCode, jdbcType=VARCHAR}
+               ,REF_CODE2    = #{code.refCode2, jdbcType=VARCHAR}
+               ,REF_CODE3    = #{code.refCode3, jdbcType=VARCHAR}
+               ,REF_CODE4    = #{code.refCode4, jdbcType=VARCHAR}
+               ,DEFAULT_YN   = #{code.defaultYn, jdbcType=VARCHAR}
+               ,RMRK         = #{code.rmrk, jdbcType=VARCHAR}
+               ,SORT_NO      = #{code.sortNo, jdbcType=VARCHAR}
+               ,USE_YN       = #{code.useYn, jdbcType=VARCHAR}
+               ,CHGR_ID      = #{code.chgrId, jdbcType=VARCHAR}
+               ,CHG_DATE     = #{code.chgDate}
+        WHERE COMMON_GRP     = #{code.commonGrp, jdbcType=VARCHAR}
+        AND   COMMON_CD      = #{code.commonCd, jdbcType=VARCHAR}
+    </update>
+    
+    
+    <update id="updateCodeDetailLng" parameterType="CommonCodeVO">
+        UPDATE TSYCO_CODE_DETAIL_NAME
+            SET
+                 CODE_NM     = #{lng.codeNm, jdbcType=VARCHAR}
+                ,CHGR_ID     = #{lng.chgrId, jdbcType=VARCHAR}
+                ,CHG_DATE    = #{lng.chgDate}
+        WHERE LNG_TYP        = #{lng.lngTyp, jdbcType=VARCHAR}
+        AND   COMMON_GRP     = #{lng.commonGrp, jdbcType=VARCHAR}
+        AND   COMMON_CD      = #{lng.commonCd, jdbcType=VARCHAR}
+    </update>
+    
+        
+    <select id="getCodeGrpCnt" resultType="int">
+        SELECT COUNT(COMMON_GRP)
+        FROM TSYCO_CODE_MAST
+        WHERE COMMON_GRP = #{commonGrp}
+    </select>
+    
+    <insert id="insertCodeGrp" parameterType="CommonGrpVO">
+        INSERT INTO
+            TSYCO_CODE_MAST(
+                 COMMON_GRP
+                ,COMMON_GRP_NM
+                ,SYSTEM_ID
+                ,LENGTH
+                ,REF_CODE
+                ,REF_CODE2
+                ,REF_CODE3
+                ,RMRK
+                ,USE_YN
+                ,SYS_FLG
+                ,REGR_ID
+                ,REG_DATE
+                ,CHGR_ID
+                ,CHG_DATE
+
+            )VALUES(
+                 #{grpInfo.commonGrp, jdbcType=VARCHAR}
+                ,#{grpInfo.commonGrpNm, jdbcType=VARCHAR}
+                ,#{grpInfo.systemId, jdbcType=VARCHAR}
+                ,#{grpInfo.length, jdbcType=VARCHAR}
+                ,#{grpInfo.refCode, jdbcType=VARCHAR}
+                ,#{grpInfo.refCode2, jdbcType=VARCHAR}
+                ,#{grpInfo.refCode3, jdbcType=VARCHAR}
+                ,#{grpInfo.rmrk, jdbcType=VARCHAR}
+                ,#{grpInfo.useYn, jdbcType=VARCHAR}
+                ,'Y'
+                ,#{grpInfo.regrId, jdbcType=VARCHAR}
+                ,#{grpInfo.regDate}
+                ,#{grpInfo.chgrId, jdbcType=VARCHAR}
+                ,#{grpInfo.chgDate}
+            )
+    </insert>
+    
+    <insert id="insertCodeGrpLng" parameterType="CommonGrpLngVO">
+        INSERT INTO
+            TSYCO_CODE_MAST_NAME(
+                 LNG_TYP
+                ,COMMON_GRP
+                ,COMMON_GRP_NM
+                ,REGR_ID
+                ,REG_DATE
+                ,CHGR_ID
+                ,CHG_DATE
+            )VALUES(
+                 #{lng.lngTyp, jdbcType=VARCHAR}
+                ,#{lng.commonGrp, jdbcType=VARCHAR}
+                ,#{lng.commonGrpNm, jdbcType=VARCHAR}
+                ,#{lng.regrId, jdbcType=VARCHAR}
+                ,#{lng.regDate}
+                ,#{lng.chgrId, jdbcType=VARCHAR}
+                ,#{lng.chgDate}
+            )
+    </insert>
+    
+    <select id="getCodeGrpInfo" resultType="CommonGrpVO">
+        SELECT
+             COMMON_GRP
+            ,COMMON_GRP_NM
+            ,SYSTEM_ID
+            ,LENGTH
+            ,REF_CODE
+            ,REF_CODE2
+            ,REF_CODE3
+            ,RMRK
+            ,USE_YN
+            ,SYS_FLG
+            ,REGR_ID
+            ,REG_DATE
+            ,CHGR_ID
+            ,CHG_DATE
+       FROM 
+            TSYCO_CODE_MAST
+       WHERE
+            COMMON_GRP = #{codeGrp}
+    </select>
+    
+    
+    <select id="getCodeGrpLngList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+        SELECT LNG.LANGUAGE_CODE
+              ,LNG.LANGUAGE_NAME
+              ,NAME.COMMON_GRP
+              ,NAME.COMMON_GRP_NM AS CODE_NM
+        FROM TSYCO_CODE_MAST_NAME NAME
+            ,TSYCO_COUNTRY_LANGUAGE LNG
+        WHERE
+             LNG.LANGUAGE_CODE = NAME.LNG_TYP
+         AND NAME.COMMON_GRP   = #{codeGrp}
+         ORDER BY LNG.LANGUAGE_CODE DESC
+    </select>
+    
+    <update id="updateCodeGrp" parameterType="CommonGrpVO">
+        UPDATE TSYCO_CODE_MAST
+            SET
+                 COMMON_GRP_NM  = #{codeGrp.commonGrpNm}
+                ,LENGTH         = #{codeGrp.length}
+                ,REF_CODE       = #{codeGrp.refCode}
+                ,REF_CODE2      = #{codeGrp.refCode2}
+                ,REF_CODE3      = #{codeGrp.refCode3}
+                ,RMRK           = #{codeGrp.rmrk}
+                ,USE_YN         = #{codeGrp.useYn}
+                ,CHGR_ID        = #{codeGrp.chgrId}
+                ,CHG_DATE       = #{codeGrp.chgDate}
+        WHERE COMMON_GRP        = #{codeGrp.commonGrp}
+    </update>
+
+    <update id="updateCodeGrpLng" parameterType="CommonGrpLngVO">
+        UPDATE TSYCO_CODE_MAST_NAME
+            SET
+                 COMMON_GRP_NM = #{lng.commonGrpNm}
+                ,CHGR_ID       = #{lng.chgrId}
+                ,CHG_DATE      = #{lng.chgDate}
+        WHERE LNG_TYP          = #{lng.lngTyp}
+        AND   COMMON_GRP       = #{lng.commonGrp}
+    </update>
+    
+    <delete id="deleteCodeGrp">
+        DELETE FROM TSYCO_CODE_MAST
+        WHERE COMMON_GRP = #{codeGrp}
+    </delete>
+    
+    <delete id="deleteCodeGrpLng">
+        DELETE FROM TSYCO_CODE_MAST_NAME
+        WHERE COMMON_GRP = #{codeGrp}
+    </delete>
+    
+    <delete id="deleteCode">
+        DELETE FROM TSYCO_CODE_DETAIL
+        WHERE COMMON_GRP = #{codeGrp}
+    </delete>
+    
+    <delete id="deleteCodeLng">
+        DELETE FROM TSYCO_CODE_DETAIL_NAME
+        WHERE COMMON_GRP = #{codeGrp}
+    </delete>
+</mapper>

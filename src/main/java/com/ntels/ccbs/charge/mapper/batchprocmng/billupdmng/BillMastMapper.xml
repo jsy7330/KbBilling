@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.billupdmng.BillMastMapper">
+<!-- 청구마스터(TBLIV_BILL_MAST) 변경을 위한 청구(TBLIV_BILL) 조회 (수납 선수대체 등 처리후 공통서비스로 처리할 내용) -->	
+ 	<select id="getForBillMastUpdt" parameterType="String" resultType="BillMastVO">
+    SELECT /* BillMastMapper.xml.getForBillMastUpdt, 박권택, 2017.11.27 */
+           BL.SO_ID                                AS SO_ID                        -- 사업ID
+         , BL.BILL_SEQ_NO                          AS BILL_SEQ_NO                  -- 청구일련번호
+         -- , MAX(BL.PYM_CYCL)                        AS PYM_CYCL                     -- 수납주기: 01(당닙)  02(월선납)  03(연선납)
+         , BL.BILL_YYMM                            AS BILL_YYMM                    -- 청구년월
+         , BL.BILL_CYCL                            AS BILL_CYCL                    -- 청구주기
+         , MAX(BL.BILL_DT)                         AS BILL_DT                      -- 청구일자
+         , BL.PYM_ACNT_ID                          AS PYM_ACNT_ID                  -- 납부자계정ID
+         , SUM(BL.ADJ_PRV_BILL_AMT)                AS ADJ_PRV_BILL_AMT             -- 조정사전청구금액
+         , SUM(BL.BILL_AMT)                        AS TOT_BILL_AMT                 -- 총청구금액
+         , SUM(BL.ADJ_AMT)                         AS TOT_ADJ_AMT                  -- 총조정금액
+         , SUM(BL.RCPT_AMT)                        AS TOT_RCPT_AMT                 -- 수납금액
+         , SUM(BL.BILL_AMT) -
+           SUM(BL.RCPT_AMT)                        AS TOT_UPYM_AMT                 -- 총UNPAY금액
+         , CASE WHEN SUM(BL.BILL_AMT) - SUM(BL.RCPT_AMT)  = 0
+                THEN 'Y' ELSE 'N'
+           END                                     AS FULL_PAY_YN                  -- FULL_PAY여부
+         , MAX(LAST_RCPT_DT)                       AS LAST_RCPT_DT                 -- 최종수납일자
+    FROM   TBLIV_BILL              BL                                              -- 청구-T
+    WHERE  BL.SO_ID            = #{ssoId}
+    AND    BL.BILL_YYMM        = #{sbillYymm}
+    AND    BL.BILL_SEQ_NO      = #{sbillSeqNo}
+    GROUP BY BL.SO_ID, BL.BILL_SEQ_NO, BL.BILL_YYMM, BL.BILL_CYCL, BL.PYM_ACNT_ID
+	</select>
+<!-- 청구마스트변경 -->	
+	<update id="updateBillMast" parameterType="BillMastVO">
+    UPDATE TBLIV_BILL_MAST 
+    SET    BILL_AMT     = #{billMastVO.totBillAmt}              -- 총청구금액
+         , RCPT_AMT     = #{billMastVO.totRcptAmt}              -- 총수납금액
+         , UNPAY_AMT    = #{billMastVO.totUpymAmt}              -- 총UNPAY금액
+         , FULL_PAY_YN  = #{billMastVO.fullPayYn}               -- 완납여부
+         , LAST_RCPT_DT = #{billMastVO.lastRcptDt}              -- 최종수납일자
+         , CHGR_ID      = #{billMastVO.chgrId}                  -- 수정자ID
+         , CHG_DATE     = #{billMastVO.chgDate}                 -- 수정일시     
+    WHERE  SO_ID        = #{billMastVO.soId}
+    AND    BILL_SEQ_NO  = #{billMastVO.billSeqNo}                   
+	</update>
+<!-- 청구선납청구적용 변경 -->	
+	<update id="updateprepdBillAply" parameterType="BillMastVO">
+		MERGE INTO TBLIV_BILL_PREPD_BILL_APLY PBA  /* BillMastMapper.xml.updateprepdBillAply, 박권택, 2017.11.27 */ 
+		   USING (
+		   
+                   SELECT SO_ID
+                    ,  BILL_SEQ_NO
+                    ,  CTRT_ID
+                    ,  USE_YYMM
+                  FROM (
+                            SELECT   
+                                    PBA.SO_ID
+                                ,   PBA.BILL_SEQ_NO
+                                ,   PBA.CTRT_ID
+                                ,   PBA.USE_YYMM
+                                ,   DECODE(SUM(BL.BILL_AMT)-SUM(BL.RCPT_AMT),0,'Y','N') AS FULL_PAY_YN
+                            FROM    TBLIV_BILL                    BL                              -- 청구-T
+                                ,   TBLIV_BILL_PREPD_BILL_APLY    PBA                             -- 청구선납청구적용-T
+                            WHERE   BL.SO_ID        = #{billMastVO.soId}
+                            AND     BL.BILL_SEQ_NO  = #{billMastVO.billSeqNo}
+                            AND     BL.PYM_CYCL     = '03'                                        /* 연선납 */
+                            /*AND     NVL(BL.FULL_PAY_YN,'N')  = 'Y'      */                          /* 완납여부 */
+                            AND     PBA.SO_ID       = BL.SO_ID
+                            AND     PBA.BILL_SEQ_NO = BL.BILL_SEQ_NO
+                            AND     PBA.CTRT_ID     = BL.CTRT_ID
+                            AND     PBA.USE_YYMM    = BL.USE_YYMM
+                            GROUP BY PBA.SO_ID
+                                ,   PBA.BILL_SEQ_NO
+                                ,   PBA.CTRT_ID
+                                ,   PBA.USE_YYMM
+                       ) WHERE FULL_PAY_YN = 'Y' 
+                       		   
+                 ) OBJ
+		   ON (     PBA.SO_ID       = OBJ.SO_ID
+		       AND  PBA.BILL_SEQ_NO = OBJ.BILL_SEQ_NO
+               AND  PBA.CTRT_ID     = OBJ.CTRT_ID
+               AND  PBA.USE_YYMM    = OBJ.USE_YYMM
+		      ) 
+		   WHEN MATCHED THEN
+				UPDATE  SET     RCPT_YN        = 'Y'                                      -- 수납여부    
+                            ,   CHGR_ID        = #{billMastVO.chgrId}                -- 수정자ID
+		   					,   CHG_DATE       = #{billMastVO.chgDate}               -- 수정일시
+	</update>	
+<!-- 월계약미납현황 변경을 위한 조회 -->
+	<select id = "getMaxYymm" parameterType="String" resultType = "String">
+		SELECT  /* BillMastMapper.xml.getMaxYymm, 이송묵, 2018.05.02 */
+			MAX(BS_YYMM)
+		FROM 
+			TBLIV_BAT_PGM_LOG
+		WHERE BAT_GRP_ID = '00002'
+		  AND BAT_PGM_ID = 'BLIV021'
+		  AND BS_YYMM NOT LIKE '9999%'
+    </select>
+    
+<!-- 월계약미납현황 가장최근 청구년월 조회 -->
+	<select id = "getMaxUpymYymm" parameterType="String" resultType = "String">
+		SELECT  /* BillMastMapper.xml.getMaxUpymYymm, 임희철, 2018.07.06 */
+			   MAX(BILL_YYMM)
+		  FROM TBLIV_MTH_CTRT_UPYM_STUS
+		 WHERE SO_ID = #{ssoId}
+		   AND PYM_ACNT_ID = #{spymAcntId}  
+    </select>    
+    
+ 	<select id="getForMthCtrtUpymStusUpdt" parameterType="String" resultType="MthCtrtUpymStusVO">
+ 				SELECT /* BillMastMapper.xml.getForMthCtrtUpymStusUpdt, 박권택, 2017.11.27 */
+		       #{ssoId}                                                     AS SO_ID                     -- 사업자ID 
+		     , #{sbillYymm}                                                 AS BILL_YYMM                 -- 청구년월
+		     , NVL(OB.CTRT_ID, NB.CTRT_ID)                                  AS CTRT_ID                   -- 계약ID
+		     , NVL(NB.PYM_ACNT_ID, OB.PYM_ACNT_ID)                          AS PYM_ACNT_ID               -- 납부계정ID 
+		     , NVL(OB.UPYM_CNT,0)                                           AS TOT_UPYM_CNT              -- 총미납횟수
+		     , NVL(OB.TOT_UPYM_AMT,0)                                       AS TOT_UPYM_AMT              -- 총미납금액
+		     , NVL(NB.BILL_YYMM, OB.LAST_UPYM_MTH)                          AS LAST_BILL_YYMM            -- 최종청구년월
+		     , NVL(NB.BILL_AMT,0)                                           AS THS_MTH_BILL_AMT          -- 당월청구금액
+		     , NVL(NB.RCPT_AMT, 0)                                          AS THS_MTH_RCPT_AMT          -- 당월수납금액
+		     , NVL(NB.LAST_RCPT_DT, OB.LAST_RCPT_DT)                        AS LAST_RCPT_DT              -- 최종수납일자
+		     , ( SELECT NVL(SUM(RCPT_AMT),0)
+		         FROM   TBLIV_BILL 
+		         WHERE  SO_ID = #{ssoId}
+		         AND    CTRT_ID = NVL(OB.CTRT_ID, NB.CTRT_ID)
+		         AND    CHRG_ITM_CD IN ( SELECT SVC_RATE_ITM_TYP_CD 
+		                                 FROM   TPMPD_SVC_RATE_ITM_TYP 
+		                                 WHERE  RATE_ITM_TYP_CD = 'CT111')
+		       )                                                            AS DEPOSIT_BILL_AMT          -- 현재보증금
+		FROM   ( SELECT A.SO_ID
+		              , A.CTRT_ID
+		              , CE.PYM_ACNT_ID
+		              , CEI.MNG_CNTER_ORG_ID
+		              , CEI.MNG_BR_ORG_ID
+		              , CEI.MNG_PSN_INCHRG_ID
+		              , MAX(A.LAST_RCPT_DT)          AS LAST_RCPT_DT
+		              , MIN(A.BILL_YYMM)             AS FRST_UPYM_MTH
+		              , MAX(A.BILL_YYMM)             AS LAST_UPYM_MTH
+		              , SUM(A.UPYM_AMT)              AS TOT_UPYM_AMT
+		              , CASE WHEN SUM(A.UPYM_AMT) != 0 THEN COUNT(DISTINCT BILL_YYMM) ELSE 0 END   AS UPYM_CNT
+		         FROM  ( SELECT SO_ID
+		                      , CTRT_ID
+		                      , CASE WHEN SUM(BILL_AMT - RCPT_AMT) != 0 THEN BILL_YYMM ELSE '' END AS BILL_YYMM
+		                      , LAST_RCPT_DT
+		                      , SUM(BILL_AMT - RCPT_AMT) AS UPYM_AMT
+		                      , PYM_ACNT_ID
+		                 FROM   TBLIV_BILL
+		                 WHERE  SO_ID = #{ssoId}
+		                 AND    BILL_YYMM &lt; #{sbillYymm}
+		                 AND    PYM_ACNT_ID  = #{spymAcntId}  
+		                 AND    CHRG_ITM_CD NOT IN (SELECT SVC_RATE_ITM_TYP_CD FROM TPMPD_SVC_RATE_ITM_TYP WHERE RATE_ITM_TYP_CD = 'CT111')
+		                 GROUP BY SO_ID, CTRT_ID, BILL_YYMM, LAST_RCPT_DT, PYM_ACNT_ID 
+		               ) A
+		            ,  TCMCT_CTRT_INFO       CE
+		            ,  TCMCT_CTRT_EXT_INFO   CEI
+		         WHERE   CE.SO_ID           = A.SO_ID
+		         AND     CE.CTRT_ID         = A.CTRT_ID
+		         AND     CE.PYM_ACNT_ID     = A.PYM_ACNT_ID
+		         AND     CE.APLY_END_DATE   = '99991231235959'
+		         AND     CEI.SO_ID          = A.SO_ID
+		         AND     CEI.CTRT_ID        = A.CTRT_ID
+		         AND     CEI.APLY_END_DATE  = '99991231235959'
+		         GROUP BY A.SO_ID, A.CTRT_ID, CE.PYM_ACNT_ID, CEI.MNG_CNTER_ORG_ID, CEI.MNG_BR_ORG_ID, CEI.MNG_PSN_INCHRG_ID
+		       ) OB
+		FULL OUTER JOIN
+		       (SELECT SO_ID
+		             , BILL_YYMM
+		             , CTRT_ID
+		             , PYM_ACNT_ID
+		             , SUM(BILL_AMT)                     AS BILL_AMT
+		             , SUM(RCPT_AMT)                     AS RCPT_AMT
+		             , MAX(MNG_CNTER_ORG_ID)             AS MNG_CNTER_ORG_ID
+		             , MAX(MNG_BR_ORG_ID)                AS MNG_BR_ORG_ID
+		             , MAX(MNGR_ID)                      AS MNGR_ID
+		             , MAX(LAST_RCPT_DT)                 AS LAST_RCPT_DT
+		        FROM   TBLIV_BILL
+		        WHERE SO_ID   = #{ssoId}      
+		        AND   BILL_YYMM = #{sbillYymm}  
+		        AND   PYM_ACNT_ID  = #{spymAcntId} 
+		        GROUP BY SO_ID, BILL_YYMM, CTRT_ID, PYM_ACNT_ID
+		       ) NB
+		ON  OB.SO_ID   = #{ssoId}
+		AND NB.SO_ID   = OB.SO_ID
+		AND NB.CTRT_ID = OB.CTRT_ID
+	</select>
+<!-- 월계약미납현황 변경 -->	
+	<update id="updateMthCtrtUpymStus" parameterType="MthCtrtUpymStusVO">
+		MERGE INTO TBLIV_MTH_CTRT_UPYM_STUS  /* BillMastMapper.xml.updateMthCtrtUpymStus, 박권택, 2017.11.27 */ 
+		   USING DUAL 
+		   ON (     SO_ID        = #{mthCtrtUpymStusVO.soId}
+		       AND  BILL_YYMM    = #{mthCtrtUpymStusVO.billYymm}
+               AND  CTRT_ID      = #{mthCtrtUpymStusVO.ctrtId}
+               AND  PYM_ACNT_ID  = #{mthCtrtUpymStusVO.pymAcntId}  
+		      ) 
+		   WHEN MATCHED THEN
+				UPDATE  SET     TOT_UPYM_CNT      = #{mthCtrtUpymStusVO.totUpymCnt}              -- 총미납건수    
+                            ,   TOT_UPYM_AMT      = #{mthCtrtUpymStusVO.totUpymAmt}              -- 총미납금액
+                            ,   LAST_BILL_YYMM    = #{mthCtrtUpymStusVO.lastBillYymm}            -- 최종청구일
+                            ,   THS_MTH_BILL_AMT  = #{mthCtrtUpymStusVO.thsMthBillAmt}           -- 월청구총액
+                            ,   THS_MTH_RCPT_AMT  = #{mthCtrtUpymStusVO.thsMthRcptAmt}           -- 월수납총액
+                            ,   LAST_RCPT_DT      = #{mthCtrtUpymStusVO.lastRcptDt}              -- 최종수납일
+                            ,   CHGR_ID           = #{mthCtrtUpymStusVO.chgrId}                  -- 수정자ID
+		   					,   CHG_DATE          = #{mthCtrtUpymStusVO.chgDate}                 -- 수정일시
+	</update>
+</mapper>

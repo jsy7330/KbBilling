@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.product.mapper.refInfo.commonInfo.AttributeMapper">
+	<select id="list" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT TA.ATTR_CD,
+		       TA.ACT_DT,
+		       TA.INACT_DT,
+		       TA.ATTR_NM,
+		       TA.IF_SYS,
+		       TA.ATTR_STRT_VAL,
+		       TA.ATTR_END_VAL,
+		       TA.REF_CD,
+		       (
+		       SELECT B.COMMON_GRP_NM
+				FROM TSYCO_CODE_MAST A, TSYCO_CODE_MAST_NAME B                                     
+				WHERE B.LNG_TYP =  #{attribute.lngTyp}
+				AND B.COMMON_GRP = TA.REF_CD  
+				AND A.COMMON_GRP = B.COMMON_GRP
+		        AND A.USE_YN = 'Y'
+		        ) AS REF_CD_NM,
+		       (
+			       SELECT NAME.CODE_NM
+					FROM TSYCO_CODE_MAST MAST
+                        , TSYCO_CODE_MAST_NAME MNAME
+						, TSYCO_CODE_DETAIL DETAIL
+						, TSYCO_CODE_DETAIL_NAME NAME
+					WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                       AND MAST.COMMON_GRP=MNAME.COMMON_GRP
+                        AND MNAME.LNG_TYP=#{attribute.lngTyp}
+						AND DETAIL.COMMON_GRP=NAME.COMMON_GRP
+						AND DETAIL.COMMON_CD=NAME.COMMON_CD
+						AND NAME.LNG_TYP=#{attribute.lngTyp}
+						AND MAST.COMMON_GRP='PP00111'
+						AND DETAIL.COMMON_CD=TA.IF_SYS
+						AND DETAIL.USE_YN='Y'
+						AND MAST.USE_YN='Y'
+		        ) AS IF_SYS_NM,		        
+		       TA.REMARK,
+		       TA.MSTR_FL,
+		       TA.REGR_ID,
+		       TA.REG_DATE,
+		       TA.CHGR_ID,
+		       TA.CHG_DATE
+		FROM   TPMBI_ATTR TA
+		WHERE  TA.MSTR_FL = '1'
+		AND    TA.INACT_DT >= #{attribute.currentDay}       
+	<if test="attribute.searchAttrNm != null and attribute.searchAttrNm != ''">
+		AND ATTR_NM LIKE CONCAT( CONCAT('%', #{attribute.searchAttrNm} ), '%' )
+	</if>
+	<if test="attribute.sord != null and attribute.sord != ''">
+		ORDER BY TA.ATTR_CD ${attribute.sord} 
+	</if>
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<select id="count" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute"  resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM   TPMBI_ATTR TA                                                    
+		WHERE  TA.MSTR_FL = '1'   
+		AND    TA.INACT_DT >= #{attribute.currentDay}  	                                           
+		<if test="attribute.searchAttrNm != null and attribute.searchAttrNm != ''">
+		AND ATTR_NM LIKE '%${attribute.searchAttrNm}%'
+		</if>
+	</select>
+
+	<select id="getAttribute" parameterType="String" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute">
+		SELECT TA.ATTR_CD,
+		       TA.ACT_DT,
+		       TA.INACT_DT,
+		       TA.ATTR_NM,
+		       TA.IF_SYS,
+		       TA.ATTR_STRT_VAL,
+		       TA.ATTR_END_VAL,
+		       TA.REF_CD,
+		  	   (SELECT B.COMMON_GRP_NM
+				FROM TSYCO_CODE_MAST A, TSYCO_CODE_MAST_NAME B                                     
+				WHERE B.LNG_TYP =  #{lngTyp}
+				AND B.COMMON_GRP = TA.REF_CD
+				AND A.COMMON_GRP = B.COMMON_GRP  
+		       ) AS REF_CD_NM,
+		       TA.REMARK,
+		       TA.MSTR_FL,
+		       TA.REGR_ID,
+		       TA.REG_DATE,
+		       TA.CHGR_ID,
+		       TA.CHG_DATE,
+		FROM   TPMBI_ATTR TA	       
+		WHERE
+			TA.ATTR_CD=#{attrCd}
+		AND TA.MSTR_FL = '1'
+	</select>	
+  	
+  	<insert id="insert" 
+			parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute">
+       INSERT INTO
+			TPMBI_ATTR
+		(
+			ATTR_CD,
+			INACT_DT,
+			ACT_DT,
+			ATTR_NM, 			
+		<if test="attrEndVal != null and attrEndVal != ''">			
+			ATTR_END_VAL,
+		</if>		
+		<if test="attrStrtVal != null and attrStrtVal != ''">
+			ATTR_STRT_VAL,
+		</if>			
+		<if test="ifSys != null and ifSys != ''">			
+			IF_SYS,
+		</if>		
+		<if test="refCd != null and refCd != ''">			
+			REF_CD,
+		</if>		
+		<if test="remark != null and remark != ''">			
+			REMARK,
+		</if>		
+			MSTR_FL,
+            REGR_ID,
+            CHGR_ID,
+            REG_DATE,
+            CHG_DATE
+		)VALUES(
+			#{attrCd},
+			#{inactDt},
+			#{actDt},
+			#{attrNm},			
+		<if test="attrEndVal != null and attrEndVal != ''">			
+			#{attrEndVal},
+		</if>		
+		<if test="attrStrtVal != null and attrStrtVal != ''">
+			#{attrStrtVal},
+		</if>	
+		<if test="ifSys != null and ifSys != ''">			
+			#{ifSys},
+		</if>		
+		<if test="refCd != null and refCd != ''">			
+			#{refCd},
+		</if>		
+		<if test="remark != null and remark != ''">			
+			#{remark},
+		</if>		
+			'1',
+            #{userId},
+            #{userId},
+            #{sysToDate},
+            #{sysToDate}
+		)
+	</insert>
+
+	<update id="update" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute">
+		UPDATE TPMBI_ATTR
+			SET    INACT_DT   	= #{tomorrow},
+				   MSTR_FL   	= '0',  			
+			       CHGR_ID   	= #{userId},   
+			       CHG_DATE 	= #{sysToDate}
+		WHERE  ATTR_CD      = #{attrCd}
+		AND    ACT_DT    	= #{oldActDt}
+		AND    MSTR_FL 		= '1'
+     </update>
+     
+   	<update id="update2" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute">
+		UPDATE TPMBI_ATTR
+			SET  
+			<if test="attrNm != null and attrNm != ''">			
+				ATTR_NM = #{attrNm},
+			</if>					
+			<if test="attrEndVal != null and attrEndVal != ''">			
+				ATTR_END_VAL = #{attrEndVal},
+			</if>		
+			<if test="attrStrtVal != null and attrStrtVal != ''">
+				ATTR_STRT_VAL = #{attrStrtVal},
+			</if>		
+		
+			<if test="ifSys != null and ifSys != ''">			
+				IF_SYS= #{ifSys},
+			</if>		
+			<if test="refCd != null and refCd != ''">			
+				REF_CD= #{refCd},
+			</if>		
+			<if test="remark != null and remark != ''">			
+				REMARK = #{remark},
+			</if>	
+		       CHGR_ID   	= #{userId},   
+		       CHG_DATE 	= #{sysToDate}
+		WHERE  ATTR_CD      = #{attrCd}
+		AND    ACT_DT    	= #{actDt}
+		AND    MSTR_FL 		= '1'
+     </update>  	   
+	<select id="commList" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute" resultType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	
+			SELECT 
+				B.COMMON_GRP, B.COMMON_GRP_NM
+			FROM TSYCO_CODE_MAST A, TSYCO_CODE_MAST_NAME B                                     
+			WHERE B.LNG_TYP = #{attribute.lngTyp}
+				AND B.COMMON_GRP = A.COMMON_GRP
+				AND A.USE_YN = 'Y'
+			<if test="attribute.commonGrpNm != null and attribute.commonGrpNm!= ''">
+				AND B.COMMON_GRP_NM LIKE '%${attribute.commonGrpNm}%'
+			</if>        
+        <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>   
+     
+	<select id="commCnt" parameterType="com.ntels.ccbs.product.domain.refInfo.commonInfo.Attribute"  resultType="int">
+			SELECT 
+				COUNT(0) AS TOTAL 
+			FROM TSYCO_CODE_MAST A, TSYCO_CODE_MAST_NAME B                                     
+			WHERE B.LNG_TYP = #{attribute.lngTyp}
+				AND B.COMMON_GRP = A.COMMON_GRP
+				AND A.USE_YN = 'Y'
+			<if test="attribute.commonGrpNm != null and attribute.commonGrpNm!= ''">
+				AND B.COMMON_GRP_NM LIKE '%${attribute.commonGrpNm}%'
+			</if>       
+	</select>  
+         
+	<select id="getAttrCd" resultType="String"> 
+         SELECT 'AT'||LPAD(NVL(TO_NUMBER(SUBSTR(MAX(ATTR_CD),3))+1,'000'),3,0) FROM TPMBI_ATTR WHERE ATTR_CD LIKE 'AT%'
+	</select>     
+	
+	<select id="commomCdList" resultType="hashmap">			
+		SELECT 
+			NAME.COMMON_GRP, NAME.COMMON_CD,NAME.CODE_NM AS COMMON_CD_NM,DETAIL.REF_CODE,DETAIL.REF_CODE2,DETAIL.REF_CODE3,DETAIL.REF_CODE4,DETAIL.DEFAULT_YN, DETAIL.SORT_NO
+		FROM TSYCO_CODE_MAST MAST
+            ,TSYCO_CODE_MAST_NAME MNAME
+			, TSYCO_CODE_DETAIL DETAIL
+			, TSYCO_CODE_DETAIL_NAME NAME
+		WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+            AND MAST.COMMON_GRP=MNAME.COMMON_GRP
+            AND MNAME.LNG_TYP={lngTyp}
+			AND DETAIL.COMMON_GRP=NAME.COMMON_GRP
+			AND DETAIL.COMMON_CD=NAME.COMMON_CD
+			AND NAME.LNG_TYP=#{lngTyp}
+			AND MAST.COMMON_GRP= #{commonGrp}  
+			AND DETAIL.USE_YN='Y'
+			AND MAST.USE_YN='Y'        
+        ORDER BY DETAIL.SORT_NO
+     </select>	
+</mapper>

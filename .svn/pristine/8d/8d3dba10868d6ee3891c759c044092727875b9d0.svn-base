@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.distribute.mapper.logistics.referenceInfo.ManufacturerInfoMapper">
+
+	<!-- 제조사 리스트 조회 -->
+	<select id="manufacturerInfoList" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ManufacturerInfoVO" resultType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ManufacturerInfoVO">	
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+			SELECT	
+					A.SO_ID					/*사업자ID*/
+					, (SELECT SO_NM FROM TSYCO_SO_MAST WHERE SO_ID = A.SO_ID) AS SO_NM		/* 사업명*/
+					, A.MNCO_ID					/*제조사ID */
+					, A.MNCO_NM					/*제조사명  */
+					, A.BOR_NO					/*사업자번호 */
+					, A.REP_NM					/*대표자명  */
+					, A.REP_TEL_NO				/*대표전화번호  */  
+					, A.REP_FAX_NO				/*대표팩스번호*/
+					, A.BUSI_CNDT				/*업태*/
+					, A.BUSI_TP					/*업종    */
+					, A.PO_INCHRG_NM			/*발주담당자명    */
+					, A.PO_INCHRG_TEL_NO		/*발주담당자전화번호 */
+					, A.PO_INCHRG_FAX_NO		/*발주담당자팩스번호 */
+					, A.PO_INCHRG_EML			/*발주담당자이메일  */
+					, A.RTNGD_INCHRG_NM			/*반품담당자명    */
+					, A.RTNGD_INCHRG_TEL_NO		/*반품담당자전화번호 */
+					, A.RTNGD_INCHRG_FAX_NO		/*반품담당자팩스번호 */
+					, A.RTNGD_INCHRG_EML		/*반품담당자이메일  */
+					, A.ZIP_CD					/*우편번호  */
+					, A.BSS_ADDR				/*기본주소  */
+					, A.DTL_ADDR				/*상세주소*/
+					, A.CTRT_INCHRG_NM			/*계약담당자명   */ 
+					, A.CTRT_INCHRG_TEL_NO		/*계약담당자전화번호 */
+					, A.CTRT_INCHRG_FAX_NO		/*계약담당자팩스번호 */
+					, A.CTRT_INCHRG_EML			/*계약담당자이메일  */
+					, A.CTRT_STRT_DT			/*계약시작일자    */
+					, A.CTRT_END_DT				/*계약종료일자    */
+					, A.CTRT_ATTCH_FILE_NM		/*계약첨부파일명   */
+					, A.CTRT_UUID				/*계약첨부파일ID*/
+					, A.CTRT_NOTE				/*계약비고 */
+					, A.BNK_CD					/*은행*/
+					, A.ACNT					/*계좌번호*/
+					, A.ACNT_HLD_NM				/*예금주*/
+					, A.PYM_MTHD_CD				/*대금지급방법 */
+					, A.STTL_INCHRG_NM			/*정산담당자명    */
+					, A.STTL_INCHRG_TEL_NO		/*정산담당자전화번호 */
+					, A.STTL_INCHRG_FAX_NO		/*정산담당자팩스번호 */
+					, A.STTL_INCHRG_EML			/*정산담당자이메일  */
+					, A.STTL_ATTCH_FILE_NM		/*정산첨부파일명     */
+					, A.STTL_UUID				/*정산첨부파일ID*/
+					, A.STTL_INCHRG_NOTE		/*정산비고  */
+					, 'Y' AS ADDR_PURIFY_YN       /*정제여부*/
+			FROM 	TDNDT_MNCO A  			/*제조사*/
+			WHERE 	1 = 1
+				<if test="manufacturerInfoVO.soId != null and manufacturerInfoVO.soId != ''">
+					AND A.SO_ID =  #{manufacturerInfoVO.soId}
+				</if>
+				<if test="manufacturerInfoVO.searchType != null and manufacturerInfoVO.searchType != '' and manufacturerInfoVO.searchType == '01' ">
+					<if test="manufacturerInfoVO.searchText != null and manufacturerInfoVO.searchText != '' ">
+						AND A.MNCO_ID LIKE CONCAT( CONCAT('%', #{manufacturerInfoVO.searchText} ), '%' )
+					</if>	
+				</if>
+				<if test="manufacturerInfoVO.searchType != null and manufacturerInfoVO.searchType != '' and manufacturerInfoVO.searchType == '02' ">
+					<if test="manufacturerInfoVO.searchText != null and manufacturerInfoVO.searchText != '' ">
+						AND A.MNCO_NM LIKE CONCAT( CONCAT('%', #{manufacturerInfoVO.searchText} ), '%' )
+					</if>	
+				</if>
+		ORDER BY A.REG_DATE DESC
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+	</select>
+
+	<!-- 제조사 리스트 카운트 -->
+	<select id="manufacturerInfoCount" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ManufacturerInfoVO" resultType="int">
+		SELECT 
+			COUNT(0) AS TOTAL 
+		FROM 	TDNDT_MNCO A  			/*제조사*/
+			WHERE 	1 = 1
+				<if test="manufacturerInfoVO.soId != null and manufacturerInfoVO.soId != ''">
+					AND A.SO_ID =  #{manufacturerInfoVO.soId}
+				</if>
+				<if test="manufacturerInfoVO.searchType != null and manufacturerInfoVO.searchType != '' and manufacturerInfoVO.searchType == '01' ">
+					<if test="manufacturerInfoVO.searchText != null and manufacturerInfoVO.searchText != '' ">
+						AND A.MNCO_ID LIKE CONCAT( CONCAT('%', #{manufacturerInfoVO.searchText} ), '%' )
+					</if>	
+				</if>
+				<if test="manufacturerInfoVO.searchType != null and manufacturerInfoVO.searchType != '' and manufacturerInfoVO.searchType == '02' ">
+					<if test="manufacturerInfoVO.searchText != null and manufacturerInfoVO.searchText != '' ">
+						AND A.MNCO_NM LIKE CONCAT( CONCAT('%', #{manufacturerInfoVO.searchText} ), '%' )
+					</if>	
+				</if>
+	</select>
+	
+	<!-- 제조사 아이디 중복 체크 조회 -->
+	<select id="getExistManufacturerInfo" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ManufacturerInfoVO"  resultType="int">
+		SELECT
+				COUNT(0) AS TOTAL
+		FROM	TDNDT_MNCO A		<!--  제조사-->
+		WHERE	A.MNCO_ID	= #{manufacturerInfoVO.mncoId} /*제조사ID*/
+	</select>
+	
+	<!-- 제조사 등록 -->
+	<insert id="insertManufacturerInfo" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ManufacturerInfoVO">
+	
+		INSERT INTO TDNDT_MNCO
+			( SO_ID							/*사업자ID*/
+			, MNCO_ID						/*제조사ID*/
+			, MNCO_NM						/*제조사명*/
+			, BOR_NO						/*사업자번호*/
+			, REP_NM						/*대표자명*/
+			, REP_TEL_NO					/*대표전화번호*/
+			, REP_FAX_NO					/*대표팩스번호*/
+			, BUSI_CNDT						/*업태*/
+			, BUSI_TP						/*업종*/
+			, PO_INCHRG_NM					/*발주담당자명*/
+			, PO_INCHRG_TEL_NO				/*발주담당자전화번호*/
+			, PO_INCHRG_FAX_NO				/*발주담당자팩스번호*/
+			, PO_INCHRG_EML					/*발주담당자이메일*/
+			, RTNGD_INCHRG_NM				/*반품담당자명*/
+			, RTNGD_INCHRG_TEL_NO			/*반품담당자전화번호*/
+			, RTNGD_INCHRG_FAX_NO			/*반품담당자팩스번호*/
+			, RTNGD_INCHRG_EML				/*반품담당자이메일*/
+			, ZIP_CD						/*우편번호*/
+			, BSS_ADDR						/*기본주소*/
+			, DTL_ADDR						/*상세주소*/
+			, CTRT_INCHRG_NM				/*계약담당자명*/
+			, CTRT_INCHRG_TEL_NO			/*계약담당자전화번호*/
+			, CTRT_INCHRG_FAX_NO			/*계약담당자팩스번호*/
+			, CTRT_INCHRG_EML				/*계약담당자이메일*/
+			, CTRT_STRT_DT					/*계약시작일자*/
+			, CTRT_END_DT					/*계약종료일자*/
+			, CTRT_ATTCH_FILE_NM			/*계약첨부파일명*/
+			, CTRT_UUID						/*계약첨부파일ID*/
+			, CTRT_NOTE						/*계약비고*/
+			, BNK_CD						/*은행*/
+			, ACNT							/*계좌번호*/
+			, ACNT_HLD_NM					/*예금주*/
+			, PYM_MTHD_CD					/*대금지급방법*/
+			, STTL_INCHRG_NM				/*정산담당자명*/
+			, STTL_INCHRG_TEL_NO			/*정산담당자전화번호*/
+			, STTL_INCHRG_FAX_NO			/*정산담당자팩스번호*/
+			, STTL_INCHRG_EML				/*정산담당자이메일*/
+			, STTL_ATTCH_FILE_NM			/*정산첨부파일명*/
+			, STTL_UUID						/*정산첨부파일ID*/
+			, STTL_INCHRG_NOTE				/*정산비고*/
+			, REGR_ID						/*등록자*/
+			, REG_DATE						/*등록일시*/
+			, CHGR_ID						/*수정자*/
+			, CHG_DATE						/*수정일시*/
+			)
+        VALUES
+			( #{manufacturerInfoVO.soId}				/*사업ID*/
+			, #{manufacturerInfoVO.mncoId}				/*제조사ID*/
+			, #{manufacturerInfoVO.mncoNm}				/*제조사명*/
+			, #{manufacturerInfoVO.borNo}				/*사업자번호*/
+			, #{manufacturerInfoVO.repNm}				/*대표자명*/
+			, #{manufacturerInfoVO.repTelNo}			/*대표전화번호*/
+			, #{manufacturerInfoVO.repFaxNo}			/*대표팩스번호*/
+			, #{manufacturerInfoVO.busiCndt}			/*업태*/
+			, #{manufacturerInfoVO.busiTp}				/*업종*/
+			, #{manufacturerInfoVO.poInchrgNm}			/*발주담당자명*/
+			, #{manufacturerInfoVO.poInchrgTelNo}		/*발주담당자전화번호*/
+			, #{manufacturerInfoVO.poInchrgFaxNo}		/*발주담당자팩스번호*/
+			, #{manufacturerInfoVO.poInchrgEml}			/*발주담당자이메일*/
+			, #{manufacturerInfoVO.rtngdInchrgNm}		/*반품담당자명*/
+			, #{manufacturerInfoVO.rtngdInchrgTelNo}	/*반품담당자전화번호*/
+			, #{manufacturerInfoVO.rtngdInchrgFaxNo}	/*반품담당자팩스번호*/
+			, #{manufacturerInfoVO.rtngdInchrgEml}		/*반품담당자이메일*/
+			, #{manufacturerInfoVO.zipCd}				/*우편번호*/
+			, #{manufacturerInfoVO.bssAddr}				/*기본주소*/
+			, #{manufacturerInfoVO.dtlAddr}				/*상세주소*/
+			, #{manufacturerInfoVO.ctrtInchrgNm}		/*계약담당자명*/
+			, #{manufacturerInfoVO.ctrtInchrgTelNo}		/*계약담당자전화번호*/
+			, #{manufacturerInfoVO.ctrtInchrgFaxNo}		/*계약담당자팩스번호*/
+			, #{manufacturerInfoVO.ctrtInchrgEml}		/*계약담당자이메일*/
+			, #{manufacturerInfoVO.ctrtStrtDt}			/*계약시작일자*/
+			, #{manufacturerInfoVO.ctrtEndDt}			/*계약종료일자*/
+			, #{manufacturerInfoVO.ctrtAttchFileNm}		/*계약첨부파일명*/
+			, #{manufacturerInfoVO.ctrtUuid}			/*계약첨부파일ID*/
+			, #{manufacturerInfoVO.ctrtNote}			/*계약비고*/
+			, #{manufacturerInfoVO.bnkCd}				/*은행코드*/
+			, #{manufacturerInfoVO.acnt}				/*계좌번호*/
+			, #{manufacturerInfoVO.acntHldNm}			/*예금주명*/
+			, #{manufacturerInfoVO.pymMthdCd}			/*대금지급방법코드*/
+			, #{manufacturerInfoVO.sttlInchrgNm}		/*정산담당자명*/
+			, #{manufacturerInfoVO.sttlInchrgTelNo}		/*정산담당자전화번호*/
+			, #{manufacturerInfoVO.sttlInchrgFaxNo}		/*정산담당자팩스번호*/
+			, #{manufacturerInfoVO.sttlInchrgEml}		/*정산담당자이메일*/
+			, #{manufacturerInfoVO.sttlAttchFileNm}		/*정산첨부파일명*/
+			, #{manufacturerInfoVO.sttlUuid}			/*정산첨부파일ID*/
+			, #{manufacturerInfoVO.sttlInchrgNote}		/*정산비고*/
+			, #{manufacturerInfoVO.regrId}				/*등록자*/
+			, #{manufacturerInfoVO.regDate}				/*등록일시*/
+			, #{manufacturerInfoVO.chgrId}				/*수정자*/
+			, #{manufacturerInfoVO.chgDate}				/*수정일시*/
+		)    
+	</insert>
+	
+	<!-- 제조사 수정 -->
+	<update id="updateManufacturerInfo" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ManufacturerInfoVO">
+		UPDATE TDNDT_MNCO
+			SET	MNCO_NM 				= #{manufacturerInfoVO.mncoNm}				/*제조사명*/
+				, BOR_NO 				= #{manufacturerInfoVO.borNo}				/*사업자번호*/
+				, REP_NM 				= #{manufacturerInfoVO.repNm}				/*대표자명*/
+				, REP_TEL_NO 			= #{manufacturerInfoVO.repTelNo}			/*대표전화번호*/	
+				, REP_FAX_NO 			= #{manufacturerInfoVO.repFaxNo}			/*대표팩스번호*/	
+				, BUSI_CNDT 			= #{manufacturerInfoVO.busiCndt}			/*업태*/	
+				, BUSI_TP 				= #{manufacturerInfoVO.busiTp}				/*업종*/
+				, PO_INCHRG_NM 			= #{manufacturerInfoVO.poInchrgNm}			/*발주담당자명*/	
+				, PO_INCHRG_TEL_NO 		= #{manufacturerInfoVO.poInchrgTelNo}		/*발주담당자전화번호*/		
+				, PO_INCHRG_FAX_NO 		= #{manufacturerInfoVO.poInchrgFaxNo}		/*발주담당자팩스번호*/		
+				, PO_INCHRG_EML 		= #{manufacturerInfoVO.poInchrgEml}			/*발주담당자이메일*/	
+				, RTNGD_INCHRG_NM 		= #{manufacturerInfoVO.rtngdInchrgNm}		/*반품담당자명*/		
+				, RTNGD_INCHRG_TEL_NO 	= #{manufacturerInfoVO.rtngdInchrgTelNo}	/*반품담당자전화번호*/			
+				, RTNGD_INCHRG_FAX_NO 	= #{manufacturerInfoVO.rtngdInchrgFaxNo}	/*반품담당자팩스번호*/			
+				, RTNGD_INCHRG_EML 		= #{manufacturerInfoVO.rtngdInchrgEml}		/*반품담당자이메일*/		
+				, ZIP_CD 				= #{manufacturerInfoVO.zipCd}				/*우편번호*/
+				, BSS_ADDR 				= #{manufacturerInfoVO.bssAddr}				/*기본주소*/
+				, DTL_ADDR 				= #{manufacturerInfoVO.dtlAddr}				/*상세주소*/
+				, CTRT_INCHRG_NM 		= #{manufacturerInfoVO.ctrtInchrgNm}		/*계약담당자명*/		
+				, CTRT_INCHRG_TEL_NO 	= #{manufacturerInfoVO.ctrtInchrgTelNo}		/*계약담당자전화번호*/		
+				, CTRT_INCHRG_FAX_NO 	= #{manufacturerInfoVO.ctrtInchrgFaxNo}		/*계약담당자팩스번호*/		
+				, CTRT_INCHRG_EML 		= #{manufacturerInfoVO.ctrtInchrgEml}		/*계약담당자이메일	*/	
+				, CTRT_STRT_DT 			= #{manufacturerInfoVO.ctrtStrtDt}			/*계약시작일자*/	
+				, CTRT_END_DT 			= #{manufacturerInfoVO.ctrtEndDt}			/*계약종료일자*/	
+				, CTRT_ATTCH_FILE_NM 	= #{manufacturerInfoVO.ctrtAttchFileNm}		/*계약첨부파일명*/	
+				, CTRT_UUID 			= #{manufacturerInfoVO.ctrtUuid}			/*계약첨부파일ID*/	
+				, CTRT_NOTE 			= #{manufacturerInfoVO.ctrtNote}			/*계약비고*/	
+				, BNK_CD 				= #{manufacturerInfoVO.bnkCd}				/*은행코드*/
+				, ACNT 					= #{manufacturerInfoVO.acnt}				/*계좌번호*/
+				, ACNT_HLD_NM 			= #{manufacturerInfoVO.acntHldNm}			/*예금주명*/	
+				, PYM_MTHD_CD 			= #{manufacturerInfoVO.pymMthdCd}			/*대금지급방법코드*/	
+				, STTL_INCHRG_NM 		= #{manufacturerInfoVO.sttlInchrgNm}		/*정산담당자명*/		
+				, STTL_INCHRG_TEL_NO	= #{manufacturerInfoVO.sttlInchrgTelNo}		/*정산담당자전화번호*/		
+				, STTL_INCHRG_FAX_NO 	= #{manufacturerInfoVO.sttlInchrgFaxNo}		/*정산담당자팩스번호*/		
+				, STTL_INCHRG_EML 		= #{manufacturerInfoVO.sttlInchrgEml}		/*정산담당자이메일*/		
+				, STTL_ATTCH_FILE_NM 	= #{manufacturerInfoVO.sttlAttchFileNm}		/*정산첨부파일명*/	
+				, STTL_UUID 			= #{manufacturerInfoVO.sttlUuid}			/*정산첨부파일ID*/
+				, STTL_INCHRG_NOTE 		= #{manufacturerInfoVO.sttlInchrgNote}		/*정산비고*/		
+				, CHGR_ID 				= #{manufacturerInfoVO.chgrId}				/*수정자*/
+				, CHG_DATE 				= #{manufacturerInfoVO.chgDate}				/*수정일시 */     
+		WHERE	MNCO_ID 				= #{manufacturerInfoVO.mncoId}				/*제조사ID*/
+	</update>
+	
+	<!-- 제조사 삭제 -->
+    <delete id="deleteManufacturerInfo" parameterType="com.ntels.ccbs.distribute.domain.logistics.referenceInfo.ManufacturerInfoVO">
+		DELETE
+		FROM	TDNDT_MNCO
+		WHERE	MNCO_ID 	= #{manufacturerInfoVO.mncoId}				/*제조사ID*/
+    </delete>
+	
+</mapper>

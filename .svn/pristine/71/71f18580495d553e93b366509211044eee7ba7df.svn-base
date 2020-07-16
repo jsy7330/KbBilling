@@ -1,0 +1,19 @@
+package com.ntels.ccbs.system.service.sample.sample;
+
+import java.util.List;
+import java.util.Map;
+
+import com.ntels.ccbs.product.domain.product.productDev.ProductDevMgt;
+import com.ntels.ccbs.product.domain.refInfo.commonInfo.Factor;
+import com.ntels.ccbs.system.domain.auth.authMng.AuthMngVO;
+import com.ntels.ccbs.system.domain.sample.sample.TreeSampleVO;
+
+
+public interface TreeSampleService {
+	//List<Map<String, Object>>getMenuList(String svcCd);
+	public List<TreeSampleVO> getMenuList(String svcCd);	
+	public List<TreeSampleVO> getComboList(String svcCd);	
+	public List<TreeSampleVO> getPordListAction(String prodList);
+	public List<TreeSampleVO> getInputProdList(String prodCd);
+	public int getInputProdCnt(String prodCd);
+}

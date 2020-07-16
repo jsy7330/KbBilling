@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://www.mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.system.mapper.main.MainMapper">
+
+	<select id="cntResult" resultType="java.util.HashMap">
+	
+		SELECT	/* mainMapper.listCnt */ 
+		      (SELECT COUNT(1) FROM TCMCU_CUST_USER 
+		       WHERE TO_CHAR(REGR_DATE, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		         AND USR_STAT = 'C')                                                                AS "join"
+		    , (SELECT COUNT(2) FROM TCMCU_CUST_USER 
+		        WHERE USR_STAT = 'T'
+		        AND TO_CHAR(CHG_DATE, 'YYYYMMDD') = TO_CHAR(SYSDATE, 'YYYYMMDD'))                   AS "sece"
+		    , (SELECT COUNT(3) FROM TDNDT_VISSUE WHERE VO_ISSUE_DT = TO_CHAR(SYSDATE, 'YYYYMMDD'))  AS "regi"
+		    , (SELECT COUNT(1) FROM TCMCU_CUST_USER)                                                AS "joinTot"
+		    , (SELECT COUNT(2) FROM TCMCU_CUST_USER WHERE USR_STAT = 'T')                           AS "seceTot"
+		    , (SELECT COUNT(3) FROM TDNDT_VISSUE)  													AS "regiTot"   
+		FROM  DUAL
+		
+	</select>
+	
+	<select id="joinMemberChart" resultType="java.util.HashMap">
+	<![CDATA[
+	
+		SELECT	/* mainMapper.joinMemberChart */
+		      SUBSTR(REG, 5, 2)||'/'||SUBSTR(REG, 7, 2) AS REG
+		    , SUM(TCNT) AS SCNT
+		    , AA.SECE   AS SECE
+		FROM  (
+		        SELECT 
+		              A.REG 
+		            , NVL(B.CNT, 0) AS TCNT
+		            , NVL(C.SEC, 0) AS SECE
+		        FROM  (
+		                SELECT TO_CHAR(SYSDATE - LEVEL+1, 'YYYYMMDD') AS REG
+		                FROM DUAL
+		                CONNECT BY LEVEL <= 15
+		                ORDER BY REG
+		              ) A
+		            , (
+		                SELECT
+		                      TO_CHAR(REGR_DATE, 'YYYYMMDD') AS REG
+		                    , COUNT(*) AS CNT
+		                FROM TCMCU_CUST_USER
+		                WHERE TO_CHAR(REGR_DATE, 'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE - 15, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		                  AND USR_STAT = 'C'
+		                GROUP BY REGR_DATE
+		                ORDER BY REGR_DATE
+		              ) B
+		            , (
+		                SELECT
+		                      TO_CHAR(CHG_DATE, 'YYYYMMDD') AS REG
+		                    , COUNT(*) AS SEC
+		                FROM  TCMCU_CUST_USER
+		                WHERE TO_CHAR(TO_DATE(TMNT_DTTM, 'YYYYMMDD HH24MISS'), 'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE - 15, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		                  AND USR_STAT = 'T'
+		                GROUP BY CHG_DATE
+		                ORDER BY CHG_DATE
+		              ) C
+		        WHERE A.REG = B.REG(+)
+		          AND A.REG = C.REG(+)
+		      ) AA
+		GROUP BY AA.REG, AA.SECE
+		ORDER BY AA.REG
+		
+	]]>
+	</select>
+	
+	<select id="regiVoucherChart" resultType="java.util.HashMap">
+	<![CDATA[
+	
+		SELECT	/* mainMapper.regiVoucherChart */
+		      SUBSTR(REG, 5, 2)||'/'||SUBSTR(REG, 7, 2) AS REG
+		    , SUM(TCNT) AS SCNT
+		FROM  (
+		        SELECT 
+		              A.REG 
+		            , NVL(B.CNT, 0) AS TCNT
+		        FROM  (
+		                SELECT TO_CHAR(SYSDATE - LEVEL+1, 'YYYYMMDD') AS REG
+		                FROM DUAL
+		                CONNECT BY LEVEL <= 15
+		                ORDER BY REG
+		              ) A
+		            , (
+		                SELECT
+		                      TO_CHAR(REG_DATE, 'YYYYMMDD') AS REG
+		                    , COUNT(*) AS CNT
+		                FROM TDNDT_VISSUE
+		                WHERE TO_CHAR(REG_DATE, 'YYYYMMDD') BETWEEN TO_CHAR(SYSDATE - 15, 'YYYYMMDD') AND TO_CHAR(SYSDATE, 'YYYYMMDD')
+		                GROUP BY REG_DATE
+		                ORDER BY REG_DATE
+		              ) B
+		        WHERE A.REG = B.REG(+)
+		      ) AA
+		GROUP BY AA.REG
+		ORDER BY AA.REG
+		
+	]]>
+	</select>
+	
+	
+	<select id="noticeList" parameterType="InquiryHistVO" resultType="InquiryHistVO">
+		<![CDATA[
+	
+		SELECT	/* mainMapper.noticeList */
+		      BULLETIN_ID
+		    , CASE WHEN NOTICE_BOUNDARY = 'A' THEN 'Admin'
+		           WHEN NOTICE_BOUNDARY = 'S' THEN 'Self-Care'
+		           END AS NOTICE_BOUNDARY
+		    , TITLE
+		    , SUBSCRIBER
+		    , TO_CHAR(REG_DT, 'DD-MM-YYYY') AS REG_DT
+		    , VIEW_CNT
+		    , EFFECT_START_DT
+		    , EFFECT_END_DT
+		FROM  TSYCO_NOTICE_BULLETIN
+		WHERE ROWNUM        <= '5'
+		  AND EFFECT_END_DT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+		ORDER BY BULLETIN_ID DESC, REG_DT DESC
+		
+		]]>
+	</select>
+	
+	
+	<select id="noticeView" parameterType="InquiryHistVO" resultType="InquiryHistVO">
+	
+		SELECT	/* mainMapper.noticeView */
+		      BULLETIN_ID
+		    , CASE WHEN NOTICE_BOUNDARY = 'A' THEN 'Admin'
+		           WHEN NOTICE_BOUNDARY = 'S' THEN 'Self-Care'
+		           END AS NOTICE_BOUNDARY
+		    , TITLE
+		    , SUBSCRIBER
+		    , CONTENTS
+		    , TO_CHAR(REG_DT, 'DD-MM-YYYY') AS REG_DT
+		    , VIEW_CNT
+		FROM  TSYCO_NOTICE_BULLETIN
+		WHERE BULLETIN_ID = #{vo.bulletin_id}
+		
+	</select>
+	
+	<select id="count" parameterType="BulletinMngVO" resultType="int">
+		SELECT 
+			COUNT(*)
+		FROM TSYCO_NOTICE AA,(SELECT A.NOTICE_ID
+			FROM TSYCO_NOTICE A, TSYCO_NOTICE_AUTH B
+			WHERE A.NOTICE_ID = B.NOTICE_ID
+			AND A.EFFECT_START_DT  &lt;= #{bulletin.regDate} 
+			AND A.EFFECT_END_DT  &gt;= #{bulletin.regDate} 
+			AND A.POPUP_YN='Y'
+			AND B.AUTH_GROUP IN (
+				SELECT USER_GROUP_ID FROM TSYCO_USER_GROUP_ROLE WHERE USER_ID= #{userId} )
+			GROUP BY A.NOTICE_ID) BB
+		WHERE AA.NOTICE_ID = BB.NOTICE_ID
+		ORDER BY AA.NOTICE_ID DESC
+	</select>
+	
+	<select id="mainBulletinList" parameterType="BulletinMngVO" resultType="BulletinMngVO">
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
+		SELECT 
+			AA.NOTICE_ID As noticeId
+		    ,(SELECT NAME.CODE_NM FROM TSYCO_CODE_MAST MAST , TSYCO_CODE_DETAIL DETAIL, TSYCO_CODE_DETAIL_NAME NAME
+				WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP AND DETAIL.COMMON_CD=NAME.COMMON_CD AND DETAIL.COMMON_GRP=NAME.COMMON_GRP
+				AND MAST.COMMON_GRP='SY00001' AND NAME.LNG_TYP=#{lng,jdbcType=VARCHAR} AND DETAIL.COMMON_CD='000'
+				AND DETAIL.USE_YN='Y'AND MAST.USE_YN='Y') AS noticeCl
+		    ,AA.TITLE AS title
+		    ,AA.CONTENTS AS content
+		    ,AA.VIEW_CNT AS viewCnt
+		    ,AA.UP_NOTICE_ID AS upNoticeId
+		    ,AA.EFFECT_START_DT AS effectStartDt
+		    ,AA.EFFECT_END_DT AS effectEndDt
+		    ,AA.POPUP_YN AS popupYn
+		    ,AA.REGR_ID AS regrId
+		    ,AA.REG_DATE AS regDate
+		FROM TSYCO_NOTICE AA,(SELECT A.NOTICE_ID
+			FROM TSYCO_NOTICE A, TSYCO_NOTICE_AUTH B
+			WHERE A.NOTICE_ID = B.NOTICE_ID
+			AND A.EFFECT_START_DT  &lt;= #{bulletin.regDate} 
+			AND A.EFFECT_END_DT  &gt;= #{bulletin.regDate} 
+			AND A.POPUP_YN='Y'
+			AND B.AUTH_GROUP IN (
+				SELECT USER_GROUP_ID FROM TSYCO_USER_GROUP_ROLE WHERE USER_ID= #{userId} )
+			GROUP BY A.NOTICE_ID) BB
+		WHERE AA.NOTICE_ID = BB.NOTICE_ID
+		<if test="sidx != null and sidx == 'noticeId'">
+			ORDER BY AA.NOTICE_ID ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'title'">
+			ORDER BY AA.TITLE ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'effectStartDt'">
+			ORDER BY AA.EFFECT_START_DT ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'effectEndDt'">
+			ORDER BY AA.EFFECT_END_DT ${sord}
+		</if>
+		<if test="sidx != null and sidx == 'viewCnt'">
+			ORDER BY AA.VIEW_CNT ${sord}
+		</if>
+		<if test="sidx == ''">
+			ORDER BY AA.NOTICE_ID DESC
+		</if>
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+		</select>
+		<select id="detailBulletin" parameterType="BulletinMngVO" resultType="BulletinMngVO">
+			SELECT 
+			  A.NOTICE_ID
+			  ,A.NOTICE_CL
+			  ,A.TITLE
+			  ,CONTENTS AS CONTENT
+			  ,A.VIEW_CNT
+			  ,A.UP_NOTICE_ID
+			  ,A.EFFECT_START_DT
+			  ,A.EFFECT_END_DT
+			  ,A.POPUP_YN
+			  ,A.USE_YN
+			FROM TSYCO_NOTICE A
+			WHERE A.NOTICE_ID =  #{noticeId} 
+		</select>
+		<select id="authBulletin" parameterType="BulletinMngVO" resultType="BulletinMngVO">
+			SELECT 
+				A.NOTICE_ID
+				,A.AUTH_GROUP
+				,(SELECT B.USER_GROUP_NAME FROM TSYCO_USER_GROUP B WHERE A.AUTH_GROUP = B.USER_GROUP_ID)AS USER_GROUP_NAME
+			FROM TSYCO_NOTICE_AUTH A
+			WHERE A.NOTICE_ID =  #{noticeId} 
+		</select>
+		
+		<update id="updateViewCnt" parameterType="BulletinMngVO">
+			UPDATE 
+	    		TSYCO_NOTICE
+	   		SET VIEW_CNT = VIEW_CNT+1 
+	    	WHERE NOTICE_ID = #{noticeId}
+		</update>
+		
+		<select id="getFileList" resultType="org.apache.commons.collections.map.CaseInsensitiveMap">
+	 		SELECT 
+	 			 A.FILE_PATH
+	 			,A.FILE_NM
+	 			,A.FILE_UUID
+	 		FROM TSYCO_NOTICE_FILE A
+	 		WHERE NOTICE_ID = #{noticeId}
+	        ORDER BY FILE_SEQ
+ 		</select>
+ 		
+		<select id="billingMainChart1" parameterType="BulletinMngVO" resultType="BulletinMngVO">
+			SELECT 
+				BILL_YYMM,CRNCY_CD,SUM(BILL_AMT)   BILL_AMT
+			FROM (
+				SELECT #{bulletin.startMonth}  AS BILL_YYMM,'KRW' AS CRNCY_CD, 0 BILL_AMT FROM DUAL   
+			UNION ALL
+				SELECT #{bulletin.middleMonth}  AS BILL_YYMM,'KRW' AS CRNCY_CD, 0 BILL_AMT FROM DUAL   
+			UNION ALL
+				SELECT #{bulletin.endMonth}  AS BILL_YYMM,'KRW' AS CRNCY_CD, 0 BILL_AMT FROM DUAL   
+			UNION ALL
+				SELECT 
+					Substr(BILL_YYMM,0,4) ||'/'|| Substr(BILL_YYMM,5,6) AS BILL_YYMM,CRNCY_CD,SUM(WON_BILL_AMT)   BILL_AMT
+				FROM TBLIV_BILL_MAST
+				WHERE SO_ID = #{bulletin.soId}                                                  
+					AND   BILL_YYMM &gt;= #{bulletin.searchStartMonth}                                            
+					AND   BILL_YYMM &lt;= #{bulletin.searchEndMonth}                                           
+				GROUP BY BILL_YYMM,CRNCY_CD
+			) GROUP BY BILL_YYMM,CRNCY_CD
+			ORDER BY 1
+		</select> 		
+		<select id="billingMainChart2" parameterType="BulletinMngVO" resultType="BulletinMngVO">
+			SELECT
+				PAY_YYMM,CRNCY_CD,SUM(RCPT_AMT) AS RCPT_AMT
+			FROM (
+				SELECT #{bulletin.startMonth} AS PAY_YYMM,'KRW' AS CRNCY_CD, 0 RCPT_AMT FROM DUAL           
+			UNION ALL
+				SELECT #{bulletin.middleMonth} AS PAY_YYMM,'KRW' AS CRNCY_CD, 0 RCPT_AMT FROM DUAL           
+			UNION ALL
+				SELECT #{bulletin.endMonth}  AS PAY_YYMM,'KRW' AS CRNCY_CD, 0 RCPT_AMT FROM DUAL           
+			UNION ALL
+			     SELECT 
+			     	SUBSTR(PAY_YYMM,0,4)||'/'||SUBSTR(PAY_YYMM,5,6) AS PAY_YYMM, CRNCY_CD, RCPT_AMT
+      			 FROM
+		      		(SELECT SUBSTR(PAY_PROC_DT,1,6) AS PAY_YYMM,CRNCY_CD,SUM(RCPT_AMT) RCPT_AMT
+					FROM TBLPY_RCPT
+					WHERE SO_ID = #{bulletin.soId} 
+						AND  PAY_PROC_DT &gt;= #{bulletin.searchStartMonth} ||'01'
+						AND  PAY_PROC_DT &lt;= #{bulletin.searchEndMonth} ||'31'
+						AND  NVL(CNCL_YN,'N') !='Y'
+					GROUP BY  SUBSTR(PAY_PROC_DT,1,6),CRNCY_CD)			
+			) GROUP BY  PAY_YYMM,CRNCY_CD  ORDER BY 1
+		</select> 	
+		<select id="customerMainChart1" parameterType="BulletinMngVO" resultType="BulletinMngVO">
+			SELECT
+				A.MM,
+				SUM(A.T_CNT) AS T_CNT,
+				SUM(A.A_CNT) AS A_CNT,
+				SUM(A.D_CNT) AS D_CNT
+			FROM (
+				SELECT
+				#{bulletin.startMonth} AS MM,
+				CASE WHEN CTRT_STAT NOT IN ( '50','90') THEN 1
+				     ELSE 0
+				END   T_CNT,
+				
+				CASE WHEN SUBSTR(RATE_STRT_DT,1,6) = #{bulletin.searchStartMonth}  THEN 1
+				     ELSE 0
+				END   A_CNT,
+				
+				CASE WHEN SUBSTR(TERM_DT,1,6) = #{bulletin.searchStartMonth}  THEN 1
+				     ELSE 0
+				END   D_CNT
+				FROM TCMCT_CTRT_INFO
+				WHERE 1=1
+				AND   SO_ID = #{bulletin.soId}
+				AND   INACT_DTTM    = '99991231235959'
+				AND   RATE_STRT_DT &lt;= #{bulletin.searchStartMonth}||'31'
+				
+				UNION ALL
+				SELECT
+				#{bulletin.middleMonth} AS MM,
+				CASE WHEN CTRT_STAT NOT IN ( '50','90') THEN 1
+				     ELSE 0
+				END   T_CNT,
+				
+				CASE WHEN SUBSTR(RATE_STRT_DT,1,6) = #{bulletin.searchMiddleMonth}  THEN 1
+				     ELSE 0
+				END   A_CNT,
+				
+				CASE WHEN SUBSTR(TERM_DT,1,6) = #{bulletin.searchMiddleMonth}   THEN 1
+				     ELSE 0
+				END   D_CNT
+				FROM TCMCT_CTRT_INFO
+				WHERE 1=1
+				AND   SO_ID = #{bulletin.soId}
+				AND   INACT_DTTM    = '99991231235959'
+				AND   RATE_STRT_DT &lt;= #{bulletin.searchMiddleMonth} ||'31'
+				UNION ALL
+				SELECT
+				#{bulletin.endMonth} AS MM,
+				CASE WHEN CTRT_STAT NOT IN ( '50','90') THEN 1
+				     ELSE 0
+				END   T_CNT,
+				
+				CASE WHEN SUBSTR(RATE_STRT_DT,1,6) = #{bulletin.searchEndMonth}  THEN 1
+				     ELSE 0
+				END   A_CNT,
+				
+				CASE WHEN SUBSTR(TERM_DT,1,6) = #{bulletin.searchEndMonth}  THEN 1
+				     ELSE 0
+				END   D_CNT
+				FROM TCMCT_CTRT_INFO
+				WHERE 1=1
+				AND   SO_ID = #{bulletin.soId}
+				AND   INACT_DTTM    = '99991231235959'
+				AND   RATE_STRT_DT &lt;= #{bulletin.searchEndMonth}||'31'
+			)A GROUP BY A.MM ORDER BY A.MM ASC
+		</select> 	
+		<select id="customerMainChart2" parameterType="BulletinMngVO" resultType="BulletinMngVO">
+			SELECT
+				A.MM,
+				SUM(A.T_CNT) AS T_CNT,
+				SUM(A.B_CNT) AS B_CNT,
+				SUM(A.V_CNT) AS V_CNT,
+				SUM(A.E_CNT) AS E_CNT,
+				SUM(A.P_CNT) AS P_CNT
+				FROM (
+				SELECT
+				#{bulletin.startMonth} AS  MM,
+				1 T_CNT,
+				CASE WHEN BASIC_PROD_FL = 'B' THEN 1
+				     ELSE 0
+				END   B_CNT,
+				CASE WHEN BASIC_PROD_FL = 'V' THEN 1
+				     ELSE 0
+				END   V_CNT,
+				CASE WHEN BASIC_PROD_FL = 'E' THEN 1
+				     ELSE 0
+				END   E_CNT,
+				CASE WHEN BASIC_PROD_FL = 'P' THEN 1
+				     ELSE 0
+				END   P_CNT
+				FROM  TPMPD_PROD
+				WHERE 1=1
+				AND   SO_ID  = #{bulletin.soId}
+				AND   INACT_DT = '99991231'
+				AND   ACT_DT  &lt;= #{bulletin.searchStartMonth}||'31'
+				UNION ALL
+				SELECT
+				#{bulletin.middleMonth} AS  MM,
+				1 T_CNT,
+				CASE WHEN BASIC_PROD_FL = 'B' THEN 1
+				     ELSE 0
+				END   B_CNT,
+				CASE WHEN BASIC_PROD_FL = 'V' THEN 1
+				     ELSE 0
+				END   V_CNT,
+				CASE WHEN BASIC_PROD_FL = 'E' THEN 1
+				     ELSE 0
+				END   E_CNT,
+				CASE WHEN BASIC_PROD_FL = 'P' THEN 1
+				     ELSE 0
+				END   P_CNT
+				FROM  TPMPD_PROD
+				WHERE 1=1
+				AND   SO_ID  = #{bulletin.soId}
+				AND   INACT_DT = '99991231'
+				AND   ACT_DT  &lt;= #{bulletin.searchMiddleMonth}||'31'
+				UNION ALL
+				SELECT
+				#{bulletin.endMonth} AS  MM,
+				1 T_CNT,
+				CASE WHEN BASIC_PROD_FL = 'B' THEN 1
+				     ELSE 0
+				END   B_CNT,
+				CASE WHEN BASIC_PROD_FL = 'V' THEN 1
+				     ELSE 0
+				END   V_CNT,
+				CASE WHEN BASIC_PROD_FL = 'E' THEN 1
+				     ELSE 0
+				END   E_CNT,
+				CASE WHEN BASIC_PROD_FL = 'P' THEN 1
+				     ELSE 0
+				END   P_CNT
+				FROM  TPMPD_PROD
+				WHERE 1=1
+				AND   SO_ID  = #{bulletin.soId}
+				AND   INACT_DT = '99991231'
+				AND   ACT_DT  &lt;= #{bulletin.searchEndMonth}||'31'
+			 ) A GROUP BY A.MM ORDER BY A.MM ASC
+		</select> 			
+</mapper>	

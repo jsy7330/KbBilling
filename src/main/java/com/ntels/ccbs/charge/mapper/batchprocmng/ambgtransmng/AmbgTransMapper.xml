@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!DOCTYPE mapper
+ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ntels.ccbs.charge.mapper.batchprocmng.ambgtransmng.AmbgTransMapper">
+	
+	<select id="getAmbgTransBalList" parameterType="String" resultType="TransCommBalVO">
+		SELECT  /* AmbgTransMapper.xml.getAmbgTransBalList, 양연희, 2017.11.24 */
+				AMBG_OCC_SEQ_NO AS TRANS_TGT_OCC_SEQ_NO
+        		,NVL(AMBG_BAL, 0.0) AS TRANS_BAL
+        		,DPST_TP_SEQ_NO AS DPST_SEQ_NO
+		FROM    TBLPY_AMBG_OCC A
+		WHERE	AMBG_OCC_SEQ_NO = #{ambgApplTgtNo}
+		AND     NVL(CNCL_YN, 'N') != 'Y'
+		AND		AMBG_BAL > 0
+	</select>
+	
+	<insert id="insertAmbgTransHist" parameterType="AmbgTransHistVO">
+		INSERT INTO	/* AmbgTransMapper.xml.insertAmbgTransHist, 양연희, 2017.11.24 */
+					TBLPY_AMBG_TRANS_HIST
+					(AMBG_TRANS_SEQ_NO
+            		,AMBG_OCC_SEQ_NO
+            		,TRANS_PROC_DTTM
+            		,AMBG_REPL_TP
+            		,TRANS_PROC_AMT
+            		,PROC_MEMO
+            		,APPR_REQR_ID
+            		,APPR_REQ_DTTM
+            		,DCSN_PROC_STAT
+            		,APPRR_ID
+            		,APPR_DTTM
+            		,CNCL_YN
+            		,CNCL_DTTM
+            		,BAL_AMT
+            		,ERP_SND_YN
+            		,INPT_MENU_ID
+            		,REGR_ID
+            		,REG_DATE
+            		,CHGR_ID
+            		,CHG_DATE
+					)
+			VALUES	(#{ambgTransHistVO.ambgTransSeqNo}
+					,#{ambgTransHistVO.ambgOccSeqNo}
+					,#{ambgTransHistVO.transProcDttm}
+					,#{ambgTransHistVO.ambgReplTp}
+					,#{ambgTransHistVO.transProcAmt}
+					,#{ambgTransHistVO.procMemo}
+					,#{ambgTransHistVO.apprReqrId}
+					,#{ambgTransHistVO.apprReqDttm}
+					,#{ambgTransHistVO.dcsnProcStat}
+					,#{ambgTransHistVO.apprrId}
+					,#{ambgTransHistVO.apprDttm}
+					,#{ambgTransHistVO.cnclYn}
+					,#{ambgTransHistVO.cnclDttm}
+					,#{ambgTransHistVO.balAmt}
+					,#{ambgTransHistVO.erpSndYn}
+					,#{ambgTransHistVO.inptMenuId}
+					,#{ambgTransHistVO.regrId}
+					,#{ambgTransHistVO.regDate}
+					,#{ambgTransHistVO.regrId}
+					,#{ambgTransHistVO.regDate}
+					)
+	</insert>
+	
+	<insert id="insertPrepayOccFromAmbg" parameterType="PrepayOccVO">
+		INSERT	INTO /* AmbgTransMapper.xml.insertPrepayOccFromAmbg, 양연희, 2018.01.17 */
+				TBLPY_PREPAY_OCC
+	            (PREPAY_OCC_SEQ_NO
+				,PYM_ACNT_ID
+				,SO_ID
+				,PREPAY_OCC_DTTM
+				,PREPAY_OCC_TP
+				,PREPAY_OCC_RESN
+				,PREPAY_OCC_TGT_SEQ_NO
+				,DPST_DT
+				,DPST_PROC_DT
+				,PREPAY_PROC_STAT
+				,PREPAY_OCC_AMT
+				,PREPAY_TRANS_AMT
+				,PREPAY_BAL
+				,TRANS_CMPL_YN
+				,CNCL_YN
+				,CNCL_DTTM
+				,CNCL_RESN
+				,TRANS_DT
+				,MNG_CNTER_ORG_ID
+				,MNG_BR_ORG_ID
+				,ERP_SND_YN
+				,INPT_MENU_ID
+				,REGR_ID
+				,REG_DATE
+                ,CHGR_ID
+                ,CHG_DATE
+				)
+		SELECT	#{prepayOccVO.prepayOccSeqNo}
+				,#{prepayOccVO.pymAcntId}
+				,SO_ID
+				,#{prepayOccVO.prepayOccDttm}
+				,#{prepayOccVO.prepayOccTp}
+				,#{prepayOccVO.prepayOccResn}
+				,AMBG_OCC_SEQ_NO
+				,DPST_DT
+				,DPST_PROC_DT
+				,#{prepayOccVO.prepayProcStat}
+				,#{prepayOccVO.prepayOccAmt}
+				,#{prepayOccVO.prepayTransAmt}
+				,#{prepayOccVO.prepayOccAmt}
+				,#{prepayOccVO.transCmplYn}
+				,#{prepayOccVO.cnclYn}
+				,#{prepayOccVO.cnclDttm}
+				,#{prepayOccVO.cnclResn}
+				,#{prepayOccVO.transDt}
+				,MNG_CNTER_ORG_ID
+				,MNG_BR_ORG_ID
+				,#{prepayOccVO.erpSndYn}
+				,#{prepayOccVO.inptMenuId}
+				,#{prepayOccVO.regrId}
+				,#{prepayOccVO.regDate}
+				,#{prepayOccVO.regrId}
+				,#{prepayOccVO.regDate}
+		FROM	TBLPY_AMBG_OCC
+		WHERE	AMBG_OCC_SEQ_NO = #{prepayOccVO.prepayOccTgtSeqNo}
+	</insert>
+	
+	<update id="updateAmbgOccBalAmt" parameterType="AmbgOccVO">
+		UPDATE	/* AmbgTransMapper.xml.updateAmbgOccBalAmt, 양연희, 2017.11.24 */
+				TBLPY_AMBG_OCC
+		SET		AMBG_PROC_STAT	= #{ambgOccVO.ambgProcStat}
+				,AMBG_TRANS_AMT	= NVL(AMBG_TRANS_AMT, 0) + #{ambgOccVO.ambgTransAmt}
+				,AMBG_BAL		= NVL(AMBG_BAL, 0) - #{ambgOccVO.ambgTransAmt}
+				,TRANS_CMPL_YN	= DECODE(SIGN(NVL(AMBG_BAL, 0) - #{ambgOccVO.ambgTransAmt}), 0, 'Y', 'N')
+				,PYM_ACNT_ID	= #{ambgOccVO.pymAcntId}
+				,TRANS_DT		= #{ambgOccVO.transDt} 
+				,CHGR_ID		= #{ambgOccVO.regrId}
+				,CHG_DATE		= #{ambgOccVO.regDate}
+		WHERE	AMBG_OCC_SEQ_NO	= #{ambgOccVO.ambgOccSeqNo}
+	</update>
+	
+	<update id="updateDepositAcntId" parameterType="DepositVO">
+		UPDATE	/* AmbgTransMapper.xml.updateDepositAcntId, 양연희, 2017.11.24 */
+				TBLPY_DPST
+		SET		PYM_ACNT_ID	= #{depositVO.pymAcntId}
+				,CHGR_ID	= #{depositVO.regrId}
+				,CHG_DATE	= #{depositVO.regDate}
+		WHERE	DPST_SEQ_NO	= #{depositVO.dpstSeqNo}
+	</update>
+
+</mapper>

@@ -1,0 +1,19 @@
+package com.ntels.ccbs.charge.mapper.payment.payment;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
+
+import com.ntels.ccbs.charge.domain.payment.advanceReceived.AdvanceReceivedVO;
+
+public interface AdvanceReceivedMapper {
+
+	int getDepositMoneyCount(@Param(value ="advanceReceivedVO") AdvanceReceivedVO advanceReceivedVO);
+	
+	List<AdvanceReceivedVO> getDepositMoneyList(
+			@Param(value ="advanceReceivedVO") AdvanceReceivedVO advanceReceivedVO
+		  , @Param(value="start")int start
+		  , @Param(value="end") int end
+	);
+	
+}

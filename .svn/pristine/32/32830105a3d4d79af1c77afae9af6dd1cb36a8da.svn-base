@@ -1,0 +1,645 @@
+package com.ntels.ccbs.customer.mapper.contract.contract;
+
+import java.util.List;
+import java.util.Map;
+
+import org.apache.ibatis.annotations.Param;
+import org.springframework.stereotype.Component;
+
+import com.ntels.ccbs.customer.domain.contract.contract.CtrtPromVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OProdCmpsExtVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OProdCmpsVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OSvcCmpsExtVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OSvcCmpsVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OrderAttrVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OrderInfoVO;
+import com.ntels.ccbs.customer.domain.contract.contract.OrderMastInfoVO;
+import com.ntels.ccbs.customer.domain.customer.payment.PaymentAccountInfoVO;
+
+
+
+@Component
+public interface OrderManagementMapper {
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getOrderMastInfo
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 오더 마스터 정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 22. 오후 3:02:15
+	 * </PRE>
+	 *   @return OrderMastInfoVO 오더마스터 정보
+	 *   @param orderCd 오더코드
+	 *   @param lng 언어코드
+	 */
+	OrderMastInfoVO getOrderMastInfo(@Param("orderCd")String orderCd, @Param("lng")String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getOrderAttrList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 오더 속성정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 22. 오후 3:02:40
+	 * </PRE>
+	 *   @return List<OrderAttrVO> 속성정보리스트
+	 *   @param orderCd 오더코드
+	 *   @param lng 언어코드
+	 *   @return
+	 */
+	List<OrderAttrVO> getOrderAttrList(@Param("orderCd")String orderCd, @Param("lng")String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getOrderInfoByRcptId
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 오더정보조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 22. 오후 3:02:58
+	 * </PRE>
+	 *   @return OrderInfoVO 오더정보
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param rcptId 접수ID
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	OrderInfoVO getOrderInfoByRcptId(@Param("soId")String soId,
+			@Param("custId")String custId,
+			@Param("rcptId")String rcptId,
+			@Param("today")String today,
+			@Param("lng")String lng);
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getPymAcntInfoList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 고객의 납부 계정 리스트 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 9. 오후 5:21:08
+	 * </PRE>
+	 *   @return List<PaymentAccountInfoVO> 납부계정정보
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	List<PaymentAccountInfoVO> getPymAcntInfoList(@Param("soId")String soId,
+			@Param("custId")String custId,
+	        @Param("today")String today,
+	        @Param("lng")String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getBasicProdGrpList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 서비스의 상품그룹조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오전 10:11:56
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 상품그룹정보 
+	 *   @param soId 사업ID
+	 *   @param basicSvcCd 서비스코드
+	 *   @param custTp 고객유형
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getBasicProdGrpList(@Param("soId")String soId,
+	        @Param("basicSvcCd")String basicSvcCd,
+	        @Param("custTp")String custTp,
+	        @Param("today")String today,
+	        @Param("lng")String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getBasicProdList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 기본상품조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오전 11:04:27
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 기본상품정보
+	 *   @param soId 사업ID
+	 *   @param basicSvcCd 서비스코드
+	 *   @param basicProdGrp 상품그룹
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 *   @return
+	 */
+	List<Map<String, Object>> getBasicProdList(@Param("soId")String soId,
+			@Param("basicSvcCd")String basicSvcCd,
+	        @Param("basicProdGrp")String basicProdGrp,
+	        @Param("today")String today,
+	        @Param("lng")String lng);
+	
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getProdAttr
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment    상품의 속성정보조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오후 1:48:18
+	 * </PRE>
+	 *   @return Map<String, Object> 속성정보
+	 *   @param soId 사업ID
+	 *   @param prodCd 상품코드
+	 *   @param attrCd 속성코드
+	 *   @param today 조회일자
+	 */
+	Map<String, Object> getProdAttr(@Param("soId") String soId
+			, @Param("prodCd") String prodCd
+			, @Param("attrCd") String attrCd
+			, @Param("today") String today);
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getDeviceProdList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 기본상품의 종속된 장비상품조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오후 3:40:32
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 장비상품정보
+	 *   @param soId 사업ID
+	 *   @param basicProdGrp 상품그룹
+	 *   @param basicProdCd 상품코드
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getDeviceProdList(@Param("soId")String soId,
+			@Param("basicProdGrp")String basicProdGrp,
+	        @Param("basicProdCd")String basicProdCd,
+	        @Param("today") String today,
+	        @Param("lng")String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getAddProdList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 기본상품의 종속된 부가상품조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오후 6:58:24
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 부가상품정보
+	 *   @param soId 사업ID
+	 *   @param basicProdGrp 상품그룹
+	 *   @param basicProdCd 상품코드
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getAddProdList(@Param("soId")String soId,
+			@Param("basicProdGrp")String basicProdGrp,
+	        @Param("basicProdCd")String basicProdCd,
+	        @Param("today")String today,
+	        @Param("lng")String lng);
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getMandatoryProdList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 부가상품의 필수관계 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오후 7:02:55
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 필수 부가상품정보
+	 *   @param soId 사업ID
+	 *   @param prodCd 상품코드
+	 *   @param today 조회일자
+	 */
+	List<Map<String, Object>> getMandatoryProdList(@Param("soId")String soId,
+			@Param("prodCd")String prodCd, 
+			@Param("today")String today);
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getExclusiveProdList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 부가상품의 베타관계 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오후 7:03:46
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 베타 부가상품정
+	 *   @param soId 사업ID
+	 *   @param prodCd 상품코드
+	 *   @param today 조회일자
+	 *   @return
+	 */
+	List<Map<String, Object>> getExclusiveProdList(@Param("soId")String soId,
+			@Param("prodCd")String prodCd,
+			@Param("today") String today);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getProdRateInfoByChargeType
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 상품의 과금유형별 과금 정보
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 14. 오후 1:29:23
+	 * </PRE>
+	 *   @return Map<String,Object> 과금 정보
+	 *   @param soId 사업ID
+	 *   @param basicProdCd 상품코드
+	 *   @param rateItmTypCd 과금유형코드
+	 *   @param today 조회일자
+	 */
+	Map<String, Object> getProdRateInfoByChargeType(@Param("soId") String soId
+			, @Param("basicProdCd") String basicProdCd
+			, @Param("rateItmTypCd") String rateItmTypCd
+			, @Param("today") String today);
+	
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getCtrtBasicInfoInUse
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 사용중인 기본 계약 정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 22. 오후 3:06:42
+	 * </PRE>
+	 *   @return Map<String,Object> 기본계약정보
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	Map<String, Object> getCtrtBasicInfoInUse(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("today") String today
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getProdCmpsInfoInUse
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 사용중인 상품 구성 정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 22. 오후 3:18:25
+	 * </PRE>
+	 *   @return List<OProdCmpsVO>
+	 *   @param soId 사업ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 *   @param termOrderId 해지계약의 오더ID
+	 */
+	List<OProdCmpsVO> getProdCmpsInfoInUse(@Param("soId") String soId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng
+			, @Param("termOrderId") String termOrderId);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getProdCmpsExtInfo
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 상품구성 확장 정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 22. 오후 3:25:45
+	 * </PRE>
+	 *   @return OProdCmpsExtVO 상품구성 확장 정보
+	 *   @param extId 확장ID
+	 */
+	OProdCmpsExtVO getProdCmpsExtInfo(@Param("extId") String extId);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getSvcCmpsInfoInUse
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 사용중인 서비스 구성 정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 22. 오후 3:35:58
+	 * </PRE>
+	 *   @return List<OSvcCmpsVO> 서비스구성정보
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param termOrderId 해지계약의 오더ID
+	 */
+	List<OSvcCmpsVO> getSvcCmpsInfoInUse(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("termOrderId") String termOrderId);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getSvcCmpsExtInfo
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 서비스구성의 확장 정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 22. 오후 3:36:43
+	 * </PRE>
+	 *   @return OSvcCmpsExtVO 서비스구성 확장정보
+	 *   @param extId 확장ID
+	 */
+	OSvcCmpsExtVO getSvcCmpsExtInfo(@Param("extId") String extId);
+
+	
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getAllDeviceProdList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 기본상품의 종속된 장비상품조회(가입중지도포함)
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오후 3:40:32
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 장비상품정보
+	 *   @param soId 사업ID
+	 *   @param basicProdGrp 상품그룹
+	 *   @param basicProdCd 상품코드
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getAllDeviceProdList(@Param("soId")String soId,
+			@Param("basicProdGrp")String basicProdGrp,
+	        @Param("basicProdCd")String basicProdCd,
+	        @Param("today") String today,
+	        @Param("lng")String lng);
+
+	
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getAllAddProdList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 기본상품의 종속된 부가상품조회(가입중지도포함)
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오후 6:58:24
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 부가상품정보
+	 *   @param soId 사업ID
+	 *   @param basicProdGrp 상품그룹
+	 *   @param basicProdCd 상품코드
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getAllAddProdList(@Param("soId")String soId,
+			@Param("basicProdGrp")String basicProdGrp,
+	        @Param("basicProdCd")String basicProdCd,
+	        @Param("today")String today,
+	        @Param("lng")String lng);
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getAllBasicProdList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 기본상품조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 13. 오전 11:04:27
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 기본상품정보
+	 *   @param soId 사업ID
+	 *   @param basicSvcCd 서비스코드
+	 *   @param basicProdGrp 상품그룹
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 *   @return
+	 */
+	List<Map<String, Object>> getAllBasicProdList(@Param("soId")String soId,
+			@Param("basicSvcCd")String basicSvcCd,
+	        @Param("basicProdGrp")String basicProdGrp,
+	        @Param("today")String today,
+	        @Param("lng")String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getPymAcntListForChange
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 납부자 변경을 위한 납부자리스트 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 3. 28. 오전 7:52:28
+	 * </PRE>
+	 *   @return List<PaymentAccountInfoVO> 납부자정보
+	 *   @param soId 사업ID
+	 *   @param ctrtId 계약ID
+	 *   @param searchTp 조회유형
+	 *   @param searchKey 조회키
+	 *   @param today 조회일자
+	 *   @param lng 언어코드
+	 */
+	List<PaymentAccountInfoVO> getPymAcntListForChange(@Param("soId") String soId
+			, @Param("ctrtId") String ctrtId
+			, @Param("searchTp") String searchTp
+			, @Param("searchKey") String searchKey
+			, @Param("today") String today
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getCtrtBasicInfoHist
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 기본상품 이력 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 2:05:00
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 기본상품 이력 정보
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getCtrtBasicInfoHist(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getDeviceProdHist
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 장비상품 이력 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 3:06:38
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 장비상품 이력 조회
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getDeviceProdHist(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getAddonHist
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 부가상품 이력 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 3:17:36
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 부가상품 이력 조회
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getAddonHist(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getDeviceProdListForFilter
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 장비상품 상품 리스트 조회(필터용)
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 3:56:35
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 계약의 장비상품 필터 조건용 리스트 조회
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getDeviceProdListForFilter(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getAddonProdListForFilter
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 부가상품 상품 리스트 조회(필터용)
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 3:59:27
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 계약의 부가상품 필터 조건용 리스트 조회
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getAddonProdListForFilter(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getSuspentionHist
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 일시정지 이력 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 4:23:49
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 계약의 일시 정지 이력 조회
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getSuspentionHist(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getInstAddrHist
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 설치 주소 이력 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 5:09:40
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 계약의 설치 주소 이력 조회
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId  계약ID
+	 *   @param lng 언어코드
+	 *   @return
+	 */
+	List<Map<String, Object>> getInstAddrHist(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getPayerHist
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 납부계정 이력 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 5:21:14
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 계약의 납부 계정 이력 조회
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getPayerHist(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getProcRateHistList
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 공정률이력
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 4. 오후 5:33:16
+	 * </PRE>
+	 *   @return List<Map<String,Object>> 공정률이력
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 *   @param ctrtId 계약ID
+	 *   @param lng 언어코드
+	 */
+	List<Map<String, Object>> getProcRateHistList(@Param("soId") String soId
+			, @Param("custId") String custId
+			, @Param("ctrtId") String ctrtId
+			, @Param("lng") String lng);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getCtrtPromInfo
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 계약의 약정 정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 4. 14. 오후 2:58:02
+	 * </PRE>
+	 *   @return CtrtPromVO 약정정보
+	 *   @param promId 약정ID
+	 *   @param ctrtId 계약ID
+	 */
+	CtrtPromVO getCtrtPromInfo(@Param("promCtrtId") String promId, @Param("ctrtId") String ctrtId);
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getCustTp
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 고객유형 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 5. 11. 오후 5:38:21
+	 * </PRE>
+	 *   @return String 고객유형
+	 *   @param soId 사업ID
+	 *   @param custId 고객ID
+	 */
+	String getCustTp(@Param("soId") String soId, @Param("custId") String custId);
+
+	/**
+	 * <PRE>
+	 * 1. MethodName: getItemInfo
+	 * 2. ClassName : OrderManagementMapper
+	 * 3. Comment   : 상품의 제품정보 조회
+	 * 4. 작성자    : JHYun
+	 * 5. 작성일    : 2017. 5. 30. 오후 3:13:13
+	 * </PRE>
+	 *   @return Map<String,Object> 제품정보
+	 *   @param soId 사업ID
+	 *   @param ctrtId 계약ID
+	 *   @param prodCmpsId 상품구성ID
+	 */
+	Map<String, Object> getItemInfo(@Param("soId") String soId, @Param("ctrtId") String ctrtId, @Param("prodCmpsId") String prodCmpsId);
+	
+}
+
