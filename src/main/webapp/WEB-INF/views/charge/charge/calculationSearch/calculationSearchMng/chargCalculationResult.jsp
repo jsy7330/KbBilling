@@ -78,21 +78,25 @@ $(document).ready(function() {
 
 	//그리드 처리
 	$("#workGrpGrid").jqGrid({
-		url : '/product/service/serviceMgt/workGrpMng/getWorkGrpListAction.json',
+		url : '/charge/charge/calculationSearch/calculationSearchMng/getChargePersonCountList.json',
 		datatype : 'local',
 		mtype: 'POST',
 		postData : {
+			soId: $('#condSo').val() ,
+  	    	billYymm : dateFormatToStringYYYYMM($('#searchStatDt').val())
 		},
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
-		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '상품명', name: 'SO_NM', width : 100, align:"left", sortable:false},
-		    { label: '고객수', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false},
-		    { label: '계약건수', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false},
-		    { label: '계약상품건수', name: 'USE_YN_NM', width : 100, align:"center", sortable:false},
-		    { label: '계약서비스건수', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '사용량', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '사용금액', name: 'CHGR_NM', width : 150, sortable:false}
+		    { label: 'soNm', name: 'SO_NM', width : 100, align:"center", hidden:true},
+		    { label: '상품명', name: 'PROD_NM', width : 100, align:"left", sortable:false},
+		    { label: '고객수', name: 'CUST_CNT', width : 100, align:"center", sortable:false},
+		    { label: '계약건수', name: 'CTRT_CNT', width : 200, align:"left", sortable:false},
+		    { label: '계약상품건수', name: 'PROD_CMPS_CNT', width : 100, align:"center", sortable:false},
+		    { label: '계약서비스건수', name: 'SVC_CMPS_CNT', width : 150, sortable:false},
+			{ label: '사용량', name: 'USE_QTY', width : 150, sortable:false},
+		    { label: '사용금액', name: 'USE_AMT', width : 150, sortable:false},
+		    { label: '사용건수', name: 'USE_CNT', width : 100, align:"center", hidden:true}
+			
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -101,7 +105,7 @@ $(document).ready(function() {
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
-			root : "workGrpList",
+			root : "charPersonCntList",
 			records : "totalCount", //총 레코드 
 			total : "totalPages",  //총페이지수
 			page : "page"          //현재 페이지
@@ -218,6 +222,23 @@ $(document).ready(function() {
   		}
 	);
 });
+
+//배치 프로그램 리스트 조회
+function searchWorkGrpList() {
+	
+	$("#workGrpGrid").setGridParam({
+		mtype: 'POST',
+		datatype : 'json',
+  	    postData : {
+  	    	soId: $('#condSo').val() ,
+  	    	billYymm : dateFormatToStringYYYYMM($('#searchStatDt').val())
+		}
+	});
+	
+   	$("#workGrpGrid").trigger("reloadGrid");	
+
+}
+
 
 /*
  * 페이지 초기화

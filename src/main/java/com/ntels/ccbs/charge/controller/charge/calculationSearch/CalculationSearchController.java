@@ -2,6 +2,7 @@ package com.ntels.ccbs.charge.controller.charge.calculationSearch;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,9 +16,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.ntels.ccbs.charge.domain.charge.calculationSearch.CalculationSearchVO;
 import com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo;
+import com.ntels.ccbs.charge.service.charge.calculationSearch.ChargCalculationResultService;
 import com.ntels.ccbs.charge.service.charge.charge.PaymentChargeCalculationService;
+import com.ntels.ccbs.common.util.CommonUtil;
+import com.ntels.ccbs.common.util.DateUtil;
+import com.ntels.ccbs.system.domain.common.service.SessionUser;
 import com.ntels.ccbs.system.service.common.service.CommonDataService;
-
 
 @Controller
 @RequestMapping(value = "/charge/charge/calculationSearch/calculationSearchMng")
@@ -27,6 +31,9 @@ public class CalculationSearchController {
 	
 	@Autowired
 	private CommonDataService commonDataService;
+	
+	@Autowired
+	private ChargCalculationResultService chargCalculationResultService;
 	
 	@Autowired
 	private PaymentChargeCalculationService paymentChargeCalculationService;
@@ -41,12 +48,54 @@ public class CalculationSearchController {
 	
 	@RequestMapping(value = "chargCalculationResult", method = RequestMethod.POST)
 	public String chargCalculationResult(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request) throws Exception {
-
+		
 		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		
 		return URL + "/chargCalculationResult";
 	}
-
 	
+	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getChargePersonCountList
+	 * 2. ClassName : CalculationSearchController
+	 * 3. Comment   : 요금계산결과현황
+	 * 4. 작성자    : chkim
+	 * 5. 작성일    : 2020. 7. 17. 오후 5:41:48
+	 * </PRE>
+	 *   @return String
+	 *   @param model
+	 *   @param calculationSearchVO
+	 *   @param request
+	 *   @param soId
+	 *   @param billYymm
+	 *   @param sidx
+	 *   @param sord
+	 *   @param page
+	 *   @param rows
+	 *   @return
+	 */
+	@RequestMapping(value = "getChargePersonCountList", method = RequestMethod.POST)
+	public String getChargePersonCountList(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request,
+			String soId,
+			String billYymm,
+			String sidx,
+			String sord,
+			int page,
+			int rows) {
+		
+		SessionUser sessionUser = CommonUtil.getSessionManager();
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		
+		Map<String, Object> chargCalInfo = chargCalculationResultService.getChargePersonCountList(soId, sessionUser.getSoAuthList(), billYymm, sidx, sord, page, rows, lng);
+		
+		model.addAttribute("charPersonCntList", chargCalInfo.get("charPersonCntList"));
+		model.addAttribute("totalCount", chargCalInfo.get("totalCount"));
+		model.addAttribute("totalPages", chargCalInfo.get("totalPages"));
+		model.addAttribute("page", chargCalInfo.get("page"));
+		
+		return URL + "/chargCalculationResult";
+	}
 	
 	/**
 	 * 
