@@ -8,6 +8,11 @@ import com.ntels.ccbs.charge.domain.charge.calculationSearch.ChargCalculationRes
 public interface ChargCalculationResultService {
 	
 	Map<String, Object> getChargePersonCountList(String soId,
-	        List<Map<String, Object>> soAuthList, String billYymm, String sidx,
-	        String sord, int page, int rows, String lng);
+	        	List<Map<String, Object>> soAuthList, 
+	        	String billYymm, 
+	        	String sidx,
+	        	String sord, 
+	        	int page, 
+	        	int rows, 
+	        	String lng);
 }

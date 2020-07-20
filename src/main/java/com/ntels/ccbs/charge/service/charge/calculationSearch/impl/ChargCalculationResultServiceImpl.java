@@ -8,7 +8,6 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.ntels.ccbs.charge.domain.charge.calculationSearch.ChargCalculationResultVO;
 import com.ntels.ccbs.charge.mapper.charge.calculationSearch.ChargCalculationResultMapper;
 import com.ntels.ccbs.charge.service.charge.calculationSearch.ChargCalculationResultService;
 
@@ -16,14 +15,14 @@ import com.ntels.ccbs.charge.service.charge.calculationSearch.ChargCalculationRe
 public class ChargCalculationResultServiceImpl implements ChargCalculationResultService{
 
 	@Autowired
-	ChargCalculationResultMapper chargCalculationResultMapper;
+	private ChargCalculationResultMapper chargCalculationResultMapper;
 
 	@Override
 	public Map<String, Object> getChargePersonCountList(String soId, List<Map<String, Object>> soAuthList,
 			String billYymm, String sidx, String sord, int page, int rows, String lng) {
 		// TODO Auto-generated method stub
 		Map<String, Object> chargPersonCntInfo = new HashMap<String, Object>();
-		int totalCount = chargCalculationResultMapper.totalCount(soId, soAuthList, billYymm);
+		Integer totalCount = chargCalculationResultMapper.totalCount(soId, soAuthList, billYymm);
 		
 		/*
 		 *  page : 몇번째의 페이지를 요청했는지.
@@ -32,8 +31,8 @@ public class ChargCalculationResultServiceImpl implements ChargCalculationResult
 			sord : 내림차순 or 오름차순
 		 */
 		
-		if(totalCount == 0){
-			chargPersonCntInfo.put("workGrpList", new ArrayList<Map<String,Object>>());
+		if(totalCount.intValue() == 0){
+			chargPersonCntInfo.put("charPersonCntList", new ArrayList<Map<String,Object>>());
 			chargPersonCntInfo.put("totalCount", totalCount);
 			chargPersonCntInfo.put("totalPages", new Integer(0));
 			chargPersonCntInfo.put("page", new Integer(1));
@@ -49,7 +48,7 @@ public class ChargCalculationResultServiceImpl implements ChargCalculationResult
 			
 			chargPersonCntInfo.put("charPersonCntList", charPersonCntList);
 			chargPersonCntInfo.put("totalCount", totalCount);
-			Integer totalPages = new Integer((int)Math.ceil((float)totalCount / (float)rows));
+			Integer totalPages = new Integer((int)Math.ceil(totalCount.floatValue() / (float)rows));
 			chargPersonCntInfo.put("totalPages", totalPages);
 			chargPersonCntInfo.put("page", new Integer(page));
 		}
