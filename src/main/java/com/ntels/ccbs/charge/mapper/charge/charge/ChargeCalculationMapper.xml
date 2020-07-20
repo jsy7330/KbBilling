@@ -126,5 +126,117 @@
 			AND BAT_PGM_ID		= #{batPgmId}
 			AND SO_ID			= #{soId}
 	</update>
+	
+	<select id="getChargeListTotalCnt" resultType="Integer">
+	/*com.ntels.ccbs.charge.mapper.charge.charge.ChargeCalculationMapper.getChargeListTotalCnt*/
+ 		SELECT
+   			COUNT(*)
+		FROM TBLCH_CLC_MAIN        A                           /* 요금게산메인 */
+			,TBLCH_SVC_CMPS_MT     B                           /* 서비스구성Master */
+			, TBLCH_CHRG           C                           /* 요금내역 */
+		WHERE A.CLC_WRK_NO      = B.CLC_WRK_NO
+		   AND B.CLC_WRK_NO      = C.CLC_WRK_NO
+		   AND B.BILL_YYMM       = C.BILL_YYMM
+		   AND B.BILL_CYCL       = C.BILL_CYCL
+		   AND B.USE_YYMM        = C.USE_YYMM
+		   AND B.SVC_CMPS_ID     = C.SVC_CMPS_ID
+		   AND B.SO_ID           = C.SO_ID
+           AND A.CLC_WRK_CL      = '5'           /* 계산작업구분(5.계산) */
+		   AND B.BILL_YYMM = #{condBillYymm}     /* 청구년월 */         
+	       <if test="condClc != null and condClc != ''">		/* 계산처리상태 */
+	       		AND A.CLC_PROC_STAT = #{condClc}
+	       </if>
+	       <if test="soId != null and soId != ''">				/* 사업구분 */
+	       		AND A.SO_ID = #{soId}
+	       </if>
+	       <if test="condPymAcntId != null and condPymAcntId != ''">	/* 납부계정 */
+	       		AND B.PYM_ACNT_ID = #{condPymAcntId}
+	       </if>
+	       <if test="condCustId != null and condCustId != ''">			/* 고객 */
+	       		AND B.CUST_ID  = #{condCustId}
+	       </if>
+	</select>
+	
+	<select id="getChargeList" resultType="java.util.HashMap">	
+	/*com.ntels.ccbs.charge.mapper.charge.charge.ChargeCalculationMapper.getChargeList*/
+	 SELECT 
+            RESULT.*
+        FROM (
+         <include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>	
+	         SELECT
+			       B.SO_ID
+			     , B.BILL_YYMM
+			     , B.BILL_CYCL
+			     , B.PYM_ACNT_ID
+			     , B.CUST_ID
+			     , B.CTRT_ID
+			     -- , FN_SETTELNO(FBLIV_GET_CTRT_MDN(B.CTRT_ID)) AS SVC_TEL_NO
+			     , B.PROD_CD
+			     , A.CLC_WRK_CL
+			     , (SELECT NVL(C.CODE_NM, B.COMMON_CD_NM) as COMMON_CD_NM
+				 FROM  TSYCO_CODE_DETAIL B
+				     LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+				     on C.LNG_TYP   = #{lng}
+				     AND C.COMMON_GRP = B.COMMON_GRP
+				     and C.COMMON_CD  = B.COMMON_CD
+				WHERE  B.COMMON_GRP = 'BLCH003'
+				  AND  B.COMMON_CD = A.CLC_WRK_CL) AS CLC_WRK_CL_NM
+			     , SUM(C.USE_AMT)    AS TOT_USE_AMT
+			     , SUM(C.USE_CNT)    AS TOT_USE_CNT
+			     , (SELECT CUST_NM
+				  FROM TCMCU_CUST_INFO      X                   	/* 고객정보 */
+				 WHERE X.CUST_ID            = B.CUST_ID
+				 and x.so_id = b.so_id
+			       )                            AS CUST_NM
+			     , (SELECT PROD_NM
+				  FROM TPMPD_PROD              X                   	/* 상품정보 */
+				 WHERE X.PROD_CD            = B.PROD_CD
+				   AND X.MSTR_FL            = '1'
+			       )                            AS PROD_NM
+			     , (SELECT SO_NM
+				  FROM TSYCO_SO_MAST        X                   	/* SO 마스타*/
+				 WHERE X.SO_ID              = B.SO_ID
+			       )                            AS SO_NM
+			     , A.CLC_WRK_NO
+			     , A.PROC_DTTM
+			     , A.CLC_PROC_STAT
+			     , (SELECT NVL(C.CODE_NM, B.COMMON_CD_NM) as COMMON_CD_NM
+				 	FROM  TSYCO_CODE_DETAIL B  LEFT OUTER JOIN TSYCO_CODE_DETAIL_NAME C
+						 ON  C.LNG_TYP    =  #{lng} 
+						 AND C.COMMON_GRP = B.COMMON_GRP
+						 AND C.COMMON_CD  = B.COMMON_CD
+					WHERE  B.COMMON_GRP = 'BLCH005'
+			  			AND  B.COMMON_CD = A.CLC_PROC_STAT) AS CLC_PROC_STAT_NM
+			FROM TBLCH_CLC_MAIN       	A                           /* 요금게산메인 */
+				,TBLCH_SVC_CMPS_MT      B                           /* 서비스구성Master */
+				, TBLCH_CHRG            C                           /* 요금내역 */
+			WHERE A.CLC_WRK_NO      = B.CLC_WRK_NO
+			   AND B.CLC_WRK_NO      = C.CLC_WRK_NO
+			   AND B.BILL_YYMM       = C.BILL_YYMM
+			   AND B.BILL_CYCL       = C.BILL_CYCL
+			   AND B.USE_YYMM        = C.USE_YYMM
+			   AND B.SVC_CMPS_ID     = C.SVC_CMPS_ID
+			   AND B.SO_ID           = C.SO_ID
+			   AND A.CLC_WRK_CL      = '5'           /* 계산작업구분(5.계산) */
+			   AND B.BILL_YYMM = #{condBillYymm}	/* 청구년월 */
+			   <if test="condClc != null and condClc != ''">		/* 계산처리상태 */
+	       			AND A.CLC_PROC_STAT = #{condClc}
+		       </if>
+		       <if test="soId != null and soId != ''">				/* 사업구분 */
+		       		AND A.SO_ID = #{soId}
+		       </if>
+		       <if test="condPymAcntId != null and condPymAcntId != ''">	/* 납부계정 */
+		       		AND B.PYM_ACNT_ID = #{condPymAcntId}
+		       </if>
+		       <if test="condCustId != null and condCustId != ''">			/* 고객 */
+		       		AND B.CUST_ID = #{condCustId}
+		       </if>
+			GROUP BY A.CLC_WRK_NO, B.SO_ID, B.BILL_YYMM, B.BILL_CYCL, B.PYM_ACNT_ID, B.CUST_ID
+				, B.CTRT_ID, B.PROD_CD, A.CLC_WRK_CL, A.PROC_DTTM, A.CLC_PROC_STAT
+			ORDER BY PROC_DTTM DESC, A.CLC_WRK_NO DESC, SO_NM, B.CUST_ID, B.CTRT_ID, PROD_NM
+		
+		<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
+            ) RESULT
+	</select>
 
 </mapper>

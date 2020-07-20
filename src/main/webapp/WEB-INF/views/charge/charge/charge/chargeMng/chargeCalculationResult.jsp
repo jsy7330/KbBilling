@@ -11,7 +11,48 @@ $(document).ready(function() {
 	pageInit();
 
 	var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
-	if($(".datepicker").length > 0){
+	//달력처리
+	if($(".month-picker").length > 0){
+		if(lng == 'ko'){
+			format = 'yy-mm';
+		}else if (lng == 'en'){
+			format = 'mm/yy';
+		}
+		$('.month-picker').datepicker( {
+			changeMonth: true,
+			changeYear: true,
+			showButtonPanel: true,
+			dateFormat: format,
+			onClose: function(dateText, inst) {
+				var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+				var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+				$(this).datepicker('setDate', new Date(year, month, 1));
+			},
+			beforeShow : function (dateText, inst) {
+		        	
+				var selectDate = $(this).val().split("-");
+				var year = Number(selectDate[0]);
+				var month = Number(selectDate[1]) - 1;
+				$(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
+				$(this).datepicker('setDate', new Date(year, month, 1));
+		            
+			}
+		}); 
+		 
+		// 년월 레이어 focus
+	    $(".month-picker").focus(function () {
+	        $(".ui-datepicker-calendar").hide();
+	        $("#ui-datepicker-div").position({
+	            my: "center top",
+	            at: "center bottom",
+	            of: $(this)
+	        });
+	    });
+		
+	}
+	
+	$('#condBillYymm').datepicker('setDate', new Date());
+	/*if($(".datepicker").length > 0){
 		$( ".datepicker" ).datepicker({
 		      changeMonth: true,
 		      changeYear: true,
@@ -30,11 +71,11 @@ $(document).ready(function() {
 		    }).datepicker("setDate", "0"); 
 	}
 	$('.inp_date .btn_cal').click(function(e){e.preventDefault();$(this).prev().focus();});
-	$( ".datepicker1.disabled" ).datepicker( "option", "disabled", true );
+	$( ".datepicker1.disabled" ).datepicker( "option", "disabled", true );*/
 
 	//그리드 처리
 	$("#workGrpGrid").jqGrid({
-		url : '/product/service/serviceMgt/workGrpMng/getWorkGrpListAction.json',
+		url : '/charge/charge/charge/chargeMng/getChargeListAction.json',
 		datatype : 'local',
 		mtype: 'POST',
 		postData : {
@@ -42,16 +83,16 @@ $(document).ready(function() {
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '작업일시', name: 'SO_NM', width : 100, align:"left", sortable:false},
-		    { label: '작업번호', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false},
-		    { label: '고객ID', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '고객명', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '계약ID', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '서비스번호', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false},
-		    { label: '계산작업구분', name: 'USE_YN_NM', width : 100, align:"center", sortable:false},
-		    { label: '상품명', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '사용액합계', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '처리상태', name: 'CHGR_NM', width : 150, sortable:false}
+		    { label: '작업일시', name: 'PROC_DTTM', width : 100, align:"left", sortable:false},
+		    { label: '작업번호', name: 'CLC_WRK_NO', width : 100, align:"center", sortable:false},
+		    { label: '고객ID', name: 'CUST_ID', width : 150, sortable:false},
+			{ label: '고객명', name: 'CUST_NM', width : 150, sortable:false},
+			{ label: '계약ID', name: 'CTRT_ID', width : 150, sortable:false},
+		   // { label: '서비스번호', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false},
+		    { label: '계산작업구분', name: 'CLC_WRK_CL', width : 100, align:"center", sortable:false},
+		    { label: '상품명', name: 'PROD_NM', width : 150, sortable:false},
+		    { label: '사용액합계', name: 'TOT_USE_AMT', width : 150, sortable:false},
+			{ label: '처리상태', name: 'CLC_PROC_STAT', width : 150, sortable:false}
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -217,6 +258,38 @@ $(document).ready(function() {
 	  		}
   		}
 	);
+	
+	//납부계정 조회
+	$('#btnSearchPym').on('click',function (e) {
+		var url="/system/common/common/pymAcntSearch/pymAcntPopup.ajax";
+		var param = new Object();
+		param.popType = "m";            //팝업타입 m:모달 o:일반
+		param.returnId1 = "searchAcntNm";
+		param.returnId2 = "condPymAcntId";
+		
+		$.ajax({
+			type : "post",
+			url : url,
+			data : param,
+			async: true,
+			success : function(data) {
+				var html = data;
+				$("#popup_dialog").html(html);
+			},      
+			complete : function(){
+				wrapWindowByMask(); // 팝업 오픈
+			}
+		}); 
+	});
+	
+	// 고객조회
+	$('#btnCustSearch').on('click',function (e) {
+			if($("#btnCustSearch").hasClass('not-active')){
+				return;
+			}
+			openCustSearchPopup();	
+		}
+	);
 });
 
 /*
@@ -262,7 +335,10 @@ function searchWorkGrpList(){
 		datatype : 'json',
   	    postData : {
   			soId : $('#condSo').val(),
-        	workGrpNm : $('#condWorkGrpNm').val()
+  			condBillYymm : $('#condBillYymm').val().replace("-",""),
+  			condClc : $('#condClc').val(),
+  			condPymAcntId : $('#condPymAcntId').val(),
+  			condCustId : $('#condCustId').val()
 		}
 	});
 	      
@@ -647,7 +723,34 @@ function btnEnable(id){
 	$('#' + id ).removeClass('not-active');
 	$('#' + id ).removeAttr('disabled');
 }
+/*
+ * 고객조회팝업
+ */
+function openCustSearchPopup(){
+	
+	$.ajax({
+		type : "post",
+		url : '/system/common/common/customerSearch/customerSearchPopup.ajax',
+		data : {
+			 inputSoId : $('#condSo').val()   //input SO Id
+			,inputCustNm : $('#condCustNm').val()   //input Customer Name
+			,inputIsUnmaskYn : $('#isUnmaskYn').val() //마스크 처리 해제 Y
+			//,outputSoId : 'condSo'            //output SO ID Select
+			,outputCustNm : 'condCustNm'            //output Customer Name Text
+			,outputCustId : 'condCustId'            //output Customer ID Text
 
+		},
+		async: true,
+		success : function(data) {
+			var html = data;
+			$("#popup_dialog").html(html);
+		},		
+		complete : function(){
+			wrapWindowByMask(); // 팝업 오픈
+			$("#txtCustSearchCustNm").focus(); //오픈 후 focus위치
+		}
+	}); 
+}
 
 </script>
 
@@ -698,7 +801,7 @@ function btnEnable(id){
 			<td>
 				<div class="date_box">
 					<div class="inp_date w130">
-						<input type="text" id="searchStatDt" name="searchStatDt"  class="datepicker" readonly="readonly" />
+						<input type="text" id="condBillYymm" name="condBillYymm"  class="month-picker" readonly="readonly" />
 						<a href="#" class="btn_cal"></a>
 					</div>
 				</div>
@@ -707,7 +810,7 @@ function btnEnable(id){
 		<tr>
 			<th>계산처리상태</th>
 			<td>
-				<select id="condSo" class="w100p">
+				<select id="condClc" class="w100p">
 					<option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option>
 					<c:forEach items="${chargeTrtTp}" var="chargeTrtTp" varStatus="status">
 						<option value="${chargeTrtTp.commonCd}">${chargeTrtTp.commonCdNm}</option>
@@ -717,10 +820,10 @@ function btnEnable(id){
 			<th>납부계정</th>
 			<td>
 				<div class="inp_date w280">
-					<input id="condCustNm" type="text" class="w120" />
-					<input id="condCustNm" type="text" class="w120" disabled/>
+					<input id="searchAcntNm" name="searchAcntNm" type="text" class="w120" disabled="disabled"/>
+					<input id="condPymAcntId" name="condPymAcntId" type="text" class="w120" disabled="disabled"/>
 					<ntels:auth auth="${menuAuthR}">
-						<a id="btnCustSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
+						<a id="btnSearchPym"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
 					</ntels:auth>
 				</div>
 			</td>
@@ -730,9 +833,9 @@ function btnEnable(id){
 			<td colspan="3">
 				<div class="inp_date w280">
 					<input id="condCustNm" type="text" class="w120" />
-					<input id="condCustNm" type="text" class="w120" disabled/>
+					<input id="condCustId" type="text" class="w120" disabled/>
 					<ntels:auth auth="${menuAuthR}">
-						<a id="btnCustSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
+						<a id="btnCustSearch" href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
 					</ntels:auth>
 				</div>
 			</td>

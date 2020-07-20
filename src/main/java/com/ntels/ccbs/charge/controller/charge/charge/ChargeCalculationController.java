@@ -1,6 +1,7 @@
 package com.ntels.ccbs.charge.controller.charge.charge;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,6 +19,8 @@ import com.ntels.ccbs.charge.domain.charge.charge.ChargeCalculationVO;
 import com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO;
 import com.ntels.ccbs.charge.service.charge.charge.ChargeCalculationService;
 import com.ntels.ccbs.common.consts.Consts;
+import com.ntels.ccbs.common.util.CommonUtil;
+import com.ntels.ccbs.common.util.DateUtil;
 import com.ntels.ccbs.system.domain.common.service.SessionUser;
 import com.ntels.ccbs.system.service.common.service.CommonDataService;
 import com.ntels.ccbs.system.service.common.service.SequenceService;
@@ -222,7 +225,31 @@ public class ChargeCalculationController {
 	*/
 	
 	
-	
+	@RequestMapping(value = "getChargeListAction", method = RequestMethod.POST)
+	public String getWorkGrpList(Model model,HttpServletRequest request,String soId,String sidx,String sord,int page,int rows
+		,String condBillYymm
+		,String condClc
+		,String condPymAcntId
+		,String condCustId) {
+		
+		SessionUser sessionUser = CommonUtil.getSessionManager();
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		String today = DateUtil.getDateStringYYYYMMDD(0);
+		
+		Map<String,Object> chargeInfo = chargeCalculationService.getChargeList(soId,sessionUser.getSoAuthList(),sidx,sord, page, rows, today, lng
+																				,condBillYymm
+																				,condClc
+																				,condPymAcntId
+																				,condCustId);
+		
+		model.addAttribute("chargeList", chargeInfo.get("chargeList"));
+		model.addAttribute("totalCount", chargeInfo.get("totalCount"));
+		model.addAttribute("totalPages", chargeInfo.get("totalPages"));
+		model.addAttribute("page", chargeInfo.get("page"));
+		 
+		
+		return URL + "/chargeCalculationResult";
+	}
 
 	@RequestMapping(value = "chargeCalculationSearch", method = RequestMethod.POST)
 	public String chargeCalculationSearch(Model model, ChargeCalculationVO chargeCalculationVO, HttpServletRequest request) throws Exception {
