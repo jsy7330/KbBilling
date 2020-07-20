@@ -12,7 +12,7 @@ $(document).ready(function() {
 
 	var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
 	
-	//CHANHEE(달력처리 수정 .datepicker 주석 / .month-picker 추가)
+	//  (달력처리 수정 .datepicker 주석 / .month-picker 추가)
 	//달력처리
 	if($(".month-picker").length > 0){
 		if(lng == 'ko'){
@@ -100,7 +100,7 @@ $(document).ready(function() {
 		],
 		viewrecords: true,
 		shrinkToFit:false,
-		//CHANHEE(120->300)
+		//  (120->300)
 		height: 300,
 		sortable : true,
 		jsonReader: {
@@ -111,7 +111,7 @@ $(document).ready(function() {
 			page : "page"          //현재 페이지
 		},
 		rowList:[5,10,20,30,50],	//선택시 노출되는 row 수
-		//CHANHEE(5->20)
+		//  (5->20)
         rowNum: 20,
         pager: "#workGrpGridPager",
         onCellSelect : function(rowid, index, contents, event){
@@ -374,7 +374,7 @@ function btnEnable(id){
 			<td>
 				<div class="date_box">
 					<div class="inp_date w130">
-						<!-- CHANHEE datepicker 에서 month-picker 로 class 수정 -->
+						<!--    datepicker 에서 month-picker 로 class 수정 -->
 						<input type="text" id="searchStatDt" name="searchStatDt"  class="month-picker" readonly="readonly" />
 						<a href="#" class="btn_cal"></a>
 					</div>

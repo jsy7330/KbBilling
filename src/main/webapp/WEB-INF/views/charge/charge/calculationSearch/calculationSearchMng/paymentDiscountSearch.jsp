@@ -11,8 +11,7 @@ $(document).ready(function() {
 	pageInit();
 
 	var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
-	
-	//CHANHEE(달력처리 수정 .datepicker 주석 / .month-picker 추가)
+
 	//달력처리
 	if($(".month-picker").length > 0){
 		if(lng == 'ko'){
@@ -55,49 +54,31 @@ $(document).ready(function() {
 	
 	$('#searchStatDt').datepicker('setDate', new Date());
 	
-	/* 
-	if($(".datepicker").length > 0){
-		$( ".datepicker" ).datepicker({
-		      changeMonth: true,
-		      changeYear: true,
-		      regional:lng
-		    }).datepicker("setDate", "-7"); 
-	}
-	$('.inp_date .btn_cal').click(function(e){e.preventDefault();$(this).prev().focus();});
-	$( ".datepicker.disabled" ).datepicker( "option", "disabled", true );
-	
-
-	if($(".datepicker1").length > 0){
-		$( ".datepicker1" ).datepicker({
-		      changeMonth: true,
-		      changeYear: true,
-		      regional:lng
-		    }).datepicker("setDate", "0"); 
-	}
-	$('.inp_date .btn_cal').click(function(e){e.preventDefault();$(this).prev().focus();});
-	$( ".datepicker1.disabled" ).datepicker( "option", "disabled", true );
- */
 	//그리드 처리
 	$("#workGrpGrid").jqGrid({
-		url : '/product/service/serviceMgt/workGrpMng/getWorkGrpListAction.json',
+		url : '/charge/charge/calculationSearch/calculationSearchMng/getChargeDiscountInfoList.json',
 		datatype : 'local',
 		mtype: 'POST',
 		postData : {
+			soId: $('#condSo').val() ,
+  	    	billYymm : dateFormatToStringYYYYMM($('#searchStatDt').val()),
+  	    	custId : $('#condCustId').val(),
+  	    	pymAcntId : $('#searchPymAcntId').val()
 		},
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '납부계정ID', name: 'SO_NM', width : 100, align:"left", sortable:false},
-		    { label: '납부계정명', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false},
-		    { label: '고객ID', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false},
-		    { label: '고객명', name: 'USE_YN_NM', width : 100, align:"center", sortable:false},
-		    { label: '계약ID', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '서비스번호', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '상품명', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '서비스명', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '과금항목명', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '이용금액', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '할인액', name: 'CHGR_NM', width : 150, sortable:false}
+		    { label: '납부계정ID', name: 'PYM_ACNT_ID', width : 100, align:"left", sortable:false},
+		    { label: '납부계정명', name: 'PYM_ACNT_NM', width : 100, align:"center", sortable:false},
+		    { label: '고객ID', name: 'CUST_ID', width : 200, align:"left", sortable:false},
+		    { label: '고객명', name: 'CUST_NM', width : 100, align:"center", sortable:false},
+		    { label: '계약ID', name: 'CTRT_ID', width : 150, sortable:false},
+			{ label: '서비스번호', name: 'SVC_CD', width : 150, sortable:false}, //  서비스번호 찾아보기
+		    { label: '상품명', name: 'PROD_NM', width : 150, sortable:false},
+		    { label: '서비스명', name: 'SVC_NM', width : 150, sortable:false},
+		    { label: '과금항목명', name: 'RATE_ITM_NM', width : 150, sortable:false},
+		    { label: '이용금액', name: 'TOT_USE_AMT', width : 150, sortable:false},
+		    { label: '할인액', name: 'TOT_DC_AMT', width : 150, sortable:false}
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -105,7 +86,7 @@ $(document).ready(function() {
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
-			root : "workGrpList",
+			root : "chargDistInfoList",
 			records : "totalCount", //총 레코드 
 			total : "totalPages",  //총페이지수
 			page : "page"          //현재 페이지
@@ -126,22 +107,31 @@ $(document).ready(function() {
 	});
 
 	$("#workGrpGrid1").jqGrid({
-		url : '/product/service/serviceMgt/workGrpMng/getWorkGrpListAction.json',
+		url : '/charge/charge/calculationSearch/calculationSearchMng/getChargeDiscountInfoDetList.json',
 		datatype : 'local',
 		mtype: 'POST',
 		postData : {
+			soId: $('#soId').val() ,
+  	    	clcwrkNo : $('#clcwrkNo').val(),
+  	    	rateItmCd : $('#rateItmCd').val(),
+  	    	prodCd : $('#prodCd').val(),
+  	    	svcCd : $('#svcCd').val(),
+  	    	billYymm : dateFormatToStringYYYYMM($('#billYymm').val()),
+  	    	pymAcntId : $('#pymAcntId').val(),
+  	    	custId : $('#custId').val(),
+  	    	ctrtId : $('#ctrtId').val()
 		},
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '할인과금항목명', name: 'SO_NM', width : 100, align:"left", sortable:false},
-		    { label: '기준일수', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false},
-		    { label: '이용일수', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false},
-		    { label: '이용금액', name: 'USE_YN_NM', width : 100, align:"center", sortable:false},
-		    { label: '할인적용방식', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '할인적용값', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '할인금액', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '사용년월', name: 'CHGR_NM', width : 150, sortable:false}
+		    { label: '할인과금항목명', name: 'DC_RATE_ITM_NM', width : 100, align:"left", sortable:false},
+		    { label: '기준일수', name: 'STD_DD_CNT', width : 100, align:"center", sortable:false},
+		    { label: '이용일수', name: 'USE_DD_CNT', width : 200, align:"left", sortable:false},
+		    { label: '이용금액', name: 'USE_AMT', width : 100, align:"center", sortable:false},
+		    { label: '할인적용방식', name: 'DC_APLY_MTHD', width : 150, sortable:false},
+			{ label: '할인적용값', name: 'DC_APLY_VAL', width : 150, sortable:false},
+			{ label: '할인금액', name: 'DC_AMT', width : 150, sortable:false},
+			{ label: '사용년월', name: 'USE_YYMM', width : 150, sortable:false}
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -149,7 +139,7 @@ $(document).ready(function() {
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
-			root : "workGrpList",
+			root : "chargDistDetInfoList",
 			records : "totalCount", //총 레코드 
 			total : "totalPages",  //총페이지수
 			page : "page"          //현재 페이지
@@ -158,7 +148,7 @@ $(document).ready(function() {
         rowNum: 5,
         pager: "#workGrpGridPager1",
         onCellSelect : function(rowid, index, contents, event){
-        	setSelectedData(rowid);
+        
         },
        	loadComplete : function () {
   	      	$("#workGrpGrid1").setGridWidth($('#gridDiv').width(),false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
@@ -195,6 +185,24 @@ $(document).ready(function() {
     		searchWorkGrpList();
 		}
     );
+    
+   // 고객명조회
+	$('#btnCustSearch').on('click',function (e) {
+			if($("#btnCustSearch").hasClass('not-active')){
+				return;
+			}
+			openCustSearchPopup();	
+		}
+	);
+ 
+	 // 납부계정조회
+	$('#btnCustPymSearch').on('click',function (e) {
+			if($("#btnCustSearch").hasClass('not-active')){
+				return;
+			}
+			openCustPymSearchPopup();	
+		}
+	);
 
 
     //초기화 버튼 이벤트
@@ -269,6 +277,126 @@ $(document).ready(function() {
 	);
 });
 
+//조회
+function searchWorkGrpList(){
+	
+	$("#workGrpGrid").setGridParam({
+		mtype: 'POST',
+		datatype : 'json',
+  	    postData : {
+  	    	soId: $('#condSo').val() ,
+  	    	billYymm : dateFormatToStringYYYYMM($('#searchStatDt').val()),
+  	    	custId : $('#condCustId').val(),
+  	    	pymAcntId : $('#searchPymAcntId').val()
+		}
+	});
+	
+   	$("#workGrpGrid").trigger("reloadGrid");
+   	
+   	$("#workGrpGrid1").clearGridData();
+   	
+   	$("#soId").val('');
+	$("#clcwrkNo").val('');
+	$("#rateItmCd").val('');
+	$("#prodCd").val('');
+	$("#svcCd").val('');
+	$("#billYymm").val('');
+	$("#pymAcntId").val('');
+	$("#custId").val('');
+	$("#ctrtId").val('');
+}
+
+/*
+ * 고객조회팝업
+ */
+function openCustSearchPopup(){
+
+	$.ajax({
+		type : "post",
+		url : '/system/common/common/customerSearch/customerSearchPopup.ajax',
+		data : {
+			 inputSoId : $('#condSo').val()   //input SO Id
+			,inputCustNm : $('#condCustNm').val()   //input Customer Name
+			,inputIsUnmaskYn : $('#isUnmaskYn').val() //마스크 처리 해제 Y
+			,outputSoId : 'condSo'            //output SO ID Select
+			,outputCustNm : 'condCustNm'            //output Customer Name Text
+			,outputCustId : 'condCustId'            //output Customer ID Text
+
+		},
+		async: true,
+		success : function(data) {
+			var html = data;
+			$("#popup_dialog").html(html);
+		},		
+		complete : function(){
+			wrapWindowByMask(); // 팝업 오픈
+			$("#txtCustSearchCustNm").focus(); //오픈 후 focus위치
+		}
+	}); 
+}
+
+/**
+ * 납부계정 조회
+ */
+function openCustPymSearchPopup(){
+	var url="/system/common/common/pymAcntSearch/pymAcntPopup.ajax";
+	var param = new Object();
+	
+	param.popType = "m";            //팝업타입 m:모달 o:일반
+	param.returnId1 = "searchAcntNm";
+	param.returnId2 = "searchPymAcntId";
+	
+	$.ajax({
+		type : "post",
+		url : url,
+		data : param,
+		async: true,
+		success : function(data) {
+			var html = data;
+			$("#popup_dialog").html(html);
+		},      
+		complete : function(){
+			wrapWindowByMask(); // 팝업 오픈
+		}
+	}); 
+}
+
+function setSelectedData(data){
+	
+	alert("click row");
+	
+	$("#soId").val(data.soId);
+	$("#clcwrkNo").val(data.clcwrkNo);
+	$("#rateItmCd").val(data.rateItmCd);
+	$("#prodCd").val(data.prodCd);
+	$("#svcCd").val(data.svcCd);
+	$("#billYymm").val(data.billYymm);
+	$("#pymAcntId").val(data.pymAcntId);
+	$("#custId").val(data.custId);
+	$("#ctrtId").val(data.ctrtId);
+	
+	//할인과금 항목 내역 grid
+	$("#workGrpGrid1").setGridParam({
+		mtype: 'POST',
+		datatype : 'json',
+  	    postData : {
+  	    	soId: $('#soId').val() ,
+  	    	clcwrkNo : $('#clcwrkNo').val(),
+  	    	rateItmCd : $('#rateItmCd').val(),
+  	    	prodCd : $('#prodCd').val(),
+  	    	svcCd : $('#svcCd').val(),
+  	    	billYymm : dateFormatToStringYYYYMM($('#billYymm').val()),
+  	    	pymAcntId : $('#pymAcntId').val(),
+  	    	custId : $('#custId').val(),
+  	    	ctrtId : $('#ctrtId').val()
+		}
+	});
+	
+   	$("#workGrpGrid1").trigger("reloadGrid");	
+   	
+   	console.info(JSON.stringify(postData));
+}
+
 /*
  * 페이지 초기화
  */
@@ -298,6 +426,21 @@ function pageInit(){
     $("#workGrpUseYnSel").val('SEL');
     $("#workGrpUseYnSel").selectmenu('refresh');
 	$("#workGrpUseYnSel").selectmenu('disable');
+	
+	$("#soId").val('');
+	$("#clcwrkNo").val('');
+	$("#rateItmCd").val('');
+	$("#prodCd").val('');
+	$("#svcCd").val('');
+	$("#billYymm").val('');
+	$("#pymAcntId").val('');
+	$("#custId").val('');
+	$("#ctrtId").val('');
+	
+	$("#searchAcntNm").val('');
+	$("#searchPymAcntId").val('');
+	$("#condCustNm").val('');
+	$("#condCustId").val('');
 }
 
 /*
@@ -355,6 +498,15 @@ function btnEnable(id){
 
 
 </script>
+<input type ="text" id ="soId" name="soId" hidden/>
+<input type ="text" id ="clcwrkNo" name="clcwrkNo" hidden/>
+<input type ="text" id ="rateItmCd" name="rateItmCd" hidden/>
+<input type ="text" id ="prodCd" name="prodCd" hidden/>
+<input type ="text" id ="svcCd" name="svcCd" hidden/>
+<input type ="text" id ="billYymm" name="billYymm" hidden/>
+<input type ="text" id ="pymAcntId" name="pymAcntId" hidden/>
+<input type ="text" id ="custId" name="custId" hidden/>
+<input type ="text" id ="ctrtId" name="ctrtId" hidden/>
 
 <!--NaviGator-->
 <div class="h3_bg">
@@ -403,7 +555,7 @@ function btnEnable(id){
 			<td>
 				<div class="date_box">
 					<div class="inp_date w130">
-						<!-- CHANHEE datepicker 에서 month-picker 로 class 수정 -->
+						<!--    datepicker 에서 month-picker 로 class 수정 -->
 						<input type="text" id="searchStatDt" name="searchStatDt"  class="month-picker" readonly="readonly" />
 						<a href="#" class="btn_cal"></a>
 					</div>
@@ -414,10 +566,10 @@ function btnEnable(id){
 			<th>납부계정</th>
 			<td>
 				<div class="inp_date w280">
-					<input id="condCustNm" type="text" class="w120" />
-					<input id="condCustNm" type="text" class="w120" disabled/>
+					<input id="searchAcntNm" type="text" class="w120" />
+					<input id="searchPymAcntId" type="text" class="w120" disabled/>
 					<ntels:auth auth="${menuAuthR}">
-						<a id="btnCustSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
+						<a id="btnCustPymSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
 					</ntels:auth>
 				</div>
 			</td>
@@ -425,7 +577,7 @@ function btnEnable(id){
 			<td>
 				<div class="inp_date w280">
 					<input id="condCustNm" type="text" class="w120" />
-					<input id="condCustNm" type="text" class="w120" disabled/>
+					<input id="condCustId" type="text" class="w120" disabled />
 					<ntels:auth auth="${menuAuthR}">
 						<a id="btnCustSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
 					</ntels:auth>

@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import com.ntels.ccbs.charge.domain.charge.calculationSearch.CalculationSearchVO;
 import com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo;
 import com.ntels.ccbs.charge.service.charge.calculationSearch.ChargCalculationResultService;
+import com.ntels.ccbs.charge.service.charge.calculationSearch.PaymentDistSearchService;
 import com.ntels.ccbs.charge.service.charge.charge.PaymentChargeCalculationService;
 import com.ntels.ccbs.common.util.CommonUtil;
-import com.ntels.ccbs.common.util.DateUtil;
 import com.ntels.ccbs.system.domain.common.service.SessionUser;
 import com.ntels.ccbs.system.service.common.service.CommonDataService;
 
@@ -38,6 +38,9 @@ public class CalculationSearchController {
 	@Autowired
 	private PaymentChargeCalculationService paymentChargeCalculationService;
 	
+	@Autowired 
+	private PaymentDistSearchService paymentDistSerchService;
+	
 /*	
 	@Autowired
 	private CustomerDocumentService customerDocumentService;
@@ -54,27 +57,6 @@ public class CalculationSearchController {
 		return URL + "/chargCalculationResult";
 	}
 	
-	
-	/**
-	 * <PRE>
-	 * 1. MethodName: getChargePersonCountList
-	 * 2. ClassName : CalculationSearchController
-	 * 3. Comment   : 요금계산결과현황
-	 * 4. 작성자    : chkim
-	 * 5. 작성일    : 2020. 7. 17. 오후 5:41:48
-	 * </PRE>
-	 *   @return String
-	 *   @param model
-	 *   @param calculationSearchVO
-	 *   @param request
-	 *   @param soId
-	 *   @param billYymm
-	 *   @param sidx
-	 *   @param sord
-	 *   @param page
-	 *   @param rows
-	 *   @return
-	 */
 	@RequestMapping(value = "getChargePersonCountList", method = RequestMethod.POST)
 	public String getChargePersonCountList(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request,
 			String soId,
@@ -176,15 +158,72 @@ public class CalculationSearchController {
 	}
 	
 	
-	
-	
-	
-	
 	@RequestMapping(value = "paymentDiscountSearch", method = RequestMethod.POST)
 	public String paymentDiscountSearch(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request) throws Exception {
 
 		String lng = (String)request.getSession().getAttribute("sessionLanguage");
 		return URL + "/paymentDiscountSearch";
+	}
+	
+	@RequestMapping(value = "getChargeDiscountInfoList", method = RequestMethod.POST)
+	public String getChargeDiscountInfoList(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request,
+			String soId,
+			String billYymm,
+			String billCycl,
+			String pymAcntId,
+			String custId,
+			String ctrtId,
+			String sidx,
+			String sord,
+			int page,
+			int rows) {
+		
+		SessionUser sessionUser = CommonUtil.getSessionManager();
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		
+		Map<String, Object> chargDistInfo = paymentDistSerchService.getChargeDiscountInfoList(soId, billYymm, billCycl, pymAcntId, custId, ctrtId, sidx, sord, page, rows, lng);
+		
+		System.out.println("CONTROLLER getChargeDiscountInfoList : " + chargDistInfo.toString());
+		
+		model.addAttribute("chargDistInfoList", chargDistInfo.get("chargDistInfoList"));
+		model.addAttribute("totalCount", chargDistInfo.get("totalCount"));
+		model.addAttribute("totalPages", chargDistInfo.get("totalPages"));
+		model.addAttribute("page", chargDistInfo.get("page"));
+		
+		return URL + "/chargCalculationResult";
+		
+	}
+	
+	@RequestMapping(value = "getChargeDiscountInfoDetList", method = RequestMethod.POST)
+	public String getChargeDiscountInfoDetList(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request,
+			String soId,
+			String clcwrkNo,
+			String rateItmCd,
+			String prodCd, 
+			String svcCd,
+			String billYymm,
+			String billCycl,
+			String pymAcntId,
+			String custId,
+			String ctrtId,
+			String sidx,
+			String sord,
+			int page,
+			int rows) {
+		
+		SessionUser sessionUser = CommonUtil.getSessionManager();
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		
+		Map<String, Object> chargDistDetInfo = paymentDistSerchService.getChargeDiscountInfoDetList(soId, clcwrkNo, rateItmCd, prodCd, svcCd, billYymm, billCycl, pymAcntId, custId, ctrtId, sidx, sord, page, rows, lng);
+		
+		System.out.println("CONTROLLER getChargeDiscountInfoList : " + chargDistDetInfo.toString());
+		
+		model.addAttribute("chargDistDetInfoList", chargDistDetInfo.get("chargDistDetInfoList"));
+		model.addAttribute("totalCount", chargDistDetInfo.get("totalCount"));
+		model.addAttribute("totalPages", chargDistDetInfo.get("totalPages"));
+		model.addAttribute("page", chargDistDetInfo.get("page"));
+		
+		return URL + "/chargCalculationResult";
 	}
 	
 	@RequestMapping(value = "useSearch", method = RequestMethod.POST)
