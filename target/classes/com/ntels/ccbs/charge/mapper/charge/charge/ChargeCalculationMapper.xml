@@ -142,7 +142,7 @@
 		   AND B.SVC_CMPS_ID     = C.SVC_CMPS_ID
 		   AND B.SO_ID           = C.SO_ID
            AND A.CLC_WRK_CL      = '5'           /* 계산작업구분(5.계산) */
-		   AND B.BILL_YYMM = #{condBillYymm}               
+		   AND B.BILL_YYMM = #{condBillYymm}     /* 청구년월 */         
 	       <if test="condClc != null and condClc != ''">		/* 계산처리상태 */
 	       		AND A.CLC_PROC_STAT = #{condClc}
 	       </if>
@@ -218,7 +218,7 @@
 			   AND B.SVC_CMPS_ID     = C.SVC_CMPS_ID
 			   AND B.SO_ID           = C.SO_ID
 			   AND A.CLC_WRK_CL      = '5'           /* 계산작업구분(5.계산) */
-			   AND B.BILL_YYMM = #{condBillYymm}
+			   AND B.BILL_YYMM = #{condBillYymm}	/* 청구년월 */
 			   <if test="condClc != null and condClc != ''">		/* 계산처리상태 */
 	       			AND A.CLC_PROC_STAT = #{condClc}
 		       </if>
