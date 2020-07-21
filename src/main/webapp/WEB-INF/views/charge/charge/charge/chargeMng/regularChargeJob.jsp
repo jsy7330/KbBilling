@@ -32,7 +32,7 @@ var intervalVal = 0;
 var selGridData;
 var batchCount = 0;
 var userId = '${session_user.userName}';
-var batGrpId = '00011';		//프로그램 그룹 아이디 
+var batGrpId = '00011';		//프로그램 그룹 아이디 (00011-요금계산, 00012-정기청구)
 var batchType = "O";	//배치 타입 O: 건별작업 B:일괄작업
 
 $(document).ready(function() {
