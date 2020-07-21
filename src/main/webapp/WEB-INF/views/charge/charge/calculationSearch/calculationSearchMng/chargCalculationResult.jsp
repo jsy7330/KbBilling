@@ -11,8 +11,7 @@ $(document).ready(function() {
 	pageInit();
 
 	var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
-	
-	//  (달력처리 수정 .datepicker 주석 / .month-picker 추가)
+
 	//달력처리
 	if($(".month-picker").length > 0){
 		if(lng == 'ko'){
@@ -54,27 +53,6 @@ $(document).ready(function() {
 	}
 	
 	$('#searchStatDt').datepicker('setDate', new Date());
-	
-	/* if($(".datepicker").length > 0){
-		$( ".datepicker" ).datepicker({
-		      changeMonth: true,
-		      changeYear: true,
-		      regional:lng
-		    }).datepicker("setDate", "-7"); 
-	}
-	$('.inp_date .btn_cal').click(function(e){e.preventDefault();$(this).prev().focus();});
-	$( ".datepicker.disabled" ).datepicker( "option", "disabled", true );
-	
-
-	if($(".datepicker1").length > 0){
-		$( ".datepicker1" ).datepicker({
-		      changeMonth: true,
-		      changeYear: true,
-		      regional:lng
-		    }).datepicker("setDate", "0"); 
-	}
-	$('.inp_date .btn_cal').click(function(e){e.preventDefault();$(this).prev().focus();});
-	$( ".datepicker1.disabled" ).datepicker( "option", "disabled", true ); */
 
 	//그리드 처리
 	$("#workGrpGrid").jqGrid({
@@ -88,19 +66,18 @@ $(document).ready(function() {
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'soNm', name: 'SO_NM', width : 100, align:"center", hidden:true},
-		    { label: '상품명', name: 'PROD_NM', width : 100, align:"left", sortable:false},
-		    { label: '고객수', name: 'CUST_CNT', width : 100, align:"center", sortable:false},
-		    { label: '계약건수', name: 'CTRT_CNT', width : 200, align:"left", sortable:false},
-		    { label: '계약상품건수', name: 'PROD_CMPS_CNT', width : 100, align:"center", sortable:false},
-		    { label: '계약서비스건수', name: 'SVC_CMPS_CNT', width : 150, sortable:false},
-			{ label: '사용량', name: 'USE_QTY', width : 150, sortable:false},
-		    { label: '사용금액', name: 'USE_AMT', width : 150, sortable:false},
-		    { label: '사용건수', name: 'USE_CNT', width : 100, align:"center", hidden:true}
+		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'PROD_NM', width : 100, align:"left", sortable:false},
+		    { label: '<spring:message code="LAB.M01.LAB00275"/>', name: 'CUST_CNT', width : 100, align:"center", sortable:false},
+		    { label: '<spring:message code="LAB.M01.LAB00267"/>', name: 'CTRT_CNT', width : 200, align:"left", sortable:false},
+		    { label: '<spring:message code="LAB.M01.LAB00276"/>', name: 'PROD_CMPS_CNT', width : 100, align:"center", sortable:false},
+		    { label: '<spring:message code="LAB.M01.LAB00277"/>', name: 'SVC_CMPS_CNT', width : 150, sortable:false},
+			{ label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'USE_QTY', width : 150, sortable:false},
+		    { label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT', width : 150, sortable:false},
+		    { label: '<spring:message code="LAB.M07.LAB00018"/>', name: 'USE_CNT', width : 100, align:"center", hidden:true}
 			
 		],
 		viewrecords: true,
 		shrinkToFit:false,
-		//  (120->300)
 		height: 300,
 		sortable : true,
 		jsonReader: {
@@ -225,6 +202,11 @@ $(document).ready(function() {
 
 //배치 프로그램 리스트 조회
 function searchWorkGrpList() {
+	
+	if($('#condSo').val() == 'SEL'){
+		alert('<spring:message code="MSG.M07.MSG00002"/>');
+		return;
+	}
 	
 	$("#workGrpGrid").setGridParam({
 		mtype: 'POST',
@@ -361,7 +343,7 @@ function btnEnable(id){
 	</colgroup>
 	<thead>
 		<tr>
-			<th><spring:message code="LAB.M07.LAB00003" /></th>
+			<th><spring:message code="LAB.M07.LAB00003" /><span class="dot">*</span></th>
 			<td>
 				<select id="condSo" class="w100p">
 					<option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option>
@@ -370,11 +352,10 @@ function btnEnable(id){
 					</c:forEach>
 				</select>
 			</td>
-			<th><spring:message code="LAB.M10.LAB00033" /></th> <!-- 청구년월 -->
+			<th><spring:message code="LAB.M10.LAB00033" /><span class="dot">*</span></th> <!-- 청구년월 -->
 			<td>
 				<div class="date_box">
 					<div class="inp_date w130">
-						<!--    datepicker 에서 month-picker 로 class 수정 -->
 						<input type="text" id="searchStatDt" name="searchStatDt"  class="month-picker" readonly="readonly" />
 						<a href="#" class="btn_cal"></a>
 					</div>
@@ -387,7 +368,7 @@ function btnEnable(id){
 <!--작업그룹표시부 -->
 <div class="main_btn_box">
 	<div class="fl">
-		<h4 class="sub_title">계산내역</h4>
+		<h4 class="sub_title"><spring:message code="LAB.M01.LAB00278" /></h4>
 	</div>
 </div>
 <div id='gridDiv'>
