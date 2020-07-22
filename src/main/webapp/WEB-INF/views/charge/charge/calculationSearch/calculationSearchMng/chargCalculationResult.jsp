@@ -66,14 +66,14 @@ $(document).ready(function() {
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'soNm', name: 'SO_NM', width : 100, align:"center", hidden:true},
-		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'PROD_NM', width : 100, align:"left", sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00275"/>', name: 'CUST_CNT', width : 100, align:"center", sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00267"/>', name: 'CTRT_CNT', width : 200, align:"left", sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00276"/>', name: 'PROD_CMPS_CNT', width : 100, align:"center", sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00277"/>', name: 'SVC_CMPS_CNT', width : 150, sortable:false},
-			{ label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'USE_QTY', width : 150, sortable:false},
-		    { label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT', width : 150, sortable:false},
-		    { label: '<spring:message code="LAB.M07.LAB00018"/>', name: 'USE_CNT', width : 100, align:"center", hidden:true}
+		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'PROD_NM', width : 200, sortable:false},
+		    { label: '<spring:message code="LAB.M01.LAB00275"/>', name: 'CUST_CNT',  sortable:false},
+		    { label: '<spring:message code="LAB.M01.LAB00267"/>', name: 'CTRT_CNT',  sortable:false},
+		    { label: '<spring:message code="LAB.M01.LAB00276"/>', name: 'PROD_CMPS_CNT',  sortable:false},
+		    { label: '<spring:message code="LAB.M01.LAB00277"/>', name: 'SVC_CMPS_CNT',  sortable:false},
+			{ label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'USE_QTY',  sortable:false},
+		    { label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT',  sortable:false},
+		    { label: '<spring:message code="LAB.M07.LAB00018"/>', name: 'USE_CNT',  hidden:true}
 			
 		],
 		viewrecords: true,
@@ -88,7 +88,6 @@ $(document).ready(function() {
 			page : "page"          //현재 페이지
 		},
 		rowList:[5,10,20,30,50],	//선택시 노출되는 row 수
-		//  (5->20)
         rowNum: 20,
         pager: "#workGrpGridPager",
         onCellSelect : function(rowid, index, contents, event){
@@ -127,43 +126,6 @@ $(document).ready(function() {
 		}
     );
 
-
-    //초기화 버튼 이벤트
-   	$('#initBtn').on('click',function (e) {
-	   		if($("#initBtn").hasClass('not-active')){
-				return;
-			}
-    		initBtn();
-		}
-    );
-
-    //신규등록 버튼 이벤트
-    $('#newBtn').on('click',function (e) {
-      	if($("#newBtn").hasClass('not-active')){
-          return;
-  		  }
-    		insertBtn();
-		  }
-    );
-
-    //수정 버튼 이벤트
-    $('#updateBtn').on('click',function (e) {
-      	if($("#updateBtn").hasClass('not-active')){
-          return;
-  		  }
-    		updateBtn();
-		  }
-    );
-
-    //삭제 버튼 이벤트
-    $('#deleteBtn').on('click',function (e) {
-      	if($("#deleteBtn").hasClass('not-active')){
-          return;
-  		  }
-    		deleteBtn();
-		  }
-    );
-
     //사용자 추가 버튼
     $('#addUserBtn').on('click',function (e) {
       	if($("#addUserBtn").hasClass('not-active')){
@@ -200,7 +162,9 @@ $(document).ready(function() {
 	);
 });
 
-//배치 프로그램 리스트 조회
+/**
+ * 조회
+ */
 function searchWorkGrpList() {
 	
 	if($('#condSo').val() == 'SEL'){
@@ -227,14 +191,6 @@ function searchWorkGrpList() {
  */
 function pageInit(){
 
-	btnEnable('initBtn');
-	btnDisable('newBtn');
-	btnDisable('updateBtn');
-	btnDisable('deleteBtn');
-	btnDisable('addUserBtn');
-	btnDisable('updateWorkUserBtn');
-	btnDisable('deleteWorkUserBtn');
-
 	$("#workGrpGrid").clearGridData();
 	$("#userGrid").clearGridData();
 	$("#workGrpUserGrid").clearGridData();
@@ -251,38 +207,6 @@ function pageInit(){
     $("#workGrpUseYnSel").val('SEL');
     $("#workGrpUseYnSel").selectmenu('refresh');
 	$("#workGrpUseYnSel").selectmenu('disable');
-}
-
-/*
- * 초기화 버튼
- */
-function initBtn(){
-
-	btnEnable('initBtn');
-	btnEnable('newBtn');
-	btnDisable('updateBtn');
-	btnDisable('deleteBtn');
-	btnDisable('addUserBtn');
-	btnDisable('updateWorkUserBtn');
-	btnDisable('deleteWorkUserBtn');
-
-	$("#userGrid").clearGridData();
-	$("#workGrpUserGrid").clearGridData();
-
-
-	$('#workGrpIdTxt').val('');
-	$('#workGrpIdTxt').addClass('not-active');
-    $('#workGrpIdTxt').attr('disabled', true);
-    $('#workGrpNmTxt').val('');
-	$('#workGrpNmTxt').removeClass('not-active');
-    $('#workGrpNmTxt').removeAttr('disabled');
-    $("#workGrpSoSel").val('SEL');
-    $("#workGrpSoSel").selectmenu('refresh');
-	$("#workGrpSoSel").selectmenu('enable');
-    $("#workGrpUseYnSel").val('SEL');
-    $("#workGrpUseYnSel").selectmenu('refresh');
-	$("#workGrpUseYnSel").selectmenu('enable');
-	$('#workGrpSoSel-button').focus();
 }
 
 /*

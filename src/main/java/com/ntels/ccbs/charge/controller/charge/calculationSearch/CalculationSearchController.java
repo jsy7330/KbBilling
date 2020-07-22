@@ -69,7 +69,7 @@ public class CalculationSearchController {
 		SessionUser sessionUser = CommonUtil.getSessionManager();
 		String lng = (String)request.getSession().getAttribute("sessionLanguage");
 		
-		Map<String, Object> chargCalInfo = chargCalculationResultService.getChargePersonCountList(soId, sessionUser.getSoAuthList(), billYymm, sidx, sord, page, rows, lng);
+		Map<String, Object> chargCalInfo = chargCalculationResultService.getChargePersonCountList(soId, billYymm, sidx, sord, page, rows, lng);
 		
 		model.addAttribute("charPersonCntList", chargCalInfo.get("charPersonCntList"));
 		model.addAttribute("totalCount", chargCalInfo.get("totalCount"));

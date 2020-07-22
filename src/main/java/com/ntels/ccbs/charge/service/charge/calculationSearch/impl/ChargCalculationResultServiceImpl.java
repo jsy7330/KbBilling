@@ -18,11 +18,11 @@ public class ChargCalculationResultServiceImpl implements ChargCalculationResult
 	private ChargCalculationResultMapper chargCalculationResultMapper;
 
 	@Override
-	public Map<String, Object> getChargePersonCountList(String soId, List<Map<String, Object>> soAuthList,
+	public Map<String, Object> getChargePersonCountList(String soId, 
 			String billYymm, String sidx, String sord, int page, int rows, String lng) {
 		// TODO Auto-generated method stub
 		Map<String, Object> chargPersonCntInfo = new HashMap<String, Object>();
-		Integer totalCount = chargCalculationResultMapper.totalCount(soId, soAuthList, billYymm);
+		Integer totalCount = chargCalculationResultMapper.totalCount(soId, billYymm);
 		
 		/*
 		 *  page : 몇번째의 페이지를 요청했는지.
@@ -44,7 +44,7 @@ public class ChargCalculationResultServiceImpl implements ChargCalculationResult
 			String start = Integer.toString(startIndex);
 			
 			
-			List<Map<String,Object>> charPersonCntList = chargCalculationResultMapper.getChargePersonCountList(soId, soAuthList, billYymm, sidx, sord, start, end, lng);
+			List<Map<String,Object>> charPersonCntList = chargCalculationResultMapper.getChargePersonCountList(soId, billYymm, sidx, sord, start, end, lng);
 			
 			chargPersonCntInfo.put("charPersonCntList", charPersonCntList);
 			chargPersonCntInfo.put("totalCount", totalCount);

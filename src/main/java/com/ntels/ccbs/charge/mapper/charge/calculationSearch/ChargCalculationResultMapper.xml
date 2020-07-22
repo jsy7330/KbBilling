@@ -5,85 +5,78 @@
 <mapper namespace="com.ntels.ccbs.charge.mapper.charge.calculationSearch.ChargCalculationResultMapper">
 	
 <select id="getChargePersonCountList" resultType="java.util.HashMap">
-	/*ChargCalculationResultMapper.getChargePersonCountList 요금계산결과현황(사업자구분 수정 조건 필요)*/
+	/*ChargCalculationResultMapper.getChargePersonCountList*/
 	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_head"/>
-	SELECT
-                A.SO_ID
-               ,(SELECT SO_NM
-                   FROM TSYCO_SO_MAST  X                                        /* SO 마스타*/
-                  WHERE X.SO_ID        = A.SO_ID
-                ) 									   AS SO_NM                 /* 지점명 */
-               ,(SELECT PROD_NM
-                  FROM TPMPD_PROD        X                                      /* 상품정보 */
-                 WHERE X.PROD_CD      = A.PROD_CD
-                   AND X.MSTR_FL      = '1'
-                )                                      AS PROD_NM                /* 상품명 */
-               ,A.CUST_CNT
-               ,A.CTRT_CNT
-               ,A.PROD_CMPS_CNT
-               ,A.SVC_CMPS_CNT 
-               ,A.USE_AMT
-               ,A.USE_QTY
-               ,A.USE_CNT
-        FROM (SELECT    B.PROD_CD
-                      , A.SO_ID
-                      , COUNT(DISTINCT A.CUST_ID     ) AS CUST_CNT               /* 고객수 */
-                      , COUNT(DISTINCT A.CTRT_ID     ) AS CTRT_CNT               /* 계약건수 */
-                      , COUNT(DISTINCT A.PROD_CMPS_ID) AS PROD_CMPS_CNT          /* 계약상품건수 */
-                      , COUNT(DISTINCT A.SVC_CMPS_ID ) AS SVC_CMPS_CNT           /* 계약서비스건수 */
-                      , SUM(A.USE_AMT)                 AS USE_AMT                /* 이용금액 */
-                      , SUM(A.USE_QTY)                 AS USE_QTY                /* 이용량 */
-                      , SUM(A.USE_CNT)                 AS USE_CNT                /* 이용건수 */
-            FROM TBLCH_CHRG A, TCMCT_PROD_CMPS_INFO B
-            WHERE A.BILL_YYMM = #{billYymm}        /* 청구년월 */
-            AND A.CLC_WRK_NO IN (SELECT MAX(CLC_WRK_NO)
-                                FROM TBLCH_CLC_MAIN
-                                WHERE BILL_YYMM = #{billYymm}
-                                AND IF(SO_ID = '%', #{soId} ,SO_ID)  = #{soId}
-                                AND CLC_WRK_CL = '0')     /* 정기 청구작업의 최종 작업계산번호를 찾아서  */
-            AND B.PROD_CMPS_ID = A.PROD_CMPS_ID
-            AND B.INACT_DTTM = '99991231235959'
-            <if test = 'soId != "SEL" and soId != "%"'>
-				AND B.SO_ID   = #{soId}
-			</if>
-			<if test = 'soId == "SEL" or soId == "%"'>
-				AND B.SO_ID  IN (IF(B.SO_ID = #{soId}, #{soId}, '%'))
-			</if>
-            GROUP BY B.PROD_CD, A.SO_ID) A
-        WHERE 1 = 1
-        ORDER BY SO_NM, PROD_NM
+	SELECT 
+		A.SO_ID
+     	,(SELECT SO_NM
+          FROM TSYCO_SO_MAST
+          WHERE SO_ID = A.SO_ID)    AS SO_NM    /* 사업 */
+     	,(SELECT PROD_NM
+          FROM TPMPD_PROD
+          WHERE PROD_CD = A.PROD_CD) AS PROD_NM   /* 상품명 */
+     	,A.CUST_CNT                               /* 고객수 */
+     	,A.CTRT_CNT                               /* 계약건수 */
+     	,A.PROD_CMPS_CNT                        /* 계약상품건수 */
+     	,A.SVC_CMPS_CNT                          /* 계약서비스건수 */
+     	,A.USE_AMT                               /* 이용금액 */
+     	,A.USE_QTY
+     	,A.USE_CNT	
+	FROM (SELECT 
+			 B.PROD_CD
+           , A.SO_ID
+           , COUNT(DISTINCT A.CUST_ID     ) AS CUST_CNT
+           , COUNT(DISTINCT A.CTRT_ID     ) AS CTRT_CNT
+           , COUNT(DISTINCT A.PROD_CMPS_ID) AS PROD_CMPS_CNT
+           , COUNT(DISTINCT A.SVC_CMPS_ID ) AS SVC_CMPS_CNT
+           , TRUNCATE(SUM(A.USE_AMT), 0)    AS USE_AMT
+           , TRUNCATE(SUM(A.USE_QTY), 0)    AS USE_QTY
+           , TRUNCATE(SUM(A.USE_CNT), 0)    AS USE_CNT
+          FROM TBLCH_CHRG A
+           , TCMCT_PROD_CMPS_INFO B
+       	  WHERE 1=1
+       	  <if test = 'soId != null and soId != "SEL"'>
+       	  		AND A.SO_ID = #{soId} /* INPUT '16' */
+       	  </if>
+       	  <if test = 'billYymm != null and billYymm != ""'>
+       	  		AND A.BILL_YYMM = #{billYymm} /* INPUT '201710'*/
+       	  </if>
+          AND A.SO_ID = B.SO_ID
+          AND A.CTRT_ID = B.CTRT_ID
+          AND A.PROD_CMPS_ID = B.PROD_CMPS_ID
+          AND B.INACT_DTTM = '99991231235959'
+       GROUP BY B.PROD_CD, A.SO_ID) A
+	WHERE 1 = 1
+	ORDER BY SO_NM, PROD_NM
 	<include refid="com.ntels.ccbs.system.mapper.common.service.CommonCfgMapper.paging_foot"/>
 </select>
 
 <select id="totalCount" resultType ="int">
 	/*ChargCalculationResultMapper.totalCount 요금계산결과현황*/
-	SELECT
-    	COUNT(A.SO_ID)     
-    FROM (SELECT    B.PROD_CD
-                      , A.SO_ID
-                      , COUNT(DISTINCT A.CUST_ID     ) AS CUST_CNT               /* 고객수 */
-                      , COUNT(DISTINCT A.CTRT_ID     ) AS CTRT_CNT               /* 계약건수 */
-                      , COUNT(DISTINCT A.PROD_CMPS_ID) AS PROD_CMPS_CNT          /* 계약상품건수 */
-                      , COUNT(DISTINCT A.SVC_CMPS_ID ) AS SVC_CMPS_CNT           /* 계약서비스건수 */
-                      , SUM(A.USE_AMT)                 AS USE_AMT                /* 이용금액 */
-                      , SUM(A.USE_QTY)                 AS USE_QTY                /* 이용량 */
-                      , SUM(A.USE_CNT)                 AS USE_CNT                /* 이용건수 */
-            FROM TBLCH_CHRG A, TCMCT_PROD_CMPS_INFO B
-            WHERE A.BILL_YYMM = #{billYymm}        /* 청구년월 */
-            AND A.CLC_WRK_NO IN (SELECT MAX(CLC_WRK_NO)
-                                FROM TBLCH_CLC_MAIN
-                                WHERE BILL_YYMM = #{billYymm}
-                                AND IF(SO_ID = '%', #{soId} ,SO_ID)  = #{soId}
-                                AND CLC_WRK_CL = '0')     /* 정기 청구작업의 최종 작업계산번호를 찾아서  */
-            AND B.PROD_CMPS_ID = A.PROD_CMPS_ID
-            AND B.INACT_DTTM = '99991231235959'
-            <if test = 'soId != "SEL" and soId != "%"'>
-				AND B.SO_ID   = #{soId}
-			</if>
-			<if test = 'soId == "SEL" or soId == "%"'>
-				AND B.SO_ID  IN (IF(B.SO_ID = #{soId}, #{soId}, '%'))
-			</if>
-            GROUP BY B.PROD_CD, A.SO_ID) A
-        WHERE 1 = 1
+	SELECT COUNT(A.CUST_CNT)
+	FROM (SELECT B.PROD_CD
+           , A.SO_ID
+           , COUNT(DISTINCT A.CUST_ID     ) AS CUST_CNT
+           , COUNT(DISTINCT A.CTRT_ID     ) AS CTRT_CNT
+           , COUNT(DISTINCT A.PROD_CMPS_ID) AS PROD_CMPS_CNT
+           , COUNT(DISTINCT A.SVC_CMPS_ID ) AS SVC_CMPS_CNT
+           , TRUNCATE(SUM(A.USE_AMT), 0)    AS USE_AMT
+           , TRUNCATE(SUM(A.USE_QTY), 0)    AS USE_QTY
+           , TRUNCATE(SUM(A.USE_CNT), 0)    AS USE_CNT
+        FROM TBLCH_CHRG A
+           , TCMCT_PROD_CMPS_INFO B
+       WHERE 1=1
+	   <if test = 'soId != null and soId != "SEL"'>
+       	  AND A.SO_ID = #{soId} /* INPUT '16' */
+       </if>
+       <if test = 'billYymm != null and billYymm != ""'>
+       	  AND A.BILL_YYMM = #{billYymm} /* INPUT '201710'*/
+       </if>
+         AND A.SO_ID = B.SO_ID
+         AND A.CTRT_ID = B.CTRT_ID
+         AND A.PROD_CMPS_ID = B.PROD_CMPS_ID
+         AND B.INACT_DTTM = '99991231235959'
+       GROUP BY B.PROD_CD, A.SO_ID) A
+	WHERE 1 = 1
 </select>
 </mapper>

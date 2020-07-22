@@ -26,11 +26,9 @@ import org.springframework.stereotype.Component;
 public interface ChargCalculationResultMapper {
 	
 	int totalCount(@Param("soId")String soId,
-			@Param("soAuthList")List<Map<String, Object>> soAuthList, 
 			@Param("billYymm")String billYymm);
 	
 	List<Map<String,Object>> getChargePersonCountList(@Param("soId")String soId,
-			@Param("soAuthList")List<Map<String, Object>> soAuthList,
 			@Param("billYymm")String billYymm,
 			@Param("sidx")String sidx,
 	        @Param("sord")String sord,
