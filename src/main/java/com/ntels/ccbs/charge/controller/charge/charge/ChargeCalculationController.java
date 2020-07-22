@@ -226,7 +226,7 @@ public class ChargeCalculationController {
 	
 	
 	@RequestMapping(value = "getChargeListAction", method = RequestMethod.POST)
-	public String getWorkGrpList(Model model,HttpServletRequest request,String soId,String sidx,String sord,int page,int rows
+	public String getChargeListAction(Model model,HttpServletRequest request,String soId,String sidx,String sord,int page,int rows
 		,String condBillYymm
 		,String condClc
 		,String condPymAcntId
@@ -243,6 +243,32 @@ public class ChargeCalculationController {
 																				,condCustId);
 		
 		model.addAttribute("chargeList", chargeInfo.get("chargeList"));
+		model.addAttribute("totalCount", chargeInfo.get("totalCount"));
+		model.addAttribute("totalPages", chargeInfo.get("totalPages"));
+		model.addAttribute("page", chargeInfo.get("page"));
+		 
+		
+		return URL + "/chargeCalculationResult";
+	}
+	
+	@RequestMapping(value = "getChargeDetailList", method = RequestMethod.POST)
+	public String getChargeDetailList(Model model,HttpServletRequest request,String soId,String sidx,String sord,int page,int rows
+		,String condBillYymm
+		,String condClc
+		,String condPymAcntId
+		,String condCustId) {
+		
+		SessionUser sessionUser = CommonUtil.getSessionManager();
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		String today = DateUtil.getDateStringYYYYMMDD(0);
+		
+		Map<String,Object> chargeInfo = chargeCalculationService.getChargeDetailList(soId,sessionUser.getSoAuthList(),sidx,sord, page, rows, today, lng
+																				,condBillYymm
+																				,condClc
+																				,condPymAcntId
+																				,condCustId);
+		
+		model.addAttribute("chargeDetailList", chargeInfo.get("chargeDetailList"));
 		model.addAttribute("totalCount", chargeInfo.get("totalCount"));
 		model.addAttribute("totalPages", chargeInfo.get("totalPages"));
 		model.addAttribute("page", chargeInfo.get("page"));

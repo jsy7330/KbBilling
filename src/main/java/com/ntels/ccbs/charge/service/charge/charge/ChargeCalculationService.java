@@ -18,9 +18,15 @@ public interface ChargeCalculationService {
 	int updateBatPgmLog(RegularChargeJobVO regularChargeJobVO);
 
 	Map<String, Object> getChargeList(String soId,List<Map<String, Object>> soAuthList,String sidx,String sord, int page, int rows, String today, String lng
-									 ,String condBillYymm
-									 ,String condClc
-									 ,String condPymAcntId
-									 ,String condCustId);
+			 ,String condBillYymm
+			 ,String condClc
+			 ,String condPymAcntId
+			 ,String condCustId);
+
+	Map<String, Object> getChargeDetailList(String soId, List<Map<String, Object>> soAuthList, String sidx, String sord,int page, int rows, String today, String lng
+			, String condBillYymm
+			, String condClc
+			, String condPymAcntId
+			, String condCustId);
 	
 }

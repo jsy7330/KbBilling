@@ -38,5 +38,13 @@ public interface ChargeCalculationMapper {
 			,@Param("condCustId")String condCustId
 			);
 
+	List<Map<String, Object>> getChargeDetailList( @Param("soId")String soId,@Param("soAuthList")List<Map<String, Object>> soAuthList,@Param("sidx")String sidx, @Param("sord")String sord, @Param("today")String today 
+			,@Param("start")String start,@Param("end")String end,@Param("lng")String lng
+			,@Param("condBillYymm")String condBillYymm
+			,@Param("condClc")String condClc
+			,@Param("condPymAcntId")String condPymAcntId
+			,@Param("condCustId")String condCustId
+			);
+
 
 }
