@@ -354,7 +354,7 @@ $(window).resize(function() {
 		</colgroup>
 		 <thead> 
 		<tr>
-			<th><spring:message code="LAB.M07.LAB00003"/><!-- 사업 --></th>
+			<th><spring:message code="LAB.M07.LAB00003"/><span class="dot">*</span><!-- 사업 --></th>
 			<td>
 				<select class="w150" id="searchSoId" name="searchSoId">
 					<c:forEach items="${session_user.soAuthList}" var="soAuthList" varStatus="status">
@@ -362,7 +362,7 @@ $(window).resize(function() {
 					</c:forEach>
 				</select>
 			</td>  
-			<th><spring:message code="LAB.M10.LAB00033"/><!-- 청구년월 --></th>
+			<th><spring:message code="LAB.M10.LAB00033"/><span class="dot">*</span><!-- 청구년월 --></th>
 			<td>
 				<select id="searchBillYymm" name="searchBillYymm" class="w150">
 					<c:forEach items="${billYymmList}" var="billYymmList" varStatus="i">

@@ -170,7 +170,7 @@ $(document).ready(function() {
     //조회 버튼 이벤트
     $('#searchBtn').on('click',function (e) {
 	    	if($('#condSo').val() == 'SEL'){
-				alert('<spring:message code="MSG.M07.MSG00006" />');	  //사업을 선택하세요
+				alert('<spring:message code="MSG.M07.MSG00006" />');  //사업을 선택하세요
 				return false;
 			}
 			if($('#condBillYymm').val() == ''){
@@ -178,7 +178,7 @@ $(document).ready(function() {
 				return false;
 			}
 			if($('#condPymAcntId').val() == ''){
-				alert('<spring:message code="MSG.M02.MSG00001"/>'); //납부계정 정보가 없습니다.
+				alert('<spring:message code="MSG.M02.MSG00001"/>');   //납부계정 정보가 없습니다.
 				return false;
 			}
 	    	if($("#searchBtn").hasClass('not-active')){
