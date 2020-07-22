@@ -8,6 +8,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.ntels.ccbs.charge.domain.charge.charge.ChargeCalculationVO;
 import com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO;
 import com.ntels.ccbs.charge.mapper.charge.charge.ChargeCalculationMapper;
 import com.ntels.ccbs.charge.service.charge.charge.ChargeCalculationService;
@@ -77,11 +78,10 @@ public class ChargeCalculationServiceImpl implements ChargeCalculationService{
 	
 
 	@Override
-	public Map<String, Object> getChargeList(String soId,List<Map<String, Object>> soAuthList, String sidx,String sord, int page, int rows, String today, String lng
-			 ,String condBillYymm,String condClc,String condPymAcntId,String condCustId){
+	public Map<String, Object> getChargeList(List<Map<String, Object>> soAuthList, ChargeCalculationVO charVO){
 		
 		Map<String,Object> chargeInfo = new HashMap<String,Object>();
-		Integer totalCount = chargeCalculationMapper.getChargeListTotalCnt(soId,soAuthList,condBillYymm,condClc,condPymAcntId,condCustId);
+		Integer totalCount = chargeCalculationMapper.getChargeListTotalCnt(soAuthList,charVO);
 		/*
 		   	page : 몇번째의 페이지를 요청했는지.
 			rows : 페이지 당 몇개의 행이 보여질건지. 
@@ -94,19 +94,19 @@ public class ChargeCalculationServiceImpl implements ChargeCalculationService{
 			chargeInfo.put("totalPages", new Integer(0));
 			chargeInfo.put("page", new Integer(1));
 		}else{
-			int endIndex = rows;
-			int startIndex = (page-1) * rows;
+			int endIndex = charVO.getRows();
+			int startIndex = (charVO.getPage()-1) * charVO.getRows();
 			
 			String end = Integer.toString(endIndex);
 			String start = Integer.toString(startIndex);
 			
-			List<Map<String,Object>> chargeList = chargeCalculationMapper.getChargeList(soId,soAuthList,sidx,start, end,sord,today,lng,condBillYymm,condClc,condPymAcntId,condCustId);
+			List<Map<String,Object>> chargeList = chargeCalculationMapper.getChargeList(soAuthList,charVO,end,start);
 			
 			chargeInfo.put("chargeList", chargeList); 
 			chargeInfo.put("totalCount", totalCount);
-			Integer totalPages = new Integer((int)Math.ceil(totalCount.floatValue() / (float)rows));
+			Integer totalPages = new Integer((int)Math.ceil(totalCount.floatValue() / (float)charVO.getRows()));
 			chargeInfo.put("totalPages", totalPages);
-			chargeInfo.put("page", new Integer(page));
+			chargeInfo.put("page", new Integer(charVO.getPage()));
 		}
 		
 		 
@@ -114,11 +114,10 @@ public class ChargeCalculationServiceImpl implements ChargeCalculationService{
 	}
 	 
 	@Override
-	public Map<String, Object> getChargeDetailList(String soId,List<Map<String, Object>> soAuthList, String sidx,String sord, int page, int rows, String today, String lng
-			 ,String condBillYymm,String condClc,String condPymAcntId,String condCustId){
+	public Map<String, Object> getChargeDetailList(List<Map<String, Object>> soAuthList, ChargeCalculationVO charVO){
 		
 		Map<String,Object> chargeDetailInfo = new HashMap<String,Object>();
-		Integer totalCount = chargeCalculationMapper.getChargeListTotalCnt(soId,soAuthList,condBillYymm,condClc,condPymAcntId,condCustId);
+		Integer totalCount = chargeCalculationMapper.getChargeListTotalCnt(soAuthList,charVO);
 		/*
 		   	page : 몇번째의 페이지를 요청했는지.
 			rows : 페이지 당 몇개의 행이 보여질건지. 
@@ -131,19 +130,19 @@ public class ChargeCalculationServiceImpl implements ChargeCalculationService{
 			chargeDetailInfo.put("totalPages", new Integer(0));
 			chargeDetailInfo.put("page", new Integer(1));
 		}else{
-			int endIndex = rows;
-			int startIndex = (page-1) * rows;
+			int endIndex = charVO.getRows();
+			int startIndex = (charVO.getPage()-1) * charVO.getRows();
 			
 			String end = Integer.toString(endIndex);
 			String start = Integer.toString(startIndex);
 			
-			List<Map<String,Object>> chargeDetailList = chargeCalculationMapper.getChargeDetailList(soId,soAuthList,sidx,start, end,sord,today,lng,condBillYymm,condClc,condPymAcntId,condCustId);
+			List<Map<String,Object>> chargeDetailList = chargeCalculationMapper.getChargeDetailList(soAuthList,charVO,end,start);
 			
 			chargeDetailInfo.put("chargeDetailList", chargeDetailList); 
 			chargeDetailInfo.put("totalCount", totalCount);
-			Integer totalPages = new Integer((int)Math.ceil(totalCount.floatValue() / (float)rows));
+			Integer totalPages = new Integer((int)Math.ceil(totalCount.floatValue() / (float)charVO.getRows()));
 			chargeDetailInfo.put("totalPages", totalPages);
-			chargeDetailInfo.put("page", new Integer(page));
+			chargeDetailInfo.put("page", new Integer(charVO.getPage()));
 		}
 		
 		 

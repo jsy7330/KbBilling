@@ -16,6 +16,94 @@ public class ChargeCalculationVO implements Serializable,CommonVO{
 	private String commonCd;
 	private String commonCdNm;
 	
+	
+	private String sidx;
+	private String sord;
+	private int page;
+	private int rows;
+	private String lng;
+	private String today;
+	
+	private String condBillYymm;
+	private String condPymAcntId;
+	private String condCustId;
+	private String condCtrtId;
+	private String condWorkGrpId;
+	private String condProdCd;
+	
+	
+	public String getLng() {
+		return lng;
+	}
+	public void setLng(String lng) {
+		this.lng = lng;
+	}
+	public String getToday() {
+		return today;
+	}
+	public void setToday(String today) {
+		this.today = today;
+	}
+	public String getSidx() {
+		return sidx;
+	}
+	public void setSidx(String sidx) {
+		this.sidx = sidx;
+	}
+	public String getSord() {
+		return sord;
+	}
+	public void setSord(String sord) {
+		this.sord = sord;
+	}
+	public int getPage() {
+		return page;
+	}
+	public void setPage(int page) {
+		this.page = page;
+	}
+	public int getRows() {
+		return rows;
+	}
+	public void setRows(int rows) {
+		this.rows = rows;
+	}
+	public String getCondBillYymm() {
+		return condBillYymm;
+	}
+	public void setCondBillYymm(String condBillYymm) {
+		this.condBillYymm = condBillYymm;
+	}
+	public String getCondPymAcntId() {
+		return condPymAcntId;
+	}
+	public void setCondPymAcntId(String condPymAcntId) {
+		this.condPymAcntId = condPymAcntId;
+	}
+	public String getCondCustId() {
+		return condCustId;
+	}
+	public void setCondCustId(String condCustId) {
+		this.condCustId = condCustId;
+	}
+	public String getCondCtrtId() {
+		return condCtrtId;
+	}
+	public void setCondCtrtId(String condCtrtId) {
+		this.condCtrtId = condCtrtId;
+	}
+	public String getCondWorkGrpId() {
+		return condWorkGrpId;
+	}
+	public void setCondWorkGrpId(String condWorkGrpId) {
+		this.condWorkGrpId = condWorkGrpId;
+	}
+	public String getCondProdCd() {
+		return condProdCd;
+	}
+	public void setCondProdCd(String condProdCd) {
+		this.condProdCd = condProdCd;
+	}
 	public String getSoId() {
 		return soId;
 	}

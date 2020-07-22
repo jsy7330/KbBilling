@@ -33,7 +33,7 @@ var selGridData;
 var batchCount = 0;
 var userId = '${session_user.userName}';
 var batGrpId = '00011';		//프로그램 그룹 아이디 (00011-요금계산, 00012-정기청구)
-var batchType = "O";	//배치 타입 O: 건별작업 B:일괄작업
+var batchType = "O";		//배치 타입 O: 건별작업 B:일괄작업
 
 $(document).ready(function() {
 
@@ -123,10 +123,7 @@ $(document).ready(function() {
 			if(batchType == "B"){
 				clearInterval(intervalVal);
 			   	oneWork("B");
-			}
-  	      	
-  	      	
-  	      	
+			} 	      	 	      	
         },
     	sortable: { update: function(permutation) {
     		$("#batchGrid").setGridWidth($('#gridDiv').width(),false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
@@ -403,8 +400,7 @@ function getBatchLog(){
 					//clearInterval(intervalVal);
 					
 					batchCount = 0; //배치 카운트 초기화
-					
-					
+										
 					//일괄 작업 일 경우 다시 호출
 					if(batchLogList[0].batProcStat == "1" && batchType == "B"){
 						
@@ -522,7 +518,7 @@ function pageEnavle(){
 		</colgroup>
 		<thead>
 			<tr>
-				<th><spring:message code="LAB.M07.LAB00003" /></th>
+				<th><spring:message code="LAB.M07.LAB00003" /><span class="dot">*</span></th>
 				<td>
 					<select id="soId" name="soId" class="w100p">
 						<%-- <option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option> --%>
@@ -531,7 +527,7 @@ function pageEnavle(){
 						</c:forEach>
 					</select>
 				</td>
-				<th><spring:message code="LAB.M10.LAB00033" /></th> <!-- 청구년월 -->
+				<th><spring:message code="LAB.M10.LAB00033" /><span class="dot">*</span></th> <!-- 청구년월 -->
 				<td>
 					<div class="date_box">
 						<div class="inp_date w130">

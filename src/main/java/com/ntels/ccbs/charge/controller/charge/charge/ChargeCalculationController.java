@@ -225,22 +225,36 @@ public class ChargeCalculationController {
 	*/
 	
 	
+	/**
+	 * <PRE>
+	 * 1. MethodName: getChargeListAction
+	 * 2. ClassName : ChargeCalculationController
+	 * 3. Comment   :
+	 * 4. 작성자    : 
+	 * 5. 작성일    : 2020. 7. 22. 오전 11:10:47
+	 * </PRE>
+	 *   @return String
+	 *   @param model
+	 *   @param request
+	 *   @param soId
+	 *   @param sidx
+	 *   @param sord
+	 *   @param page
+	 *   @param rows
+	 *   @param condBillYymm
+	 *   @param condClc
+	 *   @param condPymAcntId
+	 *   @param condCustId
+	 *   @return
+	 */
 	@RequestMapping(value = "getChargeListAction", method = RequestMethod.POST)
-	public String getChargeListAction(Model model,HttpServletRequest request,String soId,String sidx,String sord,int page,int rows
-		,String condBillYymm
-		,String condClc
-		,String condPymAcntId
-		,String condCustId) {
+	public String getChargeListAction(Model model,HttpServletRequest request,ChargeCalculationVO charVO) {
 		
 		SessionUser sessionUser = CommonUtil.getSessionManager();
-		String lng = (String)request.getSession().getAttribute("sessionLanguage");
-		String today = DateUtil.getDateStringYYYYMMDD(0);
+		charVO.setLng((String)request.getSession().getAttribute("sessionLanguage"));
+		charVO.setToday(DateUtil.getDateStringYYYYMMDD(0));
 		
-		Map<String,Object> chargeInfo = chargeCalculationService.getChargeList(soId,sessionUser.getSoAuthList(),sidx,sord, page, rows, today, lng
-																				,condBillYymm
-																				,condClc
-																				,condPymAcntId
-																				,condCustId);
+		Map<String,Object> chargeInfo = chargeCalculationService.getChargeList(sessionUser.getSoAuthList(),charVO);
 		
 		model.addAttribute("chargeList", chargeInfo.get("chargeList"));
 		model.addAttribute("totalCount", chargeInfo.get("totalCount"));
@@ -252,21 +266,13 @@ public class ChargeCalculationController {
 	}
 	
 	@RequestMapping(value = "getChargeDetailList", method = RequestMethod.POST)
-	public String getChargeDetailList(Model model,HttpServletRequest request,String soId,String sidx,String sord,int page,int rows
-		,String condBillYymm
-		,String condClc
-		,String condPymAcntId
-		,String condCustId) {
+	public String getChargeDetailList(Model model,HttpServletRequest request,ChargeCalculationVO charVO) {
 		
 		SessionUser sessionUser = CommonUtil.getSessionManager();
-		String lng = (String)request.getSession().getAttribute("sessionLanguage");
-		String today = DateUtil.getDateStringYYYYMMDD(0);
+		charVO.setLng((String)request.getSession().getAttribute("sessionLanguage"));
+		charVO.setToday(DateUtil.getDateStringYYYYMMDD(0));
 		
-		Map<String,Object> chargeInfo = chargeCalculationService.getChargeDetailList(soId,sessionUser.getSoAuthList(),sidx,sord, page, rows, today, lng
-																				,condBillYymm
-																				,condClc
-																				,condPymAcntId
-																				,condCustId);
+		Map<String,Object> chargeInfo = chargeCalculationService.getChargeDetailList(sessionUser.getSoAuthList(),charVO);
 		
 		model.addAttribute("chargeDetailList", chargeInfo.get("chargeDetailList"));
 		model.addAttribute("totalCount", chargeInfo.get("totalCount"));
