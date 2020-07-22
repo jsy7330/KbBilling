@@ -100,7 +100,7 @@ $(document).ready(function() {
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
-			root : "workGrpList",
+			root : "chargeList",
 			records : "totalCount", //총 레코드 
 			total : "totalPages",  //총페이지수
 			page : "page"          //현재 페이지
@@ -121,7 +121,7 @@ $(document).ready(function() {
 	});
 
 	$("#workGrpGrid2").jqGrid({
-		url : '/product/service/serviceMgt/workGrpMng/getWorkGrpListAction.json',
+		url : '/charge/charge/charge/chargeMng/getChargeDetailList.json',
 		datatype : 'local',
 		mtype: 'POST',
 		postData : {
@@ -129,12 +129,12 @@ $(document).ready(function() {
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '서비스명', name: 'SO_NM', width : 100, align:"left", sortable:false},
-		    { label: '과금항목명', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false},
-		    { label: '이용건수', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '이용일수', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '사용금액', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '사용년월', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false}
+		    { label: '서비스명', name: 'SVC_NM', width : 100, align:"left", sortable:false},
+		    { label: '과금항목명', name: 'RATE_ITM_NM', width : 100, align:"center", sortable:false},
+		    { label: '이용건수', name: 'USE_QTY', width : 150, sortable:false},
+			{ label: '이용일수', name: 'USE_CNT', width : 150, sortable:false}, //USE_CNT
+			{ label: '사용금액', name: 'USE_AMT', width : 150, sortable:false},
+		    { label: '사용년월', name: 'USE_YYMM', width : 200, align:"left", sortable:false}
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -142,7 +142,7 @@ $(document).ready(function() {
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
-			root : "workGrpList",
+			root : "chargeDetailList",
 			records : "totalCount", //총 레코드 
 			total : "totalPages",  //총페이지수
 			page : "page"          //현재 페이지
@@ -340,9 +340,10 @@ function searchWorkGrpList(){
   			condPymAcntId : $('#condPymAcntId').val(),
   			condCustId : $('#condCustId').val()
 		}
-	});
+	});	
 	      
-   	$("#workGrpGrid").trigger("reloadGrid");	
+   	$("#workGrpGrid").trigger("reloadGrid");
+  	
 }
 
 /*
@@ -390,7 +391,23 @@ function setSelectedData(rowId){
   			svcWrkGrpId : data.SVC_WRK_GRP_ID
 		}
 	});
-   	$("#workGrpUserGrid").trigger("reloadGrid");	
+   	$("#workGrpUserGrid").trigger("reloadGrid");
+   	
+   	//서비스 상세 내역 
+   	$("#workGrpGrid2").setGridParam({
+		mtype: 'POST',
+		datatype : 'json',
+  	    postData : {
+  	    	soId : $('#condSo').val(),
+  			condBillYymm : $('#condBillYymm').val().replace("-",""),
+  			condClc : $('#condClc').val(),
+  			condPymAcntId : $('#condPymAcntId').val(),
+  			condCustId : $('#condCustId').val()
+		}
+	});
+   	
+   	$("#workGrpGrid2").trigger("reloadGrid");
+   	
 }
 
 function reloadUserDtl(workGrpId){
@@ -788,16 +805,16 @@ function openCustSearchPopup(){
 	</colgroup>
 	<thead>
 		<tr>
-			<th><spring:message code="LAB.M07.LAB00003" /></th>
+			<th><spring:message code="LAB.M07.LAB00003" /><span class="dot">*</span></th>
 			<td>
 				<select id="condSo" class="w100p">
-					<option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option>
+					<option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option>	<!-- 사업 -->
 					<c:forEach items="${session_user.soAuthList}" var="soAuthList" varStatus="status">
 							<option value="${soAuthList.so_id}">${soAuthList.so_nm}</option>
 					</c:forEach>
 				</select>
 			</td>
-			<th>청구년월</th>
+			<th><spring:message code="LAB.M10.LAB00033" /><span class="dot">*</span></th> <!-- 청구년월 -->
 			<td>
 				<div class="date_box">
 					<div class="inp_date w130">
@@ -817,7 +834,7 @@ function openCustSearchPopup(){
 					</c:forEach>
 				</select>
 			</td>
-			<th>납부계정</th>
+			<th>납부계정<span class="dot">*</span></th>
 			<td>
 				<div class="inp_date w280">
 					<input id="searchAcntNm" name="searchAcntNm" type="text" class="w120" disabled="disabled"/>
