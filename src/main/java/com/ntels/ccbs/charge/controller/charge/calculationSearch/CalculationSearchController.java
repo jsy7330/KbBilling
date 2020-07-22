@@ -181,7 +181,7 @@ public class CalculationSearchController {
 		SessionUser sessionUser = CommonUtil.getSessionManager();
 		String lng = (String)request.getSession().getAttribute("sessionLanguage");
 		
-		Map<String, Object> chargDistInfo = paymentDistSerchService.getChargeDiscountInfoList(soId, billYymm, billCycl, pymAcntId, custId, ctrtId, sidx, sord, page, rows, lng);
+		Map<String, Object> chargDistInfo = paymentDistSerchService.getChargeDiscountInfoList(soId, billYymm, pymAcntId, custId, sidx, sord, page, rows, lng);
 		
 		System.out.println("CONTROLLER getChargeDiscountInfoList : " + chargDistInfo.toString());
 		
@@ -197,14 +197,8 @@ public class CalculationSearchController {
 	@RequestMapping(value = "getChargeDiscountInfoDetList", method = RequestMethod.POST)
 	public String getChargeDiscountInfoDetList(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request,
 			String soId,
-			String clcwrkNo,
-			String rateItmCd,
-			String prodCd, 
-			String svcCd,
 			String billYymm,
-			String billCycl,
 			String pymAcntId,
-			String custId,
 			String ctrtId,
 			String sidx,
 			String sord,
@@ -214,7 +208,7 @@ public class CalculationSearchController {
 		SessionUser sessionUser = CommonUtil.getSessionManager();
 		String lng = (String)request.getSession().getAttribute("sessionLanguage");
 		
-		Map<String, Object> chargDistDetInfo = paymentDistSerchService.getChargeDiscountInfoDetList(soId, clcwrkNo, rateItmCd, prodCd, svcCd, billYymm, billCycl, pymAcntId, custId, ctrtId, sidx, sord, page, rows, lng);
+		Map<String, Object> chargDistDetInfo = paymentDistSerchService.getChargeDiscountInfoDetList(soId, billYymm, pymAcntId, ctrtId, sidx, sord, page, rows, lng);
 		
 		model.addAttribute("chargDistDetInfoList", chargDistDetInfo.get("chargDistDetInfoList"));
 		model.addAttribute("totalCount", chargDistDetInfo.get("totalCount"));

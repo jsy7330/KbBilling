@@ -18,12 +18,12 @@ public class PaymentDistSearchServiceImpl implements PaymentDistSearchService {
 	private PaymentDistSearchMapper paymentDistSerachMapper;
 
 	@Override
-	public Map<String, Object> getChargeDiscountInfoList(String soId, String billYymm, String billCycl,
-			String pymAcntId, String custId, String ctrtId, String sidx, String sord, int page, int rows, String lng) {
+	public Map<String, Object> getChargeDiscountInfoList(String soId, String billYymm, 
+			String pymAcntId, String custId, String sidx, String sord, int page, int rows, String lng) {
 		// TODO Auto-generated method stub
 		
 		Map<String, Object> chargDistInfo = new HashMap<String, Object>();
-		Integer totalCount = paymentDistSerachMapper.chrgDistListCnt(soId, billYymm, billCycl, pymAcntId, custId, ctrtId);
+		Integer totalCount = paymentDistSerachMapper.chrgDistListCnt(soId, billYymm, pymAcntId, custId);
 		
 		/*
 		 *  page : 몇번째의 페이지를 요청했는지.
@@ -45,7 +45,7 @@ public class PaymentDistSearchServiceImpl implements PaymentDistSearchService {
 			String start = Integer.toString(startIndex);
 			
 			
-			List<Map<String,Object>> chargDistInfoList = paymentDistSerachMapper.getChargeDiscountInfoList(soId, billYymm, billCycl, pymAcntId, custId, ctrtId, sidx, sord, start, end, lng);
+			List<Map<String,Object>> chargDistInfoList = paymentDistSerachMapper.getChargeDiscountInfoList(soId, billYymm, pymAcntId, custId, sidx, sord, start, end, lng);
 			
 			chargDistInfo.put("chargDistInfoList", chargDistInfoList);
 			chargDistInfo.put("totalCount", totalCount);
@@ -58,12 +58,11 @@ public class PaymentDistSearchServiceImpl implements PaymentDistSearchService {
 	}
 
 	@Override
-	public Map<String, Object> getChargeDiscountInfoDetList(String soId, String clcwrkNo, String rateItmCd,
-			String prodCd, String svcCd, String billYymm, String billCycl, String pymAcntId, String custId,
+	public Map<String, Object> getChargeDiscountInfoDetList(String soId, String billYymm, String pymAcntId,
 			String ctrtId, String sidx, String sord, int page, int rows, String lng) {
 		// TODO Auto-generated method stub
 		Map<String, Object> chargDistDetInfo = new HashMap<String, Object>();
-		Integer totalCount = paymentDistSerachMapper.chrgDistDetListCnt(soId, clcwrkNo, rateItmCd, prodCd, svcCd, billYymm, billCycl, pymAcntId, custId, ctrtId);
+		Integer totalCount = paymentDistSerachMapper.chrgDistDetListCnt(soId, billYymm, pymAcntId, ctrtId);
 		
 		/*
 		 *  page : 몇번째의 페이지를 요청했는지.
@@ -85,7 +84,7 @@ public class PaymentDistSearchServiceImpl implements PaymentDistSearchService {
 			String start = Integer.toString(startIndex);
 			
 			
-			List<Map<String,Object>> chargDistDetInfoList = paymentDistSerachMapper.getChargeDiscountInfoList(soId, billYymm, billCycl, pymAcntId, custId, ctrtId, sidx, sord, start, end, lng);
+			List<Map<String,Object>> chargDistDetInfoList = paymentDistSerachMapper.getChargeDiscountInfoDetList(soId, billYymm, pymAcntId, ctrtId, sidx, sord, start, end, lng);
 			
 			chargDistDetInfo.put("chargDistDetInfoList", chargDistDetInfoList);
 			chargDistDetInfo.put("totalCount", totalCount);
