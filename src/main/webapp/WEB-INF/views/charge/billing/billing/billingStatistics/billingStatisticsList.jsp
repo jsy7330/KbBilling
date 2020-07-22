@@ -262,7 +262,7 @@ function searchGridList(){
                    </c:forEach>
                </select>                                           
            </td>
-           <th><spring:message code="LAB.M02.LAB00005"/><!-- 납부계정 --></th>
+           <th><spring:message code="LAB.M02.LAB00005"/><span class="dot">*</span><!-- 납부계정 --></th>
            <td>
                <div class="inp_date w280">
                    <input id="searchAcntNm" name="searchAcntNm" type="text" class="w120" disabled="disabled"/>

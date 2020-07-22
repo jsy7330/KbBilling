@@ -522,7 +522,7 @@ function pageEnavle(){
 		</colgroup>
 		<thead>
 			<tr>
-				<th><spring:message code="LAB.M07.LAB00003" /></th>
+				<th><spring:message code="LAB.M07.LAB00003" /><span class="dot">*</span></th><!-- 사업 -->
 				<td>
 					<select id="soId" name="soId" class="w100p">
 						<%-- <option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option> --%>
@@ -531,7 +531,7 @@ function pageEnavle(){
 						</c:forEach>
 					</select>
 				</td>
-				<th><spring:message code="LAB.M10.LAB00033" /></th> <!-- 청구년월 -->
+				<th><spring:message code="LAB.M10.LAB00033" /><span class="dot">*</span></th> <!-- 청구년월 -->
 				<td>
 					<div class="date_box">
 						<div class="inp_date w130">
