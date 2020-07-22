@@ -216,8 +216,6 @@ public class CalculationSearchController {
 		
 		Map<String, Object> chargDistDetInfo = paymentDistSerchService.getChargeDiscountInfoDetList(soId, clcwrkNo, rateItmCd, prodCd, svcCd, billYymm, billCycl, pymAcntId, custId, ctrtId, sidx, sord, page, rows, lng);
 		
-		System.out.println("CONTROLLER getChargeDiscountInfoList : " + chargDistDetInfo.toString());
-		
 		model.addAttribute("chargDistDetInfoList", chargDistDetInfo.get("chargDistDetInfoList"));
 		model.addAttribute("totalCount", chargDistDetInfo.get("totalCount"));
 		model.addAttribute("totalPages", chargDistDetInfo.get("totalPages"));
@@ -231,6 +229,25 @@ public class CalculationSearchController {
 
 		String lng = (String)request.getSession().getAttribute("sessionLanguage");
 		return URL + "/useSearch";
-	}	
+	}
+	
+	@RequestMapping(value = "getUsgListByCtrt", method = RequestMethod.POST)
+	public String getUsgListByCtrt(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request,
+				String soId,
+				String useYymm,
+				String ctrtId,
+				String useTyp,
+				String searchStDt,
+				String searchEndDt,
+				String sidx,
+				String sord,
+				int page,
+				int rows) {
+		
+		SessionUser sessionUser = CommonUtil.getSessionManager();
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		
+		return URL + "/useSearch";
+	}
 
 }
