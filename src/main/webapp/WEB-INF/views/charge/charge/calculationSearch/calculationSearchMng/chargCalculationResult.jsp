@@ -76,13 +76,13 @@ $(document).ready(function() {
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'soNm', name: 'SO_NM', width : 100, align:"center", hidden:true},
 		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'PROD_NM', width : 200, sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00275"/>', name: 'CUST_CNT',  sortable:false, formatter:numberAutoFormatter},
-		    { label: '<spring:message code="LAB.M01.LAB00267"/>', name: 'CTRT_CNT',  sortable:false, formatter:numberAutoFormatter},
-		    { label: '<spring:message code="LAB.M01.LAB00276"/>', name: 'PROD_CMPS_CNT',  sortable:false, formatter:numberAutoFormatter},
-		    { label: '<spring:message code="LAB.M01.LAB00277"/>', name: 'SVC_CMPS_CNT',  sortable:false, formatter:numberAutoFormatter},
-			{ label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'USE_QTY',  sortable:false, formatter:numberAutoFormatter},
-		    { label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT',  sortable:false, formatter:numberAutoFormatter},
-		    { label: '<spring:message code="LAB.M07.LAB00018"/>', name: 'USE_CNT',  hidden:true, formatter:numberAutoFormatter}
+		    { label: '<spring:message code="LAB.M01.LAB00275"/>', name: 'CUST_CNT',  align:"right", sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M01.LAB00267"/>', name: 'CTRT_CNT',  align:"right", sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M01.LAB00276"/>', name: 'PROD_CMPS_CNT',  align:"right", sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M01.LAB00277"/>', name: 'SVC_CMPS_CNT',  align:"right", sortable:false, formatter:numberAutoFormatter},
+			{ label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'USE_QTY',  align:"right", sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT',  align:"right" ,sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M07.LAB00018"/>', name: 'USE_CNT',  hidden:true, align:"right", formatter:numberAutoFormatter}
 			
 		],
 		viewrecords: true,
