@@ -1,6 +1,7 @@
 package com.ntels.ccbs.charge.controller.charge.calculationSearch;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,10 +19,18 @@ import com.ntels.ccbs.charge.domain.charge.calculationSearch.CalculationSearchVO
 import com.ntels.ccbs.charge.domain.charge.calculationSearch.PaymentChargeCalculationVo;
 import com.ntels.ccbs.charge.service.charge.calculationSearch.ChargCalculationResultService;
 import com.ntels.ccbs.charge.service.charge.calculationSearch.PaymentDistSearchService;
+import com.ntels.ccbs.charge.service.charge.calculationSearch.UseSearchService;
 import com.ntels.ccbs.charge.service.charge.charge.PaymentChargeCalculationService;
+import com.ntels.ccbs.common.consts.Consts.ExcelFormatType;
 import com.ntels.ccbs.common.util.CommonUtil;
+import com.ntels.ccbs.common.view.ExcelCellVO;
+import com.ntels.ccbs.common.view.ExcelColumnVO;
+import com.ntels.ccbs.common.view.ExcelFileVO;
+import com.ntels.ccbs.common.view.ExcelRowVO;
+import com.ntels.ccbs.common.view.ExcelSheetVO;
 import com.ntels.ccbs.system.domain.common.service.SessionUser;
 import com.ntels.ccbs.system.service.common.service.CommonDataService;
+import com.ntels.nisf.util.message.MessageUtil;
 
 @Controller
 @RequestMapping(value = "/charge/charge/calculationSearch/calculationSearchMng")
@@ -40,6 +49,9 @@ public class CalculationSearchController {
 	
 	@Autowired 
 	private PaymentDistSearchService paymentDistSerchService;
+	
+	@Autowired
+	private UseSearchService useSearchService;
 	
 /*	
 	@Autowired
@@ -227,21 +239,102 @@ public class CalculationSearchController {
 	
 	@RequestMapping(value = "getUsgListByCtrt", method = RequestMethod.POST)
 	public String getUsgListByCtrt(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request,
-				String soId,
-				String useYymm,
-				String ctrtId,
-				String useTyp,
-				String searchStDt,
-				String searchEndDt,
-				String sidx,
-				String sord,
-				int page,
-				int rows) {
+			String soId, 
+			String ctrtId, 
+			String useYymm,
+			String orderTp,
+			String useStDt,
+			String useEdDt, 
+			String sidx, 
+			String sord, 
+			int page, 
+			int rows) {
 		
 		SessionUser sessionUser = CommonUtil.getSessionManager();
 		String lng = (String)request.getSession().getAttribute("sessionLanguage");
 		
+		Map<String, Object> usgListByCtrtInfo = useSearchService.getUsgListByCtrt(soId, ctrtId, useYymm, orderTp, useStDt, useEdDt, sidx, sord, page, rows, lng);
+		
+		model.addAttribute("usgListByCtrtInfo", usgListByCtrtInfo.get("usgListByCtrtInfo"));
+		model.addAttribute("totalCount", usgListByCtrtInfo.get("totalCount"));
+		model.addAttribute("totalPages", usgListByCtrtInfo.get("totalPages"));
+		model.addAttribute("page", usgListByCtrtInfo.get("page"));
+		
 		return URL + "/useSearch";
+	}
+	
+	@RequestMapping(value ="getUsgListByCtrtExcel", method= RequestMethod.POST)
+	public String getUsgListByCtrtExcel(Model model, CalculationSearchVO calculationSearchVO, HttpServletRequest request,
+			String soId, 
+			String ctrtId, 
+			String useYymm,
+			String orderTp,
+			String useStDt,
+			String useEdDt) {
+		
+		/*
+		 * 데이터 조회
+		 */
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		List<Map<String, Object>> list = useSearchService.listExcel(soId, ctrtId, useYymm, orderTp, useStDt, useEdDt, lng);
+		
+		/*
+		 * Header 작성
+		 */
+		List<ExcelColumnVO> columnList = new ArrayList<ExcelColumnVO>();
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M01.LAB00050"), "CUST_NM", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M01.LAB00032"), "CTRT_ID", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(20, MessageUtil.getMessage("LAB.M07.LAB00130"), "PROD_NM", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M07.LAB00362"), "USG_STRT_DTM", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M07.LAB00022"), "TOTAL_USG_NOU", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M07.LAB00029"), "USG_TYP_NM", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M08.LAB00218"), "TOTAL_USG_CHRG", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M01.LAB00279"), "DEDUCTED_CHARGE", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M14.LAB00025"), "DISC_CHRG", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M01.LAB00280"), "TOTAL_RATED_CHRG", ExcelFormatType.STRING));
+		columnList.add(new ExcelColumnVO(10, MessageUtil.getMessage("LAB.M01.LAB00149"), "CHRG_CD_NM", ExcelFormatType.STRING));
+		
+		/*
+		 * 데이터 세팅
+		 */
+		List<ExcelRowVO> rowList = new ArrayList<ExcelRowVO>();
+		for(Map<String,Object> row : list){
+			ExcelRowVO rowVo = new ExcelRowVO();
+			//Row
+			Map<String, ExcelCellVO> rowMap = new HashMap<String, ExcelCellVO>();
+			for(ExcelColumnVO col : columnList){
+				//Col 세팅
+				ExcelCellVO cell = new ExcelCellVO();
+				cell.setValue(row.get(col.getKey()));
+				rowMap.put(col.getKey(), cell);
+			}
+			rowVo.setRowData(rowMap);
+			rowList.add(rowVo);
+		}
+		
+		/*
+		 * Sheet 작성
+		 */
+		List<ExcelSheetVO> shList = new ArrayList<ExcelSheetVO>();
+		ExcelSheetVO sh = new ExcelSheetVO();
+		sh.setSheetName("Use List By Ctrt");
+		sh.setDataList(rowList);
+		sh.setTitleList(columnList);
+		shList.add(sh);
+		
+		/*
+		 * 파일작성
+		 */
+		ExcelFileVO file = new ExcelFileVO();
+		file.setFileName("Use List.xlsx");
+		file.setSheetCount(1);
+		file.setSheetList(shList);
+		
+		/*
+		 * Model Set
+		 */
+		model.addAttribute("excelDataFile", file);
+		return "excelXlsxView";
 	}
 
 }

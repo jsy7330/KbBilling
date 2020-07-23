@@ -78,6 +78,49 @@ public class CustomerSearchController {
 		return  URL+"/ajax/customerSearchPopup";
 		
 	}
+	
+	@RequestMapping(value = "customerCtrtSearchPopup", method = RequestMethod.POST)
+	public String customerCtrtSearchPopup(Model model,HttpServletRequest request
+			,String inputSoId
+			,String inputCustNm
+			,String inputIsUnmaskYn
+			,String outputSoId
+			,String outputCustNm
+			,String outputCustId
+			,String outputCtrtId
+			) {
+		
+		model.addAttribute("INPUT_SO_ID", (StringUtils.isEmpty(inputSoId) == true ? "SEL" : inputSoId));
+		model.addAttribute("INPUT_CUST_NM", (StringUtils.isEmpty(inputCustNm) == true ? "" : inputCustNm));
+		model.addAttribute("INPUT_IS_UNMASK_YN", (StringUtils.isEmpty(inputIsUnmaskYn) == true ? "" : inputIsUnmaskYn));
+		model.addAttribute("OUTPUT_SO_ID", (StringUtils.isEmpty(outputSoId) == true ? "" : outputSoId));
+		model.addAttribute("OUTPUT_CUST_NM", (StringUtils.isEmpty(outputCustNm) == true ? "" : outputCustNm));
+		model.addAttribute("OUTPUT_CUST_ID", (StringUtils.isEmpty(outputCustId) == true ? "" : outputCustId));
+		model.addAttribute("OUTPUT_CTRT_ID", (StringUtils.isEmpty(outputCtrtId) == true ? "" : outputCtrtId));
+		
+		return  URL+"/ajax/customerCtrtSearchPopup";
+		
+		
+		
+	}
+	
+	@RequestMapping(value = "getCustomerCtrtListAction", method = RequestMethod.POST)
+	public String getCustomerCtrtListAction(Model model, HttpServletRequest request, String soId, String custNm, String sidx,
+			String sort, int page, int rows) {
+		
+		SessionUser sessionUser = CommonUtil.getSessionManager();
+		String today = DateUtil.getDateStringYYYYMMDD(0);
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		
+		Map<String,Object> custInfoList =customerSearchPopupService.getCustCtrtList(soId, custNm, today, lng, sidx, sort, page, rows);
+		
+		model.addAttribute("custInfoList", custInfoList.get("custInfoList"));
+		model.addAttribute("totalCount", custInfoList.get("totalCount"));
+		model.addAttribute("totalPages", custInfoList.get("totalPages"));
+		model.addAttribute("page", custInfoList.get("page"));
+		
+		return URL+"/ajax/customerCtrtSearchPopup";
+	}
 
 	
 }

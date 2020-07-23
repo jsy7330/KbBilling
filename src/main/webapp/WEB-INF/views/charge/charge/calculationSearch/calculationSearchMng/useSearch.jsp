@@ -5,6 +5,18 @@
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
 
+<style type="text/css">
+
+.window{
+display: none;
+position:absolute;
+left:100px;
+top:100px;
+z-index:10000;
+}
+
+</style>
+
 <script type="text/javascript">
 $(document).ready(function() {
 
@@ -18,40 +30,34 @@ $(document).ready(function() {
 		}else if (lng == 'en'){
 			format = 'mm/yy';
 		}
-		$('.month-picker').datepicker( {
-			changeMonth: true,
-			changeYear: true,
-			showButtonPanel: true,
-			dateFormat: format,
-			onClose: function(dateText, inst) {
-				var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
-				var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
-				$(this).datepicker('setDate', new Date(year, month, 1));
-			},
-			beforeShow : function (dateText, inst) {
-		        	
-				var selectDate = $(this).val().split("-");
-				var year = Number(selectDate[0]);
-				var month = Number(selectDate[1]) - 1;
-				$(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
-				$(this).datepicker('setDate', new Date(year, month, 1));
-		            
-			}
-		});
 		
-		$('#condUseYymm').datepicker('setDate', new Date());
-		 
-		// 년월 레이어 focus
-	    $(".month-picker").focus(function () {
-	        $(".ui-datepicker-calendar").hide();
-	        $("#ui-datepicker-div").position({
-	            my: "center top",
-	            at: "center bottom",
-	            of: $(this)
-	        });
-	    });
-		
+		$(".month-picker").datepicker({
+        changeMonth: true,
+        changeYear: true,
+        dateFormat: format,
+        showButtonPanel: true,
+        
+        onClose: function(dateText, inst) {
+            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+            
+            $(this).datepicker('setDate', new Date(year, month, 1));
+        }
+    });
+
+    $(".month-picker").focus(function () {
+        $(".ui-datepicker-calendar").hide();
+        $("#ui-datepicker-div").position({
+            my: "center top",
+            at: "center bottom",
+            of: $(this)
+        });
+    });
 	}
+	
+	$('#condUseYymm').datepicker('setDate', new Date());
+	
+	$(".inp_date .btn_cal").click(function(e){e.preventDefault();$(this).prev().focus();});
 	
 	if($(".datepicker").length > 0){
 		$( ".datepicker" ).datepicker({
@@ -76,31 +82,32 @@ $(document).ready(function() {
 
 	//그리드 처리
 	$("#workGrpGrid").jqGrid({
-		url : '/product/service/serviceMgt/workGrpMng/getWorkGrpListAction.json',
+		url : '/charge/charge/calculationSearch/calculationSearchMng/getUsgListByCtrt.json',
 		datatype : 'local',
 		mtype: 'POST',
 		postData : {
 			soId: $('#condSo').val() ,
-  	    	useYymm : dateFormatToStringYYYYMM($('#condUseYymm').val()),
   	    	ctrtId : $('#condCtrtId').val() ,
-  	    	useTyp : $('#condUseTyp').val(),
-  	    	searchStDt : dateFormatToStringYYYYMMDD($('#searchStatDt').val()),
-  	    	searchEndDt : dateFormatToStringYYYYMMDD($('#searchEndDt').val())
+  	    	useYymm : dateFormatToStringYYYYMM($('#condUseYymm').val()),
+  	    	orderTp : $('#condUseTyp').val(),
+  	    	useStDt : dateFormatToStringYYYYMMDD($('#searchStatDt').val()),
+  	    	useEdDt : dateFormatToStringYYYYMMDD($('#searchEndDt').val())
 		},
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
+		    { label: 'soNm', name: 'SO_NM', width : 100, align:"center", hidden:true},
 		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '<spring:message code="LAB.M01.LAB00050"/>', name: 'SO_NM', width : 100, align:"left", sortable:false},			//고객명
-		    { label: '<spring:message code="LAB.M01.LAB00032"/>', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false}, //계약ID
-		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false},	//상품명
-		    { label: '<spring:message code="LAB.M07.LAB00362"/>', name: 'USE_YN_NM', width : 100, align:"center", sortable:false},		//사용일자
-		    { label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'CHGR_NM', width : 150, sortable:false},						//사용량
-			{ label: '<spring:message code="LAB.M07.LAB00029"/>', name: 'CHGR_NM', width : 150, sortable:false},						//사용유형
-		    { label: '<spring:message code="LAB.M08.LAB00218"/>', name: 'CHGR_NM', width : 150, sortable:false},	//이용금액
-		    { label: '<spring:message code="LAB.M01.LAB00279"/>', name: 'CHGR_NM', width : 150, sortable:false},	//공제금액
-		    { label: '<spring:message code="LAB.M14.LAB00025"/>', name: 'CHGR_NM', width : 150, sortable:false},	//할인금액
-		    { label: '<spring:message code="LAB.M01.LAB00280"/>', name: 'CHGR_NM', width : 150, sortable:false},	//과금금액
-		    { label: '<spring:message code="LAB.M01.LAB00149"/>', name: 'CHGR_NM', width : 150, sortable:false}		//과금항목
+		    { label: '<spring:message code="LAB.M01.LAB00050"/>', name: 'CUST_NM', width : 100, align:"left", sortable:false},			//고객명
+		    { label: '<spring:message code="LAB.M01.LAB00032"/>', name: 'CTRT_ID', width : 100, align:"center", sortable:false}, //계약ID
+		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'PROD_NM', width : 200, align:"left", sortable:false},	//상품명
+		    { label: '<spring:message code="LAB.M07.LAB00362"/>', name: 'USG_STRT_DTM', width : 100, align:"center", sortable:false},		//사용일자
+		    { label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'TOTAL_USG_NOU', width : 150, sortable:false, align:"right", formatter:numberAutoFormatter},						//사용량
+			{ label: '<spring:message code="LAB.M07.LAB00029"/>', name: 'USG_TYP_NM', width : 150, sortable:false},						//사용유형
+		    { label: '<spring:message code="LAB.M08.LAB00218"/>', name: 'TOTAL_USG_CHRG', width : 150, align:"right", sortable:false, formatter:numberAutoFormatter},	//이용금액
+		    { label: '<spring:message code="LAB.M01.LAB00279"/>', name: 'DEDUCTED_CHARGE', width : 150, sortable:false, align:"right",  formatter:numberAutoFormatter},	//공제금액
+		    { label: '<spring:message code="LAB.M14.LAB00025"/>', name: 'DISC_CHRG', width : 150, sortable:false, align:"right", formatter:numberAutoFormatter},	//할인금액
+		    { label: '<spring:message code="LAB.M01.LAB00280"/>', name: 'TOTAL_RATED_CHRG', width : 150, sortable:false, align:"right", formatter:numberAutoFormatter},	//과금금액
+		    { label: '<spring:message code="LAB.M01.LAB00149"/>', name: 'CHRG_CD_NM', width : 150, sortable:false}		//과금항목
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -108,7 +115,7 @@ $(document).ready(function() {
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
-			root : "workGrpList",
+			root : "usgListByCtrtInfo",
 			records : "totalCount", //총 레코드 
 			total : "totalPages",  //총페이지수
 			page : "page"          //현재 페이지
@@ -119,9 +126,9 @@ $(document).ready(function() {
         onCellSelect : function(rowid, index, contents, event){
         	setSelectedData(rowid);
         },
-       	loadComplete : function () {
+       	loadComplete : function (data) {
   	      	$("#workGrpGrid").setGridWidth($('#gridDiv').width(),false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
-        },
+       	},
     	sortable: { update: function(permutation) {
     		$("#workGrpGrid").setGridWidth($('#gridDiv').width(),false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
     		}
@@ -141,7 +148,24 @@ $(document).ready(function() {
     		searchWorkGrpList();
 		}
     );
-
+    
+  //엑셀 다운로드 이벤트
+    $('#btn_print').on('click',function (e) {
+	    	if($("#btn_print").hasClass('not-active')){
+				return;
+			}
+    		printExcel();
+		}
+    );
+  
+  //계약ID 찾기 
+    $('#btnCustSearch').on('click',function (e) {
+    	if($("#btnCustSearch").hasClass('not-active')){
+            return;
+    		  }
+    		searchCtrtId();
+		});
+  
     //신규등록 버튼 이벤트
     $('#newBtn').on('click',function (e) {
       	if($("#newBtn").hasClass('not-active')){
@@ -218,24 +242,84 @@ function searchWorkGrpList(){
 		alert('<spring:message code="MSG.M01.MSG00067"/>');
 		return;
 	}
-	
-	alert("searchStatDt:" + searchStatDt);
-	alert("searchEndDt: " + searchEndDt);
+
 	$("#workGrpGrid").setGridParam({
 		mtype: 'POST',
 		datatype : 'json',
   	    postData : {
   	    	soId: $('#condSo').val() ,
-  	    	useYymm : dateFormatToStringYYYYMM($('#condUseYymm').val()),
   	    	ctrtId : $('#condCtrtId').val() ,
-  	    	useTyp : $('#condUseTyp').val(),
-  	    	searchStDt : dateFormatToStringYYYYMMDD($('#searchStatDt').val()),
-  	    	searchEndDt : dateFormatToStringYYYYMMDD($('#searchEndDt').val())
+  	    	//ctrtId : 'C000000341',
+  	    	useYymm : dateFormatToStringYYYYMM($('#condUseYymm').val()),
+  	    	orderTp : $('#condUseTyp').val(),
+  	    	//orderTp : '101',
+  	    	useStDt : dateFormatToStringYYYYMMDD($('#searchStatDt').val()),
+  	    	useEdDt : dateFormatToStringYYYYMMDD($('#searchEndDt').val())
+		},loadComplete : function (data) {
+
+			if(data.totalCount == 0){
+				$('#btn_print').addClass('white-btn');
+				$('#btn_print').removeClass('grey-btn');
+				$('#btn_print').addClass('not-active');
+				$('#btn_print').attr('disabled',true);
+			}else{
+				$('#btn_print').addClass('grey-btn');
+				$('#btn_print').removeClass('white-btn');
+				$('#btn_print').removeClass('not-active');
+				$('#btn_print').removeAttr('disabled');
+			}
 		}
 	});
 	
-	console.info(JSON.stringify(postData));
    	$("#workGrpGrid").trigger("reloadGrid");
+  
+}
+/**
+ * 계약ID 조회
+ */
+function searchCtrtId(){
+	
+	console.info($('#condSo').val());
+	$.ajax({
+		type : "post",
+		url : '/system/common/common/customerSearch/customerCtrtSearchPopup.ajax',
+		data : {
+			 inputSoId : $('#condSo').val()   //input SO Id
+			,inputCustNm : $('#condCustNm').val()   //input Customer Name
+			,inputIsUnmaskYn : $('#isUnmaskYn').val() //마스크 처리 해제 Y
+			,outputSoId : 'condSo'            //output SO ID Select
+			,outputCustNm : 'condCustNm'            //output Customer Name Text
+			,outputCustId : 'condCustId'            //output Customer ID Text
+			,outputCtrtId : 'condCtrtId'
+
+		},
+		async: true,
+		success : function(data) {
+			var html = data;
+			$("#popup_dialog").html(html);
+		},		
+		complete : function(){
+			wrapWindowByMask(); // 팝업 오픈
+			$("#txtCustSearchCustNm").focus(); //오픈 후 focus위치
+		}
+	}); 
+}
+
+/**
+ * 엑셀다운로드
+ */
+function printExcel(){
+	
+	var param = new Object();
+	
+	param.soId = $('#condSo').val() 
+  	param.ctrtId = $('#condCtrtId').val() 
+  	param.useYymm = dateFormatToStringYYYYMM($('#condUseYymm').val())
+  	param.orderTp = $('#condUseTyp').val()
+  	param.useStDt = dateFormatToStringYYYYMMDD($('#searchStatDt').val())
+  	param.useEdDt = dateFormatToStringYYYYMMDD($('#searchEndDt').val())
+		
+  	$.download('getUsgListByCtrtExcel.xlsx',param,'post');
 }
 
 /*
@@ -250,6 +334,12 @@ function pageInit(){
 	
 	$('#condUseTyp').val('SEL');
 	$("#condUseTyp").selectmenu('refresh');
+	
+	//엑셀버튼 비활성화
+	$('#btn_print').addClass('white-btn');
+	$('#btn_print').removeClass('grey-btn');
+	$('#btn_print').addClass('not-active');
+	$('#btn_print').attr('disabled',true);
 
 	$("#workGrpGrid").clearGridData();
 	$("#userGrid").clearGridData();
@@ -329,7 +419,6 @@ function pageInit(){
 			<td>
 				<select id="condUseTyp" class="w100p">
 					<option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option>
-					<option value="DATAPACKET">Data Packet</option>
 				</select>
 			</td>
 			<th><spring:message code="LAB.M07.LAB00363" /></th><!-- 사용기간 -->
@@ -355,7 +444,8 @@ function pageInit(){
 		<h4 class="sub_title"><spring:message code="LAB.M08.LAB00219" /></h4><!-- 이용내역 -->
 	</div>
 	<div class="fr mt10">
-		<a id='disableMaskBtn' class="grey-btn" href="#" title='액셀저장'><spring:message code="LAB.M08.LAB00015" /></a><!-- 엑셀다운로드 -->
+		<a class="grey-btn" id="btn_print" href="javascript:init();"><span class="print_icon"><spring:message code="LAB.M08.LAB00015" /></span></a>
+		<%-- <a id='disableMaskBtn' class="grey-btn" href="#" title='액셀저장'><spring:message code="LAB.M08.LAB00015" /></a><!-- 엑셀다운로드 --> --%>
 	</div>
 </div>
 <div id='gridDiv'>

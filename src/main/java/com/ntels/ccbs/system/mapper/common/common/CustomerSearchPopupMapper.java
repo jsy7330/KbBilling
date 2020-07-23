@@ -30,6 +30,8 @@ public interface CustomerSearchPopupMapper {
 			,@Param("corpRegNoList") List<String> corpRegNoList
 			,@Param("soAuthList") List<Map<String, Object>> soAuthList);
 
+	int getCustCtrtListCnt(@Param("soId")String soId
+			,@Param("custNm") String custNm);
 
 
 	List<CustSearchVO> getCustInfoList(@Param("soId")String soId
@@ -62,11 +64,12 @@ public interface CustomerSearchPopupMapper {
 			,@Param("start") String start
 			,@Param("end") String end);
 
-
-
-
-
-	
-
-
+	List<Map<String, Object>> getCustCtrtList(@Param("soId")String soId
+			,@Param("custNm") String custNm
+			,@Param("today") String today
+			,@Param("lng")String lng
+			,@Param("sidx")String sidx
+			,@Param("sort") String sort
+			,@Param("start") String start
+			,@Param("end") String end);
 }

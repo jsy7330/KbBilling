@@ -93,6 +93,48 @@ public class CustomerSearchPopupServiceImpl implements CustomerSearchPopupServic
 		return custInfo;
 	}
 
+	@Override
+	public Map<String, Object> getCustCtrtList(String soId, String custNm, String today, String lng, String sidx,
+			String sort, int page, int rows) {
+		// TODO Auto-generated method stub
+		
+		Map<String,Object> custInfo = new HashMap<String,Object>();
+		
+		Integer totalCount = customerSearchPopupMapper.getCustCtrtListCnt(soId, custNm);
+				
+		/*
+		 *  page : 몇번째의 페이지를 요청했는지.
+			rows : 페이지 당 몇개의 행이 보여질건지. 
+			sidx : 소팅하는 기준이 되는 인덱스
+			sord : 내림차순 or 오름차순
+		 */
+		
+
+		if(totalCount.intValue() == 0){
+			custInfo.put("custInfoList", new ArrayList<Map<String, Object>>());
+			custInfo.put("totalCount", totalCount);
+			custInfo.put("totalPages", new Integer(0));
+			custInfo.put("page", new Integer(1));
+		}else{
+			int endIndex = rows;
+			int startIndex = (page-1) * rows;
+			
+			String end = Integer.toString(endIndex);
+			String start = Integer.toString(startIndex);
+			
+			List<Map<String,Object>> custInfoList = customerSearchPopupMapper.getCustCtrtList(soId, custNm, today, lng, sidx, sort, start, end);
+		
+			custInfo.put("custInfoList", custInfoList);
+			custInfo.put("totalCount", totalCount);
+			Integer totalPages = new Integer((int)Math.ceil(totalCount.floatValue() / (float)rows));
+			custInfo.put("totalPages", totalPages);
+			custInfo.put("page", new Integer(page));
+		}
+		
+		return custInfo;
+		
+	}
+
 
 
 
