@@ -22,8 +22,6 @@ left:100px;
 top:100px;
 z-index:10000;
 }
-
-
 </style>
 
 <script type="text/javascript">
@@ -86,8 +84,8 @@ $(document).ready(function() {
 		    { label: '<spring:message code="LAB.M04.LAB00016"/>', name: 'logFileNm', width : 250, align:"center", sortable:false},
 		    { label: '<spring:message code="LAB.M08.LAB00197"/>', name: 'readCnt', width : 100, align:"right", formatter:'integer', sortable:false},
 			{ label: '<spring:message code="LAB.M10.LAB00097"/>', name: 'procCnt', width : 100, align:"right", formatter:'integer', sortable:false},
-		    { label: '<spring:message code="LAB.M07.LAB00287"/>', name: 'pgmStrtDttm', formatter:stringTypeFormatterYYYYMMDDHH24MISS, align:"center",width : 150, sortable:false},
-			{ label: '<spring:message code="LAB.M09.LAB00168"/>', name: 'pgmEndDttm', formatter:stringTypeFormatterYYYYMMDDHH24MISS, align:"center",width : 150, sortable:false},
+		    { label: '<spring:message code="LAB.M07.LAB00287"/>', name: 'pgmStrtDttm', formatter:stringToDateformatYYYYMMDDHH24MISS, align:"center",width : 150, sortable:false},
+			{ label: '<spring:message code="LAB.M09.LAB00168"/>', name: 'pgmEndDttm', formatter:stringToDateformatYYYYMMDDHH24MISS, align:"center",width : 150, sortable:false},
 			{ label: '<spring:message code="LAB.M09.LAB00231"/>', name: 'startEndTime', width : 150, align:"center",sortable:false},
 			{ label: 'soId', name: 'soId', hidden:true},
 			{ label: 'bsYymm', name: 'bsYymm', hidden:true},

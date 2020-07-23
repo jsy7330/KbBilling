@@ -85,7 +85,7 @@ function dateFormatToStringYYYMMDDHHMISS(value) {
  */
 function stringToDateformatYYYYMMDDHH24MISS(value) {
 	if(value == null || value == '') return '';
-	if(!/^(\d){14}$/.test(value)) return "invalid date";
+	if(!/^(\d){12}$/.test(value)) return "invalid date";
 
     var yy = value.substr(0,4),
         mm = value.substr(4,2) - 1,

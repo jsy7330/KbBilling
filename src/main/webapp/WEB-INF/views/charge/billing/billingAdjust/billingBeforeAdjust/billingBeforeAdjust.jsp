@@ -321,7 +321,7 @@ function getPymBillInfo(soId, pymAcntId){
 		<h4 class="sub_title"><spring:message code="LAB.M07.LAB00306"/></h4>
 	</div>
 	<div class="fr mt10">
-        <a href="#" class="grey-btn" id="btn_request" title='<spring:message code="LAB.M07.LAB00307"/>'><spring:message code="LAB.M07.LAB00307"/></a>
+        <a href="#" class="grey-btn" id="btn_request" title='<spring:message code="LAB.M07.LAB00346"/>'><spring:message code="LAB.M07.LAB00307"/></a>
         <%-- <a href="#" class="grey-btn" id="btn_approvalReq" title='<spring:message code="LAB.M01.LAB00231"/>'><spring:message code="LAB.M01.LAB00231"/></a> --%>
     </div>
 </div>
