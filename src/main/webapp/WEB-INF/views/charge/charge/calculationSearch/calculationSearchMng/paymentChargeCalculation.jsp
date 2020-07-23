@@ -5,6 +5,26 @@
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
 
+<style type="text/css">
+table.ui-datepicker-calendar { display:none; }
+#dimMask {
+position:absolute;
+z-index:9000;
+background-color:#000;
+display:none;
+left:0;
+top:0;
+}
+.window{
+display: none;
+position:absolute;
+left:100px;
+top:100px;
+z-index:10000;
+}
+
+</style>
+
 <script type="text/javascript">
 
 var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
@@ -13,43 +33,32 @@ $(document).ready(function() {
 	
 	//달력처리
 	if($(".month-picker").length > 0){
-		if(lng == 'ko'){
-			format = 'yy-mm';
-		}else if (lng == 'en'){
-			format = 'mm/yy';
-		}
-		$('.month-picker').datepicker( {
-			changeMonth: true,
-			changeYear: true,
-			showButtonPanel: true,
-			dateFormat: format,
-			onClose: function(dateText, inst) {
-				var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
-				var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
-				$(this).datepicker('setDate', new Date(year, month, 1));
-			},
-			beforeShow : function (dateText, inst) {
-		        	
-				var selectDate = $(this).val().split("-");
-				var year = Number(selectDate[0]);
-				var month = Number(selectDate[1]) - 1;
-				$(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
-				$(this).datepicker('setDate', new Date(year, month, 1));
-		            
-			}
-		}); 
-		 
-		// 년월 레이어 focus
-	    $(".month-picker").focus(function () {
-	        $(".ui-datepicker-calendar").hide();
-	        $("#ui-datepicker-div").position({
-	            my: "center top",
-	            at: "center bottom",
-	            of: $(this)
-	        });
-	    });
-		
-	}
+	      if(lng == 'ko'){
+	         format = 'yy-mm';
+	      }else if (lng == 'en'){
+	         format = 'mm/yy';
+	      }
+	      $('.month-picker').datepicker( {
+	         changeMonth: true,
+	         changeYear: true,
+	         showButtonPanel: true,
+	         dateFormat: format,
+	         onClose: function(dateText, inst) {
+	            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+	            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+	            $(this).datepicker('setDate', new Date(year, month, 1));
+	         },
+	         beforeShow : function (dateText, inst) {
+	                 
+	            var selectDate = $(this).val().split("-");
+	            var year = Number(selectDate[0]);
+	            var month = Number(selectDate[1]) - 1;
+	            $(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
+	            $(this).datepicker('setDate', new Date(year, month, 1));
+	                  
+	         }
+	      }).datepicker("setDate", new Date());  
+	   }
 	
 	$('#searchYyyyMm').datepicker('setDate', new Date());
 	
@@ -194,12 +203,21 @@ $(document).ready(function() {
 
 function searchGridList(){
 	
+	if ($("#searchSoId").val() == ''){
+		alert('<spring:message code="MSG.M07.MSG00002"/>');
+		return;
+	}
+	if($("#searchPymAcntId").val() == '' || $("#searchPymAcntId").val() == null){
+		alert('<spring:message code="MSG.M02.MSG00013"/>');
+		return;
+	}
+		
 	var param = new Object();
 	param.soId = $("#searchSoId").val();
 	param.billYymm = dateFormatToStringYYYYMM($("#searchYyyyMm").val());
 	param.pymAcntId = $("#searchPymAcntId").val();
 	
-	console.log(param);
+	console.log(JSON.stringify(param));
 	
 	$("#chrgeInfoGrid").setGridParam({
 		datatype : "json",
@@ -207,6 +225,8 @@ function searchGridList(){
 	});
     
 	$("#chrgeInfoGrid").trigger("reloadGrid");
+	
+	$("#dtlGrid").clearGridData();
 	
 }
 
@@ -248,7 +268,7 @@ function searchGridList(){
 	</colgroup>
 	<thead>
 		<tr>
-			<th><spring:message code="LAB.M07.LAB00003" /></th>
+			<th><spring:message code="LAB.M07.LAB00003" /><span class="dot">*</span></th>
 			<td>
 				<select id="searchSoId" class="w150">
 					<option value=""><spring:message code="LAB.M15.LAB00002"/></option>
@@ -257,7 +277,7 @@ function searchGridList(){
 					</c:forEach>
 				</select>
 			</td>
-			<th><spring:message code="LAB.M10.LAB00033" /></th><!-- 청구년월 -->
+			<th><spring:message code="LAB.M10.LAB00033" /><span class="dot">*</span></th><!-- 청구년월 -->
 			<td>
 				<div class="date_box">
 					<div class="inp_date w150">
@@ -266,7 +286,7 @@ function searchGridList(){
                     </div>
 				</div>
 			</td>
-			<th><spring:message code="LAB.M02.LAB00005" /></th><!-- 납부계정 -->
+			<th><spring:message code="LAB.M02.LAB00005" /><span class="dot">*</span></th><!-- 납부계정 -->
 			<td>
 				<div class="inp_date w280">
 					<input id="searchAcntNm" name="searchAcntNm" type="text" class="w120" disabled="disabled"/>
