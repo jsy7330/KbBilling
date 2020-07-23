@@ -4,6 +4,24 @@
 <%@ taglib uri="http://tiles.apache.org/tags-tiles" prefix="tiles"%>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
+<style type="text/css">
+table.ui-datepicker-calendar { display:none; }
+#dimMask {
+position:absolute;
+z-index:9000;
+background-color:#000;
+display:none;
+left:0;
+top:0;
+}
+.window{
+display: none;
+position:absolute;
+left:100px;
+top:100px;
+z-index:10000;
+}
+</style>
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -37,18 +55,7 @@ $(document).ready(function() {
 				$(this).datepicker('setDate', new Date(year, month, 1));
 		            
 			}
-		}); 
-		 
-		// 년월 레이어 focus
-	    $(".month-picker").focus(function () {
-	        $(".ui-datepicker-calendar").hide();
-	        $("#ui-datepicker-div").position({
-	            my: "center top",
-	            at: "center bottom",
-	            of: $(this)
-	        });
-	    });
-		
+		}).datepicker("setDate", new Date());  
 	}
 	
 	$('#condBillYymm').datepicker('setDate', new Date());
