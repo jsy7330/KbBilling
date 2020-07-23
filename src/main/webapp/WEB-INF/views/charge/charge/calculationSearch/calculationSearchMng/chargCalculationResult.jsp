@@ -5,6 +5,26 @@
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
 
+<style type="text/css">
+table.ui-datepicker-calendar { display:none; }
+#dimMask {
+position:absolute;
+z-index:9000;
+background-color:#000;
+display:none;
+left:0;
+top:0;
+}
+.window{
+display: none;
+position:absolute;
+left:100px;
+top:100px;
+z-index:10000;
+}
+
+</style>
+
 <script type="text/javascript">
 $(document).ready(function() {
 
@@ -14,43 +34,32 @@ $(document).ready(function() {
 
 	//달력처리
 	if($(".month-picker").length > 0){
-		if(lng == 'ko'){
-			format = 'yy-mm';
-		}else if (lng == 'en'){
-			format = 'mm/yy';
-		}
-		$('.month-picker').datepicker( {
-			changeMonth: true,
-			changeYear: true,
-			showButtonPanel: true,
-			dateFormat: format,
-			onClose: function(dateText, inst) {
-				var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
-				var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
-				$(this).datepicker('setDate', new Date(year, month, 1));
-			},
-			beforeShow : function (dateText, inst) {
-		        	
-				var selectDate = $(this).val().split("-");
-				var year = Number(selectDate[0]);
-				var month = Number(selectDate[1]) - 1;
-				$(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
-				$(this).datepicker('setDate', new Date(year, month, 1));
-		            
-			}
-		}); 
-		 
-		// 년월 레이어 focus
-	    $(".month-picker").focus(function () {
-	        $(".ui-datepicker-calendar").hide();
-	        $("#ui-datepicker-div").position({
-	            my: "center top",
-	            at: "center bottom",
-	            of: $(this)
-	        });
-	    });
-		
-	}
+	      if(lng == 'ko'){
+	         format = 'yy-mm';
+	      }else if (lng == 'en'){
+	         format = 'mm/yy';
+	      }
+	      $('.month-picker').datepicker( {
+	         changeMonth: true,
+	         changeYear: true,
+	         showButtonPanel: true,
+	         dateFormat: format,
+	         onClose: function(dateText, inst) {
+	            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+	            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+	            $(this).datepicker('setDate', new Date(year, month, 1));
+	         },
+	         beforeShow : function (dateText, inst) {
+	                 
+	            var selectDate = $(this).val().split("-");
+	            var year = Number(selectDate[0]);
+	            var month = Number(selectDate[1]) - 1;
+	            $(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
+	            $(this).datepicker('setDate', new Date(year, month, 1));
+	                  
+	         }
+	      }).datepicker("setDate", new Date());  
+	   }
 	
 	$('#searchStatDt').datepicker('setDate', new Date());
 
@@ -67,13 +76,13 @@ $(document).ready(function() {
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'soNm', name: 'SO_NM', width : 100, align:"center", hidden:true},
 		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'PROD_NM', width : 200, sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00275"/>', name: 'CUST_CNT',  sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00267"/>', name: 'CTRT_CNT',  sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00276"/>', name: 'PROD_CMPS_CNT',  sortable:false},
-		    { label: '<spring:message code="LAB.M01.LAB00277"/>', name: 'SVC_CMPS_CNT',  sortable:false},
-			{ label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'USE_QTY',  sortable:false},
-		    { label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT',  sortable:false},
-		    { label: '<spring:message code="LAB.M07.LAB00018"/>', name: 'USE_CNT',  hidden:true}
+		    { label: '<spring:message code="LAB.M01.LAB00275"/>', name: 'CUST_CNT',  sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M01.LAB00267"/>', name: 'CTRT_CNT',  sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M01.LAB00276"/>', name: 'PROD_CMPS_CNT',  sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M01.LAB00277"/>', name: 'SVC_CMPS_CNT',  sortable:false, formatter:numberAutoFormatter},
+			{ label: '<spring:message code="LAB.M07.LAB00022"/>', name: 'USE_QTY',  sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT',  sortable:false, formatter:numberAutoFormatter},
+		    { label: '<spring:message code="LAB.M07.LAB00018"/>', name: 'USE_CNT',  hidden:true, formatter:numberAutoFormatter}
 			
 		],
 		viewrecords: true,

@@ -5,6 +5,26 @@
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring"%>
 <%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
 
+<style type="text/css">
+table.ui-datepicker-calendar { display:none; }
+#dimMask {
+position:absolute;
+z-index:9000;
+background-color:#000;
+display:none;
+left:0;
+top:0;
+}
+.window{
+display: none;
+position:absolute;
+left:100px;
+top:100px;
+z-index:10000;
+}
+
+</style>
+
 <script type="text/javascript">
 $(document).ready(function() {
 
@@ -14,43 +34,32 @@ $(document).ready(function() {
 
 	//달력처리
 	if($(".month-picker").length > 0){
-		if(lng == 'ko'){
-			format = 'yy-mm';
-		}else if (lng == 'en'){
-			format = 'mm/yy';
-		}
-		$('.month-picker').datepicker( {
-			changeMonth: true,
-			changeYear: true,
-			showButtonPanel: true,
-			dateFormat: format,
-			onClose: function(dateText, inst) {
-				var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
-				var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
-				$(this).datepicker('setDate', new Date(year, month, 1));
-			},
-			beforeShow : function (dateText, inst) {
-		        	
-				var selectDate = $(this).val().split("-");
-				var year = Number(selectDate[0]);
-				var month = Number(selectDate[1]) - 1;
-				$(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
-				$(this).datepicker('setDate', new Date(year, month, 1));
-		            
-			}
-		}); 
-		 
-		// 년월 레이어 focus
-	    $(".month-picker").focus(function () {
-	        $(".ui-datepicker-calendar").hide();
-	        $("#ui-datepicker-div").position({
-	            my: "center top",
-	            at: "center bottom",
-	            of: $(this)
-	        });
-	    });
-		
-	}
+	      if(lng == 'ko'){
+	         format = 'yy-mm';
+	      }else if (lng == 'en'){
+	         format = 'mm/yy';
+	      }
+	      $('.month-picker').datepicker( {
+	         changeMonth: true,
+	         changeYear: true,
+	         showButtonPanel: true,
+	         dateFormat: format,
+	         onClose: function(dateText, inst) {
+	            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
+	            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
+	            $(this).datepicker('setDate', new Date(year, month, 1));
+	         },
+	         beforeShow : function (dateText, inst) {
+	                 
+	            var selectDate = $(this).val().split("-");
+	            var year = Number(selectDate[0]);
+	            var month = Number(selectDate[1]) - 1;
+	            $(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
+	            $(this).datepicker('setDate', new Date(year, month, 1));
+	                  
+	         }
+	      }).datepicker("setDate", new Date());  
+	   }
 	
 	$('#searchStatDt').datepicker('setDate', new Date());
 	
@@ -73,7 +82,7 @@ $(document).ready(function() {
 		    { label: '<spring:message code="LAB.M01.LAB00046"/>', name: 'CUST_ID', width : 150, align:"center", sortable:false},		//고객ID
 		    { label: '<spring:message code="LAB.M01.LAB00050"/>', name: 'CUST_NM', width : 100, sortable:false},	//고객명
 		    { label: '<spring:message code="LAB.M01.LAB00032"/>', name: 'CTRT_ID', width : 150, align:"center", sortable:false},	//계약ID
-			{ label: '<spring:message code="LAB.M07.LAB00186"/>', name: 'SVC_TEL_NO', width : 150, sortable:false},	//서비스 번호
+			{ label: '<spring:message code="LAB.M07.LAB00186"/>', name: 'SVC_TEL_NO', width : 150, align:"center", sortable:false},	//서비스 번호
 		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'PROD_NM', width : 200, sortable:false},	//상품명
 		    //{ label: '서비스명', name: 'SVC_NM', width : 150, sortable:false},
 		    //{ label: '과금항목명', name: 'RATE_ITM_NM', width : 150, sortable:false},
