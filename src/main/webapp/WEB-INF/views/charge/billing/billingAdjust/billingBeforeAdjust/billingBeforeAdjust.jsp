@@ -18,24 +18,28 @@ $(document).ready(function() {
 		postData : {
 		},
 		colModel: [
-            { label: 'adjResnCd', name: 'adjResnCd', hidden:true, width : 0},
-            { label: '<spring:message code="LAB.M07.LAB00004" />', name: 'soId', hidden:true, width : 0},
-            { label: '<spring:message code="LAB.M02.LAB00006" />', name: 'pymAcntId', hidden:true, width : 0},
-            { label: '<spring:message code="LAB.M07.LAB00305" />', name: 'adjNo', hidden:true, width : 0},
-            { label: '<spring:message code="LAB.M09.LAB00217" />', name: 'adjPt', hidden:true, width : 0},
-            { label: '<spring:message code="LAB.M09.LAB00217" />', name: 'adjPtNm', hidden:true, width : 0},
-            { label: '<spring:message code="LAB.M09.LAB00215" />', name: 'dcsnProcStat', hidden:true, width : 0},
+			{ label: 'billSeqNo' , name: 'billSeqNo', hidden:true, width:0},
+			{ label: 'orgAdjNo', name: 'orgAdjNo', hidden:true, width:0},
+			{ label: 'adjNo', name: 'adjNo', hidden:true, width:0},
+			{ label: 'billCycl', name: 'billCycl', hidden:true, width:0},
+			{ label: 'pymAcntId', name: 'pymAcntId', hidden:true, width:0},
+			{ label: 'dcsnProcStat', name: 'dcsnProcStat', hidden:true, width:0},
+			{ label: 'soId', name: 'soId', hidden:true, width:0},
+			{ label: 'useYymm', name: 'useYymm', hidden:true, width:0},
+			{ label: 'adjApplConts', name: 'adjApplConts', hidden:true, width:0},
+			{ label: 'adjResnCd', name: 'adjResnCd', hidden:true, width:0},
+            
             { label: '<spring:message code="LAB.M07.LAB00003" />', name: 'soNm', width : 80, align:"center"},
-            { label: '<spring:message code="LAB.M02.LAB00018" />', name: 'acntNm', width : 120, align:"left"},
-            { label: '<spring:message code="LAB.M14.LAB00078" />', name: 'hopeAplyYymm', formatter:stringTypeFormatterYYYYMM, width : 100, align:"center"},
-            { label: '<spring:message code="LAB.M01.LAB00050" />', name: 'custNm', width : 120, align:"left"},
-            { label: '<spring:message code="LAB.M01.LAB00230" />', name: 'ctrtIdCnt', width : 80, align:"right"},
-            { label: '<spring:message code="LAB.M07.LAB00301" />', name: 'prodCdCnt', width : 80, align:"right"},
-            { label: '<spring:message code="LAB.M07.LAB00302" />', name: 'svcCdCnt', width : 80, align:"right"},
-            { label: '<spring:message code="LAB.M07.LAB00303" />', name: 'adjApplAmt', formatter:'integer', width : 100, align:"right"},
-            { label: '<spring:message code="LAB.M09.LAB00215" />', name: 'dcsnProcStatNm', width : 120, align:"left"},
-            { label: '<spring:message code="LAB.M07.LAB00304" />', name: 'applDttm', formatter:stringTypeFormatterYYYYMMDDHH24MISS, width : 120, align:"right"},         //누적조정금액
-            { label: '<spring:message code="LAB.M09.LAB00077" />', name: 'rcptPsnNm', width : 120, align:"left"}
+            { label: '납부계정ID', name: 'pymAcntId', width : 120, align:"center"},
+            { label: '납부자명', name: 'pymAcntNm', width : 100, align:"center"},
+            { label: '희망적용년월', name: 'hopeAplyYymm', formatter:stringToDateformatYYYYMM, width : 120, align:"center"},
+            { label: '계약건수', name: 'ctrtIdCnt', width : 80, align:"right"},
+            { label: '상품건수', name: 'prodCdCnt', width : 80, align:"right"},
+            { label: '서비스건수', name: 'svcCdCnt', width : 80, align:"right"},
+            { label: '신청금액', name: 'adjApplAmt', formatter:'integer', width : 100, align:"right", formatter:numberAutoFormatter},
+            { label: '진행상태', name: 'dcsnProcStatNm', width : 120, align:"center"},
+            { label: '신청일시', name: 'applDttm', formatter:stringTypeFormatterYYYYMMDDHH24MISS, width : 120, align:"center"},         //누적조정금액
+            { label: '접수자', name: 'rcptPsnNm', width : 120, align:"left"}
 		],
 		/* multiselect : true, */
 		multiselect : false,
@@ -85,38 +89,43 @@ $(document).ready(function() {
     
     //신청버튼 클릭
     $('#btn_request').on('click',function (e) {
-	    if($("#btn_request").hasClass('not-active')){
-	        return;
-	    }
-	    var chkid = '';
-	    var rowObject = '';
-	    var chkid = $("#beforeAdjTable").jqGrid('getGridParam', 'selrow'); //선택된 행의 ID를 가져온다
-	    var rowObject = $("#beforeAdjTable").jqGrid('getRowData',chkid);  //선택된 행의 Data를 가져온다
-	    
-	    if(chkid==null){
+    	if($("#btn_request").hasClass('not-active')){
+            return;
+        }
+        var chkid = '';
+        var rowObject = '';
+        var chkid = $("#beforeAdjTable").jqGrid('getGridParam', 'selrow'); //선택된 행의 ID를 가져온다
+        var rowObject = $("#beforeAdjTable").jqGrid('getRowData',chkid);  //선택된 행의 Data를 가져온다
+			console.log(JSON.stringify(rowObject));
+        if(chkid==null){
             alert('<spring:message code="MSG.M03.MSG00015"/>');
             return;
         }
-	    	    
-	    rowObject.addr = $('#addr').val();
-	    rowObject.clsTskCl     = '11'; /* 마감업무구분(BLIV030 11:청구작업완료, 21:수납작업완료) */
-	    rowObject.billCycl     = '01'; /* 01:정기, 00:핫빌 */
-	    rowObject.adjPt        = '1';  /* 조정시점(1:청구전,2:청구후,3:일회성) */
-	    rowObject.hopeAplyYymm = dateFormatToStringYYYYMM(rowObject.hopeAplyYymm);
-	    
-		$.ajax({
-		  type : "post",
-		  url : '/charge/billing/billingAdjust/billingBeforeAdjust/openBeforeAdjReqPopup.ajax',
-		  data : rowObject,
-		  async: true,
-		  success : function(data) {
-		    var html = data;
-		    $("#popup_dialog").html(html);
-		  },    
-		  complete : function(){
-		    wrapWindowByMask(); // 팝업 오픈
-		  }
-		}); 
+        
+        rowObject.addr = $('#addr').val();
+        rowObject.adjPt        = '1';  /* 조정시점(1:청구전,2:청구후,3:일회성) */
+        rowObject.pymAcntNm    = $('#custNm').val();
+        rowObject.billYymm     = dateFormatToStringYYYYMM(rowObject.hopeAplyYymm);
+        rowObject.billDt       = dateFormatToStringYYYYMMDD(rowObject.billDt);
+        rowObject.payDueDt     = dateFormatToStringYYYYMMDD(rowObject.payDueDt);
+        rowObject.applDttm     = rowObject.applDttm;
+        rowObject.billAplyDt   = dateFormatToStringYYYYMMDD(rowObject.billAplyDt);
+        rowObject.chgDttm      = dateFormatToStringYYYMMDDHHMISS(rowObject.chgDttm);
+        rowObject.adjResnCd    = rowObject.adjResnCd;
+        
+        $.ajax({
+          type : "post",
+          url : '/charge/billing/billingAdjust/billingBeforeAdjust/openBeforeAdjReqPopup.ajax',
+          data : rowObject,
+          async: true,
+          success : function(data) {
+            var html = data;
+            $("#popup_dialog").html(html);
+          },    
+          complete : function(){
+            wrapWindowByMask(); // 팝업 오픈
+          }
+        }); 
 	});
   
 });
@@ -151,13 +160,14 @@ function searchPymInfo(){
             if(data.pymListCnt == '0'){
                 alert('<spring:message code="MSG.M09.MSG00039"/>'); 
             }else if(data.pymListCnt == 1){
-
-              $('#pymAcnt').val(data.pymList[0].pymAcnt);
-              $('#custNm').val(data.pymList[0].custNm);
-              $('#custTpNm').val(data.pymList[0].custTpNm);
-              $('#addr').val(data.pymList[0].addr);
-              $("#condPymAcntId").val(data.pymList[0].pymAcntId);
-              getPymBillInfo(data.pymList[0].soId, data.pymList[0].pymAcntId);
+console.log(data.pymList[0]);
+				$('#pymAcnt').val(data.pymList[0].pymAcnt);
+				$('#custNm').val(data.pymList[0].custNm);
+				$('#custTpNm').val(data.pymList[0].custTpNm);
+				$('#addr').val(data.pymList[0].addr);
+				$("#condPymAcntId").val(data.pymList[0].pymAcntId);
+				//$("#condPymAcntNm").val(data.pymList[0].pymAcntNm);
+				getPymBillInfo(data.pymList[0].soId, data.pymList[0].pymAcntId);
 
             }else{
                 //다수 존재시 팝업호출
@@ -194,6 +204,7 @@ function openPymSearchPopup(){
 	        ,outputCustId : 'condCustId'            //output Customer ID Text
 	        ,outputPymAcntId : 'condPymAcntId'      //output Payment ID Text
 	        ,outputPymAcntNm : 'condPymAcntNm'      //output Payment Nm Text
+        	,outputSoId : 'searchSoId'      		//output Payment Nm Text
 	    },
 	    async: true,
 	    success : function(data) {
@@ -321,7 +332,7 @@ function getPymBillInfo(soId, pymAcntId){
 		<h4 class="sub_title"><spring:message code="LAB.M07.LAB00306"/></h4>
 	</div>
 	<div class="fr mt10">
-        <a href="#" class="grey-btn" id="btn_request" title='<spring:message code="LAB.M07.LAB00346"/>'><spring:message code="LAB.M07.LAB00307"/></a>
+        <a href="#" class="grey-btn" id="btn_request" title='<spring:message code="LAB.M07.LAB00346"/>'><spring:message code="LAB.M07.LAB00346"/></a>
         <%-- <a href="#" class="grey-btn" id="btn_approvalReq" title='<spring:message code="LAB.M01.LAB00231"/>'><spring:message code="LAB.M01.LAB00231"/></a> --%>
     </div>
 </div>

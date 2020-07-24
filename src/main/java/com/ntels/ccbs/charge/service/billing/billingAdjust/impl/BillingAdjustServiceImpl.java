@@ -30,6 +30,11 @@ public class BillingAdjustServiceImpl implements BillingAdjustService {
 		/*
 		 * 청구전, 청구후 요금조정 대상 내역 분기
 		 */
+		System.out.println("//TEST//");
+		System.out.println(billingAdjust.getBillSeqNo()+"//"+billingAdjust.getSoId());
+		System.out.println("///////////////////////////////////////////////////////");
+		System.out.println("///////////////////////////////////////////////////////");
+		
 		if("1".equals(billingAdjust.getAdjPt())){
 			adjTgtList = billingAdjustMapper.getBeforeAdjTgtList(billingAdjust);
 		}

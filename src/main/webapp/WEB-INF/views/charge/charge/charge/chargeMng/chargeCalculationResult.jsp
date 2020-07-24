@@ -59,6 +59,7 @@ $(document).ready(function() {
 	}
 	
 	$('#condBillYymm').datepicker('setDate', new Date());
+	
 	/*if($(".datepicker").length > 0){
 		$( ".datepicker" ).datepicker({
 		      changeMonth: true,

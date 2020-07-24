@@ -30,4 +30,9 @@ public class BillingBeforeAdjustServiceImpl implements BillingBeforeAdjustServic
 	public List<BillingAdjustVO> getPymBillList(BillingAdjustVO billingAdjust) {
 		return billingBeforeAdjustMapper.getPymBillList(billingAdjust);
 	}
+	
+	@Override
+	public List<BillingAdjustVO> getPymRcpt(BillingAdjustVO billingAdjust) {
+		return billingBeforeAdjustMapper.getPymRcpt(billingAdjust);
+	}
 }

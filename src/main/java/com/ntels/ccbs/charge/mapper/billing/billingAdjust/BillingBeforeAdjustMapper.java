@@ -26,4 +26,6 @@ public interface BillingBeforeAdjustMapper {
 	List<BillingAdjustVO> getPymBillList(
 			@Param(value ="billingBeforeAdjust") BillingAdjustVO billingAdjust
 	);
+
+	List<BillingAdjustVO> getPymRcpt(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
 }

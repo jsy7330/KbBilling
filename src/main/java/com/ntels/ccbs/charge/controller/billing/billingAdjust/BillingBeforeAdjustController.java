@@ -132,19 +132,23 @@ public class BillingBeforeAdjustController {
 	}
 	
 	
-	@RequestMapping(value = "openBeforeAdjReqPopup", method = RequestMethod.POST)
-	public String openCustChngHistPopup(BillingAdjustVO billingAdjust, Model model, HttpServletRequest request) throws ServiceException{
-		String lng = (String)request.getSession().getAttribute("sessionLanguage");
-		
-		System.out.println(">> openCustChngHistPopup << ");
-		System.out.println("## PYM_ACNT_ID : " +billingAdjust.getPymAcntId());
-		
-		model.addAttribute("billBefAdj", billingAdjust);
-		model.addAttribute("adjApprover", commonDataService.getCommonCodeList("BL00042", lng));
-		model.addAttribute("adjRsn", commonDataService.getCommonCodeList("BL00024", lng));
-		
-		return  URL + "/ajax/billingBeforeAdjReq";
-	}
+	/*
+	 * @RequestMapping(value = "openBeforeAdjReqPopup", method = RequestMethod.POST)
+	 * public String openCustChngHistPopup(BillingAdjustVO billingAdjust, Model
+	 * model, HttpServletRequest request) throws ServiceException{ String lng =
+	 * (String)request.getSession().getAttribute("sessionLanguage");
+	 * 
+	 * System.out.println(">> openCustChngHistPopup << ");
+	 * System.out.println("## PYM_ACNT_ID : " +billingAdjust.getPymAcntId());
+	 * 
+	 * model.addAttribute("billBefAdj", billingAdjust);
+	 * model.addAttribute("adjApprover",
+	 * commonDataService.getCommonCodeList("BL00042", lng));
+	 * model.addAttribute("adjRsn", commonDataService.getCommonCodeList("BL00024",
+	 * lng));
+	 * 
+	 * return URL + "/ajax/billingBeforeAdjReq"; }
+	 */
 	
 	@RequestMapping(value = "getAdjTgtList", method = RequestMethod.POST)
 	public String getAdjTgtList(BillingAdjustVO param, Model model, HttpServletRequest request) throws ServiceException{
@@ -162,13 +166,36 @@ public class BillingBeforeAdjustController {
 		System.out.println("## PYM_ACNT_ID : " + param.getPymAcntId());
 		
 		List<BillingAdjustVO> adjTgtList = new ArrayList<BillingAdjustVO>();
-		List<BillingAdjustVO> billClsInfo = new ArrayList<BillingAdjustVO>();
+		//List<BillingAdjustVO> billClsInfo = new ArrayList<BillingAdjustVO>();
 		
 		adjTgtList = billingAdjustService.getAdjTgtList(param);
-		billClsInfo = billingAdjustService.getBillClsInfo(param);
+		//billClsInfo = billingAdjustService.getBillClsInfo(param);
 		
 		model.addAttribute("adjTgtList", adjTgtList);
-		model.addAttribute("billClsInfo", billClsInfo);
+		//model.addAttribute("billClsInfo", billClsInfo);
+		
+		return  URL + "/ajax/billingBeforeAdjReq";
+	}
+	
+	@RequestMapping(value = "openBeforeAdjReqPopup", method = RequestMethod.POST)
+	public String openBeforeAdjReqPopup(BillingAdjustVO billingAdjust, Model model, HttpServletRequest request) throws ServiceException{
+		String lngTyp = (String)request.getSession().getAttribute("sessionLanguage");
+		billingAdjust.setLngTyp(lngTyp);
+		
+		System.out.println(">> openCustChngHistPopup << ");
+		System.out.println("## PYM_ACNT_ID : " +billingAdjust.getPymAcntId());
+		System.out.println("## SO_ID : " + billingAdjust.getSoId());
+		System.out.println("## ADJ_NO : " + billingAdjust.getAdjNo());
+		System.out.println("## ADJ_PT : " + billingAdjust.getAdjPt());
+		System.out.println("## CLS_TSK_CL : " + billingAdjust.getClsTskCl());
+		System.out.println("## BILL_CYCL : " + billingAdjust.getBillCycl());
+		System.out.println("## LNG_TYP : " + billingAdjust.getLngTyp());
+		System.out.println("## BILL_SEQ_NO : " + billingAdjust.getBillSeqNo());
+		System.out.println("## BILL_YYMM : " + billingAdjust.getBillYymm());
+		
+		model.addAttribute("billBeforeAdj", billingAdjust);
+		model.addAttribute("pymRcpt", billingBeforeAdjustService.getPymRcpt(billingAdjust));
+		model.addAttribute("adjRsnCd", commonDataService.getCommonCodeList("BL00024", lngTyp));
 		
 		return  URL + "/ajax/billingBeforeAdjReq";
 	}

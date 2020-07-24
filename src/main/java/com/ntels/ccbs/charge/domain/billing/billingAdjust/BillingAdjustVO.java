@@ -8,6 +8,8 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 
 	private static final long serialVersionUID = -6112760163377176959L;
 	
+	private String chkJob;
+	
 	private String soId; /* 사업구분 */
 	private String regrId; /* 등록자ID */
 	private String regrNm; /* 등록자 */
@@ -100,7 +102,40 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	private String appntTelNo;
 	private String sidx;
 	private String sord;
+	private String svcNm; /*서비스명*/
+	private String rateEndDt; /*과금종료일*/
 	
+	
+	
+	public String getRateEndDt() {
+		return rateEndDt;
+	}
+	public void setRateEndDt(String rateEndDt) {
+		this.rateEndDt = rateEndDt;
+	}
+	public String getSvcNm() {
+		return svcNm;
+	}
+	public void setSvcNm(String svcNm) {
+		this.svcNm = svcNm;
+	}
+	private String orderbyNum;
+	
+	public String getChkJob() {
+		return chkJob;
+	}
+	public void setChkJob(String chkJob) {
+		this.chkJob = chkJob;
+	}
+	public String getOrderbyNum() {
+		return orderbyNum;
+	}
+	public void setOrderbyNum(String orderbyNum) {
+		this.orderbyNum = orderbyNum;
+	}
+	public static long getSerialversionuid() {
+		return serialVersionUID;
+	}
 	public String getAppntTelNo() {
 		return appntTelNo;
 	}
