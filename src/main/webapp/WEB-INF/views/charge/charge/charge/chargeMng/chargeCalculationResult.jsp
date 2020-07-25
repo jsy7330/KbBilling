@@ -94,12 +94,12 @@ $(document).ready(function() {
 		    { label: 'prodCd', name: 'PROD_CD', width : 100, align:"center", hidden:true},
 		    { label: 'ctrtId', name: 'CTRT_ID', width : 100, align:"center", hidden:true},
 		    { label: 'pymAcntId', name: 'PYM_ACNT_ID', width : 100, align:"center", hidden:true},
-		    { label: '작업번호', name: 'CLC_WRK_NO', width : 100, align:"center", sortable:false},
-		    { label: '고객ID', name: 'CUST_ID', width : 150, align:"center", sortable:false},
-			{ label: '고객명', name: 'CUST_NM', width : 150, sortable:false},
-			{ label: '계약ID', name: 'CTRT_ID', width : 150, align:"center", sortable:false},
-		    { label: '상품명', name: 'PROD_NM', width : 150, sortable:false},
-		    { label: '사용액합계', name: 'TOT_USE_AMT', width : 150, sortable:false,formatter:numberAutoFormatter ,align:"right"}
+		    { label: '<spring:message code="LAB.M09.LAB00240"/>', name: 'CLC_WRK_NO', width : 100, align:"center", sortable:false},	//작업번호
+		    { label: '<spring:message code="LAB.M01.LAB00046"/>', name: 'CUST_ID', width : 150, align:"center", sortable:false},	//고객ID
+			{ label: '<spring:message code="LAB.M01.LAB00050"/>', name: 'CUST_NM', width : 150, sortable:false},	//고객명
+			{ label: '<spring:message code="LAB.M01.LAB00032"/>', name: 'CTRT_ID', width : 150, align:"center", sortable:false},
+		    { label: '<spring:message code="LAB.M07.LAB00130"/>', name: 'PROD_NM', width : 150, sortable:false},	//상품명
+		    { label: '<spring:message code="LAB.M07.LAB00342"/>', name: 'TOT_USE_AMT', width : 150, sortable:false,formatter:numberAutoFormatter ,align:"right"} //사용액합계
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -136,12 +136,12 @@ $(document).ready(function() {
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '서비스명', name: 'SVC_NM', width : 100, sortable:false},
-		    { label: '과금항목명', name: 'RATE_ITM_NM', width : 100, sortable:false},
-		    { label: '이용건수', name: 'USE_QTY', width : 150, sortable:false,align:"right"},
-			{ label: '이용일수', name: 'USE_CNT', width : 150, sortable:false,align:"right"}, //USE_CNT
-			{ label: '사용금액', name: 'USE_AMT', width : 150, sortable:false,formatter:numberAutoFormatter,align:"right"},
-		    { label: '사용년월', name: 'USE_YYMM', width : 200, align:"left", sortable:false,align:"center", formatter:stringTypeFormatterYYYYMM}
+		    { label: '<spring:message code="LAB.M07.LAB00185"/>', name: 'SVC_NM', width : 100, sortable:false},	//서비스명
+		    { label: '<spring:message code="LAB.M01.LAB00152"/>', name: 'RATE_ITM_NM', width : 100, sortable:false},	//과금항목명
+		    { label: '<spring:message code="LAB.M08.LAB00221"/>', name: 'USE_QTY', width : 150, sortable:false,align:"right"},	//이용건수
+			{ label: '<spring:message code="LAB.M08.LAB00220"/>', name: 'USE_CNT', width : 150, sortable:false,align:"right"}, //USE_CNT
+			{ label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT', width : 150, sortable:false,formatter:numberAutoFormatter,align:"right"}, //사용금액
+		    { label: '<spring:message code="LAB.M07.LAB00021"/>', name: 'USE_YYMM', width : 200, align:"left", sortable:false,align:"center", formatter:stringTypeFormatterYYYYMM}	//사용년월
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -724,7 +724,7 @@ function openCustSearchPopup(){
 			</td>
 		</tr>
 		<tr>
-			<th>납부계정<span class="dot">*</span></th>
+			<th><spring:message code="LAB.M02.LAB00005" /><span class="dot">*</span></th> <!-- 납부계정 -->
 			<td>
 				<div class="inp_date w280">
 					<input id="searchAcntNm" name="searchAcntNm" type="text" class="w120" disabled="disabled"/>
@@ -734,7 +734,7 @@ function openCustSearchPopup(){
 					</ntels:auth>
 				</div>
 			</td>
-			<th>고객명</th>
+			<th><spring:message code="LAB.M01.LAB00050" /></th> <!-- 고객명 -->
 			<td colspan="3">
 				<div class="inp_date w280">
 					<input id="condCustNm" type="text" class="w120" />
@@ -751,7 +751,7 @@ function openCustSearchPopup(){
 <!--작업그룹표시부 -->
 <div class="main_btn_box">
 	<div class="fl">
-		<h4 class="sub_title">요금내역</h4>
+		<h4 class="sub_title"><spring:message code="LAB.M08.LAB00201" /></h4> <!-- 요금내역 -->
 	</div>
 </div>
 <div id='gridDiv'>
@@ -761,7 +761,7 @@ function openCustSearchPopup(){
 
 <div class="main_btn_box">
 	<div class="fl">
-		<h4 class="sub_title">서비스상세내역</h4>
+		<h4 class="sub_title"><spring:message code="LAB.M07.LAB00364" /></h4> <!-- 서비스상세내역 -->
 	</div>
 </div>
 <div id='gridDiv'>
