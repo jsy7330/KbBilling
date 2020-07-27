@@ -234,9 +234,7 @@ function openCustPymSearchPopup(){
  * 신정자조회팝업
  */
 function openRcptSearchPopup(){
-	
-	alert("click");
-	
+
 	$("#condUserNm").val('');  //돋보기 클릭시 초기화
 	$("#condUserId").val('');
 	var url="/system/common/common/userSearchMng/userSearchPopup.ajax";
