@@ -242,6 +242,10 @@ function searchWorkGrpList(){
 		alert('<spring:message code="MSG.M01.MSG00067"/>');
 		return;
 	}
+	if(chkDate($('#searchStatDt').val(),$('#searchEndDt').val())){
+		alert("신청일자의 시작일이 종료일보다 큽니다.");
+		return;
+	}
 
 	$("#workGrpGrid").setGridParam({
 		mtype: 'POST',
@@ -346,6 +350,22 @@ function pageInit(){
 	$("#workGrpUserGrid").clearGridData();
 }
 
+/**
+ * 검색조건 날짜 비교
+ */
+function chkDate(date1, date2){
+	
+	var chk = false;
+	
+	var d1 = new Date(date1);
+	var d2 = new Date(date2);
+	
+	if(d1 > d2){
+		chk = true;
+	}
+	
+	return chk;
+}
 
 </script>
 
