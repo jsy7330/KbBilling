@@ -33,10 +33,10 @@ $(document).ready(function() {
             { label: '납부계정ID', name: 'pymAcntId', width : 120, align:"center"},
             { label: '납부자명', name: 'pymAcntNm', width : 100, align:"center"},
             { label: '희망적용년월', name: 'hopeAplyYymm', formatter:stringToDateformatYYYYMM, width : 120, align:"center"},
-            { label: '계약건수', name: 'ctrtIdCnt', width : 80, align:"right"},
-            { label: '상품건수', name: 'prodCdCnt', width : 80, align:"right"},
-            { label: '서비스건수', name: 'svcCdCnt', width : 80, align:"right"},
-            { label: '신청금액', name: 'adjApplAmt', formatter:'integer', width : 100, align:"right", formatter:numberAutoFormatter},
+            { label: '계약건수', name: 'ctrtIdCnt', formatter:numberAutoFormatter, width : 80, align:"right"},
+            { label: '상품건수', name: 'prodCdCnt', formatter:numberAutoFormatter,width : 80, align:"right"},
+            { label: '서비스건수', name: 'svcCdCnt', formatter:numberAutoFormatter,width : 80, align:"right"},
+            { label: '신청금액', name: 'adjApplAmt', formatter:numberAutoFormatter, formatter:'integer', width : 100, align:"right"},
             { label: '진행상태', name: 'dcsnProcStatNm', width : 120, align:"center"},
             { label: '신청일시', name: 'applDttm', formatter:stringTypeFormatterYYYYMMDDHH24MISS, width : 120, align:"center"},         //누적조정금액
             { label: '접수자', name: 'rcptPsnNm', width : 120, align:"left"}
@@ -105,7 +105,7 @@ $(document).ready(function() {
         rowObject.addr = $('#addr').val();
         rowObject.adjPt        = '1';  /* 조정시점(1:청구전,2:청구후,3:일회성) */
         rowObject.pymAcntNm    = $('#custNm').val();
-        rowObject.billYymm     = dateFormatToStringYYYYMM(rowObject.hopeAplyYymm);
+        rowObject.billYymm     = dateFormatToStringYYYYMM(rowObject.billYymm);
         rowObject.billDt       = dateFormatToStringYYYYMMDD(rowObject.billDt);
         rowObject.payDueDt     = dateFormatToStringYYYYMMDD(rowObject.payDueDt);
         rowObject.applDttm     = rowObject.applDttm;
