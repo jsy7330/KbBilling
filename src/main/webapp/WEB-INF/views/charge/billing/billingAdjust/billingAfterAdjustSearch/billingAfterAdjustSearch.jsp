@@ -34,43 +34,40 @@ $(document).ready(function() {
 
 	//그리드 처리
 	$("#workGrpGrid").jqGrid({
-		url : '/product/service/serviceMgt/workGrpMng/getWorkGrpListAction.json',
+		url : '/charge/billing/billingAdjust/billingAfterAdjustSearch/getBillChargeAdjustReportList.json',
 		datatype : 'local',
 		mtype: 'POST',
 		postData : {
 		},
 		colModel: [
-		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
-		    { label: '순번', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '사업', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '적용년월',name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '신청일자', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false},
-		    { label: '납부계정ID', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '납부자명', name: 'SO_NM', width : 100, align:"left", sortable:false},
-		    { label: '조정사유', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false},
-			{ label: '신청번호', name: 'SVC_WRK_GRP_NM', width : 200, align:"left", sortable:false},
-		    { label: '최초조정전청구금액', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false},
-		    { label: '조정누적금액', name: 'SVC_WRK_GRP_ID', width : 100, align:"center", sortable:false},
-		    { label: '청구금액', name: 'USE_YN_NM', width : 100, align:"center", sortable:false},
-		    { label: '조정전청구금액', name: 'CHGR_NM', width : 150, sortable:false},
-			{ label: '신청금액', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '조정금액', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '진행상태', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '신청자명', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '청구일자', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '청구일자', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '청구반영일자', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '신청사유', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '수정자', name: 'CHGR_NM', width : 150, sortable:false},
-		    { label: '수정일시', name: 'CHGR_NM', width : 150, sortable:false}
+		    { label: 'soId', name: 'soId', width : 100, align:"center", hidden:true},
+		    { label: '<spring:message code="LAB.M07.LAB00365"/>', name: 'applDttmDt', width : 100, align:"center", sortable:false, formatter:stringToDateformatYYYYMMDD},	//신청일자
+		    { label: '납부계정ID', name: 'pymAcntId', width : 100, align:"center", hidden:true},
+		    { label: '<spring:message code="LAB.M02.LAB00018"/>', name: 'pymAcntNm', width : 100, align:"left", sortable:false},	//납부자명
+		    { label: '조정사유', name: 'adjResnNm', width : 200, align:"left", sortable:false},
+			{ label: '신청번호', name: 'adjNo', width : 100, align:"left", sortable:false},
+		    { label: '최초조정전청구금액', name: 'adjPrvBillAmt', width : 100, align:"right", sortable:false, formatter:numberAutoFormatter},
+		    { label: '조정누적금액', name: 'adjAmt', width : 100, align:"right", sortable:false, formatter:numberAutoFormatter},
+		    { label: '청구금액', name: 'billAmt', width : 100, align:"right", sortable:false, formatter:numberAutoFormatter},
+		    { label: '조정전청구금액', name: 'adjPrvBillAmtA', width : 150, align:"right", sortable:false, formatter:numberAutoFormatter},
+			{ label: '신청금액', name: 'adjApplAmt', width : 150, sortable:false, align:"right", formatter:numberAutoFormatter},
+		    { label: '조정금액', name: 'adjAmtA', width : 150, sortable:false, align:"right", formatter:numberAutoFormatter},
+		    { label: '진행상태코드', name: 'dcsnProcStat', sortable:false, hidden:true},
+		    { label: '진행상태', name: 'dcsnProcStatNm', width : 150, sortable:false},
+		    { label: '신청자명', name: 'rcpPsnNm', width : 150, sortable:false},
+		    { label: '청구일자', name: 'billDt', width : 150, align:"center",sortable:false, formatter:stringToDateformatYYYYMMDD},
+		    { label: '청구반영일자', name: 'billAplyDt', width : 150, align:"center",sortable:false, formatter:stringToDateformatYYYYMMDD},
+		    { label: '신청사유', name: 'adjApplConts', width : 150, sortable:false},
+		    { label: '수정자', name: 'chgrIdNm', width : 150, sortable:false},
+		    { label: '수정일시', name: 'chgDttm', width : 150, align:"center",sortable:false, formatter:dateTypeFormatterYYYYMMDDHH24MISS}
 		],
 		viewrecords: true,
 		shrinkToFit:false,
-		height: 120,
+		height: 300,
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
-			root : "workGrpList",
+			root : "billChargeAdjustReportList",
 			records : "totalCount", //총 레코드 
 			total : "totalPages",  //총페이지수
 			page : "page"          //현재 페이지
@@ -113,43 +110,22 @@ $(document).ready(function() {
     		searchWorkGrpList();
 		}
     );
-
-
-    //초기화 버튼 이벤트
-   	$('#initBtn').on('click',function (e) {
-	   		if($("#initBtn").hasClass('not-active')){
+    
+ 	// 납부계정조회
+	$('#btnCustPymSearch').on('click',function (e) {
+			if($("#btnCustSearch").hasClass('not-active')){
 				return;
 			}
-    		initBtn();
+			openCustPymSearchPopup();	
 		}
-    );
-
-    //신규등록 버튼 이벤트
-    $('#newBtn').on('click',function (e) {
-      	if($("#newBtn").hasClass('not-active')){
-          return;
-  		  }
-    		insertBtn();
-		  }
-    );
-
-    //수정 버튼 이벤트
-    $('#updateBtn').on('click',function (e) {
-      	if($("#updateBtn").hasClass('not-active')){
-          return;
-  		  }
-    		updateBtn();
-		  }
-    );
-
-    //삭제 버튼 이벤트
-    $('#deleteBtn').on('click',function (e) {
-      	if($("#deleteBtn").hasClass('not-active')){
-          return;
-  		  }
-    		deleteBtn();
-		  }
-    );
+	);
+ 	
+ 	$('#btnRcptSearch').on('click', function(e){
+ 		if(('#btnRcptSearch').hasClass('not-active')){
+ 			return;
+ 		}
+ 		openRcptSearchPopup();
+ 	});
 
     //사용자 추가 버튼
     $('#addUserBtn').on('click',function (e) {
@@ -187,6 +163,80 @@ $(document).ready(function() {
 	);
 });
 
+//조회
+function searchWorkGrpList(){
+	
+	var condDate = caldate(31, $('#searchEndDt').val());
+
+	if($('#condSo').val() == 'SEL'){
+		alert('<spring:message code="MSG.M07.MSG00002"/>');
+		return;
+	}
+	
+	if(chkDate($('#searchStatDt').val(),$('#searchEndDt').val())){
+		alert("신청일자의 시작일이 종료일보다 큽니다");
+		return;
+	}
+	
+	if(chkDate(condDate, $('#searchStatDt').val())){
+		alert("신청기간을 1개월 이내로 입력해 주세요");
+		return;
+	}
+	
+	$("#workGrpGrid").setGridParam({
+		mtype: 'POST',
+		datatype : 'json',
+  	    postData : {
+  	    	condSoId: $('#condSo').val() ,
+  	    	condStDt : dateFormatToStringYYYYMMDD($('#searchStatDt').val()),
+  	    	condEdDt : dateFormatToStringYYYYMMDD($('#searchEndDt').val()),
+  	    	condPymAcntId : $('#condPymAcntId').val(),
+  	    	condRcptPsnId : $('#condRcptPsnId').val(),
+  	    	condDcsnProcStat : $('#condDcsnProcStat').val()
+		}
+	});
+	
+   	$("#workGrpGrid").trigger("reloadGrid");
+}
+
+/*
+ * 납부조회팝업
+ */
+function openCustPymSearchPopup(){
+	$.ajax({
+	    type : "post",
+	    url : '/system/common/common/pymAcntSearch/pymAcntSearchPopup.ajax',
+	    data : {
+	         inputSoId : $("#condSo").val()   //input SO Id
+	        ,inputCustNm : $('#condPymAcntNm').val()   //input Customer Name
+	        ,inputPymAcntId : $('#condPymAcntId').val()
+	        ,inputIsUnmaskYn : $('#isUnmaskYn').val() //마스크 처리 해제 Y
+	        ,outputSoId : 'condSo'            //output SO ID Select
+	        ,outputCustNm : 'condCustNm'            //output Customer Name Text
+	        ,outputCustId : 'condCustId'            //output Customer ID Text
+	        ,outputPymAcntId : 'condPymAcntId'      //output Payment ID Text
+	        ,outputPymAcntNm : 'condPymAcntNm'      //output Payment Nm Text
+        	,outputSoId : 'condSo'      		//output Payment Nm Text
+	    },
+	    async: true,
+	    success : function(data) {
+	        var html = data;
+	        $("#popup_dialog").html(html);
+	    },      
+	    complete : function(){
+	        wrapWindowByMask(); // 팝업 오픈
+	        $("#txtPymSearchCustNm").focus(); //오픈 후 focus위치
+	    }
+	});
+}
+
+/**
+ * 신정자조회팝업
+ */
+function openRcptSearchPopup(){
+	
+}
+
 /*
  * 페이지 초기화
  */
@@ -218,60 +268,46 @@ function pageInit(){
 	$("#workGrpUseYnSel").selectmenu('disable');
 }
 
-/*
- * 초기화 버튼
+/**
+ * 검색조건 날짜 비교
  */
-function initBtn(){
-
-	btnEnable('initBtn');
-	btnEnable('newBtn');
-	btnDisable('updateBtn');
-	btnDisable('deleteBtn');
-	btnDisable('addUserBtn');
-	btnDisable('updateWorkUserBtn');
-	btnDisable('deleteWorkUserBtn');
-
-	$("#userGrid").clearGridData();
-	$("#workGrpUserGrid").clearGridData();
-
-
-	$('#workGrpIdTxt').val('');
-	$('#workGrpIdTxt').addClass('not-active');
-    $('#workGrpIdTxt').attr('disabled', true);
-    $('#workGrpNmTxt').val('');
-	$('#workGrpNmTxt').removeClass('not-active');
-    $('#workGrpNmTxt').removeAttr('disabled');
-    $("#workGrpSoSel").val('SEL');
-    $("#workGrpSoSel").selectmenu('refresh');
-	$("#workGrpSoSel").selectmenu('enable');
-    $("#workGrpUseYnSel").val('SEL');
-    $("#workGrpUseYnSel").selectmenu('refresh');
-	$("#workGrpUseYnSel").selectmenu('enable');
-	$('#workGrpSoSel-button').focus();
-}
-
-/*
- * 버튼 비활성화 처리
- */
-function btnDisable(id){
-	$('#' + id ).addClass('white-btn');
-	$('#' + id ).removeClass('grey-btn');
-	$('#' + id ).addClass('not-active');
-	$('#' + id ).attr('disabled',true);
+function chkDate(date1, date2){
 	
+	var chk = false;
+	
+	var d1 = new Date(date1);
+	var d2 = new Date(date2);
+	
+	if(d1 > d2){
+		chk = true;
+	}
+	
+	return chk;
 }
 
-/*
- * 버튼 활성화 처리
+/**
+ * conDate의 day만큼 전날의 날짜 return
  */
-function btnEnable(id){
-	$('#' + id ).addClass('grey-btn');
-	$('#' + id ).removeClass('white-btn');
-	$('#' + id ).removeClass('not-active');
-	$('#' + id ).removeAttr('disabled');
-}
-
-
+function caldate(day, condDate){
+	 
+	 var caledmonth, caledday, caledYear;
+	 var loadDt = new Date(condDate);
+	 var v = new Date(Date.parse(loadDt) - day*1000*60*60*24);
+	 
+	 caledYear = v.getFullYear();
+	 
+	 if( v.getMonth() < 9 ){
+	  caledmonth = '0'+(v.getMonth()+1);
+	 }else{
+	  caledmonth = v.getMonth()+1;
+	 }
+	 if( v.getDate() < 9 ){
+	  caledday = '0'+v.getDate();
+	 }else{
+	  caledday = v.getDate();
+	 }
+	 return caledYear+'-'+caledmonth+'-'+caledday;
+	}
 </script>
 
 <!--NaviGator-->
@@ -289,6 +325,14 @@ function btnEnable(id){
 
 
 <!-- 검색 버튼 -->
+<div class="main_btn_box">
+	<ntels:auth auth="${menuAuthR}">
+		<div class="fr mt10">
+			<a id='searchBtn' href="#" class="grey-btn" title='<spring:message code="LAB.M09.LAB00158"/>'><span class="search_icon"><spring:message code="LAB.M09.LAB00158"/></span></a> 
+		</div>
+	</ntels:auth>
+</div>
+
 <!-- 검색부 -->
 <table class="writeview">
 	<colgroup>
@@ -299,7 +343,7 @@ function btnEnable(id){
 	</colgroup>
 	<thead>
 		<tr>
-			<th><spring:message code="LAB.M07.LAB00003" /></th>
+			<th><spring:message code="LAB.M07.LAB00003" /><span class="dot">*</span></th>
 			<td>
 				<select id="condSo" class="w100p">
 					<option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option>
@@ -308,7 +352,7 @@ function btnEnable(id){
 					</c:forEach>
 				</select>
 			</td>
-			<th>신청일자</th>
+			<th>신청일자<span class="dot">*</span></th>
 			<td>
 				<div class="date_box">
 					<div class="inp_date w130">
@@ -324,13 +368,13 @@ function btnEnable(id){
 			</td>
 		</tr>
 		<tr>
-			<th>납부계정</th>
+			<th><spring:message code="LAB.M02.LAB00005" /></th><!-- 납부계정 -->
 			<td colspan="3">
 				<div class="inp_date w280">
-					<input id="condCustNm" type="text" class="w120" />
-					<input id="condCustNm" type="text" class="w120" disabled/>
+					<input id="condPymAcntNm" type="text" class="w120" />
+					<input id="condPymAcntId" type="text" class="w120" disabled/>
 					<ntels:auth auth="${menuAuthR}">
-						<a id="btnCustSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
+						<a id="btnCustPymSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
 					</ntels:auth>
 				</div>
 			</td>
@@ -338,17 +382,20 @@ function btnEnable(id){
 		<tr>
 			<th>진행상태</th>
 			<td>
-				<select id="condSo" class="w100p">
+				<select id="condDcsnProcStat" class="w100p">
 					<option value="SEL"><spring:message code="LAB.M15.LAB00002"/></option>
+					<c:forEach items="${dcsnProcStatList}" var="item" varStatus="status">
+							<option value="${item.commonCd}">${item.commonCdNm}</option>
+					</c:forEach>
 				</select>
 			</td>
 			<th>신청자</th>
 			<td>
 				<div class="inp_date w280">
-					<input id="condCustNm" type="text" class="w120" />
-					<input id="condCustNm" type="text" class="w120" disabled/>
+					<input id="condRcptPsnNm" type="text" class="w120" />
+					<input id="condRcptPsnId" type="text" class="w120" disabled/>
 					<ntels:auth auth="${menuAuthR}">
-						<a id="btnCustSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
+						<a id="btnRcptSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
 					</ntels:auth>
 				</div>
 			</td>
@@ -366,7 +413,7 @@ function btnEnable(id){
 	<div id="workGrpGridPager"></div>
 </div>
 <!-- 하단 버튼부 -->
-<div class="main_btn_box">
+<%-- <div class="main_btn_box">
 	<div class="fr">
 			<span id="commonBtn">
 			<ntels:auth auth="${menuAuthR}">
@@ -383,7 +430,7 @@ function btnEnable(id){
 			</ntels:auth>
 		</span>
 	</div>
-</div>
+</div> --%>
 <!-- 팝업참조 -->
 <div id="popup_dialog" class="Layer_wrap" style="display:none;"></div>
 
