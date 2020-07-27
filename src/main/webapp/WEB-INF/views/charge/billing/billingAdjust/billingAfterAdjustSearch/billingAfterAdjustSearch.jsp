@@ -121,9 +121,9 @@ $(document).ready(function() {
 	);
  	
  	$('#btnRcptSearch').on('click', function(e){
- 		if(('#btnRcptSearch').hasClass('not-active')){
- 			return;
- 		}
+ 		if($("#btnRcptSearch").hasClass('not-active')){
+			return;
+		}
  		openRcptSearchPopup();
  	});
 
@@ -174,12 +174,12 @@ function searchWorkGrpList(){
 	}
 	
 	if(chkDate($('#searchStatDt').val(),$('#searchEndDt').val())){
-		alert("신청일자의 시작일이 종료일보다 큽니다");
+		alert("신청일자의 시작일이 종료일보다 큽니다.");
 		return;
 	}
 	
 	if(chkDate(condDate, $('#searchStatDt').val())){
-		alert("신청기간을 1개월 이내로 입력해 주세요");
+		alert("신청기간을 1개월 이내로 입력해 주세요.");
 		return;
 	}
 	
@@ -191,7 +191,7 @@ function searchWorkGrpList(){
   	    	condStDt : dateFormatToStringYYYYMMDD($('#searchStatDt').val()),
   	    	condEdDt : dateFormatToStringYYYYMMDD($('#searchEndDt').val()),
   	    	condPymAcntId : $('#condPymAcntId').val(),
-  	    	condRcptPsnId : $('#condRcptPsnId').val(),
+  	    	condRcptPsnId : $('#condUserId').val(),
   	    	condDcsnProcStat : $('#condDcsnProcStat').val()
 		}
 	});
@@ -235,6 +235,28 @@ function openCustPymSearchPopup(){
  */
 function openRcptSearchPopup(){
 	
+	alert("click");
+	
+	$("#condUserNm").val('');  //돋보기 클릭시 초기화
+	$("#condUserId").val('');
+	var url="/system/common/common/userSearchMng/userSearchPopup.ajax";
+	var param = new Object();
+	param.popType = "m";            //팝업타입 m:모달 o:일반
+	param.returnId1 = "condUserNm";
+	param.returnId2 = "condUserId";
+	$.ajax({
+		type : "post",
+		url : url,
+		data : param,
+		async: true,
+		success : function(data) {
+			var html = data;
+			$("#popup_dialog").html(html);
+		},      
+		complete : function(){
+			wrapWindowByMask(); // 팝업 오픈
+		}
+	});
 }
 
 /*
@@ -392,8 +414,8 @@ function caldate(day, condDate){
 			<th>신청자</th>
 			<td>
 				<div class="inp_date w280">
-					<input id="condRcptPsnNm" type="text" class="w120" />
-					<input id="condRcptPsnId" type="text" class="w120" disabled/>
+					<input id="condUserNm" type="text" class="w120" />
+					<input id="condUserId" type="text" class="w120" disabled/>
 					<ntels:auth auth="${menuAuthR}">
 						<a id="btnRcptSearch"  href="#" title='<spring:message code="LAB.M01.LAB00047"/>' class="search"></a>
 					</ntels:auth>
