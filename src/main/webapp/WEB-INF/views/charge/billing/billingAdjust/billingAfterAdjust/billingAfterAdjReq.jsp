@@ -353,7 +353,7 @@ function checkInput(){
 	                <td><input id="popApplDttm" name="applDttm" type="text" class="w245" disabled /></td>
 	            </tr>
 	            <tr>
-	                <th><spring:message code="LAB.M09.LAB00243"/></th><!-- 적용월 -->
+	                <th><spring:message code="LAB.M10.LAB00033"/></th><!-- 적용월 -->
 	                <td><input id="popApplyMonth" name="pymAcnt" type="text" class="w245" disabled /></td>
 	                
 	                <th><spring:message code="LAB.M09.LAB00136"/><span class="dot">*</span></th><!-- 조정사유코드 -->
@@ -383,7 +383,7 @@ function checkInput(){
 	                <td><input id="popPay" name="pay" type="text" class="W850" disabled /></td>
 	            </tr>
 	            <tr>
-	                <th><spring:message code="LAB.M08.LAB00204"/><span class="dot">*</span></th><!-- 조정사유 -->
+	                <th>신청사유<span class="dot">*</span></th><!-- 조정사유 -->
 	                <td colspan="3"><input id="popAdjReq" name="adjRsn" type="text" class="W850" /></td>
 	            </tr>
 	        </tbody>

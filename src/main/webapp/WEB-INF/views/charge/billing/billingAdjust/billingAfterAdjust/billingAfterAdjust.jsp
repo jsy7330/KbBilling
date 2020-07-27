@@ -10,7 +10,7 @@ $(document).ready(function() {
 	
 	// 달력(월) 처리
     settingMonthpicker();
-    
+	
     //그리드 처리
     $("#afterAdjTable").jqGrid({
         url : 'getBillList.json?',
