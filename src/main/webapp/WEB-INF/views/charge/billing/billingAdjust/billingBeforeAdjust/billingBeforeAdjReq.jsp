@@ -12,37 +12,40 @@ $(document).ready(function() {
     setBasicInfo(); //기본정보 셋팅
     
     var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
-	//달력처리
+  //달력처리
 	if($(".month-picker").length > 0){
-		if(lng == 'ko'){
-			format = 'yy-mm';
-		}else if (lng == 'en'){
-			format = 'mm/yy';
-		}
-		$('.month-picker').datepicker( {
-	        changeMonth: true,
-	        changeYear: true,
-	        showButtonPanel: true,
-	        dateFormat: format,
-	        onClose: function(dateText, inst) {
+	      if(lng == 'ko'){
+	         format = 'yy-mm';
+	      }else if (lng == 'en'){
+	         format = 'mm/yy';
+	      }
+	      $('.month-picker').datepicker( {
+	         changeMonth: true,
+	         changeYear: true,
+	         showButtonPanel: true,
+	         dateFormat: format,
+	         onClose: function(dateText, inst) {
 	            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
 	            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
 	            $(this).datepicker('setDate', new Date(year, month, 1));
-	        }
-		 	,
-	        beforeShow : function (dateText, inst) {
+	         },
+	         beforeShow : function (dateText, inst) {
+	                 
 	            var selectDate = $(this).val().split("-");
 	            var year = Number(selectDate[0]);
 	            var month = Number(selectDate[1]) - 1;
 	            $(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
 	            $(this).datepicker('setDate', new Date(year, month, 1));
-	            
-	        }
-	    }
-	 )
-	}
+	                  
+	         }
+	      }).datepicker("setDate", new Date());  
+	   }
 	
 	//$('#popApplyMonth').datepicker('setDate', new Date());
+	
+	$(".inp_date .btn_cal").click(function(e){e.preventDefault();$(this).prev().focus();});
+	
+	
 	
     var param = checkInput();
 
@@ -404,7 +407,7 @@ function checkInput(){
 	    
 	    <div class="main_btn_box">
 	        <div class="fl">
-	            <h4 class="sub_title"><spring:message code="LAB.M09.LAB00245"/></h4>
+	            <h4 class="sub_title">조정금액</h4>
 	        </div>
 	    </div>
 	    

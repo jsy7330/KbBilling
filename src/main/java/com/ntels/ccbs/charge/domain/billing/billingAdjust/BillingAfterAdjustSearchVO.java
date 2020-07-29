@@ -29,12 +29,15 @@ public class BillingAfterAdjustSearchVO implements Serializable,CommonVO{
 	private String adjAmtA; /* 조정금액 */
 	private String dcsnProcStat; /* 진행상태 */
 	private String dcsnProcStatNm; /*진행상태명*/
-	private String rcpPsnNm; /* 신청자명 */
+	private String rcptPsnNm; /* 신청자명 */
 	private String billDt; /* 청구일자 */
 	private String billAplyDt; /* 청구반영일자 */
 	private String adjApplConts; /* 신청사유 */
 	private String chgrIdNm ;
 	private String chgDttm; /* 수정일시 */
+	private String billSeqNo; 
+	private String billYymm;	/* 청구년월 */
+	private String ctrtId;	/*계약ID*/
 	
 	private String condSoId;
 	private String condStDt;
@@ -170,12 +173,7 @@ public class BillingAfterAdjustSearchVO implements Serializable,CommonVO{
 	public void setDcsnProcStat(String dcsnProcStat) {
 		this.dcsnProcStat = dcsnProcStat;
 	}
-	public String getRcpPsnNm() {
-		return rcpPsnNm;
-	}
-	public void setRcpPsnNm(String rcpPsnNm) {
-		this.rcpPsnNm = rcpPsnNm;
-	}
+
 	public String getBillDt() {
 		return billDt;
 	}
@@ -254,6 +252,30 @@ public class BillingAfterAdjustSearchVO implements Serializable,CommonVO{
 	}
 	public void setDcsnProcStatNm(String dcsnProcStatNm) {
 		this.dcsnProcStatNm = dcsnProcStatNm;
+	}
+	public String getBillSeqNo() {
+		return billSeqNo;
+	}
+	public void setBillSeqNo(String billSeqNo) {
+		this.billSeqNo = billSeqNo;
+	}
+	public String getBillYymm() {
+		return billYymm;
+	}
+	public void setBillYymm(String billYymm) {
+		this.billYymm = billYymm;
+	}
+	public String getCtrtId() {
+		return ctrtId;
+	}
+	public void setCtrtId(String ctrtId) {
+		this.ctrtId = ctrtId;
+	}
+	public String getRcptPsnNm() {
+		return rcptPsnNm;
+	}
+	public void setRcptPsnNm(String rcptPsnNm) {
+		this.rcptPsnNm = rcptPsnNm;
 	}
 	
 }

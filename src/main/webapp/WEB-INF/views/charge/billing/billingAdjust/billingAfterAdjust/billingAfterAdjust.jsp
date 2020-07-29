@@ -10,7 +10,7 @@ $(document).ready(function() {
 	
 	// 달력(월) 처리
     settingMonthpicker();
-	
+
     //그리드 처리
     $("#afterAdjTable").jqGrid({
         url : 'getBillList.json?',
@@ -162,9 +162,10 @@ function searchPymInfo(){
             },
           dataType: 'json',
           success: function(data){
+        	console.info("data.data.pymListCnt : " + data.pymListCnt);
             if(data.pymListCnt == '0'){
                 alert('<spring:message code="MSG.M09.MSG00039"/>'); 
-            }else if(data.pymListCnt == 1){
+            }else if(data.pymListCnt == '1'){
 
               $('#pymAcnt').val(data.pymList[0].pymAcnt);
               $('#custNm').val(data.pymList[0].custNm);
@@ -197,27 +198,31 @@ function searchPymInfo(){
  */
 function openPymSearchPopup(){
 	
-	
-	//납부계정 조회
-	var url="/system/common/common/pymAcntSearch/pymAcntPopup.ajax";
-	var param = new Object();
-	param.popType = "m";            //팝업타입 m:모달 o:일반
-	param.returnId1 = "condPymAcntNm";
-	param.returnId2 = "condPymAcntId";
-	
 	$.ajax({
-		type : "post",
-		url : url,
-		data : param,
-		async: true,
-		success : function(data) {
-			var html = data;
-			$("#popup_dialog").html(html);
-		},      
-		complete : function(){
-			wrapWindowByMask(); // 팝업 오픈
-		}
-	}); 
+	    type : "post",
+	    url : '/system/common/common/pymAcntSearch/pymAcntSearchPopup.ajax',
+	    data : {
+	         inputSoId : $("#searchSoId").val()   //input SO Id
+	        ,inputCustNm : $('#condPymAcntNm').val()   //input Customer Name
+	        ,inputPymAcntId : $('#condPymAcntId').val()
+	        ,inputIsUnmaskYn : $('#isUnmaskYn').val() //마스크 처리 해제 Y
+	        ,outputSoId : 'condCustSoId'            //output SO ID Select
+	        ,outputCustNm : 'condCustNm'            //output Customer Name Text
+	        ,outputCustId : 'condCustId'            //output Customer ID Text
+	        ,outputPymAcntId : 'condPymAcntId'      //output Payment ID Text
+	        ,outputPymAcntNm : 'condPymAcntNm'      //output Payment Nm Text
+        	,outputSoId : 'searchSoId'      		//output Payment Nm Text
+	    },
+	    async: true,
+	    success : function(data) {
+	        var html = data;
+	        $("#popup_dialog").html(html);
+	    },      
+	    complete : function(){
+	        wrapWindowByMask(); // 팝업 오픈
+	        $("#txtPymSearchCustNm").focus(); //오픈 후 focus위치
+	    }
+	});
 	
 }
 
@@ -301,7 +306,7 @@ function getPymBillInfo(soId, pymAcntId){
           <td>
               <div class="date_box">
                   <div class="inp_date w150">
-                          <input  type="text"  id="searchYymm" name="searchYymm" class="monthpicker">
+                          <input  type="text"  id="searchYymm" name="searchYymm" class="monthpicker" readonly="readonly">
                           <a href="#" id='btnCal' class="btn_cal"></a>
                       </div>
               </div>

@@ -688,5 +688,35 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	public void setSord(String sord) {
 		this.sord = sord;
 	}
+	@Override
+	public String toString() {
+		return "BillingAdjustVO [chkJob=" + chkJob + ", soId=" + soId + ", regrId=" + regrId + ", regrNm=" + regrNm
+				+ ", regDate=" + regDate + ", chgrId=" + chgrId + ", chgrNm=" + chgrNm + ", chgDate=" + chgDate
+				+ ", commonCd=" + commonCd + ", commonCdNm=" + commonCdNm + ", pymAcnt=" + pymAcnt + ", custNm="
+				+ custNm + ", custTp=" + custTp + ", custTpNm=" + custTpNm + ", addr=" + addr + ", pymAcntId="
+				+ pymAcntId + ", ctrtIdCnt=" + ctrtIdCnt + ", prodCdCnt=" + prodCdCnt + ", svcCdCnt=" + svcCdCnt
+				+ ", adjNo=" + adjNo + ", billSeqNo=" + billSeqNo + ", adjPt=" + adjPt + ", adjPtNm=" + adjPtNm
+				+ ", hopeAplyYymm=" + hopeAplyYymm + ", DcsnProcStat=" + DcsnProcStat + ", applDttm=" + applDttm
+				+ ", rcptPsnNm=" + rcptPsnNm + ", applSoNm=" + applSoNm + ", soNm=" + soNm + ", apprrId=" + apprrId
+				+ ", lngTyp=" + lngTyp + ", acntNm=" + acntNm + ", dcsnProcStatNm=" + dcsnProcStatNm + ", gubun="
+				+ gubun + ", useYymm=" + useYymm + ", prodCmpsId=" + prodCmpsId + ", svcCmpsId=" + svcCmpsId
+				+ ", chrgItmCd=" + chrgItmCd + ", chrgItmNm=" + chrgItmNm + ", custId=" + custId + ", adjPrevBillAmt="
+				+ adjPrevBillAmt + ", adjAmt=" + adjAmt + ", adjAftBillAmt=" + adjAftBillAmt + ", adjApplAmt="
+				+ adjApplAmt + ", prodCd=" + prodCd + ", prodNm=" + prodNm + ", svcCd=" + svcCd + ", exrate=" + exrate
+				+ ", crncyCd=" + crncyCd + ", exrateAplyDt=" + exrateAplyDt + ", rateStrtDt=" + rateStrtDt + ", termDt="
+				+ termDt + ", ctrtStat=" + ctrtStat + ", ctrtStatNm=" + ctrtStatNm + ", svcTelNo=" + svcTelNo
+				+ ", currentYymm=" + currentYymm + ", clsTskCl=" + clsTskCl + ", billCycl=" + billCycl + ", mnsFlag="
+				+ mnsFlag + ", ctrtId=" + ctrtId + ", billYymm=" + billYymm + ", clsDt=" + clsDt + ", orgAdjApplAmt="
+				+ orgAdjApplAmt + ", totAdjApplAmt=" + totAdjApplAmt + ", orgAdjNo=" + orgAdjNo + ", billDt=" + billDt
+				+ ", adjPrvBillAmtA=" + adjPrvBillAmtA + ", adjAmtA=" + adjAmtA + ", payDueDt=" + payDueDt
+				+ ", adjPrvBillAmt=" + adjPrvBillAmt + ", billAmt=" + billAmt + ", preAdjApplAmt=" + preAdjApplAmt
+				+ ", chgrIdNm=" + chgrIdNm + ", chgDttm=" + chgDttm + ", billAplyDt=" + billAplyDt + ", billRcptAmt="
+				+ billRcptAmt + ", rcptAmt=" + rcptAmt + ", taxBillYn=" + taxBillYn + ", pymRcptAmt=" + pymRcptAmt
+				+ ", usgCnt=" + usgCnt + ", billMmTp=" + billMmTp + ", mmTp=" + mmTp + ", grpId=" + grpId
+				+ ", unpayAmt=" + unpayAmt + ", attrVal=" + attrVal + ", adjResnCd=" + adjResnCd + ", adjApplConts="
+				+ adjApplConts + ", saleAplyYn=" + saleAplyYn + ", rcptId=" + rcptId + ", pymAcntNm=" + pymAcntNm
+				+ ", appntTelNo=" + appntTelNo + ", sidx=" + sidx + ", sord=" + sord + ", svcNm=" + svcNm
+				+ ", rateEndDt=" + rateEndDt + ", orderbyNum=" + orderbyNum + "]";
+	}
 	
 }

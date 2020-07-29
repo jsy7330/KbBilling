@@ -42,6 +42,8 @@ $(document).ready(function() {
 		colModel: [
 		    { label: 'soId', name: 'soId', width : 100, align:"center", hidden:true},
 		    { label: '<spring:message code="LAB.M07.LAB00365"/>', name: 'applDttmDt', width : 100, align:"center", sortable:false, formatter:stringToDateformatYYYYMMDD},	//신청일자
+		    { label: '시퀀스번호', name: 'billSeqNo', width : 100, align:"center", hidden:true},
+		    { label: '계약ID', name: 'ctrtId', width : 100, align:"center", hidden:true},
 		    { label: '납부계정ID', name: 'pymAcntId', width : 100, align:"center", hidden:true},
 		    { label: '<spring:message code="LAB.M02.LAB00018"/>', name: 'pymAcntNm', width : 100, align:"left", sortable:false},	//납부자명
 		    { label: '조정사유', name: 'adjResnNm', width : 200, align:"left", sortable:false},
@@ -54,8 +56,9 @@ $(document).ready(function() {
 		    { label: '조정금액', name: 'adjAmtA', width : 150, sortable:false, align:"right", formatter:numberAutoFormatter},
 		    { label: '진행상태코드', name: 'dcsnProcStat', sortable:false, hidden:true},
 		    { label: '진행상태', name: 'dcsnProcStatNm', width : 150, sortable:false},
-		    { label: '신청자명', name: 'rcpPsnNm', width : 150, sortable:false},
+		    { label: '신청자명', name: 'rcptPsnNm', width : 150, sortable:false},
 		    { label: '청구일자', name: 'billDt', width : 150, align:"center",sortable:false, formatter:stringToDateformatYYYYMMDD},
+		    { label: '청구년월', name: 'billYymm', width : 150, align:"center",sortable:false, hidden:true},
 		    { label: '청구반영일자', name: 'billAplyDt', width : 150, align:"center",sortable:false, formatter:stringToDateformatYYYYMMDD},
 		    { label: '신청사유', name: 'adjApplConts', width : 150, sortable:false},
 		    { label: '수정자', name: 'chgrIdNm', width : 150, sortable:false},
@@ -75,8 +78,13 @@ $(document).ready(function() {
 		rowList:[5,10,20,30,50],	//선택시 노출되는 row 수
         rowNum: 5,
         pager: "#workGrpGridPager",
-        onCellSelect : function(rowid, index, contents, event){
-        	setSelectedData(rowid);
+       /*  onCellSelect : function(rowid, index, contents, event){
+        	var rowData = $("#workGrpGrid").jqGrid('getRowData', rowid);
+        	setSelectedData(rowData);
+        }, */
+        ondblClickRow : function(rowid){
+        	var rowData = $("#workGrpGrid").jqGrid('getRowData', rowid);
+        	setSelectedDataPopup(rowData);
         },
        	loadComplete : function () {
   	      	$("#workGrpGrid").setGridWidth($('#gridDiv').width(),false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
@@ -126,6 +134,15 @@ $(document).ready(function() {
 		}
  		openRcptSearchPopup();
  	});
+ 	
+ 	//엑셀 다운로드 이벤트
+    $('#btn_print').on('click',function (e) {
+	    	if($("#btn_print").hasClass('not-active')){
+				return;
+			}
+    		printExcel();
+		}
+    );
 
     //사용자 추가 버튼
     $('#addUserBtn').on('click',function (e) {
@@ -193,6 +210,19 @@ function searchWorkGrpList(){
   	    	condPymAcntId : $('#condPymAcntId').val(),
   	    	condRcptPsnId : $('#condUserId').val(),
   	    	condDcsnProcStat : $('#condDcsnProcStat').val()
+		},loadComplete : function (data) {
+
+			if(data.totalCount == 0){
+				$('#btn_print').addClass('white-btn');
+				$('#btn_print').removeClass('grey-btn');
+				$('#btn_print').addClass('not-active');
+				$('#btn_print').attr('disabled',true);
+			}else{
+				$('#btn_print').addClass('grey-btn');
+				$('#btn_print').removeClass('white-btn');
+				$('#btn_print').removeClass('not-active');
+				$('#btn_print').removeAttr('disabled');
+			}
 		}
 	});
 	
@@ -257,6 +287,56 @@ function openRcptSearchPopup(){
 	});
 }
 
+/**
+ * 그리드 더블 클릭
+ */
+function setSelectedDataPopup(data){
+	
+	var param = new Object();
+	param.pymAcntId = data.pymAcntId;
+	//param.pymAcntNm = data.pymAcntNm;
+	param.adjPt= '2';
+	param.billSeqNo = data.billSeqNo;
+	param.ctrtId = data.ctrtId;
+	param.adjNo = data.adjNo;
+	param.billYymm = data.billYymm;
+	param.soId = $('#condSo').val();
+	
+	console.info(JSON.stringify(param));
+	
+	$.ajax({
+        type : "post",
+        url : '/charge/billing/billingAdjust/billingAfterAdjustSearch/openAfterAdjSearhReqPopup.ajax',
+        data : param,
+        async: true,
+        success : function(data) {
+          var html = data;
+          $("#popup_dialog").html(html);
+        },    
+        complete : function(){
+          wrapWindowByMask(); // 팝업 오픈
+        }
+    }); 
+	
+}
+
+/**
+ * 엑셀다운로드
+ */
+function printExcel(){
+	
+	var param = new Object();
+	
+	param.soId = $('#condSo').val() ;
+  	param.condStDt = dateFormatToStringYYYYMMDD($('#searchStatDt').val());
+  	param.condEdDt =  dateFormatToStringYYYYMMDD($('#searchEndDt').val());
+  	param.condPymAcntId = $('#condPymAcntId').val();
+  	param.condRcptPsnId = $('#condUserId').val();
+  	param.condDcsnProcStat = $('#condDcsnProcStat').val();
+		
+  	$.download('getBillChargeAdjAfterReportExcel.xlsx',param,'post');
+}
+
 /*
  * 페이지 초기화
  */
@@ -269,6 +349,12 @@ function pageInit(){
 	btnDisable('addUserBtn');
 	btnDisable('updateWorkUserBtn');
 	btnDisable('deleteWorkUserBtn');
+	
+	//엑셀버튼 비활성화
+	$('#btn_print').addClass('white-btn');
+	$('#btn_print').removeClass('grey-btn');
+	$('#btn_print').addClass('not-active');
+	$('#btn_print').attr('disabled',true);
 
 	$("#workGrpGrid").clearGridData();
 	$("#userGrid").clearGridData();
@@ -426,6 +512,10 @@ function caldate(day, condDate){
 <div class="main_btn_box">
 	<div class="fl">
 		<h4 class="sub_title">청구후요금조정내역</h4>
+	</div>
+	<div class="fr mt10">
+		<a class="grey-btn" id="btn_print" href="javascript:init();"><span class="print_icon"><spring:message code="LAB.M08.LAB00015" /></span></a>
+		<%-- <a id='disableMaskBtn' class="grey-btn" href="#" title='액셀저장'><spring:message code="LAB.M08.LAB00015" /></a><!-- 엑셀다운로드 --> --%>
 	</div>
 </div>
 <div id='gridDiv'>

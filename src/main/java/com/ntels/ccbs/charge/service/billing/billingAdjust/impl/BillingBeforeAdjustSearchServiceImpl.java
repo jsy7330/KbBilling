@@ -10,21 +10,23 @@ import org.springframework.stereotype.Service;
 
 import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO;
 import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAfterAdjustSearchVO;
-import com.ntels.ccbs.charge.mapper.billing.billingAdjust.BillingAfterAdjustSearchMapper;
-import com.ntels.ccbs.charge.service.billing.billingAdjust.BillingAfterAdjustSearchService;
+import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingBeforeAdjustSearchVO;
+import com.ntels.ccbs.charge.mapper.billing.billingAdjust.BillingBeforeAdjustSearchMapper;
+import com.ntels.ccbs.charge.service.billing.billingAdjust.BillingBeforeAdjustSearchService;
 
 @Service
-public class BillingAfterAdjustSearchServiceImpl implements BillingAfterAdjustSearchService{
+public class BillingBeforeAdjustSearchServiceImpl implements BillingBeforeAdjustSearchService{
 
 	@Autowired
-	private BillingAfterAdjustSearchMapper billingAfterAdjustSearchMapper;
+	private BillingBeforeAdjustSearchMapper billingBeforeAdjustSearchMapper;
+
 	@Override
-	public Map<String, Object> getBillChargeAdjustReportList(BillingAfterAdjustSearchVO billingAfterAdjustSearchVO,
+	public Map<String, Object> getBillChargeAdjustReportList(BillingBeforeAdjustSearchVO billingBeforeAdjustSearchVO,
 			String sidx, String sord, int page, int rows, String lng) {
 		// TODO Auto-generated method stub
 		
 		Map<String, Object> billChargeAdjustReport = new HashMap<String, Object>();
-		Integer totalCount = billingAfterAdjustSearchMapper.totalCount(billingAfterAdjustSearchVO);
+		Integer totalCount = billingBeforeAdjustSearchMapper.totalCount(billingBeforeAdjustSearchVO);
 		
 		/*
 		 *  page : 몇번째의 페이지를 요청했는지.
@@ -34,7 +36,7 @@ public class BillingAfterAdjustSearchServiceImpl implements BillingAfterAdjustSe
 		 */
 		
 		if(totalCount.intValue() == 0){
-			billChargeAdjustReport.put("billChargeAdjustReportList", new ArrayList<BillingAfterAdjustSearchVO>());
+			billChargeAdjustReport.put("billChargeAdjustReportList", new ArrayList<BillingBeforeAdjustSearchVO>());
 			billChargeAdjustReport.put("totalCount", totalCount);
 			billChargeAdjustReport.put("totalPages", new Integer(0));
 			billChargeAdjustReport.put("page", new Integer(1));
@@ -46,7 +48,7 @@ public class BillingAfterAdjustSearchServiceImpl implements BillingAfterAdjustSe
 			String start = Integer.toString(startIndex);
 			
 			
-			List<BillingAfterAdjustSearchVO> billChargeAdjustReportList = billingAfterAdjustSearchMapper.getBillChargeAdjustReportList(billingAfterAdjustSearchVO, sidx, sord, start, end, lng);
+			List<BillingBeforeAdjustSearchVO> billChargeAdjustReportList = billingBeforeAdjustSearchMapper.getBillChargeAdjustReportList(billingBeforeAdjustSearchVO, sidx, sord, start, end, lng);
 			
 			billChargeAdjustReport.put("billChargeAdjustReportList", billChargeAdjustReportList);
 			billChargeAdjustReport.put("totalCount", totalCount);
@@ -57,14 +59,14 @@ public class BillingAfterAdjustSearchServiceImpl implements BillingAfterAdjustSe
 		
 		return billChargeAdjustReport;
 	}
-	
+
 	@Override
-	public Map<String, Object> billingAfterSearchPopupDtlList(BillingAdjustVO billingAdVO, String sidx, String sord,
+	public Map<String, Object> billingBeforeSearchPopupDtlList(BillingAdjustVO billingAdVO, String sidx, String sord,
 			int page, int rows, String lng) {
 		// TODO Auto-generated method stub
 		
 		Map<String, Object> billChrgAdjReport = new HashMap<String, Object>();
-		Integer totalCount = billingAfterAdjustSearchMapper.dtTotalCount(billingAdVO);
+		Integer totalCount = billingBeforeAdjustSearchMapper.dtTotalCount(billingAdVO);
 		
 		/*
 		 *  page : 몇번째의 페이지를 요청했는지.
@@ -74,7 +76,7 @@ public class BillingAfterAdjustSearchServiceImpl implements BillingAfterAdjustSe
 		 */
 		
 		if(totalCount.intValue() == 0){
-			billChrgAdjReport.put("billChargeAdjustReportList", new ArrayList<BillingAfterAdjustSearchVO>());
+			billChrgAdjReport.put("billChargeAdjustReportList", new ArrayList<BillingBeforeAdjustSearchVO>());
 			billChrgAdjReport.put("totalCount", totalCount);
 			billChrgAdjReport.put("totalPages", new Integer(0));
 			billChrgAdjReport.put("page", new Integer(1));
@@ -86,7 +88,7 @@ public class BillingAfterAdjustSearchServiceImpl implements BillingAfterAdjustSe
 			String start = Integer.toString(startIndex);
 			
 			
-			List<BillingAdjustVO> billChargeAdjustReportList = billingAfterAdjustSearchMapper.billingAfterSearchPopupDtlList(billingAdVO, sidx, sord, start, end, lng);
+			List<BillingAdjustVO> billChargeAdjustReportList = billingBeforeAdjustSearchMapper.billingBeforeSearchPopupDtlList(billingAdVO, sidx, sord, start, end, lng);
 			
 			billChrgAdjReport.put("billChargeAdjustReportList", billChargeAdjustReportList);
 			billChrgAdjReport.put("totalCount", totalCount);
@@ -96,19 +98,18 @@ public class BillingAfterAdjustSearchServiceImpl implements BillingAfterAdjustSe
 		}
 		
 		return billChrgAdjReport;
-		
 	}
 
 	@Override
-	public List<Map<String, Object>> listExcel(BillingAfterAdjustSearchVO billingAfterAdjustSearchVO) {
+	public List<Map<String, Object>> listExcel(BillingBeforeAdjustSearchVO billingBeforeAdjustSearchVO) {
 		// TODO Auto-generated method stub
-		return billingAfterAdjustSearchMapper.listExcel(billingAfterAdjustSearchVO);
+		return billingBeforeAdjustSearchMapper.listExcel(billingBeforeAdjustSearchVO);
 	}
 
 	@Override
 	public List<Map<String, Object>> popUpListExcel(BillingAdjustVO billingAdVO) {
 		// TODO Auto-generated method stub
-		return billingAfterAdjustSearchMapper.popUpListExcel(billingAdVO);
+		return billingBeforeAdjustSearchMapper.popUpListExcel(billingAdVO);
 	}
 	
 	

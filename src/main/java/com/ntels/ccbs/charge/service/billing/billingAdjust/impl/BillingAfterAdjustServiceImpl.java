@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO;
+import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingBasicCustInfoVO;
+import com.ntels.ccbs.charge.mapper.billing.billingAdjust.BillingAdjustMapper;
 import com.ntels.ccbs.charge.mapper.billing.billingAdjust.BillingAfterAdjustMapper;
 import com.ntels.ccbs.charge.service.billing.billingAdjust.BillingAfterAdjustService;
 import com.ntels.ccbs.common.exception.ServiceException;
@@ -27,12 +29,16 @@ public class BillingAfterAdjustServiceImpl implements BillingAfterAdjustService 
 	@Autowired
 	private BillingAfterAdjustMapper billingAfterAdjustMapper;
 	
+	@Autowired
+	private BillingAdjustMapper BillingAdjustMapper;
+	
 	@Override
 	public List<BillingAdjustVO> getPymList(BillingAdjustVO billingAdjust) {
 		if(billingAdjust.getSoId() == null){
 			//취소 상태
 			throw new ServiceException("MSG.M10.MSG00035");
 		}
+		
 		return billingAfterAdjustMapper.getPymList(billingAdjust);
 	}
 	
@@ -102,5 +108,10 @@ public class BillingAfterAdjustServiceImpl implements BillingAfterAdjustService 
 		count = billingAfterAdjustMapper.deleteAdjAplyDtl(adjNo);
 		
 		return count;
+	}
+
+	@Override
+	public BillingBasicCustInfoVO getBasicCustInfo(String soId, String pymAcntId) {
+		return BillingAdjustMapper.getBasicCustInfo(soId, pymAcntId);
 	}
 }

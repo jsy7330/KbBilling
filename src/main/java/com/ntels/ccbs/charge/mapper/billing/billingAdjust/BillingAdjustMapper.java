@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Param;
 
 import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO;
+import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingBasicCustInfoVO;
 
 public interface BillingAdjustMapper {
 
@@ -30,4 +31,7 @@ public interface BillingAdjustMapper {
 	List<BillingAdjustVO> getBillClsInfo(
 			@Param(value ="billingAdjust") BillingAdjustVO billingAdjust
 	);
+
+	BillingBasicCustInfoVO getBasicCustInfo(@Param(value="soId") String soId, 
+											@Param(value="pymAcntId") String pymAcntId);
 }

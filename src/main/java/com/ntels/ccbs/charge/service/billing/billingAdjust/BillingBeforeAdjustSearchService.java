@@ -4,24 +4,24 @@ import java.util.List;
 import java.util.Map;
 
 import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO;
-import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAfterAdjustSearchVO;
+import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingBeforeAdjustSearchVO;
 
-public interface BillingAfterAdjustSearchService {
-
-	Map<String, Object> getBillChargeAdjustReportList(BillingAfterAdjustSearchVO billingAfterAdjustSearchVO,
+public interface BillingBeforeAdjustSearchService {
+	
+	Map<String, Object> getBillChargeAdjustReportList(BillingBeforeAdjustSearchVO billingBeforeAdjustSearchVO,
 			String sidx,
 	        String sord,
 	        int page, 
         	int rows, 
         	String lng);
 	
-	Map<String, Object> billingAfterSearchPopupDtlList(BillingAdjustVO billingAdVO,
+	Map<String, Object> billingBeforeSearchPopupDtlList(BillingAdjustVO billingAdVO,
 			String sidx,
 	        String sord,
 	        int page, 
         	int rows, 
         	String lng);
 	
-	List<Map<String, Object>> listExcel(BillingAfterAdjustSearchVO billingAfterAdjustSearchVO);
+	List<Map<String, Object>> listExcel(BillingBeforeAdjustSearchVO billingBeforeAdjustSearchVO);
 	List<Map<String, Object>> popUpListExcel(BillingAdjustVO billingAdVO);
 }

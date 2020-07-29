@@ -43,7 +43,7 @@
 	     , A.SVC_CD_CNT                                             /* 서비스건수 */
 	     , B.ADJ_NO                                                 /* 조정일련번호 */
 	     , B.BILL_SEQ_NO                                            /* 청구일련번호 */
-	     , IFNULL(B.ADJ_PT, '1')               AS ADJ_PT            /* 조정시점 1:청구전 2:청구후 */
+	     , IFNULL(B.ADJ_PT, {billingBeforeAdjust.adjPt}) AS ADJ_PT  /* 조정시점 1:청구전 2:청구후 */
 	     , B.HOPE_APLY_YYMM                                         /* 희망적용녀월 */
 	     , B.DCSN_PROC_STAT                                         /* 진행상태코드 */
 	     ,(SELECT NAME.CODE_NM AS COMMON_CD_NM
