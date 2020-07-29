@@ -67,7 +67,6 @@
 			, REG_DATE
 			, CHG_DATE
 			, CHGR_ID
-			-- , SO_ID
 		)
 		VALUES
 		(
@@ -79,7 +78,6 @@
 			, #{regDate}
 			, #{chgDate}
 			, #{chgrId}
-			-- , #{soId}
 		)
 	</insert>
 	
