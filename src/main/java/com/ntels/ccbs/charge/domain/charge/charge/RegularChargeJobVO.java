@@ -54,6 +54,14 @@ public class RegularChargeJobVO implements Serializable{
 	private String chgId;            // 수정자
 	private Date chgDate;        // 수정일자
 	
+	private String cmplCnt;
+	
+	public String getCmplCnt() {
+		return cmplCnt;
+	}
+	public void setCmplCnt(String cmplCnt) {
+		this.cmplCnt = cmplCnt;
+	}
 	public String getBatGrpId() {
 		return batGrpId;
 	}
