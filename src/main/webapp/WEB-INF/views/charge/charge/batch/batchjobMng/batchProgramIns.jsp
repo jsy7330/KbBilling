@@ -342,11 +342,11 @@ function btnEnable(id){
 		</colgroup>
 		<thead>
 			<tr>
-				<th><spring:message code="LAB.M13.LAB00022"/></th>
+				<th><spring:message code="LAB.M13.LAB00035"/></th>
 				<td>
 					<input name="batPgmId" type="text" class="w100p" />
 				</td>
-				<th><spring:message code="LAB.M13.LAB00035"/></th>
+				<th><spring:message code="LAB.M13.LAB00022"/></th>
 				<td>
 					<input name="pgmNm" type="text" class="w100p" />
 				</td>
@@ -383,13 +383,13 @@ function btnEnable(id){
 		</colgroup>
 		<thead>
 			<tr>
-				<th><spring:message code="LAB.M13.LAB00035"/><span class="dot">*</span></th>
-				<td>
-					<input name="batPgmId" type="text" class="w100p" />
-				</td>
 				<th><spring:message code="LAB.M13.LAB00022"/><span class="dot">*</span></th>
 				<td>
 					<input name="pgmNm" type="text" class="w100p" />
+				</td>
+				<th><spring:message code="LAB.M13.LAB00035"/><span class="dot">*</span></th>
+				<td>
+					<input name="batPgmId" type="text" class="w100p" />
 				</td>
 			</tr>
 			<tr>
