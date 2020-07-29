@@ -136,12 +136,12 @@ $(document).ready(function() {
 		colModel: [
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
-		    { label: '<spring:message code="LAB.M07.LAB00185"/>', name: 'SVC_NM', width : 100, sortable:false},	//서비스명
-		    { label: '<spring:message code="LAB.M01.LAB00152"/>', name: 'RATE_ITM_NM', width : 100, sortable:false},	//과금항목명
-		    { label: '<spring:message code="LAB.M08.LAB00221"/>', name: 'USE_QTY', width : 150, sortable:false,align:"right"},	//이용건수
-			{ label: '<spring:message code="LAB.M08.LAB00220"/>', name: 'USE_CNT', width : 150, sortable:false,align:"right"}, //USE_CNT
-			{ label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT', width : 150, sortable:false,formatter:numberAutoFormatter,align:"right"}, //사용금액
-		    { label: '<spring:message code="LAB.M07.LAB00021"/>', name: 'USE_YYMM', width : 200, align:"left", sortable:false,align:"center", formatter:stringTypeFormatterYYYYMM}	//사용년월
+		    { label: '<spring:message code="LAB.M07.LAB00185"/>', name: 'SVC_NM', width : 150, sortable:false},	//서비스명
+		    { label: '<spring:message code="LAB.M01.LAB00152"/>', name: 'RATE_ITM_NM', width : 150, sortable:false},	//과금항목명
+		    { label: '<spring:message code="LAB.M08.LAB00221"/>', name: 'USE_QTY', width : 100, sortable:false,align:"right"},	//이용건수
+			{ label: '<spring:message code="LAB.M08.LAB00220"/>', name: 'USE_CNT', width : 100, sortable:false,align:"right"}, //USE_CNT
+			{ label: '<spring:message code="LAB.M07.LAB00361"/>', name: 'USE_AMT', width : 100, sortable:false,formatter:numberAutoFormatter,align:"right"}, //사용금액
+		    { label: '<spring:message code="LAB.M07.LAB00021"/>', name: 'USE_YYMM', width : 150, align:"left", sortable:false,align:"center", formatter:stringTypeFormatterYYYYMM}	//사용년월
 		],
 		viewrecords: true,
 		shrinkToFit:false,
@@ -279,6 +279,7 @@ function searchWorkGrpList(){
 	});	
 	      
    	$("#workGrpGrid").trigger("reloadGrid");
+   	$("#workGrpGrid2").clearGridData();
   	
 }
 
