@@ -48,7 +48,7 @@
 			, BAT_GRP.REG_DATE
 			, BAT_GRP.CHG_DATE
 			, BAT_GRP.CHGR_ID
-			, BAT_GRP.SO_ID
+			-- , BAT_GRP.SO_ID
 			, GRP_TP_CODE.CODE_NM AS BAT_GRP_TP_NM
 			, PROC_TP_CODE.CODE_NM AS BAT_PROC_TP_NM
 		<include refid="fromBatchGroupList"/>
@@ -67,7 +67,7 @@
 			, REG_DATE
 			, CHG_DATE
 			, CHGR_ID
-			, SO_ID
+			-- , SO_ID
 		)
 		VALUES
 		(
@@ -79,7 +79,7 @@
 			, #{regDate}
 			, #{chgDate}
 			, #{chgrId}
-			, #{soId}
+			-- , #{soId}
 		)
 	</insert>
 	
