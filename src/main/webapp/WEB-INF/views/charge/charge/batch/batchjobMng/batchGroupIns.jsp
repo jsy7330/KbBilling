@@ -426,8 +426,24 @@ function deleteBtn(){
 			alert(response.message);
 		}
 	});
+	
+//	$("#batGrpGrid").trigger("reloadGrid");
+	
 }
+/**
+ * 수정 CHANHEE
+ */
+ function searchBatchProgramList(){
+	
+	 $("#batGrpGrid").trigger("reloadGrid");
+	 
+	 $('#insertForm')[0].reset();
 
+		$('#insertForm input[name="batGrpId"]').addClass('not-active');
+		$('#insertForm input[name="batGrpId"]').attr('disabled', true);
+		$("#insertForm select").selectmenu('refresh');
+		$("#insertForm select").selectmenu('enable');
+}
 function addBatchWorkMap() {
 
 	var rowId = $('#batchProgramGrid').getGridParam('selrow');
