@@ -21,17 +21,17 @@ $(document).ready(function() {
 		    { label: 'soId', name: 'soId', width : 100, align:"center", hidden:true},
 		    { label: 'clsStpCl', name: 'clsStpCl', width : 100, hidden: true},
 		    { label: 'clsTskCl', name: 'clsTskCl', width : 100, hidden: true},
-		    { label: '<spring:message code="LAB.M13.LAB00035"/>', name: 'batPgmId', width : 100, align:"left", sortable:false},
-		    { label: '<spring:message code="LAB.M13.LAB00022"/>', name: 'pgmNm', width : 100, align:"center", sortable:false},
-		    { label: '<spring:message code="LAB.M07.LAB00314"/>', name: 'execObj', width : 100, align:"left", sortable:false},
-		    { label: '<spring:message code="LAB.M13.LAB00014"/>', name: 'pkgNm', width : 100, align:"left", sortable:false},
+		    { label: '<spring:message code="LAB.M13.LAB00035"/>', name: 'batPgmId', width : 100, align:"center", sortable:false},
+		    { label: '<spring:message code="LAB.M13.LAB00022"/>', name: 'pgmNm', width : 100, sortable:false},
+		    { label: '<spring:message code="LAB.M07.LAB00314"/>', name: 'execObj', width : 150, align:"center", sortable:false},
+		    { label: '<spring:message code="LAB.M13.LAB00014"/>', name: 'pkgNm', width : 150, align:"center", sortable:false},
 		    { label: '<spring:message code="LAB.M05.LAB00056"/>', name: 'clsStpNm', width : 100, align:"center", sortable:false},
-		    { label: '<spring:message code="LAB.M05.LAB00057"/>', name: 'clsTskNm', width : 150, sortable:false},
+		    { label: '<spring:message code="LAB.M05.LAB00057"/>', name: 'clsTskNm', width : 100, sortable:false},
 		    { label: '<spring:message code="LAB.M13.LAB00038"/>', name: 'pgmCt', width : 150, sortable:false}
 		],
 		viewrecords: true,
 		shrinkToFit:false,
-		height: 120,
+		height: 240,
 		sortable : true,
 		jsonReader: {
 			repeatitems : true,
@@ -41,7 +41,7 @@ $(document).ready(function() {
 			page : "page"          //현재 페이지
 		},
 		rowList:[5,10,20,30,50],	//선택시 노출되는 row 수
-        rowNum: 5,
+        rowNum: 10,
         pager: "#batPgmGridPager",
         onCellSelect : function(rowid, index, contents, event){
         	setSelectedData(rowid);
