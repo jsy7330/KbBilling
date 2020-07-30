@@ -9,43 +9,41 @@ table.ui-datepicker-calendar { display:none; }
 </style>
 <script type="text/javascript">
 $(document).ready(function() {
-    setBasicInfo(); //기본정보 셋팅
+    setBasicInfo(); //기본정보 셋팅 ${billBeforeAdj.adjResnCd}
     
     var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
-  //달력처리
+	//달력처리
 	if($(".month-picker").length > 0){
-	      if(lng == 'ko'){
-	         format = 'yy-mm';
-	      }else if (lng == 'en'){
-	         format = 'mm/yy';
-	      }
-	      $('.month-picker').datepicker( {
-	         changeMonth: true,
-	         changeYear: true,
-	         showButtonPanel: true,
-	         dateFormat: format,
-	         onClose: function(dateText, inst) {
+		if(lng == 'ko'){
+			format = 'yy-mm';
+		}else if (lng == 'en'){
+			format = 'mm/yy';
+		}
+		$('.month-picker').datepicker( {
+	        changeMonth: true,
+	        changeYear: true,
+	        showButtonPanel: true,
+	        dateFormat: format,
+	        minDate: 0,
+	        onClose: function(dateText, inst) {
 	            var month = $("#ui-datepicker-div .ui-datepicker-month :selected").val();
 	            var year = $("#ui-datepicker-div .ui-datepicker-year :selected").val();
 	            $(this).datepicker('setDate', new Date(year, month, 1));
-	         },
-	         beforeShow : function (dateText, inst) {
-	                 
+	        }
+		 	,
+	        beforeShow : function (dateText, inst) {
 	            var selectDate = $(this).val().split("-");
 	            var year = Number(selectDate[0]);
 	            var month = Number(selectDate[1]) - 1;
 	            $(this).datepicker( "option", "defaultDate", new Date(year, month, 1) );
 	            $(this).datepicker('setDate', new Date(year, month, 1));
-	                  
-	         }
-	      }).datepicker("setDate", new Date());  
-	   }
-	
-	//$('#popApplyMonth').datepicker('setDate', new Date());
-	
+	            
+	        }
+	    }
+	 )
+	}
 	$(".inp_date .btn_cal").click(function(e){e.preventDefault();$(this).prev().focus();});
-	
-	
+	//$('#popApplyMonth').datepicker('setDate', new Date());
 	
     var param = checkInput();
 
@@ -83,14 +81,36 @@ $(document).ready(function() {
             { label: '<spring:message code="LAB.M01.LAB00050" />', name: 'custNm', width : 120, align:"left"},
             { label: '<spring:message code="LAB.M01.LAB00032" />', name: 'ctrtId', width : 80, align:"center"},
             { label: '<spring:message code="LAB.M07.LAB00186" />', name: 'svcTelNo', width : 100, align:"center"},
-          //  { label: '<spring:message code="LAB.M07.LAB00021" />', name: 'useYymm', formatter:dateFormatToStringYYYYMM, width : 150, align:"center"},
             { label: '<spring:message code="LAB.M07.LAB00130" />', name: 'prodNm', width : 150, align:"left"},
             { label: '서비스명', name: 'svcNm', width : 120, align:"left"},
             { label: '요금항목', name: 'chrgItmNm', width : 120, align:"left"},
             { label: '계약상태', name: 'ctrtStatNm', width : 120, align:"center"},
           	{ label: '과금개시일', name: 'rateStrtDt',  width : 120, align:"center", formatter:stringToDateformatYYYYMMDD},
           	{ label: '과금종료일', name: 'rateEndDt', width : 180, align:"center", formatter:stringToDateformatYYYYMMDD},
-            { label: '조정신청금액', name: 'adjApplAmt', formatter:'integer', width : 120, align:"right" , formatter:numberAutoFormatter}
+          	{ label: '조정신청금액', name: 'adjApplAmt', formatter:"integer", width : 80, align:"right", editable:true
+            	,editoptions:{//숫자와 '-'만 입력받을수 있게 처리
+                    dataInit: function(element) {
+                          $(element).keyup(function(event){
+                                var keyValue = event.key; //jquery로 눌려진 값을 가져온다.
+                                var str = element.value; // 현재 input태그에 입력된 문자열을 가져온다
+                                
+                                var regex =  /^[-]?\d*(\.?\d*)$/g;
+                                var totalStr = str.replace(/^[-]?\d*(\.?\d*)$/g, ""); // concat
+                                
+                                if(event.keyCode == 8 || event.keyCode == 9 || event.keyCode == 46){
+                                    return true;
+                                }else{
+                                    if(regex.test(totalStr)){
+                                        return;
+                                    }else{
+                                        alert('<spring:message code="MSG.M07.MSG00134"/>');
+                                        element.value = '';
+                                    }
+                                }
+                           })
+                    }
+                 }
+          	}
         ],
         viewrecords: true,
         shrinkToFit:false,
@@ -107,11 +127,9 @@ $(document).ready(function() {
         onCellSelect : function(rowid, index, contents, event){
         },
         loadComplete : function (data) {
-           // $("#beforeAdjRegiditTable").setGridWidth(988,false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
             $("#beforeAdjRegiditTable").setGridWidth($('#beforeAdjRegiditGrid').width(),false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
         },
         sortable: { update: function(permutation) {
-            //$("#beforeAdjRegiditTable").setGridWidth(988,false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
             $("#beforeAdjRegiditTable").setGridWidth($('#beforeAdjRegiditGrid').width(),false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
             }
         },
@@ -124,18 +142,6 @@ $(document).ready(function() {
             }
             ));
         
-        },
-        afterSaveCell : function(rowid, cellname, value, iRow, iCol){
-            
-        },
-        afterSubmitCell : function(rowid, cellname, value, iRow, iCol){
-            
-        },
-        afterSaveCell : function(rowid, cellname, value, iRow, iCol){
-            
-        },
-        onSelectCell : function(rowid, celname, value, iRow, iCol){
-            
         }
     });
 
@@ -160,7 +166,7 @@ $(document).ready(function() {
     });
   
 });
-
+//신청 취소
 function chkCancel(){
 	if('${billBeforeAdj.adjNo}' == null && '${billBeforeAdj.adjNo}' ==""){
         alert('<spring:message code="MSG.M09.MSG00066" />');
@@ -180,22 +186,21 @@ function chkCancel(){
 	
 	if(check){	
 		$.ajax({
-		       url:'/charge/billing/billingAdjust/billingBeforeAdjust/cancelAdjList.json',
-		       type:'POST',
-		       data : JSON.stringify(cancelAdjNo),
-		       dataType: 'json',
-		       contentType : "application/json; charset=UTF-8",
-		       success: function(data){
-		           alert('<spring:message code="MSG.M07.MSG00084"/>');
+		     url:'/charge/billing/billingAdjust/billingBeforeAdjust/cancelAdjList.json',
+		     type:'post',
+	   	     data : cancelAdjNo,
+	   	     async: false,
+	   	     success: function(data){
+		        alert('<spring:message code="MSG.M07.MSG00084"/>');
 		           
-					$("#beforeAdjTable").trigger("reloadGrid");
-		        	$("#btnClose").trigger('click');
-		       },
-		       beforeSend: function(data){
-		       },
-		       error : function(err){
-		           alert('<spring:message code="MSG.M10.MSG00005"/>');
-		       }
+				$("#beforeAdjTable").trigger("reloadGrid");
+		        $("#btnClose").trigger('click');
+		     },
+		     beforeSend: function(data){
+		     },
+		     error : function(err){
+		         alert('<spring:message code="MSG.M10.MSG00005"/>');
+		     }
 		   });
 	}
 }
@@ -204,7 +209,7 @@ function chkCancel(){
 function chkValidation(){
 	
 	if('${pymRcpt[0].pymRcptAmt}' > 0){
-        alert('<spring:message code="MSG.M07.MSG00129" />'); return;
+        alert('<spring:message code="MSG.M07.MSG00129" />'); return; 
     }
 	
 	if($('#popAdjRsn').val() == 'SEL'){
@@ -217,95 +222,225 @@ function chkValidation(){
         return;
     }
     
-    //조정 데이터
+  	//조정 데이터
     var adjustVO = new Object();
     var adj = new Object();
     adj.adjNo     = '${billBeforeAdj.adjNo}';
-    adj.billYymm  = '${billBeforeAdj.billYymm}';
-    adj.billCycl  = '${billBeforeAdj.billCycl}';
-    adj.billDt    = '${billBeforeAdj.billDt}';
-    adj.billSeqNo = '${billBeforeAdj.billSeqNo}';
+    if('${billBeforeAdj.billYymm}' == ''){
+    	adj.billYymm  = '0';
+    	adj.billCycl  = '0';
+    	adj.billDt  = '0';
+    	adj.billSeqNo  = '0';
+    }else{
+    	adj.billYymm  = '${billBeforeAdj.billYymm}';
+   	 	adj.billCycl  = '${billBeforeAdj.billCycl}';
+   	    adj.billDt    = '${billBeforeAdj.billDt}';
+   	    adj.billSeqNo = '${billBeforeAdj.billSeqNo}';
+    }   
     adj.pymAcntId = '${billBeforeAdj.pymAcntId}';
     adj.pymAcntNm = '${billBeforeAdj.pymAcntNm}';
     adj.soId      = '${billBeforeAdj.soId}';
-    adj.adjPt     = '2'; //청구후 요금조정
+    adj.hopeAplyYymm = $("#popApplyMonth").val().replace('-','');  
     adj.adjResnCd = $('#popAdjRsn').val();
-    adj.saleAplyYn = 'N';
-    adj.adjApplConts = $('#popAdjReq').val();
-    
+    adj.adjApplConts = $('#popAdjReq').val(); 
+    adj.billReIssYn = 'N';		//청구서재발행여부
+    adj.dcsnProcStat = '03';	//결재처리상태 03.결재완료  
+    adj.adjPt     = '1';		//청구후 요금조정,청구전 요금조정 (1,2)
+    adj.adjBillDt = '0';
+    adj.apprReqrId = '0';
+    adj.apprReqDttm = '0';
+    adj.apprrId = '0';
+    adj.apprDttm = '0';
+    adj.adjSbtDdCnt = 0;
+    adj.adjPrvBillAmt = 0;
+    adj.adjAmt = 0;
+    adj.saleAplyDt = '0';
+    adj.inptMenuId = '0';
+    adj.saleAplyYn = '0';
+    adj.applDttm = '0';
+    adj.appntTelNo = '0';
+      
     adjustVO.adj = adj;
     
-    //조정상세 데이터
-    var reqAdjDtlList = [];
-    var reqAdjIds = $('#beforeAdjRegiditTable').getDataIDs();
+  	//조정상세 데이터 
+    var reqAdjDtlList = []; 
+    var reqAdjIds = $('#beforeAdjRegiditTable').getDataIDs(); //row수
     var reqIdx = 0;
-    
+   
+    var isNotChanged = 0;
     var isChanged = 0;
+    
+ 	
+    //요금조정금액이 전부0원인 경우  RETURN
     $.each(reqAdjIds, function(index, value){
         var confValue = $('#beforeAdjRegiditTable').getRowData(value);
-        //0인놈은 제외        
+              
         if(confValue.adjApplAmt ==  0){
-        	return true;
+        	isNotChanged++;
         }
         
-        confValue.useYymm = dateFormatToStringYYYYMM(confValue.useYymm);
-        reqAdjDtlList[reqIdx++] = confValue;
-        
-        //기존 금액과 조정금액 비교
+        if(isNotChanged == reqAdjIds.length){
+       	  alert('조정신청금액을 입력하세요.');
+       	  return; 
+        }        
+    });       
+
+  	//	기존값과 비교 동일할 경우 (조정 금액 비교, 조정사유 변경여부, 신청사유내역) RETURN	
+    $.each(reqAdjIds, function(index, value){
+        var confValue = $('#beforeAdjRegiditTable').getRowData(value); 
+       	                          
         if(confValue.adjApplAmt != confValue.orgAdjApplAmt){
         	isChanged++;
-        }
-        
+        }  
+
      });
-    
+	
+    if($('#popAdjRsn').val() != '${billBeforeAdj.adjResnCd}'){
+    	isChanged++;
+    }
+  
     if($('#popAdjReq').val() != '${billBeforeAdj.adjApplConts}'){
     	isChanged++;
     }
     
-    if($('#popAdjRsn').val() != '${billBeforeAdj.adjResnCd}'){
-    	isChanged++;
+  	//변경된 값이 없다면 
+    if(isChanged == 0){ 
+        alert('<spring:message code="MSG.M06.MSG00026"/>'); //변경된 정보가 없습니다.
+        return;
     }
-    //alert(isChanged); return;
-    if(isChanged == 0){
-        alert('<spring:message code="MSG.M06.MSG00026"/>'); return;
-    }
+     
+    var applGubn = 0;	//최초신청건 여부
+    var applYn = 0;		//신청불가(청구작업진행,신청건존재) 상태값
+    var applyYymm = $("#popApplyMonth").val().split('-'); //안내 메세지
     
+    //변경된 조정상세 데이터만 
+    $.each(reqAdjIds, function(index, value){
+    	
+    	//신청불가 (청구작업진행,신청건존재)
+    	if(applYn != 0){
+    		if(applYn == -1){
+	    		alert("현재 "+applyYymm[0]+"년 "+applyYymm[1]+"월은 청구작업 진행중입니다.");
+	    		return false;
+	    		
+    		}
+    	}
+        var confValue = $('#beforeAdjRegiditTable').getRowData(value); 
+        
+        var adjInfo = new Object();      
+        adjInfo.soId = '${billBeforeAdj.soId}';
+        adjInfo.pymAcntId = '${billBeforeAdj.pymAcntId}';
+        adjInfo.adjNo = '${billBeforeAdj.adjNo}';        
+        adjInfo.hopeAplyYymm =$("#popApplyMonth").val().replace('-','');   
+        adjInfo.useYymm = confValue.useYymm;	
+        adjInfo.prodCmpsId =confValue.prodCmpsId;
+        adjInfo.svcCmpsId = confValue.svcCmpsId;
+        adjInfo.chrgItmCd = confValue.chrgItmCd;
+                
+   	 	$.ajax({
+   	        url:'/charge/billing/billingAdjust/billingBeforeAdjust/getApplBeforeCount.json',
+   	        type:'post',
+   	        data : adjInfo,
+   	     	async: false,
+   	        success: function(data){	   	       
+           		confValue.useYymm = dateFormatToStringYYYYMM(confValue.useYymm);             		
+           		
+           		if(data.resultCount == -1){	//현재 청구년월은 청구진행중인 건
+           			applYn = data.resultCount;         			
+           		}else if(data.resultCount == 0){
+       	 			confValue.gubun = "I";
+       	 			
+   	 				if(confValue.adjApplAmt != confValue.orgAdjApplAmt){
+      	 					reqAdjDtlList[reqIdx++] = confValue;     	 					
+   	 				}
+       	 		}else{
+       	 			applGubn = applGubn+1; 
+       	 			confValue.gubun = "U";
+       	 			
+       	 			if(confValue.adjApplAmt != confValue.orgAdjApplAmt){
+      	 					reqAdjDtlList[reqIdx++] = confValue;
+   	 				}
+       	 		}	
+           		applYn = data.resultCount;
+   	        },
+   	        beforeSend: function(data){
+   	        },
+   	        error : function(err){
+   	        	alert('<spring:message code="MSG.M10.MSG00005"/>');
+   	        	return
+   	        }
+     	});
+       
+    });
+
+    if(applGubn != 0){
+    	adjustVO.gubun = 'U';
+    }else{
+    	adjustVO.gubun = 'I'; 
+    }
+   
     adjustVO.adjDtl = reqAdjDtlList;
     
-    if('${billBeforeAdj.adjNo}' == '' || '${billBeforeAdj.adjNo}' == null){
-    	adjustVO.gubun = 'I';
-    }else{
-    	adjustVO.gubun = 'U';
-    }
+    // 희망청구년월 신청건 여부 확인
+	if(applYn == -2 && adj.adjNo == ""){
+		console.log("신청건이 존재합니다.");
+		alert("현재 "+applyYymm[0]+"년 "+applyYymm[1]+"월은 신청건이 존재합니다.");
+		
+		$("#beforeAdjTable").trigger('reloadGrid');
+    	$("#btnClose").trigger('click');
+		return;
+	} 
     
-    $.ajax({
-        url:'/charge/billing/billingAdjust/billingBeforeAdjust/modAdjTgtList.json',
-        type:'POST',
+    if(adjustVO.gubun != "" && applYn != -1){
+    	reqAppl(adjustVO);
+    }else{  
+    	
+    	$("#beforeAdjTable").trigger('reloadGrid');
+    	$("#btnClose").trigger('click');
+    }
+   
+}
+  
+function reqAppl(adjustVO){   	
+	console.log("//////////////////APPLINFO"+JSON.stringify(adjustVO));
+	
+	$.ajax({
+        url:'/charge/billing/billingAdjust/billingBeforeAdjust/reqAppl.json',
+        type:'post',
         data : JSON.stringify(adjustVO),
         dataType: 'json',
         contentType : "application/json; charset=UTF-8",
-        success: function(data){
-        	alert('<spring:message code="MSG.M07.MSG00084"/>');
-        	
-        	$("#beforeAdjTable").trigger("reloadGrid");
+     	async: false,
+        success: function(data){	
+        	console.log(data.result+"결과");
+			if(data.result = 0){
+				alert('<spring:message code="MSG.M10.MSG00005"/>');
+			}    	
+			
+			$("#beforeAdjTable").trigger('reloadGrid');
         	$("#btnClose").trigger('click');
-        	
         },
         beforeSend: function(data){
         },
         error : function(err){
         	alert('<spring:message code="MSG.M10.MSG00005"/>');
         }
-    });
-      
+	});   
 }
 
-function setBasicInfo(){
+
+function setBasicInfo(){//신청된건이면 disabled
+    if(('${billBeforeAdj.billYymm}').length > 0 ){	
+    	$('#popApplyMonth').attr('disabled',true);
+    }else{
+    	$('#popApplyMonth').attr('disabled',false);
+    }
+    
     $('#popPymAcnt').val('${billBeforeAdj.pymAcntNm}');
-    $('#popApplDttm').val('${billBeforeAdj.applDttm}');
+    $('#popApplDttm').val('${billBeforeAdj.applDttm}');	
     $('#popApplyMonth').val(stringToDateformatYYYYMM('${billBeforeAdj.billYymm}'));
     $('#popdcsnProcStat').val('${billBeforeAdj.dcsnProcStatNm}');
     $('#popAdjReq').val('${billBeforeAdj.adjApplConts}');
+    
     //수납내역체크
     if('${pymRcpt[0].pymRcptAmt}' > 0){
     	$('#popPay').val('Y');
@@ -336,6 +471,9 @@ function checkInput(){
     param.pymAcntId = '${billBeforeAdj.pymAcntId}';
     param.billSeqNo = '${billBeforeAdj.billSeqNo}';
     param.billYymm = '${billBeforeAdj.billYymm}';
+    param.adjResnCd = "${billBeforeAdj.adjResnCd}";
+    
+    $("#popAdjRsn").val("${billBeforeAdj.adjResnCd}")
     
     return param;
 }
@@ -368,11 +506,11 @@ function checkInput(){
 	                <td><input id="popApplDttm" name="applDttm" type="text" class="w245" disabled /></td>
 	            </tr>
 	            <tr>
-	                <th>적용월</th><!-- 적용월 -->
+	                <th>희망적용월</th><!-- 적용월 -->
 	                <td>
 	                	<div class="date_box">
 							<div class="inp_date w130">
-								<input type="text" id="popApplyMonth" name="popApplyMonth"  class="month-picker" readonly="readonly" />
+								<input type="text"  class="month-picker" id="popApplyMonth" name="popApplyMonth" readonly="readonly" />
 								<a href="#" class="btn_cal"></a>
 							</div>
 						</div>
@@ -407,7 +545,7 @@ function checkInput(){
 	    
 	    <div class="main_btn_box">
 	        <div class="fl">
-	            <h4 class="sub_title">조정금액</h4>
+	            <h4 class="sub_title"><spring:message code="LAB.M09.LAB00245"/></h4>
 	        </div>
 	    </div>
 	    

@@ -1,6 +1,7 @@
 package com.ntels.ccbs.charge.controller.charge.batch;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,10 +19,13 @@ import com.ntels.ccbs.charge.domain.charge.batch.BatchGroupVO;
 import com.ntels.ccbs.charge.domain.charge.batch.BatchJobMngVO;
 import com.ntels.ccbs.charge.domain.charge.batch.BatchProgramVO;
 import com.ntels.ccbs.charge.domain.charge.batch.BatchWorkMapVO;
+import com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO;
 import com.ntels.ccbs.charge.service.charge.batch.BatchGroupService;
 import com.ntels.ccbs.charge.service.charge.batch.BatchProgramService;
 import com.ntels.ccbs.charge.service.charge.batch.BatchWorkMapService;
 import com.ntels.ccbs.common.util.CommonUtil;
+import com.ntels.ccbs.common.util.DateUtil;
+import com.ntels.ccbs.system.domain.common.service.SessionUser;
 import com.ntels.ccbs.system.service.common.service.CommonDataService;
 
 
@@ -244,6 +248,16 @@ public class BatchJobMngController {
 		return modelMap;
 	}
 	
+	@RequestMapping(value = "finishInfoMng", method = RequestMethod.POST)
+	public String finishInfoMng(Model model, BatchJobMngVO batchJobMngVO, HttpServletRequest request) throws Exception {
+
+		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		
+		model.addAttribute("finishTp", commonDataService.getCommonCodeList("BL00039", lng)); //마감구분
+		
+		return URL + "/finishInfoMng";
+	}
+	
 	@RequestMapping(value = "batchJobSearch", method = RequestMethod.POST)
 	public String batchJobSearch(Model model, BatchJobMngVO batchJobMngVO, HttpServletRequest request) throws Exception {
 
@@ -254,12 +268,41 @@ public class BatchJobMngController {
 		return URL + "/batchJobSearch";
 	}
 	
-	@RequestMapping(value = "finishInfoMng", method = RequestMethod.POST)
-	public String finishInfoMng(Model model, BatchJobMngVO batchJobMngVO, HttpServletRequest request) throws Exception {
+	@RequestMapping(value = "finishInfoMngListAction", method = RequestMethod.POST)
+	public String finishInfoMngListAction(Model model, BatchJobMngVO batchJobMngVO, HttpServletRequest request){
 
-		String lng = (String)request.getSession().getAttribute("sessionLanguage");
-		model.addAttribute("finishTp", commonDataService.getCommonCodeList("BL00039", lng));
+		SessionUser sessionUser = CommonUtil.getSessionManager();
+		batchJobMngVO.setLng((String)request.getSession().getAttribute("sessionLanguage"));
+		batchJobMngVO.setToday(DateUtil.getDateStringYYYYMMDD(0));
 		
+		Map<String,Object> finishInfo = batchGroupService.getChargeList(sessionUser.getSoAuthList(),batchJobMngVO);
+		
+		
+		model.addAttribute("finishInfo", finishInfo.get("finishInfo"));
+		model.addAttribute("totalCount", finishInfo.get("totalCount"));
+		model.addAttribute("totalPages", finishInfo.get("totalPages"));
+		model.addAttribute("page", finishInfo.get("page"));
+
 		return URL + "/finishInfoMng";
 	}	
+	
+	@RequestMapping(value = "updatefinishInfoMng", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelMap updatefinishInfoMng(BatchJobMngVO batchJobMngVO) {
+		ModelMap modelMap = new ModelMap();
+		
+		try {
+			batchJobMngVO.setChgrId(CommonUtil.getSessionManager().getUserId());
+			batchJobMngVO.setChgDate(DateUtil.sysdate());
+			batchJobMngVO.setBillCycl("01"); //청구주기 고정값
+			
+			batchGroupService.updatefinishInfoMng(batchJobMngVO);
+			modelMap.addAttribute("success", true);
+		} catch (Exception e) {
+			modelMap.addAttribute("success", false);
+			modelMap.addAttribute("message", e.getMessage());
+		}
+		
+		return modelMap;
+	}
 }

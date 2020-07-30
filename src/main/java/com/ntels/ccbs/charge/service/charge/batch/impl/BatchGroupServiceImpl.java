@@ -1,13 +1,18 @@
 package com.ntels.ccbs.charge.service.charge.batch.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.ntels.ccbs.charge.domain.charge.batch.BatchGroupVO;
+import com.ntels.ccbs.charge.domain.charge.batch.BatchJobMngVO;
+import com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO;
 import com.ntels.ccbs.charge.mapper.charge.batch.BatchGroupMapper;
 import com.ntels.ccbs.charge.service.charge.batch.BatchGroupService;
 import com.ntels.ccbs.charge.service.charge.batch.BatchWorkMapService;
@@ -113,6 +118,47 @@ public class BatchGroupServiceImpl implements BatchGroupService {
 		
 		// 배치그룹 삭제
 		batchGroupMapper.deleteBatchGroup(batchGroupVO);
+	}
+
+	@Override
+	public Map<String, Object> getChargeList(List<Map<String, Object>> soAuthList, BatchJobMngVO batchJobMngVO){
+		
+		Map<String,Object> chargeInfo = new HashMap<String,Object>();
+		Integer totalCount = batchGroupMapper.finishInfoListCount(soAuthList,batchJobMngVO);
+		/*
+		   	page : 몇번째의 페이지를 요청했는지.
+			rows : 페이지 당 몇개의 행이 보여질건지. 
+			sidx : 소팅하는 기준이 되는 인덱스
+			sord : 내림차순 or 오름차순
+		 */
+		if(totalCount.intValue() == 0){
+			chargeInfo.put("chargeList", new ArrayList<Map<String,Object>>());
+			chargeInfo.put("totalCount", totalCount);
+			chargeInfo.put("totalPages", new Integer(0));
+			chargeInfo.put("page", new Integer(1));
+		}else{
+			int endIndex = batchJobMngVO.getRows();
+			int startIndex = (batchJobMngVO.getPage()-1) * batchJobMngVO.getRows();
+			
+			String end = Integer.toString(endIndex);
+			String start = Integer.toString(startIndex);
+			
+			List<Map<String,Object>> finishInfo = batchGroupMapper.finishInfoList(soAuthList,batchJobMngVO,end,start);
+			
+			chargeInfo.put("finishInfo", finishInfo); 
+			chargeInfo.put("totalCount", totalCount);
+			Integer totalPages = new Integer((int)Math.ceil(totalCount.floatValue() / (float)batchJobMngVO.getRows()));
+			chargeInfo.put("totalPages", totalPages);
+			chargeInfo.put("page", new Integer(batchJobMngVO.getPage()));
+		}
+		
+		 
+		return chargeInfo;
+	}
+	
+	@Override
+	public void updatefinishInfoMng(BatchJobMngVO batchJobMngVO) {
+		batchGroupMapper.updatefinishInfoMng(batchJobMngVO);
 	}
 	
 }

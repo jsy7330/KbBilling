@@ -84,7 +84,7 @@ $(document).ready(function() {
         
         searchPymInfo();
 
-        getPymBillInfo($("#searchSoId").val(), $('#condPymAcntId').val());
+        //getPymBillInfo($("#searchSoId").val(), $('#condPymAcntId').val());
     });
     
     //신청버튼 클릭
@@ -93,7 +93,7 @@ $(document).ready(function() {
             return;
         }
         var chkid = '';
-        var rowObject = '';
+        var rowObject = new Object();
         var chkid = $("#beforeAdjTable").jqGrid('getGridParam', 'selrow'); //선택된 행의 ID를 가져온다
         var rowObject = $("#beforeAdjTable").jqGrid('getRowData',chkid);  //선택된 행의 Data를 가져온다
 			console.log(JSON.stringify(rowObject));
@@ -105,14 +105,16 @@ $(document).ready(function() {
         rowObject.addr = $('#addr').val();
         rowObject.adjPt        = '1';  /* 조정시점(1:청구전,2:청구후,3:일회성) */
         rowObject.pymAcntNm    = $('#custNm').val();
-        rowObject.billYymm     = dateFormatToStringYYYYMM(rowObject.billYymm);
+        rowObject.billYymm     = dateFormatToStringYYYYMM(rowObject.hopeAplyYymm);
         rowObject.billDt       = dateFormatToStringYYYYMMDD(rowObject.billDt);
         rowObject.payDueDt     = dateFormatToStringYYYYMMDD(rowObject.payDueDt);
         rowObject.applDttm     = rowObject.applDttm;
         rowObject.billAplyDt   = dateFormatToStringYYYYMMDD(rowObject.billAplyDt);
         rowObject.chgDttm      = dateFormatToStringYYYMMDDHHMISS(rowObject.chgDttm);
         rowObject.adjResnCd    = rowObject.adjResnCd;
+        rowObject.adjApplConts    = rowObject.adjApplConts;
         
+        console.log(JSON.stringify(rowObject));
         $.ajax({
           type : "post",
           url : '/charge/billing/billingAdjust/billingBeforeAdjust/openBeforeAdjReqPopup.ajax',
@@ -160,15 +162,14 @@ function searchPymInfo(){
             if(data.pymListCnt == '0'){
                 alert('<spring:message code="MSG.M09.MSG00039"/>'); 
             }else if(data.pymListCnt == 1){
-console.log(data.pymList[0]);
+				console.log(data.pymList[0]+"pymList");
 				$('#pymAcnt').val(data.pymList[0].pymAcnt);
 				$('#custNm').val(data.pymList[0].custNm);
 				$('#custTpNm').val(data.pymList[0].custTpNm);
 				$('#addr').val(data.pymList[0].addr);
 				$("#condPymAcntId").val(data.pymList[0].pymAcntId);
 				//$("#condPymAcntNm").val(data.pymList[0].pymAcntNm);
-				getPymBillInfo(data.pymList[0].soId, data.pymList[0].pymAcntId);
-
+				getPymBillInfo($("#searchSoId").val(), $('#condPymAcntId').val());
             }else{
                 //다수 존재시 팝업호출
                 openPymSearchPopup();

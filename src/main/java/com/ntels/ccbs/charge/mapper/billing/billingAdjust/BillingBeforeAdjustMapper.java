@@ -28,4 +28,22 @@ public interface BillingBeforeAdjustMapper {
 	);
 
 	List<BillingAdjustVO> getPymRcpt(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+
+	Object getApplCount(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+
+	int insertReqAppl(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+
+	int updateReqAppl(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+	
+	int insertReqDtlAppl(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+
+	int updateReqDtlAppl(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+
+	int deleteReqAppl(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+	
+	int deleteReqDtlAppl(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+
+	int getApplYymmCount(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+	
+	int getApplHopeYymm(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
 }

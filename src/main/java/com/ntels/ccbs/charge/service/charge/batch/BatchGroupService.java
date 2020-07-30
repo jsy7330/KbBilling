@@ -1,8 +1,11 @@
 package com.ntels.ccbs.charge.service.charge.batch;
 
 import java.util.List;
+import java.util.Map;
 
 import com.ntels.ccbs.charge.domain.charge.batch.BatchGroupVO;
+import com.ntels.ccbs.charge.domain.charge.batch.BatchJobMngVO;
+import com.ntels.ccbs.charge.domain.charge.charge.RegularChargeJobVO;
 
 public interface BatchGroupService {
 
@@ -78,4 +81,7 @@ public interface BatchGroupService {
 	
 	void deleteBatchGroup(BatchGroupVO batchGroupVO);
 
+	void updatefinishInfoMng(BatchJobMngVO batchJobMngVO);
+
+	Map<String, Object> getChargeList(List<Map<String, Object>> soAuthList, BatchJobMngVO batchJobMngVO);
 }

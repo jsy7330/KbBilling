@@ -70,6 +70,8 @@ public class PymAcntSearchController {
 		SessionUser sessionUser = CommonUtil.getSessionManager();
 		String today = DateUtil.getDateStringYYYYMMDD(0);
 		String lng = (String)request.getSession().getAttribute("sessionLanguage");
+		System.out.println(today+"/////////////////////////////////////////////////////////////////////");
+		System.out.println(today+"/////////////////////////////////////////////////////////////////////");
 		Map<String,Object> pymInfoList = pymAcntSearchPopupService.getPymAcntInfoList(soId, custNm, custId, ctrtId, svcTelNo, pymAcntId, sessionUser.getSoAuthList(), today, lng, sidx, sord, page, rows);
 		
 		model.addAttribute("pymAcntInfoList", pymInfoList.get("pymAcntInfoList"));

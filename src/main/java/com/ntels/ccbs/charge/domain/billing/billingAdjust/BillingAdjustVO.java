@@ -104,397 +104,21 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	private String sord;
 	private String svcNm; /*서비스명*/
 	private String rateEndDt; /*과금종료일*/
-	
-	
-	
-	public String getRateEndDt() {
-		return rateEndDt;
-	}
-	public void setRateEndDt(String rateEndDt) {
-		this.rateEndDt = rateEndDt;
-	}
-	public String getSvcNm() {
-		return svcNm;
-	}
-	public void setSvcNm(String svcNm) {
-		this.svcNm = svcNm;
-	}
-	private String orderbyNum;
-	
+	private String chrgId;
+	private String adjBillDt;
+	private String billReIssYn;
+	private String apprReqrId;
+	private String apprReqDttm;
+	private String dcsnProcStat;
+	private String apprDttm;
+	private Integer adjSbtDdCnt;
+	private String saleAplyDt;
+	private String inptMenuId;
 	public String getChkJob() {
 		return chkJob;
 	}
 	public void setChkJob(String chkJob) {
 		this.chkJob = chkJob;
-	}
-	public String getOrderbyNum() {
-		return orderbyNum;
-	}
-	public void setOrderbyNum(String orderbyNum) {
-		this.orderbyNum = orderbyNum;
-	}
-	public static long getSerialversionuid() {
-		return serialVersionUID;
-	}
-	public String getAppntTelNo() {
-		return appntTelNo;
-	}
-	public void setAppntTelNo(String appntTelNo) {
-		this.appntTelNo = appntTelNo;
-	}
-	public String getPymAcntNm() {
-		return pymAcntNm;
-	}
-	public void setPymAcntNm(String pymAcntNm) {
-		this.pymAcntNm = pymAcntNm;
-	}
-	public String getRcptId() {
-		return rcptId;
-	}
-	public void setRcptId(String rcptId) {
-		this.rcptId = rcptId;
-	}
-	public String getSaleAplyYn() {
-		return saleAplyYn;
-	}
-	public void setSaleAplyYn(String saleAplyYn) {
-		this.saleAplyYn = saleAplyYn;
-	}
-	public String getAdjApplConts() {
-		return adjApplConts;
-	}
-	public void setAdjApplConts(String adjApplConts) {
-		this.adjApplConts = adjApplConts;
-	}
-	public String getAdjResnCd() {
-		return adjResnCd;
-	}
-	public void setAdjResnCd(String adjResnCd) {
-		this.adjResnCd = adjResnCd;
-	}
-	public Double getUnpayAmt() {
-		return unpayAmt;
-	}
-	public void setUnpayAmt(Double unpayAmt) {
-		this.unpayAmt = unpayAmt;
-	}
-	public String getUsgCnt() {
-		return usgCnt;
-	}
-	public void setUsgCnt(String usgCnt) {
-		this.usgCnt = usgCnt;
-	}
-	public String getBillMmTp() {
-		return billMmTp;
-	}
-	public void setBillMmTp(String billMmTp) {
-		this.billMmTp = billMmTp;
-	}
-	public String getMmTp() {
-		return mmTp;
-	}
-	public void setMmTp(String mmTp) {
-		this.mmTp = mmTp;
-	}
-	public String getGrpId() {
-		return grpId;
-	}
-	public void setGrpId(String grpId) {
-		this.grpId = grpId;
-	}
-	public String getAttrVal() {
-		return attrVal;
-	}
-	public void setAttrVal(String attrVal) {
-		this.attrVal = attrVal;
-	}
-	public Double getPymRcptAmt() {
-		return pymRcptAmt;
-	}
-	public void setPymRcptAmt(Double pymRcptAmt) {
-		this.pymRcptAmt = pymRcptAmt;
-	}
-	public Double getAdjPrevBillAmt() {
-		return adjPrevBillAmt;
-	}
-	public void setAdjPrevBillAmt(Double adjPrevBillAmt) {
-		this.adjPrevBillAmt = adjPrevBillAmt;
-	}
-	public Double getBillRcptAmt() {
-		return billRcptAmt;
-	}
-	public void setBillRcptAmt(Double billRcptAmt) {
-		this.billRcptAmt = billRcptAmt;
-	}
-	public Double getRcptAmt() {
-		return rcptAmt;
-	}
-	public void setRcptAmt(Double rcptAmt) {
-		this.rcptAmt = rcptAmt;
-	}
-	public String getTaxBillYn() {
-		return taxBillYn;
-	}
-	public void setTaxBillYn(String taxBillYn) {
-		this.taxBillYn = taxBillYn;
-	}
-	public Double getAdjAmt() {
-		return adjAmt;
-	}
-	public void setAdjAmt(Double adjAmt) {
-		this.adjAmt = adjAmt;
-	}
-	public Double getAdjAftBillAmt() {
-		return adjAftBillAmt;
-	}
-	public void setAdjAftBillAmt(Double adjAftBillAmt) {
-		this.adjAftBillAmt = adjAftBillAmt;
-	}
-	public Double getAdjApplAmt() {
-		return adjApplAmt;
-	}
-	public void setAdjApplAmt(Double adjApplAmt) {
-		this.adjApplAmt = adjApplAmt;
-	}
-	public Double getOrgAdjApplAmt() {
-		return orgAdjApplAmt;
-	}
-	public void setOrgAdjApplAmt(Double orgAdjApplAmt) {
-		this.orgAdjApplAmt = orgAdjApplAmt;
-	}
-	public Double getTotAdjApplAmt() {
-		return totAdjApplAmt;
-	}
-	public void setTotAdjApplAmt(Double totAdjApplAmt) {
-		this.totAdjApplAmt = totAdjApplAmt;
-	}
-	public Double getAdjPrvBillAmtA() {
-		return adjPrvBillAmtA;
-	}
-	public void setAdjPrvBillAmtA(Double adjPrvBillAmtA) {
-		this.adjPrvBillAmtA = adjPrvBillAmtA;
-	}
-	public Double getAdjAmtA() {
-		return adjAmtA;
-	}
-	public void setAdjAmtA(Double adjAmtA) {
-		this.adjAmtA = adjAmtA;
-	}
-	public Double getAdjPrvBillAmt() {
-		return adjPrvBillAmt;
-	}
-	public void setAdjPrvBillAmt(Double adjPrvBillAmt) {
-		this.adjPrvBillAmt = adjPrvBillAmt;
-	}
-	public Double getBillAmt() {
-		return billAmt;
-	}
-	public void setBillAmt(Double billAmt) {
-		this.billAmt = billAmt;
-	}
-	public Double getPreAdjApplAmt() {
-		return preAdjApplAmt;
-	}
-	public void setPreAdjApplAmt(Double preAdjApplAmt) {
-		this.preAdjApplAmt = preAdjApplAmt;
-	}
-	public String getOrgAdjNo() {
-		return orgAdjNo;
-	}
-	public void setOrgAdjNo(String orgAdjNo) {
-		this.orgAdjNo = orgAdjNo;
-	}
-	public String getBillDt() {
-		return billDt;
-	}
-	public void setBillDt(String billDt) {
-		this.billDt = billDt;
-	}
-	public String getPayDueDt() {
-		return payDueDt;
-	}
-	public void setPayDueDt(String payDueDt) {
-		this.payDueDt = payDueDt;
-	}
-	public String getChgrIdNm() {
-		return chgrIdNm;
-	}
-	public void setChgrIdNm(String chgrIdNm) {
-		this.chgrIdNm = chgrIdNm;
-	}
-	public String getChgDttm() {
-		return chgDttm;
-	}
-	public void setChgDttm(String chgDttm) {
-		this.chgDttm = chgDttm;
-	}
-	public String getBillAplyDt() {
-		return billAplyDt;
-	}
-	public void setBillAplyDt(String billAplyDt) {
-		this.billAplyDt = billAplyDt;
-	}
-	public String getBillYymm() {
-		return billYymm;
-	}
-	public void setBillYymm(String billYymm) {
-		this.billYymm = billYymm;
-	}
-	public String getClsDt() {
-		return clsDt;
-	}
-	public void setClsDt(String clsDt) {
-		this.clsDt = clsDt;
-	}
-	public String getCtrtId() {
-		return ctrtId;
-	}
-	public void setCtrtId(String ctrtId) {
-		this.ctrtId = ctrtId;
-	}
-	public String getMnsFlag() {
-		return mnsFlag;
-	}
-	public void setMnsFlag(String mnsFlag) {
-		this.mnsFlag = mnsFlag;
-	}
-	public String getClsTskCl() {
-		return clsTskCl;
-	}
-	public void setClsTskCl(String clsTskCl) {
-		this.clsTskCl = clsTskCl;
-	}
-	public String getBillCycl() {
-		return billCycl;
-	}
-	public void setBillCycl(String billCycl) {
-		this.billCycl = billCycl;
-	}
-	public String getCurrentYymm() {
-		return currentYymm;
-	}
-	public void setCurrentYymm(String currentYymm) {
-		this.currentYymm = currentYymm;
-	}
-	public String getGubun() {
-		return gubun;
-	}
-	public void setGubun(String gubun) {
-		this.gubun = gubun;
-	}
-	public String getUseYymm() {
-		return useYymm;
-	}
-	public void setUseYymm(String useYymm) {
-		this.useYymm = useYymm;
-	}
-	public String getProdCmpsId() {
-		return prodCmpsId;
-	}
-	public void setProdCmpsId(String prodCmpsId) {
-		this.prodCmpsId = prodCmpsId;
-	}
-	public String getSvcCmpsId() {
-		return svcCmpsId;
-	}
-	public void setSvcCmpsId(String svcCmpsId) {
-		this.svcCmpsId = svcCmpsId;
-	}
-	public String getChrgItmCd() {
-		return chrgItmCd;
-	}
-	public void setChrgItmCd(String chrgItmCd) {
-		this.chrgItmCd = chrgItmCd;
-	}
-	public String getChrgItmNm() {
-		return chrgItmNm;
-	}
-	public void setChrgItmNm(String chrgItmNm) {
-		this.chrgItmNm = chrgItmNm;
-	}
-	public String getCustId() {
-		return custId;
-	}
-	public void setCustId(String custId) {
-		this.custId = custId;
-	}
-	public String getProdCd() {
-		return prodCd;
-	}
-	public void setProdCd(String prodCd) {
-		this.prodCd = prodCd;
-	}
-	public String getProdNm() {
-		return prodNm;
-	}
-	public void setProdNm(String prodNm) {
-		this.prodNm = prodNm;
-	}
-	public String getSvcCd() {
-		return svcCd;
-	}
-	public void setSvcCd(String svcCd) {
-		this.svcCd = svcCd;
-	}
-	public String getExrate() {
-		return exrate;
-	}
-	public void setExrate(String exrate) {
-		this.exrate = exrate;
-	}
-	public String getCrncyCd() {
-		return crncyCd;
-	}
-	public void setCrncyCd(String crncyCd) {
-		this.crncyCd = crncyCd;
-	}
-	public String getExrateAplyDt() {
-		return exrateAplyDt;
-	}
-	public void setExrateAplyDt(String exrateAplyDt) {
-		this.exrateAplyDt = exrateAplyDt;
-	}
-	public String getRateStrtDt() {
-		return rateStrtDt;
-	}
-	public void setRateStrtDt(String rateStrtDt) {
-		this.rateStrtDt = rateStrtDt;
-	}
-	public String getTermDt() {
-		return termDt;
-	}
-	public void setTermDt(String termDt) {
-		this.termDt = termDt;
-	}
-	public String getCtrtStat() {
-		return ctrtStat;
-	}
-	public void setCtrtStat(String ctrtStat) {
-		this.ctrtStat = ctrtStat;
-	}
-	public String getCtrtStatNm() {
-		return ctrtStatNm;
-	}
-	public void setCtrtStatNm(String ctrtStatNm) {
-		this.ctrtStatNm = ctrtStatNm;
-	}
-	public String getSvcTelNo() {
-		return svcTelNo;
-	}
-	public void setSvcTelNo(String svcTelNo) {
-		this.svcTelNo = svcTelNo;
-	}
-	public String getDcsnProcStatNm() {
-		return dcsnProcStatNm;
-	}
-	public void setDcsnProcStatNm(String dcsnProcStatNm) {
-		this.dcsnProcStatNm = dcsnProcStatNm;
-	}
-	public String getAcntNm() {
-		return acntNm;
-	}
-	public void setAcntNm(String acntNm) {
-		this.acntNm = acntNm;
 	}
 	public String getSoId() {
 		return soId;
@@ -676,6 +300,366 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	public void setLngTyp(String lngTyp) {
 		this.lngTyp = lngTyp;
 	}
+	public String getAcntNm() {
+		return acntNm;
+	}
+	public void setAcntNm(String acntNm) {
+		this.acntNm = acntNm;
+	}
+	public String getDcsnProcStatNm() {
+		return dcsnProcStatNm;
+	}
+	public void setDcsnProcStatNm(String dcsnProcStatNm) {
+		this.dcsnProcStatNm = dcsnProcStatNm;
+	}
+	public String getGubun() {
+		return gubun;
+	}
+	public void setGubun(String gubun) {
+		this.gubun = gubun;
+	}
+	public String getUseYymm() {
+		return useYymm;
+	}
+	public void setUseYymm(String useYymm) {
+		this.useYymm = useYymm;
+	}
+	public String getProdCmpsId() {
+		return prodCmpsId;
+	}
+	public void setProdCmpsId(String prodCmpsId) {
+		this.prodCmpsId = prodCmpsId;
+	}
+	public String getSvcCmpsId() {
+		return svcCmpsId;
+	}
+	public void setSvcCmpsId(String svcCmpsId) {
+		this.svcCmpsId = svcCmpsId;
+	}
+	public String getChrgItmCd() {
+		return chrgItmCd;
+	}
+	public void setChrgItmCd(String chrgItmCd) {
+		this.chrgItmCd = chrgItmCd;
+	}
+	public String getChrgItmNm() {
+		return chrgItmNm;
+	}
+	public void setChrgItmNm(String chrgItmNm) {
+		this.chrgItmNm = chrgItmNm;
+	}
+	public String getCustId() {
+		return custId;
+	}
+	public void setCustId(String custId) {
+		this.custId = custId;
+	}
+	public Double getAdjPrevBillAmt() {
+		return adjPrevBillAmt;
+	}
+	public void setAdjPrevBillAmt(Double adjPrevBillAmt) {
+		this.adjPrevBillAmt = adjPrevBillAmt;
+	}
+	public Double getAdjAmt() {
+		return adjAmt;
+	}
+	public void setAdjAmt(Double adjAmt) {
+		this.adjAmt = adjAmt;
+	}
+	public Double getAdjAftBillAmt() {
+		return adjAftBillAmt;
+	}
+	public void setAdjAftBillAmt(Double adjAftBillAmt) {
+		this.adjAftBillAmt = adjAftBillAmt;
+	}
+	public Double getAdjApplAmt() {
+		return adjApplAmt;
+	}
+	public void setAdjApplAmt(Double adjApplAmt) {
+		this.adjApplAmt = adjApplAmt;
+	}
+	public String getProdCd() {
+		return prodCd;
+	}
+	public void setProdCd(String prodCd) {
+		this.prodCd = prodCd;
+	}
+	public String getProdNm() {
+		return prodNm;
+	}
+	public void setProdNm(String prodNm) {
+		this.prodNm = prodNm;
+	}
+	public String getSvcCd() {
+		return svcCd;
+	}
+	public void setSvcCd(String svcCd) {
+		this.svcCd = svcCd;
+	}
+	public String getExrate() {
+		return exrate;
+	}
+	public void setExrate(String exrate) {
+		this.exrate = exrate;
+	}
+	public String getCrncyCd() {
+		return crncyCd;
+	}
+	public void setCrncyCd(String crncyCd) {
+		this.crncyCd = crncyCd;
+	}
+	public String getExrateAplyDt() {
+		return exrateAplyDt;
+	}
+	public void setExrateAplyDt(String exrateAplyDt) {
+		this.exrateAplyDt = exrateAplyDt;
+	}
+	public String getRateStrtDt() {
+		return rateStrtDt;
+	}
+	public void setRateStrtDt(String rateStrtDt) {
+		this.rateStrtDt = rateStrtDt;
+	}
+	public String getTermDt() {
+		return termDt;
+	}
+	public void setTermDt(String termDt) {
+		this.termDt = termDt;
+	}
+	public String getCtrtStat() {
+		return ctrtStat;
+	}
+	public void setCtrtStat(String ctrtStat) {
+		this.ctrtStat = ctrtStat;
+	}
+	public String getCtrtStatNm() {
+		return ctrtStatNm;
+	}
+	public void setCtrtStatNm(String ctrtStatNm) {
+		this.ctrtStatNm = ctrtStatNm;
+	}
+	public String getSvcTelNo() {
+		return svcTelNo;
+	}
+	public void setSvcTelNo(String svcTelNo) {
+		this.svcTelNo = svcTelNo;
+	}
+	public String getCurrentYymm() {
+		return currentYymm;
+	}
+	public void setCurrentYymm(String currentYymm) {
+		this.currentYymm = currentYymm;
+	}
+	public String getClsTskCl() {
+		return clsTskCl;
+	}
+	public void setClsTskCl(String clsTskCl) {
+		this.clsTskCl = clsTskCl;
+	}
+	public String getBillCycl() {
+		return billCycl;
+	}
+	public void setBillCycl(String billCycl) {
+		this.billCycl = billCycl;
+	}
+	public String getMnsFlag() {
+		return mnsFlag;
+	}
+	public void setMnsFlag(String mnsFlag) {
+		this.mnsFlag = mnsFlag;
+	}
+	public String getCtrtId() {
+		return ctrtId;
+	}
+	public void setCtrtId(String ctrtId) {
+		this.ctrtId = ctrtId;
+	}
+	public String getBillYymm() {
+		return billYymm;
+	}
+	public void setBillYymm(String billYymm) {
+		this.billYymm = billYymm;
+	}
+	public String getClsDt() {
+		return clsDt;
+	}
+	public void setClsDt(String clsDt) {
+		this.clsDt = clsDt;
+	}
+	public Double getOrgAdjApplAmt() {
+		return orgAdjApplAmt;
+	}
+	public void setOrgAdjApplAmt(Double orgAdjApplAmt) {
+		this.orgAdjApplAmt = orgAdjApplAmt;
+	}
+	public Double getTotAdjApplAmt() {
+		return totAdjApplAmt;
+	}
+	public void setTotAdjApplAmt(Double totAdjApplAmt) {
+		this.totAdjApplAmt = totAdjApplAmt;
+	}
+	public String getOrgAdjNo() {
+		return orgAdjNo;
+	}
+	public void setOrgAdjNo(String orgAdjNo) {
+		this.orgAdjNo = orgAdjNo;
+	}
+	public String getBillDt() {
+		return billDt;
+	}
+	public void setBillDt(String billDt) {
+		this.billDt = billDt;
+	}
+	public Double getAdjPrvBillAmtA() {
+		return adjPrvBillAmtA;
+	}
+	public void setAdjPrvBillAmtA(Double adjPrvBillAmtA) {
+		this.adjPrvBillAmtA = adjPrvBillAmtA;
+	}
+	public Double getAdjAmtA() {
+		return adjAmtA;
+	}
+	public void setAdjAmtA(Double adjAmtA) {
+		this.adjAmtA = adjAmtA;
+	}
+	public String getPayDueDt() {
+		return payDueDt;
+	}
+	public void setPayDueDt(String payDueDt) {
+		this.payDueDt = payDueDt;
+	}
+	public Double getAdjPrvBillAmt() {
+		return adjPrvBillAmt;
+	}
+	public void setAdjPrvBillAmt(Double adjPrvBillAmt) {
+		this.adjPrvBillAmt = adjPrvBillAmt;
+	}
+	public Double getBillAmt() {
+		return billAmt;
+	}
+	public void setBillAmt(Double billAmt) {
+		this.billAmt = billAmt;
+	}
+	public Double getPreAdjApplAmt() {
+		return preAdjApplAmt;
+	}
+	public void setPreAdjApplAmt(Double preAdjApplAmt) {
+		this.preAdjApplAmt = preAdjApplAmt;
+	}
+	public String getChgrIdNm() {
+		return chgrIdNm;
+	}
+	public void setChgrIdNm(String chgrIdNm) {
+		this.chgrIdNm = chgrIdNm;
+	}
+	public String getChgDttm() {
+		return chgDttm;
+	}
+	public void setChgDttm(String chgDttm) {
+		this.chgDttm = chgDttm;
+	}
+	public String getBillAplyDt() {
+		return billAplyDt;
+	}
+	public void setBillAplyDt(String billAplyDt) {
+		this.billAplyDt = billAplyDt;
+	}
+	public Double getBillRcptAmt() {
+		return billRcptAmt;
+	}
+	public void setBillRcptAmt(Double billRcptAmt) {
+		this.billRcptAmt = billRcptAmt;
+	}
+	public Double getRcptAmt() {
+		return rcptAmt;
+	}
+	public void setRcptAmt(Double rcptAmt) {
+		this.rcptAmt = rcptAmt;
+	}
+	public String getTaxBillYn() {
+		return taxBillYn;
+	}
+	public void setTaxBillYn(String taxBillYn) {
+		this.taxBillYn = taxBillYn;
+	}
+	public Double getPymRcptAmt() {
+		return pymRcptAmt;
+	}
+	public void setPymRcptAmt(Double pymRcptAmt) {
+		this.pymRcptAmt = pymRcptAmt;
+	}
+	public String getUsgCnt() {
+		return usgCnt;
+	}
+	public void setUsgCnt(String usgCnt) {
+		this.usgCnt = usgCnt;
+	}
+	public String getBillMmTp() {
+		return billMmTp;
+	}
+	public void setBillMmTp(String billMmTp) {
+		this.billMmTp = billMmTp;
+	}
+	public String getMmTp() {
+		return mmTp;
+	}
+	public void setMmTp(String mmTp) {
+		this.mmTp = mmTp;
+	}
+	public String getGrpId() {
+		return grpId;
+	}
+	public void setGrpId(String grpId) {
+		this.grpId = grpId;
+	}
+	public Double getUnpayAmt() {
+		return unpayAmt;
+	}
+	public void setUnpayAmt(Double unpayAmt) {
+		this.unpayAmt = unpayAmt;
+	}
+	public String getAttrVal() {
+		return attrVal;
+	}
+	public void setAttrVal(String attrVal) {
+		this.attrVal = attrVal;
+	}
+	public String getAdjResnCd() {
+		return adjResnCd;
+	}
+	public void setAdjResnCd(String adjResnCd) {
+		this.adjResnCd = adjResnCd;
+	}
+	public String getAdjApplConts() {
+		return adjApplConts;
+	}
+	public void setAdjApplConts(String adjApplConts) {
+		this.adjApplConts = adjApplConts;
+	}
+	public String getSaleAplyYn() {
+		return saleAplyYn;
+	}
+	public void setSaleAplyYn(String saleAplyYn) {
+		this.saleAplyYn = saleAplyYn;
+	}
+	public String getRcptId() {
+		return rcptId;
+	}
+	public void setRcptId(String rcptId) {
+		this.rcptId = rcptId;
+	}
+	public String getPymAcntNm() {
+		return pymAcntNm;
+	}
+	public void setPymAcntNm(String pymAcntNm) {
+		this.pymAcntNm = pymAcntNm;
+	}
+	public String getAppntTelNo() {
+		return appntTelNo;
+	}
+	public void setAppntTelNo(String appntTelNo) {
+		this.appntTelNo = appntTelNo;
+	}
 	public String getSidx() {
 		return sidx;
 	}
@@ -687,6 +671,81 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	}
 	public void setSord(String sord) {
 		this.sord = sord;
+	}
+	public String getSvcNm() {
+		return svcNm;
+	}
+	public void setSvcNm(String svcNm) {
+		this.svcNm = svcNm;
+	}
+	public String getRateEndDt() {
+		return rateEndDt;
+	}
+	public void setRateEndDt(String rateEndDt) {
+		this.rateEndDt = rateEndDt;
+	}
+	public String getChrgId() {
+		return chrgId;
+	}
+	public void setChrgId(String chrgId) {
+		this.chrgId = chrgId;
+	}
+	public String getAdjBillDt() {
+		return adjBillDt;
+	}
+	public void setAdjBillDt(String adjBillDt) {
+		this.adjBillDt = adjBillDt;
+	}
+	public String getBillReIssYn() {
+		return billReIssYn;
+	}
+	public void setBillReIssYn(String billReIssYn) {
+		this.billReIssYn = billReIssYn;
+	}
+	public String getApprReqrId() {
+		return apprReqrId;
+	}
+	public void setApprReqrId(String apprReqrId) {
+		this.apprReqrId = apprReqrId;
+	}
+	public String getApprReqDttm() {
+		return apprReqDttm;
+	}
+	public void setApprReqDttm(String apprReqDttm) {
+		this.apprReqDttm = apprReqDttm;
+	}
+	public String getDcsnProcStat() {
+		return dcsnProcStat;
+	}
+	public void setDcsnProcStat(String dcsnProcStat) {
+		this.dcsnProcStat = dcsnProcStat;
+	}
+	public String getApprDttm() {
+		return apprDttm;
+	}
+	public void setApprDttm(String apprDttm) {
+		this.apprDttm = apprDttm;
+	}
+	public Integer getAdjSbtDdCnt() {
+		return adjSbtDdCnt;
+	}
+	public void setAdjSbtDdCnt(Integer adjSbtDdCnt) {
+		this.adjSbtDdCnt = adjSbtDdCnt;
+	}
+	public String getSaleAplyDt() {
+		return saleAplyDt;
+	}
+	public void setSaleAplyDt(String saleAplyDt) {
+		this.saleAplyDt = saleAplyDt;
+	}
+	public String getInptMenuId() {
+		return inptMenuId;
+	}
+	public void setInptMenuId(String inptMenuId) {
+		this.inptMenuId = inptMenuId;
+	}
+	public static long getSerialversionuid() {
+		return serialVersionUID;
 	}
 	@Override
 	public String toString() {
@@ -716,7 +775,54 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 				+ ", unpayAmt=" + unpayAmt + ", attrVal=" + attrVal + ", adjResnCd=" + adjResnCd + ", adjApplConts="
 				+ adjApplConts + ", saleAplyYn=" + saleAplyYn + ", rcptId=" + rcptId + ", pymAcntNm=" + pymAcntNm
 				+ ", appntTelNo=" + appntTelNo + ", sidx=" + sidx + ", sord=" + sord + ", svcNm=" + svcNm
-				+ ", rateEndDt=" + rateEndDt + ", orderbyNum=" + orderbyNum + "]";
+				+ ", rateEndDt=" + rateEndDt + ", chrgId=" + chrgId + ", adjBillDt=" + adjBillDt + ", billReIssYn="
+				+ billReIssYn + ", apprReqrId=" + apprReqrId + ", apprReqDttm=" + apprReqDttm + ", dcsnProcStat="
+				+ dcsnProcStat + ", apprDttm=" + apprDttm + ", adjSbtDdCnt=" + adjSbtDdCnt + ", saleAplyDt="
+				+ saleAplyDt + ", inptMenuId=" + inptMenuId + ", getChkJob()=" + getChkJob() + ", getSoId()="
+				+ getSoId() + ", getRegrId()=" + getRegrId() + ", getRegrNm()=" + getRegrNm() + ", getRegDate()="
+				+ getRegDate() + ", getChgrId()=" + getChgrId() + ", getChgrNm()=" + getChgrNm() + ", getChgDate()="
+				+ getChgDate() + ", getCommonCd()=" + getCommonCd() + ", getCommonCdNm()=" + getCommonCdNm()
+				+ ", getPymAcnt()=" + getPymAcnt() + ", getCustNm()=" + getCustNm() + ", getCustTp()=" + getCustTp()
+				+ ", getCustTpNm()=" + getCustTpNm() + ", getAddr()=" + getAddr() + ", getPymAcntId()=" + getPymAcntId()
+				+ ", getCtrtIdCnt()=" + getCtrtIdCnt() + ", getProdCdCnt()=" + getProdCdCnt() + ", getSvcCdCnt()="
+				+ getSvcCdCnt() + ", getAdjNo()=" + getAdjNo() + ", getBillSeqNo()=" + getBillSeqNo() + ", getAdjPt()="
+				+ getAdjPt() + ", getAdjPtNm()=" + getAdjPtNm() + ", getHopeAplyYymm()=" + getHopeAplyYymm()
+				+ ", getDcsnProcStat()=" + getDcsnProcStat() + ", getApplDttm()=" + getApplDttm() + ", getRcptPsnNm()="
+				+ getRcptPsnNm() + ", getApplSoNm()=" + getApplSoNm() + ", getSoNm()=" + getSoNm() + ", getApprrId()="
+				+ getApprrId() + ", getLngTyp()=" + getLngTyp() + ", getAcntNm()=" + getAcntNm()
+				+ ", getDcsnProcStatNm()=" + getDcsnProcStatNm() + ", getGubun()=" + getGubun() + ", getUseYymm()="
+				+ getUseYymm() + ", getProdCmpsId()=" + getProdCmpsId() + ", getSvcCmpsId()=" + getSvcCmpsId()
+				+ ", getChrgItmCd()=" + getChrgItmCd() + ", getChrgItmNm()=" + getChrgItmNm() + ", getCustId()="
+				+ getCustId() + ", getAdjPrevBillAmt()=" + getAdjPrevBillAmt() + ", getAdjAmt()=" + getAdjAmt()
+				+ ", getAdjAftBillAmt()=" + getAdjAftBillAmt() + ", getAdjApplAmt()=" + getAdjApplAmt()
+				+ ", getProdCd()=" + getProdCd() + ", getProdNm()=" + getProdNm() + ", getSvcCd()=" + getSvcCd()
+				+ ", getExrate()=" + getExrate() + ", getCrncyCd()=" + getCrncyCd() + ", getExrateAplyDt()="
+				+ getExrateAplyDt() + ", getRateStrtDt()=" + getRateStrtDt() + ", getTermDt()=" + getTermDt()
+				+ ", getCtrtStat()=" + getCtrtStat() + ", getCtrtStatNm()=" + getCtrtStatNm() + ", getSvcTelNo()="
+				+ getSvcTelNo() + ", getCurrentYymm()=" + getCurrentYymm() + ", getClsTskCl()=" + getClsTskCl()
+				+ ", getBillCycl()=" + getBillCycl() + ", getMnsFlag()=" + getMnsFlag() + ", getCtrtId()=" + getCtrtId()
+				+ ", getBillYymm()=" + getBillYymm() + ", getClsDt()=" + getClsDt() + ", getOrgAdjApplAmt()="
+				+ getOrgAdjApplAmt() + ", getTotAdjApplAmt()=" + getTotAdjApplAmt() + ", getOrgAdjNo()=" + getOrgAdjNo()
+				+ ", getBillDt()=" + getBillDt() + ", getAdjPrvBillAmtA()=" + getAdjPrvBillAmtA() + ", getAdjAmtA()="
+				+ getAdjAmtA() + ", getPayDueDt()=" + getPayDueDt() + ", getAdjPrvBillAmt()=" + getAdjPrvBillAmt()
+				+ ", getBillAmt()=" + getBillAmt() + ", getPreAdjApplAmt()=" + getPreAdjApplAmt() + ", getChgrIdNm()="
+				+ getChgrIdNm() + ", getChgDttm()=" + getChgDttm() + ", getBillAplyDt()=" + getBillAplyDt()
+				+ ", getBillRcptAmt()=" + getBillRcptAmt() + ", getRcptAmt()=" + getRcptAmt() + ", getTaxBillYn()="
+				+ getTaxBillYn() + ", getPymRcptAmt()=" + getPymRcptAmt() + ", getUsgCnt()=" + getUsgCnt()
+				+ ", getBillMmTp()=" + getBillMmTp() + ", getMmTp()=" + getMmTp() + ", getGrpId()=" + getGrpId()
+				+ ", getUnpayAmt()=" + getUnpayAmt() + ", getAttrVal()=" + getAttrVal() + ", getAdjResnCd()="
+				+ getAdjResnCd() + ", getAdjApplConts()=" + getAdjApplConts() + ", getSaleAplyYn()=" + getSaleAplyYn()
+				+ ", getRcptId()=" + getRcptId() + ", getPymAcntNm()=" + getPymAcntNm() + ", getAppntTelNo()="
+				+ getAppntTelNo() + ", getSidx()=" + getSidx() + ", getSord()=" + getSord() + ", getSvcNm()="
+				+ getSvcNm() + ", getRateEndDt()=" + getRateEndDt() + ", getChrgId()=" + getChrgId()
+				+ ", getAdjBillDt()=" + getAdjBillDt() + ", getBillReIssYn()=" + getBillReIssYn() + ", getApprReqrId()="
+				+ getApprReqrId() + ", getApprReqDttm()=" + getApprReqDttm() + ", getApprDttm()=" + getApprDttm()
+				+ ", getAdjSbtDdCnt()=" + getAdjSbtDdCnt() + ", getSaleAplyDt()=" + getSaleAplyDt()
+				+ ", getInptMenuId()=" + getInptMenuId() + ", getClass()=" + getClass() + ", hashCode()=" + hashCode()
+				+ ", toString()=" + super.toString() + "]";
 	}
+	
+	
+	
 	
 }

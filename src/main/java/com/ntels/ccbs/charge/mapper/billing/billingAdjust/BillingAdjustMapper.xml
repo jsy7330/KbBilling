@@ -70,7 +70,8 @@
      , 0                                          AS ADJ_PRV_BILL_AMT
      , 0                                          AS ADJ_AMT
      , 0                                          AS ADJ_AFT_BILL_AMT
-     , IFNULL(B.ADJ_APPL_AMT, 0)                  AS ADJ_APPL_AMT
+ 	 , IFNULL(B.ADJ_APPL_AMT,0)    AS ADJ_APPL_AMT     /* 신청금액 */
+     , IFNULL(B.ADJ_APPL_AMT,0)    AS ORG_ADJ_APPL_AMT /* 신청금액과 원래값 비교 */
      , B.ADJ_PT
      , A.PROD_CD
      , A.SVC_CD

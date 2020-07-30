@@ -10,9 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.ntels.ccbs.charge.domain.billing.billingAdjust.AdjustVO;
 import com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO;
 import com.ntels.ccbs.charge.service.billing.billingAdjust.BillingAdjustService;
 import com.ntels.ccbs.charge.service.billing.billingAdjust.BillingBeforeAdjustService;
@@ -199,4 +201,88 @@ public class BillingBeforeAdjustController {
 		
 		return  URL + "/ajax/billingBeforeAdjReq";
 	}
+	
+	 /**
+	 * <PRE>
+	 * 1. MethodName: getApplBeforeCount
+	 * 2. ClassName : BillingBeforeAdjustController
+	 * 3. Comment   : 청구된 년월과 신청된 조정과 조정상세 COUNT
+	 * 4. 작성자    : 
+	 * 5. 작성일    : 2020. 7. 29. 오전 11:04:49
+	 * </PRE>
+	 *   @return String
+	 *   @param billingAdjust
+	 *   @param model
+	 *   @param request
+	 *   @return
+	 *   @throws ServiceException
+	 */
+	@RequestMapping(value = "getApplBeforeCount", method = RequestMethod.POST)
+	 public String getApplBeforeCount(BillingAdjustVO billingAdjust, Model model,HttpServletRequest request) throws ServiceException{ 
+		 
+		int applYymmCount = 0; //청구진행중인 신청건
+		int applHopeYymm = 0;  //해당 희망청구년월 신청건
+		int resultCount = 0;   //신청건 여부
+		
+		applYymmCount = (int) billingBeforeAdjustService.getApplYymmCount(billingAdjust);
+		
+		applHopeYymm = billingBeforeAdjustService.getApplHopeYymm(billingAdjust);
+		if(applYymmCount != 0) {
+			model.addAttribute("resultCount",-1); // -1 구분값 : 청구작업진행중
+		}else if(applHopeYymm != 0) {
+			model.addAttribute("resultCount",-2); // -2 구분값 : 해당희망청구년월 신청건 존재
+		}else {
+			resultCount= (int) billingBeforeAdjustService.getApplBeforeCount(billingAdjust);
+			model.addAttribute("resultCount",resultCount);
+		}
+		  
+		 return URL + "/ajax/billingBeforeAdjReq"; 
+		 
+	 }
+	 
+	 
+	 /**
+	 * <PRE>
+	 * 1. MethodName: reqAppl
+	 * 2. ClassName : BillingBeforeAdjustController
+	 * 3. Comment   : 청구전 요금조정 신청 
+	 * 4. 작성자    : 
+	 * 5. 작성일    : 2020. 7. 29. 오전 10:05:06
+	 * </PRE>
+	 *   @return void
+	 *   @param adjust
+	 *   @param model
+	 *   @param request
+	 *   @throws Exception
+	 */
+	 
+	@RequestMapping(value = "reqAppl", method = RequestMethod.POST) 
+	 public void reqAppl(@RequestBody AdjustVO adjust, Model model, HttpServletRequest request ) throws Exception{	 		
+	 
+		 String gubun = adjust.getGubun();							//INSERT UPDATE 구분
+		 BillingAdjustVO adjAply = adjust.getAdj();					//메인신청 정보
+		 List<BillingAdjustVO> adjAplyDtl  = adjust.getAdjDtl();	//세부신청 정보 리스트		
+		 
+		 int result = billingBeforeAdjustService.modAdjTgtList(adjAply, adjAplyDtl, gubun);
+		 
+		 model.addAttribute("result", result);
+	 }
+	 
+	 @RequestMapping(value = "cancelAdjList", method = RequestMethod.POST)
+	 public String cancelAdjList(BillingAdjustVO billingAdjust, Model model,HttpServletRequest request) throws ServiceException{ 
+		 
+		 String lngTyp =(String)request.getSession().getAttribute("sessionLanguage");
+		 billingAdjust.setLngTyp(lngTyp);
+		 
+		 int result =  billingBeforeAdjustService.deleteReqDtlAppl(billingAdjust);	//세부신청 정보삭제
+		 
+		 if(result != 0) {
+			 result +=  billingBeforeAdjustService.deleteReqAppl(billingAdjust);	//메인신청 정보삭제
+		 }
+		 
+		 model.addAttribute("resultCount",result);
+	 
+		 return URL + "/ajax/billingBeforeAdjReq"; 
+		 
+	 }
 }
