@@ -449,11 +449,13 @@
                   FROM TPMPD_PROD              X                  /* 상품정보 */
                  WHERE X.PROD_CD            = A.PROD_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS PROD_NM
              , (SELECT SVC_NM
                   FROM TPMSV_SVC               X                  /* 서비스정보 */
                  WHERE X.SVC_CD             = A.SVC_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS SVC_NM
              , A.CHRG_ITM_NM                                      /* 요금항목 */
              , (SELECT SO_NM
@@ -614,11 +616,13 @@ SELECT COUNT(*) FROM (SELECT
                   FROM TPMPD_PROD              X                  /* 상품정보 */
                  WHERE X.PROD_CD            = A.PROD_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS PROD_NM
              , (SELECT SVC_NM
                   FROM TPMSV_SVC               X                  /* 서비스정보 */
                  WHERE X.SVC_CD             = A.SVC_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS SVC_NM
              , A.CHRG_ITM_NM                                      /* 요금항목 */
              , (SELECT SO_NM
@@ -992,11 +996,13 @@ SELECT Z.CHK_JOB, Z.ADJ_NO, Z.BILL_SEQ_NO, Z.BILL_YYMM, Z.BILL_DT, APPL_SO_ID, Z
                   FROM TPMPD_PROD              X                  /* 상품정보 */
                  WHERE X.PROD_CD            = A.PROD_CD
                    AND X.MSTR_FL            = '1'
+                    AND X.SO_ID 				= A.SO_ID
                )                            AS PROD_NM
              , (SELECT SVC_NM
                   FROM TPMSV_SVC               X                  /* 서비스정보 */
                  WHERE X.SVC_CD             = A.SVC_CD
                    AND X.MSTR_FL            = '1'
+                   AND A.SO_ID				= X.SO_ID
                )                            AS SVC_NM
              , A.CHRG_ITM_NM                                      /* 요금항목 */
              , (SELECT SO_NM
