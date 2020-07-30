@@ -393,4 +393,68 @@
         AND    D1.ATTR_VAL         = '1'                        /* 속성값 (요금조정 대상) */
         ORDER  BY SO_NM, CUST_NM, A1.CTRT_ID, C1.USE_YYMM, PROD_NM, SVC_NM, D2.DISP_PRI_NO
     </select>
+    <select id="getBasicCustInfo" resultType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingBasicCustInfoVO">
+        SELECT '0' AS CHK_JOB                     /* 납부계정별 요금계산에서 사용 */
+             , A.PYM_ACNT_ID
+        ,A.ACNT_NM AS PYM_ACNT
+             , CASE WHEN B.CUST_TP IN ('B','D','E') THEN BIZ_REG_NO
+                    ELSE B.CORP_REG_NO
+               END AS RSDT_CRRNO
+             , B.CORP_REG_NO AS MASKING_RSDT_CRRNO                                       /* 암호화 해제 필요 */
+             , B.CUST_NM                                                                 /* 고객명 */
+             , B.REP_NM                                                                  /* 대표자명 */
+             , B.CUST_NM AS CRR_NM                                                       /* 업체명 */
+             , B.BUSI_CNDT                                                               /* 업태 */
+             , (SELECT NAME.CODE_NM AS COMMON_CD_NM
+                            FROM TSYCO_CODE_MAST MAST
+                                ,TSYCO_CODE_MAST_NAME MNAME
+                                ,TSYCO_CODE_DETAIL DETAIL
+                                ,TSYCO_CODE_DETAIL_NAME NAME
+                           WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                             AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                             AND MNAME.LNG_TYP     ='ko' /* INPUT */
+                             AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                             AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                             AND NAME.LNG_TYP      ='ko' /* INPUT */
+                             AND MAST.COMMON_GRP   ='CM00014'
+                             AND DETAIL.COMMON_CD = B.BUSI_TP
+               ) AS BUSI_TP                                                              /* 업종 */
+             , CONCAT(A.ZIP_CD, ' ', TRIM(A.BASE_ADDR), ' ', TRIM(A.ADDR_DTL)) AS ADDR
+             , B.CUST_TP                                                                 /* 고객유형 */
+             , (SELECT NAME.CODE_NM AS COMMON_CD_NM
+                            FROM TSYCO_CODE_MAST MAST
+                                ,TSYCO_CODE_MAST_NAME MNAME
+                                ,TSYCO_CODE_DETAIL DETAIL
+                                ,TSYCO_CODE_DETAIL_NAME NAME
+                           WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                             AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                             AND MNAME.LNG_TYP     ='ko' /* INPUT */
+                             AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                             AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                             AND NAME.LNG_TYP      ='ko' /* INPUT */
+                             AND MAST.COMMON_GRP   ='CM00009'
+                             AND DETAIL.COMMON_CD = B.CUST_TP
+               ) AS CUST_TP_NM                                                           /* 고객유형명 */                                     
+             , (SELECT NAME.CODE_NM AS COMMON_CD_NM
+                            FROM TSYCO_CODE_MAST MAST
+                                ,TSYCO_CODE_MAST_NAME MNAME
+                                ,TSYCO_CODE_DETAIL DETAIL
+                                ,TSYCO_CODE_DETAIL_NAME NAME
+                           WHERE MAST.COMMON_GRP=DETAIL.COMMON_GRP
+                             AND MAST.COMMON_GRP   =MNAME.COMMON_GRP
+                             AND MNAME.LNG_TYP     ='ko' /* INPUT */
+                             AND DETAIL.COMMON_GRP =NAME.COMMON_GRP
+                             AND DETAIL.COMMON_CD  =NAME.COMMON_CD
+                             AND NAME.LNG_TYP      ='ko' /* INPUT */
+                             AND MAST.COMMON_GRP   ='CM00001'
+                             AND DETAIL.COMMON_CD = A.PYM_MTHD
+               ) AS PYM_MTHD_NM                                                          /* 납부방법 */
+             , A.SO_ID
+          FROM TCMCU_PYM_ACNT_INFO      A                                                /* 납부계정정보 */
+             , TCMCU_CUST_INFO          B                                                /* 고객정보 */
+         WHERE A.CUST_ID                = B.CUST_ID
+               AND A.SO_ID = #{soId}  /* INPUT */
+           AND A.SO_ID = B.SO_ID
+           AND A.PYM_ACNT_ID = #{pymAcntId}  /* INPUT */    
+    </select>
 </mapper>
