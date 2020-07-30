@@ -407,11 +407,13 @@
                   FROM TPMPD_PROD              X                            /* 상품정보 */
                  WHERE X.PROD_CD            = A.PROD_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS PROD_NM
              , (SELECT SVC_NM
                   FROM TPMSV_SVC               X                            /* 서비스정보 */
                  WHERE X.SVC_CD             = A.SVC_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS SVC_NM
              , B.SVC_RATE_ITM_TYP_NM        AS CHRG_ITM_NM                  /* 요금항목명 */
              , (SELECT SO_NM
@@ -518,11 +520,13 @@
                   FROM TPMPD_PROD              X                            /* 상품정보 */
                  WHERE X.PROD_CD            = A.PROD_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS PROD_NM
              , (SELECT SVC_NM
                   FROM TPMSV_SVC               X                            /* 서비스정보 */
                  WHERE X.SVC_CD             = A.SVC_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS SVC_NM
              , B.SVC_RATE_ITM_TYP_NM        AS CHRG_ITM_NM                  /* 요금항목명 */
              , (SELECT SO_NM
@@ -812,11 +816,13 @@ SELECT /*+ ORDERED USE_NL(A B) INDEX(A PK_TBLIV_BILL) INDEX(B IX_TP_SVC_RATE_ITM
                   FROM TPMPD_PROD              X                            /* 상품정보 */
                  WHERE X.PROD_CD            = A.PROD_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS PROD_NM
              , (SELECT SVC_NM
                   FROM TPMSV_SVC               X                            /* 서비스정보 */
                  WHERE X.SVC_CD             = A.SVC_CD
                    AND X.MSTR_FL            = '1'
+                   AND X.SO_ID 				= A.SO_ID
                )                            AS SVC_NM
              , B.SVC_RATE_ITM_TYP_NM        AS CHRG_ITM_NM                  /* 요금항목명 */
              , (SELECT SO_NM
