@@ -1,7 +1,11 @@
+//billingAdjustVO
+
 package com.ntels.ccbs.charge.domain.billing.billingAdjust;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.zip.Inflater;
+
 import com.ntels.ccbs.system.domain.common.service.CommonVO;
 
 public class BillingAdjustVO implements Serializable,CommonVO{
@@ -33,7 +37,7 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	private String adjPt;
 	private String adjPtNm;
 	private String hopeAplyYymm;
-	private String DcsnProcStat;
+	private String dcsnProcStat;
 	private String applDttm;
 	private String rcptPsnNm;
 	private String applSoNm;
@@ -109,7 +113,6 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	private String billReIssYn;
 	private String apprReqrId;
 	private String apprReqDttm;
-	private String dcsnProcStat;
 	private String apprDttm;
 	private Integer adjSbtDdCnt;
 	private String saleAplyDt;
@@ -259,10 +262,10 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 		this.hopeAplyYymm = hopeAplyYymm;
 	}
 	public String getDcsnProcStat() {
-		return DcsnProcStat;
+		return dcsnProcStat;
 	}
 	public void setDcsnProcStat(String dcsnProcStat) {
-		DcsnProcStat = dcsnProcStat;
+		this.dcsnProcStat = dcsnProcStat;
 	}
 	public String getApplDttm() {
 		return applDttm;
@@ -714,12 +717,6 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	public void setApprReqDttm(String apprReqDttm) {
 		this.apprReqDttm = apprReqDttm;
 	}
-	public String getDcsnProcStat() {
-		return dcsnProcStat;
-	}
-	public void setDcsnProcStat(String dcsnProcStat) {
-		this.dcsnProcStat = dcsnProcStat;
-	}
 	public String getApprDttm() {
 		return apprDttm;
 	}
@@ -747,82 +744,6 @@ public class BillingAdjustVO implements Serializable,CommonVO{
 	public static long getSerialversionuid() {
 		return serialVersionUID;
 	}
-	@Override
-	public String toString() {
-		return "BillingAdjustVO [chkJob=" + chkJob + ", soId=" + soId + ", regrId=" + regrId + ", regrNm=" + regrNm
-				+ ", regDate=" + regDate + ", chgrId=" + chgrId + ", chgrNm=" + chgrNm + ", chgDate=" + chgDate
-				+ ", commonCd=" + commonCd + ", commonCdNm=" + commonCdNm + ", pymAcnt=" + pymAcnt + ", custNm="
-				+ custNm + ", custTp=" + custTp + ", custTpNm=" + custTpNm + ", addr=" + addr + ", pymAcntId="
-				+ pymAcntId + ", ctrtIdCnt=" + ctrtIdCnt + ", prodCdCnt=" + prodCdCnt + ", svcCdCnt=" + svcCdCnt
-				+ ", adjNo=" + adjNo + ", billSeqNo=" + billSeqNo + ", adjPt=" + adjPt + ", adjPtNm=" + adjPtNm
-				+ ", hopeAplyYymm=" + hopeAplyYymm + ", DcsnProcStat=" + DcsnProcStat + ", applDttm=" + applDttm
-				+ ", rcptPsnNm=" + rcptPsnNm + ", applSoNm=" + applSoNm + ", soNm=" + soNm + ", apprrId=" + apprrId
-				+ ", lngTyp=" + lngTyp + ", acntNm=" + acntNm + ", dcsnProcStatNm=" + dcsnProcStatNm + ", gubun="
-				+ gubun + ", useYymm=" + useYymm + ", prodCmpsId=" + prodCmpsId + ", svcCmpsId=" + svcCmpsId
-				+ ", chrgItmCd=" + chrgItmCd + ", chrgItmNm=" + chrgItmNm + ", custId=" + custId + ", adjPrevBillAmt="
-				+ adjPrevBillAmt + ", adjAmt=" + adjAmt + ", adjAftBillAmt=" + adjAftBillAmt + ", adjApplAmt="
-				+ adjApplAmt + ", prodCd=" + prodCd + ", prodNm=" + prodNm + ", svcCd=" + svcCd + ", exrate=" + exrate
-				+ ", crncyCd=" + crncyCd + ", exrateAplyDt=" + exrateAplyDt + ", rateStrtDt=" + rateStrtDt + ", termDt="
-				+ termDt + ", ctrtStat=" + ctrtStat + ", ctrtStatNm=" + ctrtStatNm + ", svcTelNo=" + svcTelNo
-				+ ", currentYymm=" + currentYymm + ", clsTskCl=" + clsTskCl + ", billCycl=" + billCycl + ", mnsFlag="
-				+ mnsFlag + ", ctrtId=" + ctrtId + ", billYymm=" + billYymm + ", clsDt=" + clsDt + ", orgAdjApplAmt="
-				+ orgAdjApplAmt + ", totAdjApplAmt=" + totAdjApplAmt + ", orgAdjNo=" + orgAdjNo + ", billDt=" + billDt
-				+ ", adjPrvBillAmtA=" + adjPrvBillAmtA + ", adjAmtA=" + adjAmtA + ", payDueDt=" + payDueDt
-				+ ", adjPrvBillAmt=" + adjPrvBillAmt + ", billAmt=" + billAmt + ", preAdjApplAmt=" + preAdjApplAmt
-				+ ", chgrIdNm=" + chgrIdNm + ", chgDttm=" + chgDttm + ", billAplyDt=" + billAplyDt + ", billRcptAmt="
-				+ billRcptAmt + ", rcptAmt=" + rcptAmt + ", taxBillYn=" + taxBillYn + ", pymRcptAmt=" + pymRcptAmt
-				+ ", usgCnt=" + usgCnt + ", billMmTp=" + billMmTp + ", mmTp=" + mmTp + ", grpId=" + grpId
-				+ ", unpayAmt=" + unpayAmt + ", attrVal=" + attrVal + ", adjResnCd=" + adjResnCd + ", adjApplConts="
-				+ adjApplConts + ", saleAplyYn=" + saleAplyYn + ", rcptId=" + rcptId + ", pymAcntNm=" + pymAcntNm
-				+ ", appntTelNo=" + appntTelNo + ", sidx=" + sidx + ", sord=" + sord + ", svcNm=" + svcNm
-				+ ", rateEndDt=" + rateEndDt + ", chrgId=" + chrgId + ", adjBillDt=" + adjBillDt + ", billReIssYn="
-				+ billReIssYn + ", apprReqrId=" + apprReqrId + ", apprReqDttm=" + apprReqDttm + ", dcsnProcStat="
-				+ dcsnProcStat + ", apprDttm=" + apprDttm + ", adjSbtDdCnt=" + adjSbtDdCnt + ", saleAplyDt="
-				+ saleAplyDt + ", inptMenuId=" + inptMenuId + ", getChkJob()=" + getChkJob() + ", getSoId()="
-				+ getSoId() + ", getRegrId()=" + getRegrId() + ", getRegrNm()=" + getRegrNm() + ", getRegDate()="
-				+ getRegDate() + ", getChgrId()=" + getChgrId() + ", getChgrNm()=" + getChgrNm() + ", getChgDate()="
-				+ getChgDate() + ", getCommonCd()=" + getCommonCd() + ", getCommonCdNm()=" + getCommonCdNm()
-				+ ", getPymAcnt()=" + getPymAcnt() + ", getCustNm()=" + getCustNm() + ", getCustTp()=" + getCustTp()
-				+ ", getCustTpNm()=" + getCustTpNm() + ", getAddr()=" + getAddr() + ", getPymAcntId()=" + getPymAcntId()
-				+ ", getCtrtIdCnt()=" + getCtrtIdCnt() + ", getProdCdCnt()=" + getProdCdCnt() + ", getSvcCdCnt()="
-				+ getSvcCdCnt() + ", getAdjNo()=" + getAdjNo() + ", getBillSeqNo()=" + getBillSeqNo() + ", getAdjPt()="
-				+ getAdjPt() + ", getAdjPtNm()=" + getAdjPtNm() + ", getHopeAplyYymm()=" + getHopeAplyYymm()
-				+ ", getDcsnProcStat()=" + getDcsnProcStat() + ", getApplDttm()=" + getApplDttm() + ", getRcptPsnNm()="
-				+ getRcptPsnNm() + ", getApplSoNm()=" + getApplSoNm() + ", getSoNm()=" + getSoNm() + ", getApprrId()="
-				+ getApprrId() + ", getLngTyp()=" + getLngTyp() + ", getAcntNm()=" + getAcntNm()
-				+ ", getDcsnProcStatNm()=" + getDcsnProcStatNm() + ", getGubun()=" + getGubun() + ", getUseYymm()="
-				+ getUseYymm() + ", getProdCmpsId()=" + getProdCmpsId() + ", getSvcCmpsId()=" + getSvcCmpsId()
-				+ ", getChrgItmCd()=" + getChrgItmCd() + ", getChrgItmNm()=" + getChrgItmNm() + ", getCustId()="
-				+ getCustId() + ", getAdjPrevBillAmt()=" + getAdjPrevBillAmt() + ", getAdjAmt()=" + getAdjAmt()
-				+ ", getAdjAftBillAmt()=" + getAdjAftBillAmt() + ", getAdjApplAmt()=" + getAdjApplAmt()
-				+ ", getProdCd()=" + getProdCd() + ", getProdNm()=" + getProdNm() + ", getSvcCd()=" + getSvcCd()
-				+ ", getExrate()=" + getExrate() + ", getCrncyCd()=" + getCrncyCd() + ", getExrateAplyDt()="
-				+ getExrateAplyDt() + ", getRateStrtDt()=" + getRateStrtDt() + ", getTermDt()=" + getTermDt()
-				+ ", getCtrtStat()=" + getCtrtStat() + ", getCtrtStatNm()=" + getCtrtStatNm() + ", getSvcTelNo()="
-				+ getSvcTelNo() + ", getCurrentYymm()=" + getCurrentYymm() + ", getClsTskCl()=" + getClsTskCl()
-				+ ", getBillCycl()=" + getBillCycl() + ", getMnsFlag()=" + getMnsFlag() + ", getCtrtId()=" + getCtrtId()
-				+ ", getBillYymm()=" + getBillYymm() + ", getClsDt()=" + getClsDt() + ", getOrgAdjApplAmt()="
-				+ getOrgAdjApplAmt() + ", getTotAdjApplAmt()=" + getTotAdjApplAmt() + ", getOrgAdjNo()=" + getOrgAdjNo()
-				+ ", getBillDt()=" + getBillDt() + ", getAdjPrvBillAmtA()=" + getAdjPrvBillAmtA() + ", getAdjAmtA()="
-				+ getAdjAmtA() + ", getPayDueDt()=" + getPayDueDt() + ", getAdjPrvBillAmt()=" + getAdjPrvBillAmt()
-				+ ", getBillAmt()=" + getBillAmt() + ", getPreAdjApplAmt()=" + getPreAdjApplAmt() + ", getChgrIdNm()="
-				+ getChgrIdNm() + ", getChgDttm()=" + getChgDttm() + ", getBillAplyDt()=" + getBillAplyDt()
-				+ ", getBillRcptAmt()=" + getBillRcptAmt() + ", getRcptAmt()=" + getRcptAmt() + ", getTaxBillYn()="
-				+ getTaxBillYn() + ", getPymRcptAmt()=" + getPymRcptAmt() + ", getUsgCnt()=" + getUsgCnt()
-				+ ", getBillMmTp()=" + getBillMmTp() + ", getMmTp()=" + getMmTp() + ", getGrpId()=" + getGrpId()
-				+ ", getUnpayAmt()=" + getUnpayAmt() + ", getAttrVal()=" + getAttrVal() + ", getAdjResnCd()="
-				+ getAdjResnCd() + ", getAdjApplConts()=" + getAdjApplConts() + ", getSaleAplyYn()=" + getSaleAplyYn()
-				+ ", getRcptId()=" + getRcptId() + ", getPymAcntNm()=" + getPymAcntNm() + ", getAppntTelNo()="
-				+ getAppntTelNo() + ", getSidx()=" + getSidx() + ", getSord()=" + getSord() + ", getSvcNm()="
-				+ getSvcNm() + ", getRateEndDt()=" + getRateEndDt() + ", getChrgId()=" + getChrgId()
-				+ ", getAdjBillDt()=" + getAdjBillDt() + ", getBillReIssYn()=" + getBillReIssYn() + ", getApprReqrId()="
-				+ getApprReqrId() + ", getApprReqDttm()=" + getApprReqDttm() + ", getApprDttm()=" + getApprDttm()
-				+ ", getAdjSbtDdCnt()=" + getAdjSbtDdCnt() + ", getSaleAplyDt()=" + getSaleAplyDt()
-				+ ", getInptMenuId()=" + getInptMenuId() + ", getClass()=" + getClass() + ", hashCode()=" + hashCode()
-				+ ", toString()=" + super.toString() + "]";
-	}
-	
-	
 	
 	
 }
