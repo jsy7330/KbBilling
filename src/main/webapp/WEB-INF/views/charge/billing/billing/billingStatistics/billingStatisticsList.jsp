@@ -5,13 +5,31 @@
 <%@ taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
 <%@ taglib uri="/WEB-INF/tag/ntels.tld" prefix="ntels" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
-
+<style type="text/css">
+table.ui-datepicker-calendar { display:none; }
+#dimMask {
+position:absolute;
+z-index:9000;
+background-color:#000;
+display:none;
+left:0;
+top:0;
+}
+.window{
+display: none;
+position:absolute;
+left:100px;
+top:100px;
+z-index:10000;
+}
+</style>
 <script type="text/javascript">
 
 var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
 
 $(document).ready(function() {
 	
+	var lng = '<%= session.getAttribute( "sessionLanguage" ) %>';
 	//달력처리
 	if($(".month-picker").length > 0){
 		if(lng == 'ko'){
@@ -38,18 +56,7 @@ $(document).ready(function() {
 				$(this).datepicker('setDate', new Date(year, month, 1));
 		            
 			}
-		}); 
-		 
-		// 년월 레이어 focus
-	    $(".month-picker").focus(function () {
-	        $(".ui-datepicker-calendar").hide();
-	        $("#ui-datepicker-div").position({
-	            my: "center top",
-	            at: "center bottom",
-	            of: $(this)
-	        });
-	    });
-		
+		}).datepicker("setDate", new Date());  
 	}
 	
 	$('#searchYyyyMm').datepicker('setDate', new Date());
@@ -218,6 +225,7 @@ function searchGridList(){
 	});
     
 	$("#billDtlGrid").trigger("reloadGrid");
+	$("#dtlGrid").clearGridData();
 	
 }
 
@@ -277,11 +285,11 @@ function searchGridList(){
           <th><spring:message code="LAB.M10.LAB00033"/><!-- 청구년월 --></th>
           <td>
               <div class="date_box">
-                  <div class="inp_date w150">
-                      <input type="text" id="searchYyyyMm" name="searchYyyyMm" class="month-picker" readonly="readonly"/>
-                    <a href="#" class="btn_cal"></a>
-                  </div>
-              </div>
+					<div class="inp_date w130">
+						<input type="text" id="condBillYymm" name="condBillYymm"  class="month-picker" readonly="readonly" />
+						<a href="#" class="btn_cal"></a>
+					</div>
+				</div>
           </td>
         </tr>
     </thead>
