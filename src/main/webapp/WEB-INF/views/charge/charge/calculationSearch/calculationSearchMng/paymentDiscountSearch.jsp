@@ -130,8 +130,8 @@ $(document).ready(function() {
 		    { label: 'soId', name: 'SO_ID', width : 100, align:"center", hidden:true},
 		    { label: 'useYn', name: 'USE_YN', width : 100, align:"center", hidden:true},
 		    { label: '<spring:message code="LAB.M14.LAB00089"/>', name: 'RATE_ITM_NM', width : 150, sortable:false},	//할인과금항목명
-		    { label: '<spring:message code="LAB.M01.LAB00281"/>', name: 'STD_DD_CNT', width : 100,  sortable:false},	//기준일수
-		    { label: '<spring:message code="LAB.M08.LAB00220"/>', name: 'USE_DD_CNT', width : 100,  sortable:false},	//이용일수
+		    { label: '<spring:message code="LAB.M01.LAB00281"/>', name: 'STD_DD_CNT', width : 100,  align:"right", sortable:false},	//기준일수
+		    { label: '<spring:message code="LAB.M08.LAB00220"/>', name: 'USE_DD_CNT', width : 100,  align:"right", sortable:false},	//이용일수
 		    //{ label: '이용금액', name: 'USE_AMT', width : 100, align:"center", sortable:false},
 		    //{ label: '할인적용방식', name: 'DC_APLY_MTHD', width : 150, sortable:false},
 			//{ label: '할인적용값', name: 'DC_APLY_VAL', width : 150, sortable:false},
@@ -337,6 +337,33 @@ function openCustSearchPopup(){
  * 납부계정 조회
  */
 function openCustPymSearchPopup(){
+	
+	$.ajax({
+	    type : "post",
+	    url : '/system/common/common/pymAcntSearch/pymAcntSearchPopup.ajax',
+	    data : {
+	         inputSoId : $("#condSo").val()   //input SO Id
+	        ,inputCustNm : $('#searchAcntNm').val()   //input Customer Name
+	        ,inputPymAcntId : $('#searchPymAcntId').val()
+	        ,inputIsUnmaskYn : $('#isUnmaskYn').val() //마스크 처리 해제 Y
+	        ,outputSoId : 'condSo'            //output SO ID Select
+	        //,outputCustNm : 'condCustNm'            //output Customer Name Text
+	        //,outputCustId : 'condCustId'            //output Customer ID Text
+	        ,outputPymAcntId : 'searchPymAcntId'      //output Payment ID Text
+	        ,outputPymAcntNm : 'searchAcntNm'      //output Payment Nm Text
+        	,outputSoId : 'condSo'      		//output Payment Nm Text
+	    },
+	    async: true,
+	    success : function(data) {
+	        var html = data;
+	        $("#popup_dialog").html(html);
+	    },      
+	    complete : function(){
+	        wrapWindowByMask(); // 팝업 오픈
+	        $("#txtPymSearchCustNm").focus(); //오픈 후 focus위치
+	    }
+	});
+	/* 
 	var url="/system/common/common/pymAcntSearch/pymAcntPopup.ajax";
 	var param = new Object();
 	
@@ -356,7 +383,7 @@ function openCustPymSearchPopup(){
 		complete : function(){
 			wrapWindowByMask(); // 팝업 오픈
 		}
-	}); 
+	});  */
 }
 
 /*
@@ -455,6 +482,7 @@ function btnEnable(id){
 }
 
 
+
 </script>
 <input type ="text" id ="soId" name="soId" hidden/>
 <input type ="text" id ="billYymm" name="billYymm" hidden/>
@@ -509,7 +537,6 @@ function btnEnable(id){
 			<td>
 				<div class="date_box">
 					<div class="inp_date w130">
-						<!--    datepicker 에서 month-picker 로 class 수정 -->
 						<input type="text" id="searchStatDt" name="searchStatDt"  class="month-picker" readonly="readonly" />
 						<a href="#" class="btn_cal"></a>
 					</div>
