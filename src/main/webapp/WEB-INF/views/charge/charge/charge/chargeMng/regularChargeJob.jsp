@@ -112,6 +112,13 @@ $(document).ready(function() {
         rowNum: 20,
         pager: "#batchGridPager",
         onCellSelect : function(rowid, index, contents, event){
+        	$("#rsn").val('');
+        	var rowData = $("#batchGrid").jqGrid('getRowData', rowid);
+        	if(rowData.logFileNm == null || rowData.logFileNm == 'undefined' || rowData.logFileNm.length == 0){
+        		return;
+        	}else{
+        		setReadLogFile(rowData.logFileNm);
+        	}
         },
        	loadComplete : function () {
   	      	$("#batchGrid").setGridWidth($('#gridDiv').width(),false); //그리드 테이블을 DIV(widht 100% : w100p)로 감싸서 처리
@@ -449,6 +456,31 @@ function getBatchLog(){
      	}
 	});
 	
+}
+/**
+ * 로그파일 출력
+ */
+function setReadLogFile(fileNm){
+	
+	$.ajax({
+		url : '/charge/charge/charge/chargeMng/readLogFile',
+		type : 'POST',
+		dataType: 'json',
+		data : {
+			fileName : fileNm
+		},
+		success : function(data) {
+			alert("success" + JSON.stringify(data));
+			
+			if(data.resultText != null && data.resultText.length != 0){
+				$('#rsn').val(data.resultText);
+			}if(data.resultError == "NOFILE"){
+				alert("파일이 존재하지 않습니다.");
+			}
+		},error : function(err){
+			alert("err: "+err);
+		}
+	});
 }
 
 function pageInit(){

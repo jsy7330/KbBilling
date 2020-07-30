@@ -1,5 +1,10 @@
 package com.ntels.ccbs.charge.controller.charge.charge;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
@@ -31,6 +37,9 @@ import com.ntels.ccbs.system.service.common.service.SequenceService;
 public class ChargeCalculationController {
 	
 	private static String URL = "charge/charge/charge/chargeMng";
+	
+	@Value("${file.path.batchLog}")
+	private String filePath;
 	
 	@Autowired
 	private CommonDataService commonDataService;
@@ -300,5 +309,48 @@ public class ChargeCalculationController {
 		model.addAttribute("chargeTrtTp", commonDataService.getCommonCodeList("BL00004", lng));
 		
 		return URL + "/chargeCalculationResult";
+	}
+	
+	@RequestMapping(value="readLogFile", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelMap readLogFile(Model model, HttpServletRequest request, String fileName){
+		
+		ModelMap modelMap = new ModelMap();
+		System.out.println(">>>>> readLogFile <<<<<<");
+		System.out.println("FILE PATH: "+ filePath);
+		System.out.println("FILE NAME: "+ fileName);
+		
+		try{
+            //파일 객체 생성
+            File file = new File(filePath+ fileName);
+            
+            if(!file.isFile()) {
+            	modelMap.addAttribute("resultError", "NOFILE");
+            }else {
+	            //입력 스트림 생성
+	            FileReader filereader = new FileReader(file);
+	            //입력 버퍼 생성
+	            BufferedReader bufReader = new BufferedReader(filereader);
+	            String line = "";
+	            String resultText = "";
+	            while((line = bufReader.readLine()) != null){
+	                System.out.println(line);
+	                resultText += line;
+	                resultText += "\n";
+	            }
+	            //.readLine()은 끝에 개행문자를 읽지 않는다.            
+	            bufReader.close();
+	            
+	            System.out.println("resultText: " +resultText);
+	            
+	            modelMap.addAttribute("resultText", resultText);
+            }
+        }catch (FileNotFoundException e) {
+            // TODO: handle exception
+        }catch(IOException e){
+            System.out.println(e);
+        }
+		
+		return modelMap;
 	}
 }
