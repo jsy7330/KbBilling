@@ -21,7 +21,6 @@ $(document).ready(function() {
         colModel: [
 			{ label: 'billSeqNo' , name: 'billSeqNo', hidden:true, width:0},
 			{ label: 'orgAdjNo', name: 'orgAdjNo', hidden:true, width:0},
-			{ label: 'adjNo', name: 'adjNo', hidden:true, width:0},
 			{ label: 'billCycl', name: 'billCycl', hidden:true, width:0},
 			{ label: 'pymAcntId', name: 'pymAcntId', hidden:true, width:0},
 			{ label: 'dcsnProcStat', name: 'dcsnProcStat', hidden:true, width:0},
@@ -32,7 +31,7 @@ $(document).ready(function() {
             { label: '<spring:message code="LAB.M10.LAB00033" />', name: 'billYymm', formatter:stringTypeFormatterYYYYMM, width : 120, align:"center"},
             { label: '<spring:message code="LAB.M09.LAB00253" />', name: 'adjNo', width : 120, align:"left"},
             { label: '<spring:message code="LAB.M10.LAB00058" />', name: 'adjPrvBillAmt', formatter:'integer', width : 210, align:"right"},
-            { label: '조정금액', name: 'adjAmt', formatter:'integer', width : 190, align:"right"},
+            { label: '<spring:message code="LAB.M09.LAB00134" />', name: 'adjAmt', formatter:'integer', width : 190, align:"right"},
             { label: '<spring:message code="LAB.M10.LAB00031" />', name: 'billAmt', formatter:'integer', width : 90, align:"right"},
             { label: '<spring:message code="LAB.M09.LAB00137" />', name: 'adjPrvBillAmtA', formatter:'integer', width : 200, align:"right"},
             { label: '<spring:message code="LAB.M07.LAB00345" />', name: 'adjApplAmt', formatter:'integer', width : 120, align:"right"},

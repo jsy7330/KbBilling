@@ -193,11 +193,11 @@ function chkValidation(){
     }
 	
 	if($('#popAdjRsn').val() == 'SEL'){
-        alert('조정사유를 선택하세요'); return;
+        alert('<spring:message code="MSG.M09.MSG00071" />'); return;
     }
     
     if($('#popAdjReq').val() == '' || $('#popAdjReq').val() == null){
-        alert('조정신청내역를 입력하세요'); 
+        alert('<spring:message code="MSG.M09.MSG00072" />'); 
         $('#popAdjReq').focus();
         return;
     }
