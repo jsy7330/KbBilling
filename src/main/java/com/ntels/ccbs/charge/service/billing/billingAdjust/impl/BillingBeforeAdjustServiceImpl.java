@@ -44,7 +44,7 @@ public class BillingBeforeAdjustServiceImpl implements BillingBeforeAdjustServic
 	}
 	
 	@Override
-	public Object getApplBeforeCount(BillingAdjustVO billingAdjust) {
+	public int getApplBeforeCount(BillingAdjustVO billingAdjust) {
 		return billingBeforeAdjustMapper.getApplCount(billingAdjust);
 	}
 	

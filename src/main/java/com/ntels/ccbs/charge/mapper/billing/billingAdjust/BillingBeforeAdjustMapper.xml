@@ -184,16 +184,19 @@
     </select>
     
     <select id="getApplHopeYymm"  resultType="integer" parameterType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO">
+	   /*신규신청시 해당 청구년월 계약 확인 com.ntels.ccbs.charge.mapper.billing.billingAdjust.BillingBeforeAdjustMapper.getApplHopeYymm*/
 	    SELECT COUNT(*)
 	  	FROM TBLIV_CHRG_ADJ_APLY
-	 	WHERE HOPE_APLY_YYMM = #{billingAdjust.hopeAplyYymm}  /* 희망청구년월 */
+	 	WHERE 	HOPE_APLY_YYMM = #{billingAdjust.hopeAplyYymm}  /* 희망청구년월 */
+	 		AND PYM_ACNT_ID    = #{billingAdjust.pymAcntId}		/* 납부자 */
     </select>
     
     <select id="getApplYymmCount" resultType="integer" parameterType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO">
+    	/*해당계약 청구진행상태 확인  com.ntels.ccbs.charge.mapper.billing.billingAdjust.BillingBeforeAdjustMapper.getApplYymmCount*/
     	SELECT COUNT(*)
 	  	FROM TBLIV_CLS_INFO
  		WHERE SO_ID = #{billingAdjust.soId}  
-	   		AND BILL_YYMM = #{billingAdjust.hopeAplyYymm}  /* 희망청구년월 */
+	   		AND BILL_YYMM = #{billingAdjust.hopeAplyYymm}  /* 청구일 */
     </select>
     
     <select id="getApplCount" resultType="integer" parameterType="com.ntels.ccbs.charge.domain.billing.billingAdjust.BillingAdjustVO">
@@ -204,6 +207,7 @@
 			AND A.PYM_ACNT_ID    = #{billingAdjust.pymAcntId}
 			AND A.HOPE_APLY_YYMM = #{billingAdjust.hopeAplyYymm}
 			AND A.ADJ_NO         = #{billingAdjust.adjNo}
+			AND A.ADJ_NO = B.ADJ_NO
 			AND B.USE_YYMM       = #{billingAdjust.useYymm}
 			AND B.PROD_CMPS_ID   = #{billingAdjust.prodCmpsId}
 			AND B.SVC_CMPS_ID    = #{billingAdjust.svcCmpsId}

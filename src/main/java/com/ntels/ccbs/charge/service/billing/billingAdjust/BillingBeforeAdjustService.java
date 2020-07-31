@@ -10,7 +10,7 @@ public interface BillingBeforeAdjustService {
 	
 	public Object getPymRcpt(BillingAdjustVO billingAdjust);
 
-	public Object getApplBeforeCount(BillingAdjustVO billingAdjust);
+	public int getApplBeforeCount(BillingAdjustVO billingAdjust);
 	
 	public int getApplYymmCount(BillingAdjustVO billingAdjust);
 	
