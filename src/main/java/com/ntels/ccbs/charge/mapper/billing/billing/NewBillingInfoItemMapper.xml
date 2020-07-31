@@ -114,7 +114,7 @@
 				AND  #{newBillingInfoItemVO.searchYymm} BETWEEN B.EFT_BGN_YYMM AND B.EFT_END_YYMM
 			</if>
 			<if test="newBillingInfoItemVO.searchSetItmNm != null and newBillingInfoItemVO.searchSetItmNm != ''">
-				AND  UPPER(B.SET_ITM_NM)  LIKE '%' || UPPER(#{newBillingInfoItemVO.searchSetItmNm}) || '%'
+				AND  UPPER(B.SET_ITM_NM)  LIKE CONCAT('%',UPPER(#{newBillingInfoItemVO.searchSetItmNm}), '%')
 			</if>
 			<if test="newBillingInfoItemVO.searchReferenceType != null and newBillingInfoItemVO.searchReferenceType != ''">
 				AND  B.SET_LOC = #{newBillingInfoItemVO.searchReferenceType}
@@ -208,7 +208,7 @@
 				AND  #{newBillingInfoItemVO.searchYymm} BETWEEN B.EFT_BGN_YYMM AND B.EFT_END_YYMM
 			</if>
 			<if test="newBillingInfoItemVO.searchSetItmNm != null and newBillingInfoItemVO.searchSetItmNm != ''">
-				AND  UPPER(B.SET_ITM_NM)  LIKE '%' || UPPER(#{newBillingInfoItemVO.searchSetItmNm}) || '%'
+				AND  UPPER(B.SET_ITM_NM)  LIKE CONCAT('%',UPPER(#{newBillingInfoItemVO.searchSetItmNm}), '%')
 			</if>
 			<if test="newBillingInfoItemVO.searchReferenceType != null and newBillingInfoItemVO.searchReferenceType != ''">
 				AND  B.SET_LOC = #{newBillingInfoItemVO.searchReferenceType}
