@@ -600,6 +600,7 @@ function checkValidation(type){
 					alert('<spring:message code="MSG.M13.MSG00030"/>');  //필드성격에 맞는 값을 입력해주세요.
 					return false;
 				}
+				param.setVal = $("#setVal").val();		//설정값
 			}
 			
 		}
