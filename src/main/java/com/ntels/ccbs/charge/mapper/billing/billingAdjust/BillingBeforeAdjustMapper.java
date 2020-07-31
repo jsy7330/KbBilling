@@ -29,7 +29,7 @@ public interface BillingBeforeAdjustMapper {
 
 	List<BillingAdjustVO> getPymRcpt(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
 
-	Object getApplCount(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
+	int getApplCount(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
 
 	int insertReqAppl(@Param(value="billingAdjust")BillingAdjustVO billingAdjust);
 
