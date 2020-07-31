@@ -276,10 +276,10 @@
     
     <select id="getBillSetupItemMaxId" parameterType="com.ntels.ccbs.charge.domain.billing.billing.NewBillingInfoItemVO" resultType="String">	
         SELECT CASE
-                WHEN ( SELECT LPAD(MAX(TO_NUMBER(SET_ITM_ID))+1, 5, '0')
+                WHEN ( SELECT LPAD(MAX(SET_ITM_ID)+1, 5, '0')
                               FROM TBLIV_BILL_STP_ITM             /* 빌링설정항목 */
                          ) IS NULL THEN '00001'
-                ELSE  ( SELECT LPAD(MAX(TO_NUMBER(SET_ITM_ID))+1, 5, '0')
+                ELSE  ( SELECT LPAD(MAX(SET_ITM_ID)+1, 5, '0')
                               FROM TBLIV_BILL_STP_ITM             /* 빌링설정항목 */
                          )
                 END AS SET_ITM_CD
