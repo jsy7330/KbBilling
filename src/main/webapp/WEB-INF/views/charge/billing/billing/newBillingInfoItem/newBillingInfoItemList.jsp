@@ -540,7 +540,8 @@ function checkValidation(type){
 		}
 		
 		if($("#required").val() != "" && $("#required").val() != null) {	//필수항목
-			param.required = $("#required").val();
+			//param.required = $("#required").val();
+		param.required = $("input[name=required]:checked").val();
 		}
 		else if($("#notRequired").val() != "" && $("#notRequired").val() != null) {
 			param.required = $("#notRequired").val();
@@ -593,18 +594,22 @@ function checkValidation(type){
 		}else if(typeCd == '1' && $("#setVal").val() != ''){
 			
 			if($("#fieldNature").val() == '1') {  //필드성격이 숫자일 경우 숫자만 입력 체크
-				if($.isNumeric($("#setVal").val()) == true) {
-					param.setVal = $("#setVal").val();		//설정값
-				} 
-				else {
+				if($.isNumeric($("#setVal").val()) == false) {
+					// param.setVal = $("#setVal").val();		//설정값
 					alert('<spring:message code="MSG.M13.MSG00030"/>');  //필드성격에 맞는 값을 입력해주세요.
 					return false;
-				}
+				} 
+				/* else {
+					alert('<spring:message code="MSG.M13.MSG00030"/>');  //필드성격에 맞는 값을 입력해주세요.
+					return false;
+				} */
 			}
 		}
 		
 		param.setVal = $("#setVal").val();		//설정값
 		param.searchYymm = dateFormatToStringYYYYMM($("#searchYymm").val()); //기준년월
+		
+		console.info(JSON.stringify(param));
 		return param;
 }
 
